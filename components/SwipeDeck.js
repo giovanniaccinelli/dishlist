@@ -14,7 +14,7 @@ export default function SwipeDeck({ dishes, reloadDishes }) {
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
       ...d,
-      _key: d.id || `local-${i}`,
+      _key: `${d.id || "local"}-${i}`, // stable and unique
     }));
     setCards(formatted);
     setDeckEmpty(formatted.length === 0);

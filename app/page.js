@@ -12,11 +12,13 @@ export default function Feed() {
   const [password, setPassword] = useState("");
 
   const loadDishes = async () => {
+    if (!user) return;
     try {
-      // **Load all dishes, not just user's**
-      const fetchedDishes = await getDishesFromFirestore();
+      const fetchedDishes = await getDishesFromFirestore(); // get ALL dishes, not just user’s
+      console.log("Fetched dishes:", fetchedDishes);
       setDishes(fetchedDishes);
-    } catch {
+    } catch (err) {
+      console.error("Failed to load dishes:", err);
       alert("Failed to load dishes. Please try again.");
     }
   };
@@ -34,7 +36,6 @@ export default function Feed() {
   }
 
   if (!user) {
-    // Login UI (Google + Email)
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center text-white">
         <div className="bg-[#1A1A1A] p-8 rounded-2xl w-full max-w-sm shadow-xl">
@@ -76,6 +77,20 @@ export default function Feed() {
             Create Account
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (dishes.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] text-white text-xl font-semibold">
+        No dishes found. 
+        <button
+          onClick={loadDishes}
+          className="ml-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl"
+        >
+          Reload
+        </button>
       </div>
     );
   }

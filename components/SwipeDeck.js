@@ -2,108 +2,172 @@
 
 import { useState, useEffect } from "react";
 import TinderCard from "react-tinder-card";
-import { motion } from "framer-motion";
-import { saveDishToFirestore } from "../app/lib/firebaseHelpers";
+import { motion, AnimatePresence } from "framer-motion";
+import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
 import { useAuth } from "../app/lib/auth";
 
-export default function SwipeDeck({ dishes, reloadDishes }) {
+export default function SwipeDeck({
+  dishes,
+  onSwiped,
+  onDeckEmpty,
+  loadMoreDishes,
+  hasMore,
+  loadingMore,
+  onResetFeed,
+}) {
   const { user } = useAuth();
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
       ...d,
-      _key: `${d.id || "local"}-${i}`, // stable and unique
+      _key: `${d.id || "local"}-${i}`,
     }));
     setCards(formatted);
     setDeckEmpty(formatted.length === 0);
   }, [dishes]);
 
-  const handleSwipeEnd = (info, dishKey) => {
+  const dismissCard = (dish) => {
+    setCards((prev) => {
+      const updated = prev.filter((d) => d._key !== dish._key);
+      if (updated.length === 0) {
+        setDeckEmpty(true);
+        if (typeof onDeckEmpty === "function") onDeckEmpty();
+      }
+      return updated;
+    });
+  };
+
+  const handleSwipeEnd = async (info, dish) => {
     const threshold = 120;
     if (Math.abs(info.deltaX) > threshold) {
-      setCards((prev) => {
-        const updated = prev.filter((d) => d._key !== dishKey);
-        if (updated.length === 0) setDeckEmpty(true);
-        return updated;
-      });
+      if (user && dish.id) {
+        await saveSwipedDishForUser(user.uid, dish.id);
+        if (typeof onSwiped === "function") onSwiped(dish.id);
+      }
+      dismissCard(dish);
     }
   };
 
   const handleAddToMyList = async (dish) => {
     if (!user) return alert("You need to log in first!");
-    await saveDishToFirestore({
-      ...dish,
-      owner: user.uid,
-      ownerName: user.displayName || "Anonymous",
-      createdAt: new Date(),
-    });
-    alert(`${dish.name} added to your dishlist!`);
+    if (dish.id) {
+      await saveDishToUserList(user.uid, dish.id);
+      await saveSwipedDishForUser(user.uid, dish.id);
+      if (typeof onSwiped === "function") onSwiped(dish.id);
+    }
+    setToast("ADDING TO YOUR DISHLIST");
+    setTimeout(() => setToast(""), 1200);
+    dismissCard(dish);
   };
 
-  const handleReload = async () => {
-    await reloadDishes();
-    setDeckEmpty(false);
+  const renderImage = (dish) => {
+    const imageSrc =
+      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+    if (!imageSrc) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-gray-500">
+          No image available
+        </div>
+      );
+    }
+    return (
+      <img
+        src={imageSrc}
+        alt={dish.name}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          e.currentTarget.src = "/file.svg";
+        }}
+      />
+    );
   };
 
   if (deckEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center h-[75vh] text-gray-400 text-xl">
-        You're all caught up!
-        <button
-          onClick={handleReload}
-          className="mt-4 bg-red-500 hover:bg-red-600 px-6 py-3 rounded-full text-white font-semibold"
-        >
-          Reload Dishes
-        </button>
+      <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500 text-lg">
+        You&apos;re all caught up!
+        {hasMore ? (
+          <button
+            onClick={loadMoreDishes}
+            disabled={loadingMore}
+            className="mt-4 bg-black text-white px-6 py-3 rounded-full font-semibold disabled:opacity-60"
+          >
+            {loadingMore ? "Loading..." : "Load More"}
+          </button>
+        ) : (
+          <button
+            onClick={onResetFeed}
+            className="mt-4 bg-black text-white px-6 py-3 rounded-full font-semibold"
+          >
+            Start Over
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-full max-w-md h-[75vh]">
+      <div className="relative w-full max-w-md h-[70vh]">
         {cards.map((dish, index) => (
           <TinderCard
             key={dish._key}
             preventSwipe={["up", "down"]}
             className="absolute w-full"
-            onCardLeftScreen={() => {}}
             swipeRequirementType="position"
           >
             <motion.div
               drag="x"
-              onDragEnd={(e, info) => handleSwipeEnd(info, dish._key)}
-              className="relative bg-[#1A1A1A] rounded-2xl shadow-xl overflow-hidden w-full h-[75vh] cursor-grab"
+              onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
+              className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
+              whileTap={{ scale: 0.98 }}
             >
-              <img
-                src={dish.imageURL || dish.image}
-                alt={dish.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-14 left-6">
-                <h2 className="text-3xl font-bold">{dish.name}</h2>
-                <p className="text-gray-300 text-sm">
-                  by {dish.ownerName || "Unknown Publisher"}
-                </p>
-                <p className="text-yellow-400 text-sm">
-                  ★ {dish.rating || 0}/5
+              {renderImage(dish)}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-20 left-5 right-5 text-white">
+                <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
+                <h2 className="text-2xl font-bold">{dish.name}</h2>
+                <p className="text-sm text-white/80 line-clamp-2">
+                  {dish.description || "No description yet."}
                 </p>
               </div>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleAddToMyList(dish)}
-                className="absolute bottom-6 right-6 bg-gradient-to-tr from-red-500 to-pink-500 px-4 py-2 rounded-full font-semibold text-sm shadow-lg hover:opacity-90 transition"
-              >
-                Add
-              </motion.button>
+              <div className="absolute bottom-6 right-6 flex gap-3">
+                <button
+                  onClick={() => handleAddToMyList(dish)}
+                  className="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                  aria-label="Add to dishlist"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => handleAddToMyList(dish)}
+                  className="w-14 h-14 rounded-full bg-[#F9E547] text-black text-2xl font-bold flex items-center justify-center shadow-lg"
+                  aria-label="Save dish"
+                >
+                  ♥
+                </button>
+              </div>
             </motion.div>
           </TinderCard>
         ))}
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

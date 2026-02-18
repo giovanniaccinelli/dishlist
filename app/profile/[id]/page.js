@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { doc, getDoc, updateDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { doc, getDoc, updateDoc, getDocs, collection, query, where, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
@@ -40,36 +40,40 @@ export default function PublicProfile() {
   const handleFollow = async () => {
     if (!user) return alert("Log in first");
     const userRef = doc(db, "users", id);
+    const currentUserRef = doc(db, "users", user.uid);
     const currentFollowers = profileUser.followers || [];
     const newFollowers = isFollowing
       ? currentFollowers.filter(f => f !== user.uid)
       : [...currentFollowers, user.uid];
     await updateDoc(userRef, { followers: newFollowers });
+    await updateDoc(currentUserRef, {
+      following: isFollowing ? arrayRemove(id) : arrayUnion(id),
+    });
     setIsFollowing(!isFollowing);
   };
 
   if (!profileUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white">
+      <div className="min-h-screen flex items-center justify-center text-black">
         Loading profile...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0E0E0E] p-6 text-white relative">
+    <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-red-500 to-pink-500 flex items-center justify-center text-2xl font-bold">
+        <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
           {profileUser.displayName?.[0] || "U"}
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
-          <p className="text-gray-400 text-sm">{dishes.length} dishes</p>
+          <p className="text-black/60 text-sm">{dishes.length} dishes</p>
           {user && user.uid !== id && (
             <button
               onClick={handleFollow}
-              className="mt-2 bg-red-500 hover:bg-red-600 py-1 px-3 rounded-full text-sm"
+              className="mt-2 bg-black text-white py-1 px-3 rounded-full text-sm"
             >
               {isFollowing ? "Unfollow" : "Follow"}
             </button>
@@ -79,9 +83,9 @@ export default function PublicProfile() {
 
       {/* Dishes grid */}
       <h2 className="text-xl font-semibold mb-4">Dishes</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {dishes.length === 0 && (
-          <div className="bg-[#1e1e1e] rounded-xl h-32 flex items-center justify-center text-gray-500">
+          <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
             No dishes yet.
           </div>
         )}
@@ -89,19 +93,33 @@ export default function PublicProfile() {
           {dishes.map((dish) => (
             <motion.div
               key={dish.id}
-              className="bg-[#1A1A1A] rounded-xl overflow-hidden shadow-lg"
+              className="bg-white rounded-2xl overflow-hidden shadow-md"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
-              <img
-                src={dish.imageURL || dish.image}
-                alt={dish.name}
-                className="w-full h-32 object-cover"
-              />
-              <p className="p-3 text-center font-medium">{dish.name}</p>
-              <p className="text-center text-yellow-400 pb-3">★ {dish.rating || 0}/5</p>
+              {(() => {
+                const imageSrc =
+                  dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+                if (!imageSrc) {
+                  return (
+                    <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                      No image
+                    </div>
+                  );
+                }
+                return (
+                  <img
+                    src={imageSrc}
+                    alt={dish.name}
+                    className="w-full h-28 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/file.svg";
+                    }}
+                  />
+                );
+              })()}
             </motion.div>
           ))}
         </AnimatePresence>

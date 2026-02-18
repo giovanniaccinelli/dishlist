@@ -26,7 +26,10 @@ export function AuthProvider({ children }) {
       {
         displayName: userData.displayName || "Unnamed",
         email: userData.email,
-        followers: [], // Added for follow feature
+        followers: [],
+        following: [],
+        savedDishes: [],
+        swipedDishes: [],
       },
       { merge: true } // Avoid overwriting followers when updating
     );

@@ -7,6 +7,7 @@ import { useAuth } from '../app/lib/auth';
 export default function UploadModal({ onClose, onDishAdded }) {
   const { user } = useAuth();
   const [dishName, setDishName] = useState('');
+  const [dishDescription, setDishDescription] = useState('');
   const [dishImage, setDishImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -20,8 +21,8 @@ export default function UploadModal({ onClose, onDishAdded }) {
   };
 
   const handlePost = async () => {
-    if (!dishName || !dishImage) {
-      alert('Please provide both dish name and image.');
+    if (!dishName) {
+      alert('Please provide a dish name.');
       return;
     }
     if (!user) {
@@ -32,14 +33,19 @@ export default function UploadModal({ onClose, onDishAdded }) {
     setLoading(true);
     try {
       // Upload image
-      const imageURL = await uploadImage(dishImage);
-      if (!imageURL) throw new Error('Image upload failed');
+      let imageURL = '';
+      if (dishImage) {
+        imageURL = await uploadImage(dishImage, user.uid);
+        if (!imageURL) throw new Error('Image upload failed');
+      }
 
       // Save dish in Firestore
       await saveDishToFirestore({
         name: dishName,
+        description: dishDescription || '',
         imageURL,
         owner: user.uid,
+        ownerName: user.displayName || "Anonymous",
         createdAt: new Date(),
       });
 
@@ -50,6 +56,7 @@ export default function UploadModal({ onClose, onDishAdded }) {
 
       // Reset and close
       setDishName('');
+      setDishDescription('');
       setDishImage(null);
       setPreview(null);
       onClose();
@@ -70,6 +77,14 @@ export default function UploadModal({ onClose, onDishAdded }) {
           type="text"
           placeholder="Dish name"
           className="w-full p-3 mb-4 rounded-xl bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          disabled={loading}
+        />
+        <textarea
+          value={dishDescription}
+          onChange={(e) => setDishDescription(e.target.value)}
+          placeholder="Description"
+          className="w-full p-3 mb-4 rounded-xl bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          rows={3}
           disabled={loading}
         />
         <input

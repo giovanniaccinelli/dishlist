@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
@@ -30,12 +30,16 @@ export default function Explore() {
   const handleFollow = async (userId) => {
     if (!user) return alert("Log in first");
     const userRef = doc(db, "users", userId);
+    const currentUserRef = doc(db, "users", user.uid);
     const updatedUser = users.find(u => u.id === userId);
     const alreadyFollowing = updatedUser.followers?.includes(user.uid);
     const newFollowers = alreadyFollowing
       ? updatedUser.followers.filter(f => f !== user.uid)
       : [...(updatedUser.followers || []), user.uid];
     await updateDoc(userRef, { followers: newFollowers });
+    await updateDoc(currentUserRef, {
+      following: alreadyFollowing ? arrayRemove(userId) : arrayUnion(userId),
+    });
     fetchUsers();
   };
 

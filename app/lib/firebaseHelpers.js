@@ -152,8 +152,20 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     }
   }
 
-  // Persist the saved dish doc (source of truth)
-  await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
+  // Persist the saved dish doc (source of truth) with a short verify + retry
+  const savedRef = doc(db, "users", userId, "saved", dishId);
+  const attemptSave = async () => {
+    await setDoc(savedRef, payload, { merge: true });
+    const verifySnap = await getDoc(savedRef);
+    return verifySnap.exists();
+  };
+
+  let ok = await attemptSave();
+  if (!ok) {
+    await new Promise((r) => setTimeout(r, 200));
+    ok = await attemptSave();
+  }
+  if (!ok) throw new Error("Save did not persist.");
 
   // Best-effort: keep a savedDishes array for quick lookups
   try {

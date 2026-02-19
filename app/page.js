@@ -12,6 +12,7 @@ export default function Feed() {
   const [activeTab, setActiveTab] = useState("dish");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
 
   const shuffle = (arr) => {
     const copy = [...arr];
@@ -77,14 +78,40 @@ export default function Feed() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
+          {authError && (
+            <p className="mb-3 text-sm text-red-400 text-center">{authError}</p>
+          )}
+
           <button
-            onClick={() => signInWithEmail(email, password)}
+            onClick={async () => {
+              setAuthError("");
+              if (!email || !password) {
+                setAuthError("Email and password are required.");
+                return;
+              }
+              try {
+                await signInWithEmail(email, password);
+              } catch (err) {
+                setAuthError(err?.message || "Login failed.");
+              }
+            }}
             className="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-semibold mb-2"
           >
             Login
           </button>
           <button
-            onClick={() => signUpWithEmail(email, password)}
+            onClick={async () => {
+              setAuthError("");
+              if (!email || !password) {
+                setAuthError("Email and password are required.");
+                return;
+              }
+              try {
+                await signUpWithEmail(email, password);
+              } catch (err) {
+                setAuthError(err?.message || "Create account failed.");
+              }
+            }}
             className="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-semibold"
           >
             Create Account

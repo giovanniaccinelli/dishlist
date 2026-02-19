@@ -182,17 +182,12 @@ export async function getSavedDishesFromFirestore(userId) {
   const savedSub = await getDocs(collection(db, "users", userId, "saved"));
   const results = [];
   const missing = [];
-  const needsRecheck = [];
   savedSub.docs.forEach((d) => {
     const data = d.data();
     savedDishIds.add(d.id);
-    const imageSrc =
-      data?.imageURL || data?.imageUrl || data?.image_url || data?.image || "";
-    if (data && imageSrc) {
+    if (data) {
       results.push({ id: d.id, ...data });
-      return;
     }
-    needsRecheck.push(d.id);
   });
 
   for (const id of savedDishIds) {
@@ -200,21 +195,9 @@ export async function getSavedDishesFromFirestore(userId) {
     const dishSnap = await getDoc(doc(db, "dishes", id));
     if (dishSnap.exists()) {
       const data = dishSnap.data();
-      const imageSrc =
-        data?.imageURL || data?.imageUrl || data?.image_url || data?.image || "";
-      if (imageSrc) {
-        results.push({ id: dishSnap.id, ...data });
-      } else {
-        missing.push(id);
-      }
+      results.push({ id: dishSnap.id, ...data });
     } else {
       missing.push(id);
-    }
-  }
-
-  if (needsRecheck.length > 0) {
-    for (const id of needsRecheck) {
-      if (!missing.includes(id)) continue;
       try {
         await deleteDoc(doc(db, "users", userId, "saved", id));
       } catch (err) {

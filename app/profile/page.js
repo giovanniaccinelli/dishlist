@@ -276,7 +276,7 @@ export default function Profile() {
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 right-6 bg-black text-white w-16 h-16 rounded-full shadow-xl text-3xl flex items-center justify-center hover:opacity-90 transition"
+        className="fixed bottom-20 right-6 bg-black text-white w-16 h-16 rounded-full shadow-xl text-3xl flex items-center justify-center hover:opacity-90 transition z-50"
         disabled={loadingUpload}
         aria-label="Add dish"
       >

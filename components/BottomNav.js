@@ -14,7 +14,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-black/10 flex justify-around items-center py-2">
+    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-black/10 flex justify-around items-center py-2 z-50">
       {navItems.map((item) => (
         <Link
           key={item.href}

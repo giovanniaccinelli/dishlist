@@ -116,7 +116,8 @@ export async function getDishesFromFirestore(userId) {
 // Save a dish reference (by ID) to a user's saved dishes
 export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
   if (!userId || !dishId) throw new Error("Missing userId or dishId");
-  const payload = dishData
+
+  let payload = dishData
     ? {
         dishId,
         name: dishData.name || "",
@@ -129,10 +130,32 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
       }
     : { dishId, createdAt: new Date() };
 
-  // Persist the saved dish doc (this is the source of truth)
+  // If payload is missing core fields, fetch from dishes/{id} to guarantee a complete saved card
+  if (!payload.name || !payload.imageURL) {
+    try {
+      const dishSnap = await getDoc(doc(db, "dishes", dishId));
+      if (dishSnap.exists()) {
+        const data = dishSnap.data();
+        payload = {
+          dishId,
+          name: data.name || payload.name || "",
+          description: data.description || payload.description || "",
+          imageURL:
+            data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
+          owner: data.owner || payload.owner || "",
+          ownerName: data.ownerName || payload.ownerName || "",
+          createdAt: data.createdAt || payload.createdAt || new Date(),
+        };
+      }
+    } catch (err) {
+      console.warn("Failed to hydrate saved dish payload, continuing:", err);
+    }
+  }
+
+  // Persist the saved dish doc (source of truth)
   await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
 
-  // Best-effort: keep a savedDishes array for quick lookups, but don't fail the save if this fails
+  // Best-effort: keep a savedDishes array for quick lookups
   try {
     const refDoc = doc(db, "users", userId);
     await setDoc(refDoc, { savedDishes: arrayUnion(dishId) }, { merge: true });

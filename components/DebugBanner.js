@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../app/lib/auth";
-import { useSearchParams } from "next/navigation";
 
 export default function DebugBanner() {
-  const params = useSearchParams();
   const { user } = useAuth();
   const [lastSave, setLastSave] = useState(null);
+  const [enabled, setEnabled] = useState(false);
 
-  const enabled = useMemo(() => params?.get("debug") === "1", [params]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setEnabled(params.get("debug") === "1");
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;

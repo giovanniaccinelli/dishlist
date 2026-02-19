@@ -165,7 +165,18 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     await new Promise((r) => setTimeout(r, 200));
     ok = await attemptSave();
   }
-  if (!ok) throw new Error("Save did not persist.");
+  if (!ok) {
+    if (typeof globalThis !== "undefined") {
+      globalThis.__lastSave = {
+        ok: false,
+        dishId,
+        userId,
+        error: "Save did not persist.",
+        ts: Date.now(),
+      };
+    }
+    throw new Error("Save did not persist.");
+  }
 
   // Best-effort: keep a savedDishes array for quick lookups
   try {
@@ -173,6 +184,15 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     await setDoc(refDoc, { savedDishes: arrayUnion(dishId) }, { merge: true });
   } catch (err) {
     console.warn("Failed to update savedDishes array, continuing:", err);
+  }
+
+  if (typeof globalThis !== "undefined") {
+    globalThis.__lastSave = {
+      ok: true,
+      dishId,
+      userId,
+      ts: Date.now(),
+    };
   }
 
   return true;

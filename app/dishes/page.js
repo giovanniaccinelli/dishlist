@@ -56,7 +56,11 @@ export default function Dishes() {
             const imageSrc =
               dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
             return (
-              <div key={`${dish.id}-${index}`} className="bg-white rounded-2xl overflow-hidden shadow-md">
+              <div
+                key={`${dish.id}-${index}`}
+                className="bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer"
+                onClick={() => handleSave(dish)}
+              >
                 {imageSrc ? (
                   <img
                     src={imageSrc}
@@ -74,7 +78,10 @@ export default function Dishes() {
                 <div className="p-2 flex items-center justify-between">
                   <span className="text-xs font-semibold">{dish.name}</span>
                   <button
-                    onClick={() => handleSave(dish)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSave(dish);
+                    }}
                     className="w-8 h-8 rounded-full bg-[#2BD36B] text-black text-xl font-bold flex items-center justify-center"
                     aria-label="Add to dishlist"
                   >

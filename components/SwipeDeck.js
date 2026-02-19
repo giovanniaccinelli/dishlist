@@ -81,6 +81,10 @@ export default function SwipeDeck({
     dismissCard(dish);
   };
 
+  const handleCardSave = async (dish) => {
+    await handleAddToMyList(dish);
+  };
+
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -140,6 +144,7 @@ export default function SwipeDeck({
             <motion.div
               drag="x"
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
+              onClick={() => handleCardSave(dish)}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
@@ -155,7 +160,8 @@ export default function SwipeDeck({
               </div>
               <div className="absolute bottom-6 right-6">
                 <button
-                  onClick={async () => {
+                  onClick={async (e) => {
+                    e.stopPropagation();
                     if (typeof onAction === "function") {
                       await onAction(dish);
                       if (actionToast) {

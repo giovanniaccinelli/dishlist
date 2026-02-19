@@ -115,8 +115,7 @@ export async function getDishesFromFirestore(userId) {
 
 // Save a dish reference (by ID) to a user's saved dishes
 export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
-  const refDoc = doc(db, "users", userId);
-  await setDoc(refDoc, { savedDishes: arrayUnion(dishId) }, { merge: true });
+  if (!userId || !dishId) throw new Error("Missing userId or dishId");
   const payload = dishData
     ? {
         dishId,
@@ -129,15 +128,28 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
         createdAt: new Date(),
       }
     : { dishId, createdAt: new Date() };
+
+  // Persist the saved dish doc (this is the source of truth)
   await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
-  const verifySnap = await getDoc(refDoc);
-  const saved = verifySnap.exists() ? verifySnap.data().savedDishes || [] : [];
-  return saved.includes(dishId);
+
+  // Best-effort: keep a savedDishes array for quick lookups, but don't fail the save if this fails
+  try {
+    const refDoc = doc(db, "users", userId);
+    await setDoc(refDoc, { savedDishes: arrayUnion(dishId) }, { merge: true });
+  } catch (err) {
+    console.warn("Failed to update savedDishes array, continuing:", err);
+  }
+
+  return true;
 }
 
 export async function removeSavedDishFromUser(userId, dishId) {
   const refDoc = doc(db, "users", userId);
-  await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
+  try {
+    await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
+  } catch (err) {
+    console.warn("Failed to update savedDishes array, continuing:", err);
+  }
   try {
     await deleteDoc(doc(db, "users", userId, "saved", dishId));
   } catch (err) {
@@ -207,9 +219,13 @@ export async function getSavedDishesFromFirestore(userId) {
   }
 
   if (missing.length > 0) {
-    await updateDoc(userRef, {
-      savedDishes: arrayRemove(...missing),
-    });
+    try {
+      await updateDoc(userRef, {
+        savedDishes: arrayRemove(...missing),
+      });
+    } catch (err) {
+      console.warn("Failed to clean savedDishes array, continuing:", err);
+    }
   }
 
   return results;

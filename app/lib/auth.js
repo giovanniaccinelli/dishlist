@@ -11,7 +11,7 @@ import {
   updateProfile as firebaseUpdateProfile,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -21,17 +21,30 @@ export function AuthProvider({ children }) {
 
   const saveUserDoc = async (userData) => {
     if (!userData) return;
+    const userRef = doc(db, "users", userData.uid);
+    const existing = await getDoc(userRef);
+    if (!existing.exists()) {
+      await setDoc(
+        userRef,
+        {
+          displayName: userData.displayName || "Unnamed",
+          email: userData.email,
+          followers: [],
+          following: [],
+          savedDishes: [],
+          swipedDishes: [],
+        },
+        { merge: true }
+      );
+      return;
+    }
     await setDoc(
-      doc(db, "users", userData.uid),
+      userRef,
       {
         displayName: userData.displayName || "Unnamed",
         email: userData.email,
-        followers: [],
-        following: [],
-        savedDishes: [],
-        swipedDishes: [],
       },
-      { merge: true } // Avoid overwriting followers when updating
+      { merge: true }
     );
   };
 

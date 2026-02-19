@@ -14,6 +14,11 @@ export default function SwipeDeck({
   hasMore,
   loadingMore,
   onResetFeed,
+  onAction,
+  actionLabel = "+",
+  actionClassName,
+  actionToast,
+  trackSwipes = true,
 }) {
   const { user } = useAuth();
   const [cards, setCards] = useState([]);
@@ -43,7 +48,7 @@ export default function SwipeDeck({
   const handleSwipeEnd = async (info, dish) => {
     const threshold = 120;
     if (Math.abs(info.deltaX) > threshold) {
-      if (user && dish.id) {
+      if (trackSwipes && user && dish.id) {
         await saveSwipedDishForUser(user.uid, dish.id);
         if (typeof onSwiped === "function") onSwiped(dish.id);
       }
@@ -53,10 +58,23 @@ export default function SwipeDeck({
 
   const handleAddToMyList = async (dish) => {
     if (!user) return alert("You need to log in first!");
-    if (dish.id) {
-      await saveDishToUserList(user.uid, dish.id);
+    if (!dish?.id) {
+      setToast("SAVE FAILED");
+      setTimeout(() => setToast(""), 1500);
+      return;
+    }
+    try {
+      const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
+      if (!savedOk) {
+        throw new Error("Save did not persist.");
+      }
       await saveSwipedDishForUser(user.uid, dish.id);
       if (typeof onSwiped === "function") onSwiped(dish.id);
+    } catch (err) {
+      console.error("Save failed:", err);
+      setToast("SAVE FAILED");
+      setTimeout(() => setToast(""), 1500);
+      return;
     }
     setToast("ADDING TO YOUR DISHLIST");
     setTimeout(() => setToast(""), 1200);
@@ -66,7 +84,7 @@ export default function SwipeDeck({
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-    if (!imageSrc) {
+    if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-gray-500">
           No image available
@@ -135,20 +153,27 @@ export default function SwipeDeck({
                   {dish.description || "No description yet."}
                 </p>
               </div>
-              <div className="absolute bottom-6 right-6 flex gap-3">
+              <div className="absolute bottom-6 right-6">
                 <button
-                  onClick={() => handleAddToMyList(dish)}
-                  className="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
-                  aria-label="Add to dishlist"
+                  onClick={async () => {
+                    if (typeof onAction === "function") {
+                      await onAction(dish);
+                      if (actionToast) {
+                        setToast(actionToast);
+                        setTimeout(() => setToast(""), 1200);
+                      }
+                      dismissCard(dish);
+                      return;
+                    }
+                    await handleAddToMyList(dish);
+                  }}
+                  className={
+                    actionClassName ||
+                    "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                  }
+                  aria-label="Action"
                 >
-                  +
-                </button>
-                <button
-                  onClick={() => handleAddToMyList(dish)}
-                  className="w-14 h-14 rounded-full bg-[#F9E547] text-black text-2xl font-bold flex items-center justify-center shadow-lg"
-                  aria-label="Save dish"
-                >
-                  ♥
+                  {actionLabel}
                 </button>
               </div>
             </motion.div>

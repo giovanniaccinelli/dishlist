@@ -7,6 +7,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
+import { saveDishToUserList } from "../../lib/firebaseHelpers";
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -52,6 +53,11 @@ export default function PublicProfile() {
     setIsFollowing(!isFollowing);
   };
 
+  const handleSaveDish = async (dish) => {
+    if (!user) return alert("Log in first");
+    await saveDishToUserList(user.uid, dish.id, dish);
+  };
+
   if (!profileUser) {
     return (
       <div className="min-h-screen flex items-center justify-center text-black">
@@ -90,9 +96,9 @@ export default function PublicProfile() {
           </div>
         )}
         <AnimatePresence>
-          {dishes.map((dish) => (
+          {dishes.map((dish, index) => (
             <motion.div
-              key={dish.id}
+              key={`${dish.id}-${index}`}
               className="bg-white rounded-2xl overflow-hidden shadow-md"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -120,6 +126,16 @@ export default function PublicProfile() {
                   />
                 );
               })()}
+              <div className="p-2 flex items-center justify-between">
+                <span className="text-xs font-semibold">{dish.name}</span>
+                <button
+                  onClick={() => handleSaveDish(dish)}
+                  className="w-8 h-8 rounded-full bg-[#2BD36B] text-black text-xl font-bold flex items-center justify-center"
+                  aria-label="Add to dishlist"
+                >
+                  +
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>

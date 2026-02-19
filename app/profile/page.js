@@ -4,18 +4,20 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   uploadImage,
   saveDishToFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   removeDishFromAllUsers,
+  deleteDishAndImage,
   updateOwnerNameForDishes,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { doc, deleteDoc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -58,6 +60,23 @@ export default function Profile() {
         }
       })();
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(userRef, async (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      setProfileMeta({
+        followers: data.followers || [],
+        following: data.following || [],
+        savedDishes: data.savedDishes || [],
+      });
+      const saved = await getSavedDishesFromFirestore(user.uid);
+      setSavedDishes(saved);
+    });
+    return () => unsubscribe();
   }, [user]);
 
   const handleImageChange = (file) => {
@@ -105,10 +124,13 @@ export default function Profile() {
     setLoadingUpload(false);
   };
 
-  const handleDeleteDish = async (id) => {
-    if (!confirm("Delete this dish?")) return;
-    await deleteDoc(doc(db, "dishes", id));
-    await removeDishFromAllUsers(id);
+  const handleDeleteDish = async (dish) => {
+    if (!confirm("Remove this dish?")) return;
+    await deleteDishAndImage(
+      dish.id,
+      dish.imageURL || dish.imageUrl || dish.image_url || dish.image
+    );
+    await removeDishFromAllUsers(dish.id);
     const refreshedUploaded = await getDishesFromFirestore(user.uid);
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
     setUploadedDishes(refreshedUploaded);
@@ -147,7 +169,7 @@ export default function Profile() {
     );
   }
 
-  const DishGrid = ({ title, dishes, allowDelete }) => (
+  const DishGrid = ({ title, dishes, allowDelete, source }) => (
     <>
       {title ? <h2 className="text-xl font-semibold mt-8 mb-4">{title}</h2> : null}
       <div className="grid grid-cols-3 gap-3">
@@ -166,10 +188,13 @@ export default function Profile() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
+                <Link href={`/dish/${dish.id}?source=${source}`} className="absolute inset-0 z-10">
+                  <span className="sr-only">Open dish</span>
+                </Link>
                 {(() => {
                   const imageSrc =
                     dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                  if (!imageSrc) {
+                  if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
                     return (
                       <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
                         No image
@@ -189,10 +214,10 @@ export default function Profile() {
                 })()}
                 {allowDelete && (
                   <button
-                    onClick={() => handleDeleteDish(dish.id)}
-                    className="absolute top-2 right-2 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => handleDeleteDish(dish)}
+                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
                   >
-                    Delete
+                    Remove
                   </button>
                 )}
               </motion.div>
@@ -238,15 +263,16 @@ export default function Profile() {
       </div>
 
       <h2 className="text-2xl font-bold mb-4">My Dishlist</h2>
-      <DishGrid title="" dishes={savedDishes} allowDelete={false} />
-      <DishGrid title="My Dishes" dishes={uploadedDishes} allowDelete />
+      <DishGrid title="" dishes={savedDishes} allowDelete={false} source="saved" />
+      <DishGrid title="My Dishes" dishes={uploadedDishes} allowDelete source="uploaded" />
 
       {/* Add Dish button */}
       <motion.button
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 right-6 bg-gradient-to-tr from-red-500 to-pink-500 text-white w-16 h-16 rounded-full shadow-lg text-3xl flex items-center justify-center hover:opacity-90 transition"
+        className="fixed bottom-20 right-6 bg-black text-white w-16 h-16 rounded-full shadow-xl text-3xl flex items-center justify-center hover:opacity-90 transition"
         disabled={loadingUpload}
+        aria-label="Add dish"
       >
         +
       </motion.button>
@@ -261,26 +287,26 @@ export default function Profile() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#1A1A1A]/80 backdrop-blur-xl p-6 rounded-2xl w-full max-w-md shadow-xl"
+              className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl border border-black/10"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              <h2 className="text-2xl font-semibold mb-4">Add New Dish</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-black">Add New Dish</h2>
               <input
                 type="text"
                 placeholder="Dish name"
                 value={dishName}
                 onChange={(e) => setDishName(e.target.value)}
-                className="w-full p-3 rounded-full bg-[#2a2a2a] text-white mb-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
                 disabled={loadingUpload}
               />
               <textarea
                 placeholder="Description"
                 value={dishDescription}
                 onChange={(e) => setDishDescription(e.target.value)}
-                className="w-full p-3 rounded-2xl bg-[#2a2a2a] text-white mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
                 rows={3}
                 disabled={loadingUpload}
               />
@@ -291,9 +317,9 @@ export default function Profile() {
                 }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
-                className={`w-full h-40 rounded-xl border-2 border-dashed ${
-                  dragActive ? "border-red-500 bg-[#2a2a2a]" : "border-gray-600"
-                } flex items-center justify-center text-gray-400 mb-4 cursor-pointer relative`}
+                className={`w-full h-40 rounded-2xl border-2 border-dashed ${
+                  dragActive ? "border-black bg-[#F6F6F2]" : "border-black/20"
+                } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative`}
               >
                 <input
                   type="file"
@@ -306,7 +332,7 @@ export default function Profile() {
                   <img
                     src={preview}
                     alt="Preview"
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover rounded-2xl"
                   />
                 ) : loadingUpload ? (
                   "Uploading..."
@@ -317,7 +343,7 @@ export default function Profile() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePost}
-                className="w-full bg-gradient-to-tr from-red-500 to-pink-500 py-3 rounded-full font-semibold hover:opacity-90 transition"
+                className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
                 disabled={loadingUpload}
               >
                 {loadingUpload ? "Uploading..." : "Post Dish"}
@@ -326,7 +352,7 @@ export default function Profile() {
                 onClick={() => {
                   if (!loadingUpload) setIsModalOpen(false);
                 }}
-                className="mt-3 w-full bg-gray-700 py-2 rounded-full hover:bg-gray-600 transition"
+                className="mt-3 w-full bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black"
                 disabled={loadingUpload}
               >
                 Cancel

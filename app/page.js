@@ -1,30 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import SwipeDeck from "../components/SwipeDeck";
-import {
-  getDishesPage,
-  getSwipedDishesForUser,
-  clearSwipedDishesForUser,
-  getFollowingForUser,
-} from "./lib/firebaseHelpers";
+import { getAllDishesFromFirestore } from "./lib/firebaseHelpers";
 import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
-import { collection, getDocs, query, where, orderBy, limit as limitResults } from "firebase/firestore";
-import { db } from "./lib/firebase";
 
 export default function Feed() {
   const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [dishes, setDishes] = useState([]);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
   const [loadingDishes, setLoadingDishes] = useState(false);
-  const [swipedIds, setSwipedIds] = useState([]);
   const [activeTab, setActiveTab] = useState("dish");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const filterNewItems = (items, swipedSet, existingIds) =>
-    items.filter((d) => d?.id && !swipedSet.has(d.id) && !existingIds.has(d.id));
 
   const shuffle = (arr) => {
     const copy = [...arr];
@@ -35,94 +22,15 @@ export default function Feed() {
     return copy;
   };
 
-  const fetchFollowedDishes = async (followedIds) => {
-    if (!followedIds.length) return [];
-    const chunks = [];
-    for (let i = 0; i < followedIds.length; i += 10) {
-      chunks.push(followedIds.slice(i, i + 10));
-    }
-    const results = [];
-    for (const chunk of chunks) {
-      const q = query(
-        collection(db, "dishes"),
-        where("owner", "in", chunk),
-        orderBy("createdAt", "desc"),
-        limitResults(20)
-      );
-      const snap = await getDocs(q);
-      snap.docs.forEach((doc) => results.push({ id: doc.id, ...doc.data() }));
-    }
-    return results;
-  };
-
-  const buildMixedFeed = (followed, randomPool, pageSize, swipedSet) => {
-    const out = [];
-    const followedQueue = [...followed];
-    const randomQueue = shuffle(randomPool);
-    while (out.length < pageSize && (followedQueue.length || randomQueue.length)) {
-      if (followedQueue.length) out.push(followedQueue.shift());
-      if (out.length >= pageSize) break;
-      if (randomQueue.length) out.push(randomQueue.shift());
-    }
-    const existing = new Set();
-    return out.filter((d) => {
-      if (!d?.id || swipedSet.has(d.id) || existing.has(d.id)) return false;
-      existing.add(d.id);
-      return true;
-    });
-  };
-
   const loadDishes = async () => {
     if (!user) return;
     setLoadingDishes(true);
     try {
-      const swiped = await getSwipedDishesForUser(user.uid);
-      setSwipedIds(swiped);
-      const swipedSet = new Set(swiped);
-
-      const followedIds = await getFollowingForUser(user.uid);
-      const followedDishes = await fetchFollowedDishes(followedIds);
-
-      const pageSize = 20;
-      const { items, lastDoc: newLastDoc } = await getDishesPage({
-        pageSize: 50,
-      });
-      const mixed = buildMixedFeed(followedDishes, items, pageSize, swipedSet);
-
-      setDishes(mixed);
-      setLastDoc(newLastDoc);
-      setHasMore(Boolean(newLastDoc));
+      const all = await getAllDishesFromFirestore();
+      setDishes(shuffle(all));
     } catch (err) {
       console.error("Failed to load dishes:", err);
       alert("Failed to load dishes. Please try again.");
-    } finally {
-      setLoadingDishes(false);
-    }
-  };
-
-  const loadMoreDishes = async () => {
-    if (!user || !lastDoc || loadingDishes) return;
-    setLoadingDishes(true);
-    try {
-      const swipedSet = new Set(swipedIds);
-      const followedIds = await getFollowingForUser(user.uid);
-      const followedDishes = await fetchFollowedDishes(followedIds);
-
-      const { items, lastDoc: newLastDoc } = await getDishesPage({
-        pageSize: 50,
-        cursor: lastDoc,
-      });
-      const mixed = buildMixedFeed(followedDishes, items, 20, swipedSet);
-      setDishes((prev) => {
-        const existing = new Set(prev.map((d) => d.id));
-        const filtered = filterNewItems(mixed, swipedSet, existing);
-        return [...prev, ...filtered];
-      });
-      setLastDoc(newLastDoc);
-      setHasMore(Boolean(newLastDoc));
-    } catch (err) {
-      console.error("Failed to load more dishes:", err);
-      alert("Failed to load more dishes. Please try again.");
     } finally {
       setLoadingDishes(false);
     }
@@ -229,16 +137,12 @@ export default function Feed() {
       ) : (
         <SwipeDeck
           dishes={dishes}
-          onSwiped={(id) => setSwipedIds((prev) => [...prev, id])}
-          loadMoreDishes={loadMoreDishes}
-          hasMore={hasMore}
+          trackSwipes={false}
+          onDeckEmpty={loadDishes}
+          loadMoreDishes={loadDishes}
+          hasMore={false}
           loadingMore={loadingDishes}
-          onResetFeed={async () => {
-            if (!user) return;
-            await clearSwipedDishesForUser(user.uid);
-            setSwipedIds([]);
-            await loadDishes();
-          }}
+          onResetFeed={loadDishes}
         />
       )}
       <BottomNav />

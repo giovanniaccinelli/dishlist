@@ -67,35 +67,41 @@ export default function Feed() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center text-white">
-        <div className="bg-[#1A1A1A] p-8 rounded-2xl w-full max-w-sm shadow-xl">
-          <h2 className="text-2xl font-bold mb-6 text-center">Sign in to browse dishes</h2>
+      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black px-6">
+        <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-black/10">
+          <h2 className="text-2xl font-bold mb-2 text-center">Welcome to DishList</h2>
+          <p className="text-sm text-black/60 text-center mb-6">
+            Sign in to browse and save dishes
+          </p>
           <button
             onClick={signInWithGoogle}
-            className="w-full bg-red-500 hover:bg-red-600 py-3 rounded-xl font-semibold mb-4"
+            className="w-full bg-black text-white py-3 rounded-full font-semibold mb-4 hover:opacity-90 transition"
           >
-            Sign in with Google
+            Continue with Google
           </button>
-          <hr className="border-gray-600 my-4" />
-          <p className="text-gray-400 text-center mb-4">Or use email</p>
+          <div className="flex items-center gap-3 my-4">
+            <div className="h-px flex-1 bg-black/10" />
+            <span className="text-xs text-black/50">or</span>
+            <div className="h-px flex-1 bg-black/10" />
+          </div>
 
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 mb-3 rounded-xl bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full p-3 mb-3 rounded-full bg-[#F6F6F2] border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 mb-4 rounded-xl bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full p-3 mb-4 rounded-full bg-[#F6F6F2] border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
           {authError && (
-            <p className="mb-3 text-sm text-red-400 text-center">{authError}</p>
+            <p className="mb-3 text-sm text-red-500 text-center">{authError}</p>
           )}
 
           <button
@@ -111,9 +117,9 @@ export default function Feed() {
                 setAuthError(err?.message || "Login failed.");
               }
             }}
-            className="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-semibold mb-2"
+            className="w-full bg-black text-white py-3 rounded-full font-semibold mb-2 hover:opacity-90 transition"
           >
-            Login
+            Log In
           </button>
           <button
             onClick={async () => {
@@ -128,7 +134,7 @@ export default function Feed() {
                 setAuthError(err?.message || "Create account failed.");
               }
             }}
-            className="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-semibold"
+            className="w-full bg-white border border-black/20 py-3 rounded-full font-semibold hover:bg-black/5 transition"
           >
             Create Account
           </button>

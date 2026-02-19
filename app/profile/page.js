@@ -372,13 +372,28 @@ export default function Profile() {
       <AnimatePresence>
         {editProfileModal && (
           <motion.div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-            <motion.div className="bg-[#1A1A1A]/80 backdrop-blur-xl p-6 rounded-2xl w-full max-w-md shadow-xl">
-              <h2 className="text-2xl font-semibold mb-4">Edit Profile</h2>
-              <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 rounded-full bg-[#2a2a2a] text-white mb-4 focus:outline-none focus:ring-2 focus:ring-red-500" />
-              <motion.button whileTap={{ scale: 0.95 }} onClick={handleEditProfile} className="w-full bg-gradient-to-tr from-red-500 to-pink-500 py-3 rounded-full font-semibold hover:opacity-90 transition">
+            <motion.div className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl border border-black/10">
+              <h2 className="text-2xl font-semibold mb-2 text-black">Edit Profile</h2>
+              <p className="text-sm text-black/60 mb-4">Update your display name.</p>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+              />
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleEditProfile}
+                className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
+              >
                 Save
               </motion.button>
-              <button onClick={() => setEditProfileModal(false)} className="mt-3 w-full bg-gray-700 py-2 rounded-full hover:bg-gray-600 transition">Cancel</button>
+              <button
+                onClick={() => setEditProfileModal(false)}
+                className="mt-3 w-full bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black"
+              >
+                Cancel
+              </button>
             </motion.div>
           </motion.div>
         )}

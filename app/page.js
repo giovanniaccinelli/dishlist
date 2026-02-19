@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import SwipeDeck from "../components/SwipeDeck";
-import { getAllDishesFromFirestore } from "./lib/firebaseHelpers";
+import { getAllDishesFromFirestore, cleanupDishIdField } from "./lib/firebaseHelpers";
 import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
 
@@ -39,6 +39,22 @@ export default function Feed() {
 
   useEffect(() => {
     loadDishes();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("migrate") === "1") {
+      cleanupDishIdField()
+        .then((count) => {
+          alert(`Cleanup done. Removed id field from ${count} dishes.`);
+        })
+        .catch((err) => {
+          console.error("Cleanup failed:", err);
+          alert("Cleanup failed. Check console.");
+        });
+    }
   }, [user]);
 
   if (loading) {

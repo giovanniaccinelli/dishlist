@@ -15,6 +15,7 @@ import {
   arrayRemove,
   arrayUnion,
   deleteDoc,
+  deleteField,
   writeBatch,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -318,4 +319,32 @@ export async function updateOwnerNameForDishes(userId, ownerName) {
     batch.update(dishDoc.ref, { ownerName });
   });
   await batch.commit();
+}
+
+// One-time cleanup: remove stale "id" field from dishes to avoid collisions.
+export async function cleanupDishIdField() {
+  const snapshot = await getDocs(collection(db, "dishes"));
+  let total = 0;
+  let batch = writeBatch(db);
+  let ops = 0;
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    if (data && Object.prototype.hasOwnProperty.call(data, "id")) {
+      batch.update(docSnap.ref, { id: deleteField() });
+      total += 1;
+      ops += 1;
+      if (ops >= 450) {
+        await batch.commit();
+        batch = writeBatch(db);
+        ops = 0;
+      }
+    }
+  }
+
+  if (ops > 0) {
+    await batch.commit();
+  }
+
+  return total;
 }

@@ -145,6 +145,16 @@ export default function SwipeDeck({
               drag="x"
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
               onClick={() => handleCardSave(dish)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleCardSave(dish);
+              }}
+              onPointerUp={(e) => {
+                if (e.pointerType === "touch") {
+                  e.preventDefault();
+                  handleCardSave(dish);
+                }
+              }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
@@ -162,6 +172,35 @@ export default function SwipeDeck({
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
+                    if (typeof onAction === "function") {
+                      await onAction(dish);
+                      if (actionToast) {
+                        setToast(actionToast);
+                        setTimeout(() => setToast(""), 1200);
+                      }
+                      dismissCard(dish);
+                      return;
+                    }
+                    await handleAddToMyList(dish);
+                  }}
+                  onTouchEnd={async (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (typeof onAction === "function") {
+                      await onAction(dish);
+                      if (actionToast) {
+                        setToast(actionToast);
+                        setTimeout(() => setToast(""), 1200);
+                      }
+                      dismissCard(dish);
+                      return;
+                    }
+                    await handleAddToMyList(dish);
+                  }}
+                  onPointerUp={async (e) => {
+                    if (e.pointerType !== "touch") return;
+                    e.stopPropagation();
+                    e.preventDefault();
                     if (typeof onAction === "function") {
                       await onAction(dish);
                       if (actionToast) {

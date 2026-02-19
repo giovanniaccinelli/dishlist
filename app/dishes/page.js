@@ -60,6 +60,16 @@ export default function Dishes() {
                 key={`${dish.id}-${index}`}
                 className="bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer"
                 onClick={() => handleSave(dish)}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleSave(dish);
+                }}
+                onPointerUp={(e) => {
+                  if (e.pointerType === "touch") {
+                    e.preventDefault();
+                    handleSave(dish);
+                  }
+                }}
               >
                 {imageSrc ? (
                   <img
@@ -80,6 +90,17 @@ export default function Dishes() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      handleSave(dish);
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleSave(dish);
+                    }}
+                    onPointerUp={(e) => {
+                      if (e.pointerType !== "touch") return;
+                      e.stopPropagation();
+                      e.preventDefault();
                       handleSave(dish);
                     }}
                     className="w-8 h-8 rounded-full bg-[#2BD36B] text-black text-xl font-bold flex items-center justify-center"

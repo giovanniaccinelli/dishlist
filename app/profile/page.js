@@ -17,7 +17,7 @@ import {
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -46,10 +46,8 @@ export default function Profile() {
     if (user) {
       (async () => {
         const uploaded = await getDishesFromFirestore(user.uid);
-        const saved = await getSavedDishesFromFirestore(user.uid);
         const userSnap = await getDoc(doc(db, "users", user.uid));
         setUploadedDishes(uploaded);
-        setSavedDishes(saved);
         if (userSnap.exists()) {
           const data = userSnap.data();
           setProfileMeta({
@@ -65,7 +63,7 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return undefined;
     const userRef = doc(db, "users", user.uid);
-    const unsubscribe = onSnapshot(userRef, async (snap) => {
+    const unsubscribeUser = onSnapshot(userRef, (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
       setProfileMeta({
@@ -73,10 +71,18 @@ export default function Profile() {
         following: data.following || [],
         savedDishes: data.savedDishes || [],
       });
-      const saved = await getSavedDishesFromFirestore(user.uid);
+    });
+
+    const savedRef = collection(db, "users", user.uid, "saved");
+    const unsubscribeSaved = onSnapshot(savedRef, (snap) => {
+      const saved = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setSavedDishes(saved);
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeUser();
+      unsubscribeSaved();
+    };
   }, [user]);
 
   const handleImageChange = (file) => {

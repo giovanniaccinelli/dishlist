@@ -16,8 +16,8 @@ export default function Explore() {
   const fetchUsers = async () => {
     const snapshot = await getDocs(collection(db, "users"));
     const usersList = snapshot.docs.map(doc => ({
-      id: doc.id,
       ...doc.data(),
+      id: doc.id,
     }));
     setUsers(usersList);
   };

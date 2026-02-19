@@ -27,8 +27,8 @@ export default function PublicProfile() {
     const q = query(collection(db, "dishes"), where("owner", "==", id));
     const snapshot = await getDocs(q);
     const fetchedDishes = snapshot.docs.map(doc => ({
-      id: doc.id,
       ...doc.data(),
+      id: doc.id,
     }));
     setDishes(fetchedDishes);
   };

@@ -74,7 +74,7 @@ export async function saveDishToFirestore(dish) {
 // Get all dishes (for feed)
 export async function getAllDishesFromFirestore() {
   const snapshot = await getDocs(collection(db, "dishes"));
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 }
 
 // Get a paginated page of dishes, newest first
@@ -94,7 +94,7 @@ export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
     : baseQuery;
 
   const snapshot = await getDocs(pagedQuery);
-  const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const items = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
   const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
   return { items, lastDoc };
 }
@@ -110,7 +110,7 @@ export async function getFollowingForUser(userId) {
 export async function getDishesFromFirestore(userId) {
   const q = query(collection(db, "dishes"), where("owner", "==", userId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 }
 
 // Save a dish reference (by ID) to a user's saved dishes

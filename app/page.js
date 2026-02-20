@@ -9,7 +9,6 @@ export default function Feed() {
   const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [dishes, setDishes] = useState([]);
   const [loadingDishes, setLoadingDishes] = useState(false);
-  const [activeTab, setActiveTab] = useState("dish");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -148,35 +147,13 @@ export default function Feed() {
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <h1 className="text-3xl font-bold">DishList</h1>
         <div className="flex items-center gap-3">
-          <button className="w-10 h-10 rounded-full border border-black/20 flex items-center justify-center">
-            <span className="text-xl">≡</span>
-          </button>
-          <button className="w-10 h-10 rounded-full border border-black/20 flex items-center justify-center">
+          <button
+            onClick={() => (window.location.href = "/profile")}
+            className="w-10 h-10 rounded-full border border-black/20 flex items-center justify-center"
+            aria-label="Profile"
+          >
             <span className="text-xl">👤</span>
           </button>
-        </div>
-      </div>
-      <div className="px-5 pb-3">
-        <div className="flex items-center justify-center gap-8 text-sm font-semibold text-black/70">
-          <button
-            onClick={() => setActiveTab("dish")}
-            className={activeTab === "dish" ? "text-black" : ""}
-          >
-            dish
-          </button>
-          <button
-            onClick={() => setActiveTab("recipe")}
-            className={activeTab === "recipe" ? "text-black" : ""}
-          >
-            recipe
-          </button>
-        </div>
-        <div className="mt-2 h-2 rounded-full bg-black/10 overflow-hidden">
-          <div
-            className={`h-full rounded-full bg-black transition-all ${
-              activeTab === "dish" ? "w-1/2" : "w-1/2 translate-x-full"
-            }`}
-          />
         </div>
       </div>
       {loadingDishes && dishes.length === 0 ? (

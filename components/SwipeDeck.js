@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -24,6 +24,10 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchMoved = useRef(false);
+  const didDrag = useRef(false);
+  const skipClick = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -144,16 +148,39 @@ export default function SwipeDeck({
             <motion.div
               drag="x"
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
-              onClick={() => handleCardSave(dish)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleCardSave(dish);
+              onDragStart={() => {
+                didDrag.current = true;
+              }}
+              onPointerDown={(e) => {
+                didDrag.current = false;
+                skipClick.current = false;
+                if (e.pointerType === "touch") {
+                  touchStart.current = { x: e.clientX, y: e.clientY };
+                  touchMoved.current = false;
+                }
+              }}
+              onPointerMove={(e) => {
+                if (e.pointerType === "touch") {
+                  const dx = Math.abs(e.clientX - touchStart.current.x);
+                  const dy = Math.abs(e.clientY - touchStart.current.y);
+                  if (dx > 6 || dy > 6) touchMoved.current = true;
+                }
               }}
               onPointerUp={(e) => {
                 if (e.pointerType === "touch") {
-                  e.preventDefault();
-                  handleCardSave(dish);
+                  const moved = touchMoved.current || didDrag.current;
+                  skipClick.current = true;
+                  if (!moved) {
+                    handleCardSave(dish);
+                  }
                 }
+              }}
+              onClick={() => {
+                if (skipClick.current || didDrag.current) {
+                  skipClick.current = false;
+                  return;
+                }
+                handleCardSave(dish);
               }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}

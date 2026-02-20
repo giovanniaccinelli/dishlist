@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList } from "../../lib/firebaseHelpers";
+import AuthPromptModal from "../../../components/AuthPromptModal";
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ export default function PublicProfile() {
   const [profileUser, setProfileUser] = useState(null);
   const [dishes, setDishes] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   // Fetch profile data
   const fetchProfileData = async () => {
@@ -39,7 +41,10 @@ export default function PublicProfile() {
 
   // Follow/Unfollow handler
   const handleFollow = async () => {
-    if (!user) return alert("Log in first");
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
     const userRef = doc(db, "users", id);
     const currentUserRef = doc(db, "users", user.uid);
     const currentFollowers = profileUser.followers || [];
@@ -54,7 +59,10 @@ export default function PublicProfile() {
   };
 
   const handleSaveDish = async (dish) => {
-    if (!user) return alert("Log in first");
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
     await saveDishToUserList(user.uid, dish.id, dish);
   };
 
@@ -167,6 +175,7 @@ export default function PublicProfile() {
       </div>
 
       <BottomNav />
+      <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
     </div>
   );
 }

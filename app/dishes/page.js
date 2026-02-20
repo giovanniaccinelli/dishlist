@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import BottomNav from "../../components/BottomNav";
 import { getAllDishesFromFirestore, saveDishToUserList } from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
+import AuthPromptModal from "../../components/AuthPromptModal";
 
 export default function Dishes() {
   const { user } = useAuth();
   const [dishes, setDishes] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -29,7 +31,10 @@ export default function Dishes() {
   }, [dishes, search]);
 
   const handleSave = async (dish) => {
-    if (!user) return alert("Log in first");
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
     await saveDishToUserList(user.uid, dish.id, dish);
   };
 
@@ -116,6 +121,7 @@ export default function Dishes() {
       )}
 
       <BottomNav />
+      <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
     </div>
   );
 }

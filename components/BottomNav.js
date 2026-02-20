@@ -2,15 +2,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, LayoutGrid, Utensils, User } from "lucide-react";
+import { useAuth } from "../app/lib/auth";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const profileHref = user ? "/profile" : "/?auth=1";
 
   const navItems = [
     { href: "/", icon: <Home size={24} />, label: "feed" },
     { href: "/dishlists", icon: <LayoutGrid size={24} />, label: "dishlists" },
     { href: "/dishes", icon: <Utensils size={24} />, label: "dishes" },
-    { href: "/profile", icon: <User size={24} />, label: "profile" },
+    { href: profileHref, icon: <User size={24} />, label: "profile" },
   ];
 
   return (

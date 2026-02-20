@@ -19,6 +19,7 @@ export default function SwipeDeck({
   actionClassName,
   actionToast,
   trackSwipes = true,
+  onAuthRequired,
 }) {
   const { user } = useAuth();
   const [cards, setCards] = useState([]);
@@ -61,7 +62,10 @@ export default function SwipeDeck({
   };
 
   const handleAddToMyList = async (dish) => {
-    if (!user) return alert("You need to log in first!");
+    if (!user) {
+      if (typeof onAuthRequired === "function") onAuthRequired();
+      return;
+    }
     if (!dish?.id) {
       setToast("SAVE FAILED");
       setTimeout(() => setToast(""), 1500);

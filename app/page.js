@@ -67,7 +67,10 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-[#F6F6F2] text-black relative">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">DishList</h1>
+        <div className="flex items-center gap-3">
+          <img src="/logo-mark.svg" alt="DishList logo" className="w-9 h-9" />
+          <h1 className="text-3xl font-bold">DishList</h1>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {

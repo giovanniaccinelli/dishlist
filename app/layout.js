@@ -3,7 +3,6 @@
 import "./globals.css";
 import { AuthProvider } from "./lib/auth";
 import DebugBanner from "../components/DebugBanner";
-import { Analytics } from "@vercel/analytics/next";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 
 export default function RootLayout({ children }) {
@@ -23,7 +22,6 @@ export default function RootLayout({ children }) {
           <DebugBanner />
           {children}
         </AuthProvider>
-        <Analytics />
       </body>
     </html>
   );

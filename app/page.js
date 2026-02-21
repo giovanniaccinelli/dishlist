@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import SwipeDeck from "../components/SwipeDeck";
 import {
   getAllDishesFromFirestore,
-  getDishesPage,
   cleanupDishIdField,
   cleanupNamelessDishes,
 } from "./lib/firebaseHelpers";
@@ -11,17 +10,10 @@ import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
 
-const FEED_PAGE_SIZE = 20;
-
 export default function Feed() {
   const { user, loading } = useAuth();
   const [dishes, setDishes] = useState([]);
   const [loadingDishes, setLoadingDishes] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [fallbackPool, setFallbackPool] = useState([]);
-  const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -38,103 +30,13 @@ export default function Feed() {
     setLoadingDishes(true);
     setLoadError("");
     try {
-      const firstPage = await getDishesPage({ pageSize: FEED_PAGE_SIZE });
-      setDishes(shuffle(firstPage.items));
-      setLastDoc(firstPage.lastDoc);
-      setHasMore(Boolean(firstPage.lastDoc));
-      setFallbackPool([]);
-      setUsingFallbackPagination(false);
+      const all = await getAllDishesFromFirestore();
+      setDishes(shuffle(all));
     } catch (err) {
       console.error("Failed to load dishes:", err);
-      // Fallback: if paginated query fails due to older data shape, fetch all once.
-      try {
-        const all = shuffle(await getAllDishesFromFirestore());
-        setDishes(all.slice(0, FEED_PAGE_SIZE));
-        setFallbackPool(all);
-        setUsingFallbackPagination(true);
-        setLastDoc(null);
-        setHasMore(all.length > FEED_PAGE_SIZE);
-      } catch (fallbackErr) {
-        console.error("Fallback feed load failed:", fallbackErr);
-        setLoadError("Failed to load feed. Please retry.");
-      }
+      setLoadError("Failed to load feed. Please retry.");
     } finally {
       setLoadingDishes(false);
-    }
-  };
-
-  const loadMoreDishes = async () => {
-    if (loadingMore || loadingDishes) return;
-
-    if (usingFallbackPagination) {
-      setLoadingMore(true);
-      try {
-        setDishes((prev) => {
-          const nextSlice = fallbackPool.slice(prev.length, prev.length + FEED_PAGE_SIZE);
-          const merged = [...prev, ...nextSlice];
-          setHasMore(merged.length < fallbackPool.length);
-          return merged;
-        });
-      } finally {
-        setLoadingMore(false);
-      }
-      return;
-    }
-
-    if (!lastDoc) return;
-    setLoadingMore(true);
-    setLoadError("");
-    try {
-      let cursor = lastDoc;
-      let nextPage = { items: [], lastDoc: null };
-      let guard = 0;
-      // Skip empty filtered pages to avoid stalling at 20/40/60 boundaries.
-      while (cursor && guard < 8) {
-        nextPage = await getDishesPage({
-          pageSize: FEED_PAGE_SIZE,
-          cursor,
-        });
-        if (nextPage.items.length > 0 || !nextPage.lastDoc) break;
-        cursor = nextPage.lastDoc;
-        guard += 1;
-      }
-
-      setDishes((prev) => {
-        const existingIds = new Set(prev.map((d) => d.id));
-        const merged = [...prev];
-        nextPage.items.forEach((item) => {
-          if (!existingIds.has(item.id)) merged.push(item);
-        });
-        return merged;
-      });
-      setLastDoc(nextPage.lastDoc);
-      setHasMore(Boolean(nextPage.lastDoc));
-    } catch (err) {
-      console.error("Failed to load more dishes:", err);
-      // Fallback to full dataset pagination if cursor query fails on some clients.
-      try {
-        const all = shuffle(await getAllDishesFromFirestore());
-        setFallbackPool(all);
-        setUsingFallbackPagination(true);
-        let mergedLength = 0;
-        setDishes((prev) => {
-          const ids = new Set(prev.map((d) => d.id));
-          const merged = [...prev];
-          all.forEach((item) => {
-            if (!ids.has(item.id) && merged.length < prev.length + FEED_PAGE_SIZE) {
-              merged.push(item);
-            }
-          });
-          mergedLength = merged.length;
-          return merged;
-        });
-        setHasMore(mergedLength < all.length);
-      } catch (fallbackErr) {
-        console.error("Fallback load more failed:", fallbackErr);
-        setLoadError("Could not load more dishes.");
-      }
-    } finally {
-      setLoadingMore(false);
     }
   };
 
@@ -221,9 +123,8 @@ export default function Feed() {
           dishes={dishes}
           trackSwipes={false}
           onAuthRequired={() => setShowAuthPrompt(true)}
-          loadMoreDishes={loadMoreDishes}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
+          hasMore={false}
+          loadingMore={false}
           onResetFeed={loadInitialDishes}
         />
       )}

@@ -6,7 +6,6 @@ import {
   cleanupDishIdField,
   cleanupNamelessDishes,
   saveDishToUserList,
-  saveSwipedDishForUser,
 } from "./lib/firebaseHelpers";
 import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
@@ -50,25 +49,10 @@ export default function Feed() {
     if (!dish?.id) return false;
     try {
       const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
-      if (!savedOk) return false;
-      try {
-        await saveSwipedDishForUser(user.uid, dish.id);
-      } catch (err) {
-        console.warn("Failed to track swiped dish after save:", err);
-      }
-      return true;
+      return Boolean(savedOk);
     } catch (err) {
       console.error("Feed save failed:", err);
       return false;
-    }
-  };
-
-  const handleFeedSwipe = async (dishId) => {
-    if (!user || !dishId) return;
-    try {
-      await saveSwipedDishForUser(user.uid, dishId);
-    } catch (err) {
-      console.warn("Failed to track swiped dish:", err);
     }
   };
 
@@ -153,11 +137,12 @@ export default function Feed() {
       ) : (
         <SwipeDeck
           dishes={dishes}
-          trackSwipes
-          onSwiped={handleFeedSwipe}
+          preserveContinuity={false}
+          trackSwipes={false}
           onAction={handleFeedSave}
           dismissOnAction
           actionLabel="+"
+          actionClassName="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
           actionToast="ADDING TO YOUR DISHLIST"
           onAuthRequired={() => setShowAuthPrompt(true)}
           hasMore={false}

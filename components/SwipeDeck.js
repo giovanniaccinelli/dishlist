@@ -27,6 +27,7 @@ export default function SwipeDeck({
   const [deckInitialized, setDeckInitialized] = useState(false);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const [showRecipe, setShowRecipe] = useState(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -56,6 +57,10 @@ export default function SwipeDeck({
   }, [dishes, deckInitialized, preserveContinuity]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+
+  useEffect(() => {
+    setShowRecipe(false);
+  }, [currentCard?._key]);
 
   const advanceCard = () => {
     setCurrentIndex((prev) => {
@@ -132,15 +137,81 @@ export default function SwipeDeck({
           className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
           whileTap={{ scale: 0.98 }}
         >
-          {renderImage(currentCard)}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          <div className="absolute bottom-20 left-5 right-5 text-white">
-            <p className="text-lg font-semibold">{currentCard.ownerName || "Unknown"}</p>
-            <h2 className="text-2xl font-bold">{currentCard.name}</h2>
-            <p className="text-sm text-white/80 line-clamp-2">
-              {currentCard.description || "No description yet."}
-            </p>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+            <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowRecipe(false);
+                }}
+                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                  !showRecipe ? "bg-white text-black" : "text-white/80"
+                }`}
+              >
+                dish
+              </button>
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowRecipe(true);
+                }}
+                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                  showRecipe ? "bg-white text-black" : "text-white/80"
+                }`}
+              >
+                recipe
+              </button>
+            </div>
           </div>
+
+          <motion.div
+            className="absolute inset-0"
+            style={{ transformStyle: "preserve-3d" }}
+            animate={{ rotateY: showRecipe ? 180 : 0 }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+          >
+            <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
+              {renderImage(currentCard)}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-20 left-5 right-5 text-white">
+                <p className="text-lg font-semibold">{currentCard.ownerName || "Unknown"}</p>
+                <h2 className="text-2xl font-bold">{currentCard.name}</h2>
+                <p className="text-sm text-white/80 line-clamp-2">
+                  {currentCard.description || "No description yet."}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-y-auto"
+              style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
+            >
+              <p className="text-sm font-semibold text-black/60 mb-1">
+                {currentCard.ownerName || "Unknown"}
+              </p>
+              <h2 className="text-2xl font-bold mb-3">{currentCard.name}</h2>
+              {currentCard.description ? (
+                <p className="text-sm text-black/70 mb-4">{currentCard.description}</p>
+              ) : null}
+              <div className="mb-4">
+                <h3 className="text-base font-semibold mb-1">Ingredients</h3>
+                <p className="text-sm text-black/80 whitespace-pre-wrap">
+                  {currentCard.recipeIngredients || "No ingredients provided."}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold mb-1">Method</h3>
+                <p className="text-sm text-black/80 whitespace-pre-wrap">
+                  {currentCard.recipeMethod || "No method provided."}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           <div className="absolute bottom-6 right-6">
             <button
               onPointerUp={(e) => {

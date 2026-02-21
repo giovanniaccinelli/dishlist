@@ -21,7 +21,7 @@ export default function SwipeDeck({
   onAuthRequired,
   preserveContinuity = true,
 }) {
-  const SWIPE_EJECT_THRESHOLD = 110;
+  const SWIPE_EJECT_THRESHOLD = 70;
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
@@ -117,16 +117,16 @@ export default function SwipeDeck({
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-full max-w-md h-[70vh]">
-        {cards.map((dish, index) => (
+        {cards[0] ? (
           <TinderCard
-            key={dish._key}
+            key={cards[0]._key}
             preventSwipe={["up", "down"]}
             className="absolute w-full"
             swipeRequirementType="position"
           >
             <motion.div
               drag="x"
-              onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
+              onDragEnd={(e, info) => handleSwipeEnd(info, cards[0])}
               onDragStart={() => {
                 didDrag.current = true;
               }}
@@ -149,17 +149,16 @@ export default function SwipeDeck({
                   touchMoved.current = false;
                 }
               }}
-              className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
-              style={{ zIndex: cards.length - index }}
+              className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
               whileTap={{ scale: 0.98 }}
             >
-              {renderImage(dish)}
+              {renderImage(cards[0])}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               <div className="absolute bottom-20 left-5 right-5 text-white">
-                <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
-                <h2 className="text-2xl font-bold">{dish.name}</h2>
+                <p className="text-lg font-semibold">{cards[0].ownerName || "Unknown"}</p>
+                <h2 className="text-2xl font-bold">{cards[0].name}</h2>
                 <p className="text-sm text-white/80 line-clamp-2">
-                  {dish.description || "No description yet."}
+                  {cards[0].description || "No description yet."}
                 </p>
               </div>
               <div className="absolute bottom-6 right-6">
@@ -172,10 +171,9 @@ export default function SwipeDeck({
                       return;
                     }
 
-                    // Immediate eject: behave like a swipe and move on instantly.
-                    if (dismissOnAction) dismissCard(dish);
+                    if (dismissOnAction) dismissCard(cards[0]);
 
-                    Promise.resolve(onAction(dish))
+                    Promise.resolve(onAction(cards[0]))
                       .then((result) => {
                         if (result === false) {
                           setToast("ACTION FAILED");
@@ -193,7 +191,7 @@ export default function SwipeDeck({
                   }}
                   className={
                     actionClassName ||
-                    "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                    "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center"
                   }
                   aria-label="Action"
                 >
@@ -202,7 +200,7 @@ export default function SwipeDeck({
               </div>
             </motion.div>
           </TinderCard>
-        ))}
+        ) : null}
       </div>
 
       <AnimatePresence>

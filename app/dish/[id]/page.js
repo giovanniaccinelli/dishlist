@@ -22,6 +22,7 @@ export default function DishDetail() {
   const { user, loading } = useAuth();
 
   const source = searchParams.get("source") || "saved";
+  const mode = searchParams.get("mode") || "single";
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const [dish, setDish] = useState(null);
@@ -59,9 +60,13 @@ export default function DishDetail() {
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
+    if (mode === "single") return [dish];
     const others = list.filter((d) => d.id !== dish.id);
-    return [dish, ...others];
-  }, [dish, list]);
+    const shuffledOthers = others
+      .slice()
+      .sort(() => Math.random() - 0.5);
+    return [dish, ...shuffledOthers];
+  }, [dish, list, mode]);
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return;

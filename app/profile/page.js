@@ -159,6 +159,16 @@ export default function Profile() {
     router.replace("/");
   };
 
+  const openShuffleDeck = (source) => {
+    const pool = source === "uploaded" ? uploadedDishes : savedDishes;
+    if (!pool.length) {
+      alert("No dishes to shuffle.");
+      return;
+    }
+    const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-black">
@@ -175,9 +185,20 @@ export default function Profile() {
     );
   }
 
-  const DishGrid = ({ title, dishes, allowDelete, source }) => (
+  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true }) => (
     <>
-      {title ? <h2 className="text-xl font-semibold mt-8 mb-4">{title}</h2> : null}
+      {showHeader && title ? (
+        <div className="flex items-center justify-between mt-8 mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button
+            onClick={() => openShuffleDeck(source)}
+            className="bg-black text-white py-1 px-3 rounded-full text-sm font-semibold disabled:opacity-40"
+            disabled={dishes.length === 0}
+          >
+            Shuffle
+          </button>
+        </div>
+      ) : null}
       <div className="grid grid-cols-3 gap-3">
         {dishes.length === 0 ? (
           <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
@@ -194,7 +215,10 @@ export default function Profile() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
-                <Link href={`/dish/${dish.id}?source=${source}`} className="absolute inset-0 z-10">
+                <Link
+                  href={`/dish/${dish.id}?source=${source}&mode=single`}
+                  className="absolute inset-0 z-10"
+                >
                   <span className="sr-only">Open dish</span>
                 </Link>
                 {(() => {
@@ -268,8 +292,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold mb-4">My Dishlist</h2>
-      <DishGrid title="" dishes={savedDishes} allowDelete={false} source="saved" />
+      <DishGrid title="My Dishlist" dishes={savedDishes} allowDelete={false} source="saved" />
       <DishGrid title="My Dishes" dishes={uploadedDishes} allowDelete source="uploaded" />
 
       {/* Add Dish button */}

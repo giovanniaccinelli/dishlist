@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  useDragControls,
+} from "framer-motion";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 export default function SwipeDeck({
   dishes,
@@ -19,6 +27,7 @@ export default function SwipeDeck({
   trackSwipes = true,
   onAuthRequired,
   preserveContinuity = true,
+  disabled = false,
 }) {
   const SWIPE_EJECT_THRESHOLD = 70;
 
@@ -28,6 +37,13 @@ export default function SwipeDeck({
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
+  const dragControls = useDragControls();
+  const dragX = useMotionValue(0);
+  const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
+  const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
+  const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
+  const rightCueScale = useTransform(dragX, [0, 50, 160], [0.7, 0.9, 1.1]);
+  const leftCueScale = useTransform(dragX, [0, -50, -160], [0.7, 0.9, 1.1]);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -73,11 +89,59 @@ export default function SwipeDeck({
     });
   };
 
+  const runAction = (card) => {
+    if (typeof onAction !== "function") {
+      if (typeof onAuthRequired === "function") onAuthRequired();
+      return;
+    }
+    Promise.resolve(onAction(card))
+      .then((result) => {
+        if (result === false) {
+          setToast("ACTION FAILED");
+          setTimeout(() => setToast(""), 1200);
+          return;
+        }
+        setToast(actionToast || "ADDING TO YOUR DISHLIST");
+        setTimeout(() => setToast(""), 1200);
+      })
+      .catch((err) => {
+        console.error("Deck action failed:", err);
+        setToast("ACTION FAILED");
+        setTimeout(() => setToast(""), 1200);
+      });
+  };
+
+  const handleActionPress = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (disabled) return;
+    const card = currentCard;
+    if (dismissOnAction) advanceCard();
+    dragX.set(0);
+    runAction(card);
+  };
+
+  const handleStartOver = () => {
+    if (typeof onResetFeed === "function") {
+      onResetFeed();
+      return;
+    }
+    setCurrentIndex(0);
+    setDeckEmpty(false);
+    setShowRecipe(false);
+    dragX.set(0);
+  };
+
   const handleSwipeEnd = (info, dish) => {
+    if (disabled) return;
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
+      if (swipeAddEnabled && info.offset.x > 0) {
+        runAction(dish);
+      }
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
       advanceCard();
     }
+    dragX.set(0);
   };
 
   const renderImage = (dish) => {
@@ -115,7 +179,7 @@ export default function SwipeDeck({
           </button>
         ) : (
           <button
-            onClick={onResetFeed}
+            onClick={handleStartOver}
             className="mt-4 bg-black text-white px-6 py-3 rounded-full font-semibold"
           >
             Start Over
@@ -130,14 +194,47 @@ export default function SwipeDeck({
       <div className="relative w-full max-w-md h-[70vh]">
         <motion.div
           key={currentCard._key}
-          drag="x"
+          drag={disabled ? false : "x"}
+          dragListener={false}
+          dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
+          style={{ x: dragX }}
+          onPointerDown={(e) => {
+            if (disabled) return;
+            const target = e.target;
+            if (target instanceof Element && target.closest("[data-no-drag='true']")) return;
+            dragControls.start(e);
+          }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
-          whileTap={{ scale: 0.98 }}
+          className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
         >
+          {swipeAddEnabled && (
+            <motion.div
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#2BD36B]/25"
+              style={{ opacity: rightCueOpacity }}
+            >
+              <motion.div
+                style={{ scale: rightCueScale }}
+                className="w-48 h-48 rounded-full border-4 border-white/80 bg-[#2BD36B]/35 backdrop-blur-sm flex items-center justify-center"
+              >
+                <Plus size={110} strokeWidth={2.1} className="text-white" />
+              </motion.div>
+            </motion.div>
+          )}
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30"
+            style={{ opacity: leftCueOpacity }}
+          >
+            <motion.div
+              style={{ scale: leftCueScale }}
+              className="w-48 h-48 rounded-full border-4 border-white/80 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white text-[110px] leading-none font-light"
+            >
+              ×
+            </motion.div>
+          </motion.div>
           <div
+            data-no-drag="true"
             className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
             onPointerDownCapture={(e) => e.stopPropagation()}
             onPointerMoveCapture={(e) => e.stopPropagation()}
@@ -145,6 +242,7 @@ export default function SwipeDeck({
           >
             <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
+                data-no-drag="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -157,6 +255,7 @@ export default function SwipeDeck({
                 dish
               </button>
               <button
+                data-no-drag="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -170,6 +269,9 @@ export default function SwipeDeck({
               </button>
             </div>
           </div>
+          <div className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            saves: {Number(currentCard.saves || 0)}
+          </div>
 
           <motion.div
             className="absolute inset-0"
@@ -178,10 +280,45 @@ export default function SwipeDeck({
             transition={{ duration: 0.35, ease: "easeInOut" }}
           >
             <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
+              <button
+                type="button"
+                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRecipe((prev) => !prev);
+                }}
+                aria-label="Toggle dish and recipe view"
+              />
               {renderImage(currentCard)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-20 left-5 right-5 text-white">
-                <p className="text-lg font-semibold">{currentCard.ownerName || "Unknown"}</p>
+              <div className="absolute bottom-20 left-5 right-5 text-white z-20">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
+                    {currentCard.ownerPhotoURL ? (
+                      <img
+                        src={currentCard.ownerPhotoURL}
+                        alt={currentCard.ownerName || "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      (currentCard.ownerName?.[0] || "U").toUpperCase()
+                    )}
+                  </div>
+                  {currentCard.owner ? (
+                    <Link
+                      data-no-drag="true"
+                      href={`/profile/${currentCard.owner}`}
+                      className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {currentCard.ownerName || "Unknown"}
+                    </Link>
+                  ) : (
+                    <p className="text-lg font-semibold leading-none">
+                      {currentCard.ownerName || "Unknown"}
+                    </p>
+                  )}
+                </div>
                 <h2 className="text-2xl font-bold">{currentCard.name}</h2>
                 <p className="text-sm text-white/80 line-clamp-2">
                   {currentCard.description || "No description yet."}
@@ -193,6 +330,15 @@ export default function SwipeDeck({
               className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-y-auto"
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
+              <button
+                type="button"
+                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRecipe((prev) => !prev);
+                }}
+                aria-label="Toggle dish and recipe view"
+              />
               <p className="text-sm font-semibold text-black/60 mb-1">
                 {currentCard.ownerName || "Unknown"}
               </p>
@@ -217,41 +363,42 @@ export default function SwipeDeck({
 
           <div className="absolute bottom-6 right-6">
             <button
+              data-no-drag="true"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {}
+              }}
+              onPointerMove={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
               onPointerUp={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-
-                const card = currentCard;
-                if (dismissOnAction) advanceCard();
-
-                if (typeof onAction !== "function") {
-                  if (typeof onAuthRequired === "function") onAuthRequired();
-                  return;
-                }
-
-                Promise.resolve(onAction(card))
-                  .then((result) => {
-                    if (result === false) {
-                      setToast("ACTION FAILED");
-                      setTimeout(() => setToast(""), 1200);
-                      return;
-                    }
-                    setToast(actionToast || "ADDING TO YOUR DISHLIST");
-                    setTimeout(() => setToast(""), 1200);
-                  })
-                  .catch((err) => {
-                    console.error("Deck action failed:", err);
-                    setToast("ACTION FAILED");
-                    setTimeout(() => setToast(""), 1200);
-                  });
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {}
+                handleActionPress(e);
               }}
               className={
                 actionClassName ||
-                "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center"
+                "add-action-btn w-14 h-14 text-[36px]"
               }
               aria-label="Action"
+              disabled={disabled}
             >
-              {actionLabel}
+              {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
           </div>
         </motion.div>

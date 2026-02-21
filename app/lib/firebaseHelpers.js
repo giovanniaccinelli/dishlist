@@ -1,6 +1,7 @@
 import { db, storage } from "./firebase";
 import {
   collection,
+  collectionGroup,
   addDoc,
   getDocs,
   query,
@@ -20,6 +21,25 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
+async function enrichWithOwnerPhotos(items) {
+  if (!Array.isArray(items) || items.length === 0) return items;
+  const ownerIds = Array.from(new Set(items.map((i) => i.owner).filter(Boolean)));
+  if (ownerIds.length === 0) return items;
+
+  const userSnaps = await Promise.all(ownerIds.map((uid) => getDoc(doc(db, "users", uid))));
+  const photoMap = new Map();
+  userSnaps.forEach((snap) => {
+    if (snap.exists()) {
+      photoMap.set(snap.id, snap.data()?.photoURL || "");
+    }
+  });
+
+  return items.map((item) => ({
+    ...item,
+    ownerPhotoURL: item.ownerPhotoURL || photoMap.get(item.owner) || "",
+  }));
+}
+
 // Upload dish image to Firebase Storage
 export async function uploadImage(file, userId) {
   if (!file || !userId) {
@@ -28,6 +48,18 @@ export async function uploadImage(file, userId) {
   const safeName = file.name ? file.name.replace(/\s+/g, "-") : "upload";
   const uniqueName = `${Date.now()}-${safeName}`;
   const storageRef = ref(storage, `dishImages/${userId}/${uniqueName}`);
+  const snapshot = await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(snapshot.ref);
+  return url;
+}
+
+export async function uploadProfileImage(file, userId) {
+  if (!file || !userId) {
+    throw new Error("Missing file or userId for profile upload.");
+  }
+  const safeName = file.name ? file.name.replace(/\s+/g, "-") : "profile";
+  const uniqueName = `${Date.now()}-${safeName}`;
+  const storageRef = ref(storage, `profileImages/${userId}/${uniqueName}`);
   const snapshot = await uploadBytes(storageRef, file);
   const url = await getDownloadURL(snapshot.ref);
   return url;
@@ -91,9 +123,10 @@ export async function saveDishToFirestore(dish) {
 // Get all dishes (for feed)
 export async function getAllDishesFromFirestore() {
   const snapshot = await getDocs(collection(db, "dishes"));
-  return snapshot.docs
+  const dishes = snapshot.docs
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
+  return enrichWithOwnerPhotos(dishes);
 }
 
 // Get a paginated page of dishes, newest first
@@ -131,7 +164,8 @@ export async function getFollowingForUser(userId) {
 export async function getDishesFromFirestore(userId) {
   const q = query(collection(db, "dishes"), where("owner", "==", userId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  const dishes = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  return enrichWithOwnerPhotos(dishes);
 }
 
 // Save a dish reference (by ID) to a user's saved dishes
@@ -150,6 +184,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
         ownerName: dishData.ownerName || "",
+        ownerPhotoURL: dishData.ownerPhotoURL || "",
         createdAt: new Date(),
       }
     : { dishId, createdAt: new Date() };
@@ -171,6 +206,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
             data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
           owner: data.owner || payload.owner || "",
           ownerName: data.ownerName || payload.ownerName || "",
+          ownerPhotoURL: data.ownerPhotoURL || payload.ownerPhotoURL || "",
           createdAt: data.createdAt || payload.createdAt || new Date(),
         };
       }
@@ -228,9 +264,11 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
 export async function removeSavedDishFromUser(userId, dishId) {
   if (!userId || !dishId) return false;
   const refDoc = doc(db, "users", userId);
+  const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
     await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
-    await deleteDoc(doc(db, "users", userId, "saved", dishId));
+    await deleteDoc(savedDocRef);
+    await syncDishSaveCount(dishId);
     return true;
   } catch (err) {
     console.error("Failed to remove saved dish:", err);
@@ -276,14 +314,17 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
         ownerName: dishData.ownerName || "",
+        ownerPhotoURL: dishData.ownerPhotoURL || "",
         createdAt: dishData.createdAt || new Date(),
       }
     : { dishId, createdAt: new Date() };
 
   const userRef = doc(db, "users", userId);
+  const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
     await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
-    await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
+    await setDoc(savedDocRef, payload, { merge: true });
+    await syncDishSaveCount(dishId);
     return true;
   } catch (err) {
     console.error("Failed to add saved dish:", err);
@@ -334,8 +375,44 @@ export async function getSavedDishesFromFirestore(userId) {
       console.warn("Failed to clean savedDishes array, continuing:", err);
     }
   }
+  // Always hydrate save counts and core fields from canonical dishes/{id}
+  // so UI reflects the true global state across users.
+  const canonicalSnaps = await Promise.all(
+    results.map((dish) => getDoc(doc(db, "dishes", dish.id)))
+  );
+  const canonicalMap = new Map();
+  canonicalSnaps.forEach((snap) => {
+    if (snap.exists()) canonicalMap.set(snap.id, snap.data());
+  });
 
-  return results;
+  const merged = results.map((dish) => {
+    const canonical = canonicalMap.get(dish.id);
+    if (!canonical) return dish;
+    return {
+      ...dish,
+      name: canonical.name || dish.name || "",
+      description: canonical.description || dish.description || "",
+      recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
+      recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
+      isPublic: canonical.isPublic !== false,
+      imageURL:
+        canonical.imageURL ||
+        canonical.imageUrl ||
+        canonical.image_url ||
+        canonical.image ||
+        dish.imageURL ||
+        dish.imageUrl ||
+        dish.image_url ||
+        dish.image ||
+        "",
+      owner: canonical.owner || dish.owner || "",
+      ownerName: canonical.ownerName || dish.ownerName || "",
+      ownerPhotoURL: canonical.ownerPhotoURL || dish.ownerPhotoURL || "",
+      saves: Number(canonical.saves || 0),
+    };
+  });
+
+  return enrichWithOwnerPhotos(merged);
 }
 
 // Remove a dish reference from all users who saved it
@@ -357,6 +434,52 @@ export async function removeDishFromAllUsers(dishId) {
     batch.update(userDoc.ref, { swipedDishes: arrayRemove(dishId) });
   });
   await batch.commit();
+}
+
+export async function recountDishSavesFromUsers() {
+  const dishesSnap = await getDocs(collection(db, "dishes"));
+  const counts = new Map();
+  dishesSnap.docs.forEach((d) => counts.set(d.id, 0));
+
+  const savedDocsSnap = await getDocs(collectionGroup(db, "saved"));
+  const uniquePairs = new Set();
+  savedDocsSnap.docs.forEach((savedDoc) => {
+    const uid = savedDoc.ref.parent.parent?.id;
+    const dishId = savedDoc.data()?.dishId || savedDoc.id;
+    if (!uid || !dishId) return;
+    uniquePairs.add(`${uid}:${dishId}`);
+  });
+  uniquePairs.forEach((pair) => {
+    const [, dishId] = pair.split(":");
+    counts.set(dishId, (counts.get(dishId) || 0) + 1);
+  });
+
+  const entries = Array.from(counts.entries());
+  const chunkSize = 400;
+  for (let i = 0; i < entries.length; i += chunkSize) {
+    const batch = writeBatch(db);
+    entries.slice(i, i + chunkSize).forEach(([dishId, saveCount]) => {
+      batch.set(doc(db, "dishes", dishId), { saves: saveCount }, { merge: true });
+    });
+    await batch.commit();
+  }
+
+  return entries.length;
+}
+
+export async function syncDishSaveCount(dishId) {
+  if (!dishId) return 0;
+  const snapshot = await getDocs(collectionGroup(db, "saved"));
+  const userIds = new Set();
+  snapshot.docs.forEach((savedDoc) => {
+    const savedDishId = savedDoc.data()?.dishId || savedDoc.id;
+    if (savedDishId !== dishId) return;
+    const uid = savedDoc.ref.parent.parent?.id;
+    if (uid) userIds.add(uid);
+  });
+  const saveCount = userIds.size;
+  await setDoc(doc(db, "dishes", dishId), { saves: saveCount }, { merge: true });
+  return saveCount;
 }
 
 // Update ownerName on all dishes for a user (used after profile rename)

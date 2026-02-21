@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
+import { AnimatePresence, motion } from "framer-motion";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
@@ -10,10 +11,12 @@ import BottomNav from "../../../components/BottomNav";
 import {
   deleteDishAndImage,
   deleteImageByUrl,
+  getAllDishesFromFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   removeDishFromAllUsers,
   removeSavedDishFromUser,
+  saveDishToUserList,
   updateDishAndSavedCopies,
   uploadImage,
 } from "../../lib/firebaseHelpers";
@@ -42,6 +45,7 @@ export default function DishDetail() {
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [pageToast, setPageToast] = useState("");
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -53,11 +57,18 @@ export default function DishDetail() {
   };
 
   useEffect(() => {
-    if (!dishId || !userId) return;
+    if (!dishId) return;
+    if (!userId && source !== "public") {
+      setLoadingDish(false);
+      return;
+    }
     setRemovedDishIds(new Set());
     (async () => {
       let items = [];
-      if (source === "uploaded") {
+      if (source === "public") {
+        const all = await getAllDishesFromFirestore();
+        items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "uploaded") {
         items = await getDishesFromFirestore(userId);
       } else {
         items = await getSavedDishesFromFirestore(userId);
@@ -121,7 +132,51 @@ export default function DishDetail() {
     return true;
   };
 
+  const handleAdd = async (dishToAdd) => {
+    if (!userId) {
+      alert("Please sign in to save dishes.");
+      return false;
+    }
+    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
+    return Boolean(saved);
+  };
+
+  const handleResetDeck = async () => {
+    setLoadingDish(true);
+    setRemovedDishIds(new Set());
+    try {
+      let items = [];
+      if (source === "public") {
+        const all = await getAllDishesFromFirestore();
+        items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "uploaded") {
+        items = await getDishesFromFirestore(userId);
+      } else {
+        items = await getSavedDishesFromFirestore(userId);
+      }
+      items = items
+        .slice()
+        .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+      const found = items.find((d) => d.id === dishId) || items[0] || null;
+      if (found) {
+        setDish(found);
+        if (mode === "shuffle") {
+          const others = items.filter((d) => d.id !== found.id);
+          setDeckList([found, ...shuffleArray(others)]);
+        } else {
+          setDeckList([found]);
+        }
+      } else {
+        setDish(null);
+        setDeckList([]);
+      }
+    } finally {
+      setLoadingDish(false);
+    }
+  };
+
   const canEditUploaded = source === "uploaded";
+  const isPublicSource = source === "public";
 
   const openEditModal = (dishToEdit) => {
     if (!canEditUploaded || dishToEdit?.owner !== userId) return;
@@ -175,12 +230,14 @@ export default function DishDetail() {
       await updateDishAndSavedCopies(editingDish.id, updates);
 
       setDish((prev) => (prev?.id === editingDish.id ? { ...prev, ...updates } : prev));
-      setList((prev) =>
+      setDeckList((prev) =>
         prev.map((item) => (item.id === editingDish.id ? { ...item, ...updates } : item))
       );
 
       setEditOpen(false);
       setEditingDish(null);
+      setPageToast("Dish updated");
+      setTimeout(() => setPageToast(""), 1200);
     } catch (err) {
       console.error("Failed to update dish:", err);
       alert("Failed to update dish.");
@@ -197,7 +254,7 @@ export default function DishDetail() {
     );
   }
 
-  if (!user) {
+  if (!user && !isPublicSource) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
         Please sign in.
@@ -221,25 +278,34 @@ export default function DishDetail() {
         </button>
       </div>
 
-      <div className="px-5">
+      <div className={`px-5 ${editOpen ? "pointer-events-none" : ""}`}>
         <SwipeDeck
           dishes={orderedList}
           preserveContinuity
-          onAction={canEditUploaded ? openEditModal : handleRemove}
+          disabled={editOpen}
+          onAction={canEditUploaded ? openEditModal : isPublicSource ? handleAdd : handleRemove}
           dismissOnAction={!canEditUploaded}
-          actionLabel={canEditUploaded ? "Edit" : "Remove"}
+          actionLabel={canEditUploaded ? "Edit" : isPublicSource ? "+" : "Remove"}
           actionClassName={
             canEditUploaded
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
-              : "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
+              : isPublicSource
+                ? "add-action-btn w-11 h-11"
+                : "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
           }
-          actionToast={canEditUploaded ? "Edit Dish" : "Removed"}
+          actionToast={canEditUploaded ? undefined : isPublicSource ? "ADDING TO YOUR DISHLIST" : "Removed"}
           trackSwipes={false}
+          onResetFeed={handleResetDeck}
         />
       </div>
 
       {editOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerMove={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
           <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6">
             <h2 className="text-xl font-semibold mb-4">Edit Dish</h2>
             <input
@@ -321,6 +387,19 @@ export default function DishDetail() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {pageToast && (
+          <motion.div
+            className="fixed inset-x-4 top-24 z-50 bg-black text-white text-center py-3 rounded-xl font-semibold"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {pageToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
     </div>

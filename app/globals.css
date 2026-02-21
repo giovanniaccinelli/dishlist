@@ -12,6 +12,16 @@
   h1, h2, h3, h4 {
     @apply font-semibold tracking-tight;
   }
+
+  button,
+  a {
+    transition: transform 140ms ease-out;
+  }
+
+  button:active,
+  a:active {
+    transform: scale(0.97);
+  }
 }
 
 /* Buttons */
@@ -40,4 +50,26 @@
 
 .upload-area.drag-active {
   @apply border-red-500 bg-[#2a2a2a];
+}
+
+.pressable-card {
+  transition: transform 140ms ease-out;
+}
+
+.pressable-card:active,
+.pressable-card:has(a:active),
+.pressable-card:has(button:active) {
+  transform: scale(0.97);
+}
+
+.add-action-btn {
+  @apply rounded-full border-2 border-white bg-black/20 text-white font-black leading-none flex items-center justify-center backdrop-blur-sm shadow-lg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a,
+  .pressable-card {
+    transition: none;
+  }
 }

@@ -5,7 +5,11 @@ import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
-import { getAllDishesFromFirestore, saveDishToUserList } from "./lib/firebaseHelpers";
+import {
+  getAllDishesFromFirestore,
+  recountDishSavesFromUsers,
+  saveDishToUserList,
+} from "./lib/firebaseHelpers";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -48,6 +52,21 @@ export default function Feed() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("recountSaves") !== "1") return;
+    recountDishSavesFromUsers()
+      .then(() => getAllDishesFromFirestore().then((items) => {
+        const publicItems = items.filter((dish) => dish.isPublic !== false);
+        const ordered = publicItems
+          .slice()
+          .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+        setDeckList(shuffleArray(ordered));
+      }))
+      .catch((err) => console.error("Failed to recount saves:", err));
+  }, []);
+
   const orderedList = useMemo(() => {
     return deckList.filter((d) => !addedDishIds.has(d.id));
   }, [deckList, addedDishIds]);
@@ -68,6 +87,24 @@ export default function Feed() {
     return true;
   };
 
+  const handleResetFeed = async () => {
+    setLoadingDishes(true);
+    setAddedDishIds(new Set());
+    try {
+      const items = await getAllDishesFromFirestore();
+      const publicItems = items.filter((dish) => dish.isPublic !== false);
+      const ordered = publicItems
+        .slice()
+        .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+      setDeckList(shuffleArray(ordered));
+    } catch (err) {
+      console.error("Failed to reset feed:", err);
+      setDeckList([]);
+    } finally {
+      setLoadingDishes(false);
+    }
+  };
+
   if (loading || loadingDishes) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -79,7 +116,7 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-[#F6F6F2] text-black relative pb-24">
       <div className="px-5 pt-6 pb-3 flex items-center gap-3">
-        <img src="/logo-mark.svg" alt="DishList logo" className="w-9 h-9" />
+        <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
         <h1 className="text-3xl font-bold">DishList</h1>
       </div>
       <div className="px-5">
@@ -89,10 +126,11 @@ export default function Feed() {
           onAction={handleAdd}
           dismissOnAction
           actionLabel="+"
-          actionClassName="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+          actionClassName="add-action-btn w-14 h-14 text-[36px]"
           actionToast="ADDING TO YOUR DISHLIST"
           trackSwipes={false}
           onAuthRequired={() => setShowAuthPrompt(true)}
+          onResetFeed={handleResetFeed}
         />
       </div>
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />

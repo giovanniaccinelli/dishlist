@@ -10,26 +10,40 @@ export default function BottomNav() {
   const profileHref = user ? "/profile" : "/?auth=1";
 
   const navItems = [
-    { href: "/", icon: <Home size={24} />, label: "feed" },
-    { href: "/dishlists", icon: <LayoutGrid size={24} />, label: "dishlists" },
-    { href: "/dishes", icon: <Utensils size={24} />, label: "dishes" },
-    { href: profileHref, icon: <User size={24} />, label: "profile" },
+    { href: "/", icon: Home, label: "feed" },
+    { href: "/dishlists", icon: LayoutGrid, label: "dishlists" },
+    { href: "/dishes", icon: Utensils, label: "dishes" },
+    { href: profileHref, icon: User, label: "profile" },
   ];
 
+  const isActive = (href) => {
+    if (href === "/") return pathname === "/" || pathname === "/feed";
+    if (href === "/profile") return pathname.startsWith("/profile");
+    return pathname === href;
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-black/10 flex justify-around items-center py-2 z-50">
-      {navItems.map((item) => (
+    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-black/10 flex items-center py-2 z-50">
+      {navItems.map((item) => {
+        const active = isActive(item.href);
+        const Icon = item.icon;
+        return (
         <Link
           key={item.href}
           href={item.href}
-          className={`flex flex-col items-center text-xs font-semibold ${
-            pathname === item.href ? "text-black" : "text-black/40"
-          }`}
+          className="w-1/4 flex flex-col items-center text-xs font-semibold"
         >
-          {item.icon}
-          <span className="mt-1">{item.label}</span>
+          <div
+            className={`w-14 h-9 rounded-2xl flex items-center justify-center transition-colors ${
+              active ? "bg-black text-white" : "bg-transparent text-black/45"
+            }`}
+          >
+            <Icon size={22} />
+          </div>
+          <span className={`mt-1 ${active ? "text-black" : "text-black/45"}`}>{item.label}</span>
         </Link>
-      ))}
+      );
+      })}
     </div>
   );
 }

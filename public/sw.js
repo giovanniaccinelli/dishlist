@@ -1,11 +1,11 @@
-const CACHE_VERSION = "dishlist-v2";
+const CACHE_VERSION = "dishlist-v3";
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const APP_SHELL = [
   "/",
   "/manifest.webmanifest",
   "/offline.html",
-  "/icons/icon-192.svg",
-  "/icons/icon-512.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {

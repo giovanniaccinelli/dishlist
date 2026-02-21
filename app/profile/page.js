@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   uploadImage,
+  uploadProfileImage,
   saveDishToFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
@@ -17,7 +18,8 @@ import {
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { Plus } from "lucide-react";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -38,6 +40,12 @@ export default function Profile() {
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [newName, setNewName] = useState(user?.displayName || "");
+  const [newPhotoFile, setNewPhotoFile] = useState(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState(user?.photoURL || "");
+  const [connectionsOpen, setConnectionsOpen] = useState(false);
+  const [connectionsTitle, setConnectionsTitle] = useState("");
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [connectionsUsers, setConnectionsUsers] = useState([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -57,6 +65,7 @@ export default function Profile() {
             followers: data.followers || [],
             following: data.following || [],
             savedDishes: data.savedDishes || [],
+            photoURL: data.photoURL || "",
           });
         }
       })();
@@ -73,12 +82,13 @@ export default function Profile() {
         followers: data.followers || [],
         following: data.following || [],
         savedDishes: data.savedDishes || [],
+        photoURL: data.photoURL || "",
       });
     });
 
     const savedRef = collection(db, "users", user.uid, "saved");
-    const unsubscribeSaved = onSnapshot(savedRef, (snap) => {
-      const saved = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const unsubscribeSaved = onSnapshot(savedRef, async () => {
+      const saved = await getSavedDishesFromFirestore(user.uid);
       setSavedDishes(saved);
     });
 
@@ -121,6 +131,7 @@ export default function Profile() {
         imageURL,
         owner: user.uid,
         ownerName: user.displayName || "Anonymous",
+        ownerPhotoURL: user.photoURL || profileMeta.photoURL || "",
         createdAt: new Date(),
       });
       const updatedDishes = await getDishesFromFirestore(user.uid);
@@ -154,10 +165,20 @@ export default function Profile() {
 
   const handleEditProfile = async () => {
     try {
-      await updateProfile(auth.currentUser, { displayName: newName });
+      let nextPhotoURL = user?.photoURL || profileMeta.photoURL || "";
+      if (newPhotoFile) {
+        nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
+      }
+      await updateProfile(auth.currentUser, { displayName: newName, photoURL: nextPhotoURL || null });
+      await setDoc(
+        doc(db, "users", user.uid),
+        { displayName: newName, photoURL: nextPhotoURL || "" },
+        { merge: true }
+      );
       await updateOwnerNameForDishes(user.uid, newName);
       alert("Profile updated!");
       setEditProfileModal(false);
+      setNewPhotoFile(null);
     } catch {
       alert("Failed to update profile.");
     }
@@ -176,6 +197,27 @@ export default function Profile() {
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
     router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle`);
+  };
+
+  const openConnections = async (type) => {
+    if (!user) return;
+    const rawIds = type === "followers" ? profileMeta.followers || [] : profileMeta.following || [];
+    const ids = Array.from(new Set(rawIds));
+    setConnectionsTitle(type === "followers" ? "Followers" : "Following");
+    setConnectionsOpen(true);
+    setConnectionsLoading(true);
+    try {
+      const docs = await Promise.all(ids.map((uid) => getDoc(doc(db, "users", uid))));
+      const usersList = docs
+        .filter((snap) => snap.exists())
+        .map((snap) => ({ id: snap.id, ...snap.data() }));
+      setConnectionsUsers(usersList);
+    } catch (err) {
+      console.error(`Failed to load ${type}:`, err);
+      setConnectionsUsers([]);
+    } finally {
+      setConnectionsLoading(false);
+    }
   };
 
   if (loading) {
@@ -218,7 +260,7 @@ export default function Profile() {
             {dishes.map((dish, index) => (
               <motion.div
                 key={`${dish.id}-${index}`}
-                className="bg-white rounded-2xl overflow-hidden shadow-md relative group"
+                className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -251,6 +293,12 @@ export default function Profile() {
                     />
                   );
                 })()}
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                  <div className="text-[11px] font-semibold leading-tight truncate">
+                    {dish.name || "Untitled dish"}
+                  </div>
+                  <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                </div>
                 {allowDelete && (
                   <button
                     onClick={() => handleDeleteDish(dish)}
@@ -271,7 +319,15 @@ export default function Profile() {
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <div className="flex items-center gap-4 mb-6">
         <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
-          {user.displayName?.[0] || "U"}
+          {user.photoURL || profileMeta.photoURL ? (
+            <img
+              src={user.photoURL || profileMeta.photoURL}
+              alt="Profile"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          ) : (
+            user.displayName?.[0] || "U"
+          )}
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
@@ -289,11 +345,21 @@ export default function Profile() {
         </div>
         <div>
           <div className="text-2xl font-bold">{profileMeta.followers.length}</div>
-          <div className="text-xs text-black/60">followers</div>
+          <button
+            onClick={() => openConnections("followers")}
+            className="text-xs text-black/60 hover:text-black underline"
+          >
+            followers
+          </button>
         </div>
         <div>
           <div className="text-2xl font-bold">{profileMeta.following.length}</div>
-          <div className="text-xs text-black/60">following</div>
+          <button
+            onClick={() => openConnections("following")}
+            className="text-xs text-black/60 hover:text-black underline"
+          >
+            following
+          </button>
         </div>
         <div>
           <div className="text-2xl font-bold">{uploadedDishes.length}</div>
@@ -301,18 +367,17 @@ export default function Profile() {
         </div>
       </div>
 
-      <DishGrid title="My Dishlist" dishes={savedDishes} allowDelete={false} source="saved" />
-      <DishGrid title="My Dishes" dishes={uploadedDishes} allowDelete source="uploaded" />
+      <DishGrid title="My DishList" dishes={savedDishes} allowDelete={false} source="saved" />
+      <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
 
       {/* Add Dish button */}
       <motion.button
-        whileTap={{ scale: 0.92 }}
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 right-6 bg-black text-white w-16 h-16 rounded-full shadow-xl text-3xl flex items-center justify-center hover:opacity-90 transition z-50"
+        className="add-action-btn fixed bottom-20 right-6 w-16 h-16 text-[40px] z-50"
         disabled={loadingUpload}
         aria-label="Add dish"
       >
-        +
+        <Plus size={26} strokeWidth={2.1} />
       </motion.button>
 
       {/* Upload Modal */}
@@ -403,6 +468,21 @@ export default function Profile() {
                   "Drag & Drop or Click to Upload"
                 )}
               </div>
+              <div className="mb-4 rounded-2xl border border-black/10 bg-[#F6F6F2] p-3">
+                <p className="text-sm text-black/70 mb-2">
+                  If you don&apos;t have an image, search if the dish is already posted.
+                </p>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    router.push("/dishes");
+                  }}
+                  className="w-full bg-white border border-black/20 py-2 rounded-full text-sm font-semibold hover:bg-black/5 transition"
+                  disabled={loadingUpload}
+                >
+                  Search Existing Dishes
+                </button>
+              </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePost}
@@ -438,6 +518,24 @@ export default function Profile() {
                 onChange={(e) => setNewName(e.target.value)}
                 className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
               />
+              <label className="block text-sm font-medium mb-2 text-black">Profile picture</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setNewPhotoFile(file);
+                  if (file) setNewPhotoPreview(URL.createObjectURL(file));
+                }}
+                className="w-full mb-3"
+              />
+              {newPhotoPreview ? (
+                <img
+                  src={newPhotoPreview}
+                  alt="Profile preview"
+                  className="w-24 h-24 rounded-full object-cover mb-4 border border-black/10"
+                />
+              ) : null}
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleEditProfile}
@@ -451,6 +549,63 @@ export default function Profile() {
               >
                 Cancel
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {connectionsOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-5"
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">{connectionsTitle}</h3>
+                <button onClick={() => setConnectionsOpen(false)} className="text-sm text-black/60">
+                  Close
+                </button>
+              </div>
+              {connectionsLoading ? (
+                <div className="text-black/60">Loading...</div>
+              ) : connectionsUsers.length === 0 ? (
+                <div className="bg-[#f0f0ea] rounded-xl h-24 flex items-center justify-center text-gray-500">
+                  No users.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {connectionsUsers.map((u) => (
+                    <Link
+                      key={u.id}
+                      href={u.id === user.uid ? "/profile" : `/profile/${u.id}`}
+                      onClick={() => setConnectionsOpen(false)}
+                      className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold">
+                        {u.photoURL ? (
+                          <img src={u.photoURL} alt="Profile" className="w-11 h-11 rounded-full object-cover" />
+                        ) : (
+                          u.displayName?.[0] || "U"
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-base font-semibold truncate">{u.displayName || "User"}</div>
+                        <div className="text-xs text-black/60">
+                          {u.followers?.length || 0} followers
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

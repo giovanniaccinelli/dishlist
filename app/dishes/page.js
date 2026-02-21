@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
 import { getAllDishesFromFirestore, getDishesPage, saveDishToUserList } from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { Plus } from "lucide-react";
 
 const DISHES_PAGE_SIZE = 24;
 
@@ -20,6 +22,8 @@ export default function Dishes() {
   const [fallbackPool, setFallbackPool] = useState([]);
   const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [searchPool, setSearchPool] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -126,11 +130,34 @@ export default function Dishes() {
     fetchDishes();
   }, []);
 
+  useEffect(() => {
+    const term = search.trim();
+    if (!term) return;
+    if (searchPool) return;
+    let cancelled = false;
+    const run = async () => {
+      setSearchLoading(true);
+      try {
+        const all = await getAllDishesFromFirestore();
+        if (!cancelled) setSearchPool(all);
+      } catch (err) {
+        console.error("Failed to load full search pool:", err);
+      } finally {
+        if (!cancelled) setSearchLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [search, searchPool]);
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return dishes;
-    return dishes.filter((d) => d.name?.toLowerCase().includes(term));
-  }, [dishes, search]);
+    const source = searchPool || dishes;
+    return source.filter((d) => d.name?.toLowerCase().includes(term));
+  }, [dishes, search, searchPool]);
 
   const handleSave = async (dish) => {
     if (!user) {
@@ -160,6 +187,8 @@ export default function Dishes() {
 
       {loading ? (
         <div className="text-black/60">Loading dishes...</div>
+      ) : search.trim() && searchLoading ? (
+        <div className="text-black/60">Searching all dishes...</div>
       ) : loadError && filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
           <p>{loadError}</p>
@@ -182,19 +211,11 @@ export default function Dishes() {
             return (
               <div
                 key={`${dish.id}-${index}`}
-                className="bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer"
-                onClick={() => handleSave(dish)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handleSave(dish);
-                }}
-                onPointerUp={(e) => {
-                  if (e.pointerType === "touch") {
-                    e.preventDefault();
-                    handleSave(dish);
-                  }
-                }}
+                className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
               >
+                <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                  <span className="sr-only">Open dish card</span>
+                </Link>
                 {imageSrc ? (
                   <img
                     src={imageSrc}
@@ -210,30 +231,34 @@ export default function Dishes() {
                     No image
                   </div>
                 )}
-                <div className="p-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold">{dish.name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSave(dish);
-                    }}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleSave(dish);
-                    }}
-                    onPointerUp={(e) => {
-                      if (e.pointerType !== "touch") return;
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleSave(dish);
-                    }}
-                    className="w-8 h-8 rounded-full bg-[#2BD36B] text-black text-xl font-bold flex items-center justify-center"
-                    aria-label="Add to dishlist"
-                  >
-                    +
-                  </button>
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                  <div className="text-[11px] font-semibold leading-tight truncate">
+                    {dish.name || "Untitled dish"}
+                  </div>
+                  <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleSave(dish);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleSave(dish);
+                  }}
+                  onPointerUp={(e) => {
+                    if (e.pointerType !== "touch") return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleSave(dish);
+                  }}
+                  className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                  aria-label="Add to dishlist"
+                >
+                  <Plus size={20} strokeWidth={2.1} />
+                </button>
               </div>
             );
           })}

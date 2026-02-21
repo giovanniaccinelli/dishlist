@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
         userRef,
         {
           displayName: userData.displayName || "Unnamed",
+          photoURL: userData.photoURL || "",
           email: userData.email,
           followers: [],
           following: [],
@@ -42,6 +43,7 @@ export function AuthProvider({ children }) {
       userRef,
       {
         displayName: userData.displayName || "Unnamed",
+        photoURL: userData.photoURL || "",
         email: userData.email,
       },
       { merge: true }

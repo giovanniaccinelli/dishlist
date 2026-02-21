@@ -35,9 +35,32 @@ export default function SwipeDeck({
       ...d,
       _key: `${d.id || "local"}-${i}`,
     }));
-    setCards(formatted);
-    setDeckEmpty(formatted.length === 0);
+    setCards((prev) => {
+      if (prev.length === 0) {
+        setDeckEmpty(formatted.length === 0);
+        return formatted;
+      }
+
+      // Hard reset when upstream list is replaced (e.g. feed reset).
+      if (formatted.length < prev.length) {
+        setDeckEmpty(formatted.length === 0);
+        return formatted;
+      }
+
+      // Soft merge for pagination so current swipe state is preserved.
+      const existingKeys = new Set(prev.map((c) => c._key));
+      const appended = formatted.filter((c) => !existingKeys.has(c._key));
+      const merged = appended.length > 0 ? [...prev, ...appended] : prev;
+      setDeckEmpty(merged.length === 0);
+      return merged;
+    });
   }, [dishes]);
+
+  useEffect(() => {
+    if (cards.length > 0 && cards.length <= 5 && hasMore && !loadingMore && loadMoreDishes) {
+      loadMoreDishes();
+    }
+  }, [cards.length, hasMore, loadingMore, loadMoreDishes]);
 
   const dismissCard = (dish) => {
     setCards((prev) => {

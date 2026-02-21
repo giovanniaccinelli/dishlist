@@ -96,15 +96,21 @@ export default function DishDetail() {
   }, [dish, deckList, mode, removedDishIds]);
 
   const handleRemove = async (dishToRemove) => {
-    if (!userId) return;
+    if (!userId) return false;
     if (source === "uploaded") {
-      await deleteDishAndImage(
-        dishToRemove.id,
-        dishToRemove.imageURL || dishToRemove.imageUrl || dishToRemove.image_url || dishToRemove.image
-      );
-      await removeDishFromAllUsers(dishToRemove.id);
+      try {
+        await deleteDishAndImage(
+          dishToRemove.id,
+          dishToRemove.imageURL || dishToRemove.imageUrl || dishToRemove.image_url || dishToRemove.image
+        );
+        await removeDishFromAllUsers(dishToRemove.id);
+      } catch (err) {
+        console.error("Failed to remove uploaded dish:", err);
+        return false;
+      }
     } else {
-      await removeSavedDishFromUser(userId, dishToRemove.id);
+      const removed = await removeSavedDishFromUser(userId, dishToRemove.id);
+      if (!removed) return false;
     }
     setRemovedDishIds((prev) => {
       const next = new Set(prev);
@@ -112,6 +118,7 @@ export default function DishDetail() {
       return next;
     });
     setDeckList((prev) => prev.filter((d) => d.id !== dishToRemove.id));
+    return true;
   };
 
   const canEditUploaded = source === "uploaded";

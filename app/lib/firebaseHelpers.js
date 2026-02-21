@@ -226,16 +226,15 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
 }
 
 export async function removeSavedDishFromUser(userId, dishId) {
+  if (!userId || !dishId) return false;
   const refDoc = doc(db, "users", userId);
   try {
     await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
-  } catch (err) {
-    console.warn("Failed to update savedDishes array, continuing:", err);
-  }
-  try {
     await deleteDoc(doc(db, "users", userId, "saved", dishId));
+    return true;
   } catch (err) {
-    console.error("Failed to delete saved dish doc:", err);
+    console.error("Failed to remove saved dish:", err);
+    return false;
   }
 }
 
@@ -284,23 +283,12 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   const userRef = doc(db, "users", userId);
   try {
     await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
-  } catch (err) {
-    try {
-      await setDoc(userRef, { savedDishes: [dishId] }, { merge: true });
-    } catch (fallbackErr) {
-      console.error("Failed to update savedDishes array:", fallbackErr);
-      return false;
-    }
-  }
-
-  try {
     await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
+    return true;
   } catch (err) {
-    console.error("Failed to persist saved dish doc:", err);
+    console.error("Failed to add saved dish:", err);
     return false;
   }
-
-  return true;
 }
 
 // Get dishes saved by user

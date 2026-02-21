@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -26,7 +26,10 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
-  const [showRecipeByCard, setShowRecipeByCard] = useState({});
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchMoved = useRef(false);
+  const didDrag = useRef(false);
+  const skipClick = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -65,13 +68,15 @@ export default function SwipeDeck({
     });
   };
 
-  const handleSwipe = async (direction, dish) => {
-    if (direction !== "left" && direction !== "right") return;
-    if (trackSwipes && user && dish.id) {
-      await saveSwipedDishForUser(user.uid, dish.id);
-      if (typeof onSwiped === "function") onSwiped(dish.id);
+  const handleSwipeEnd = async (info, dish) => {
+    const threshold = 120;
+    if (Math.abs(info.deltaX) > threshold) {
+      if (trackSwipes && user && dish.id) {
+        await saveSwipedDishForUser(user.uid, dish.id);
+        if (typeof onSwiped === "function") onSwiped(dish.id);
+      }
+      dismissCard(dish);
     }
-    dismissCard(dish);
   };
 
   const handleAddToMyList = async (dish) => {
@@ -102,6 +107,10 @@ export default function SwipeDeck({
     dismissCard(dish);
   };
 
+  const handleCardSave = async (dish) => {
+    await handleAddToMyList(dish);
+  };
+
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -122,10 +131,6 @@ export default function SwipeDeck({
         }}
       />
     );
-  };
-
-  const toggleRecipeView = (dishKey) => {
-    setShowRecipeByCard((prev) => ({ ...prev, [dishKey]: !prev[dishKey] }));
   };
 
   if (deckEmpty) {
@@ -161,117 +166,58 @@ export default function SwipeDeck({
             preventSwipe={["up", "down"]}
             className="absolute w-full"
             swipeRequirementType="position"
-            onSwipe={(dir) => handleSwipe(dir, dish)}
           >
             <motion.div
+              drag="x"
+              onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
+              onDragStart={() => {
+                didDrag.current = true;
+              }}
+              onPointerDown={(e) => {
+                didDrag.current = false;
+                skipClick.current = false;
+                if (e.pointerType === "touch") {
+                  touchStart.current = { x: e.clientX, y: e.clientY };
+                  touchMoved.current = false;
+                }
+              }}
+              onPointerMove={(e) => {
+                if (e.pointerType === "touch") {
+                  const dx = Math.abs(e.clientX - touchStart.current.x);
+                  const dy = Math.abs(e.clientY - touchStart.current.y);
+                  if (dx > 6 || dy > 6) touchMoved.current = true;
+                }
+              }}
+              onPointerUp={(e) => {
+                if (e.pointerType === "touch") {
+                  const moved = touchMoved.current || didDrag.current;
+                  skipClick.current = true;
+                  if (!moved) {
+                    handleCardSave(dish);
+                  }
+                }
+              }}
+              onClick={() => {
+                if (skipClick.current || didDrag.current) {
+                  skipClick.current = false;
+                  return;
+                }
+                handleCardSave(dish);
+              }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
+              whileTap={{ scale: 0.98 }}
             >
-              {index === 0 && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                  <div className="bg-black/40 rounded-full p-1 flex gap-1 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
-                      }}
-                      className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-                        !showRecipeByCard[dish._key]
-                          ? "bg-white text-black"
-                          : "text-white/90"
-                      }`}
-                    >
-                      dish
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleRecipeView(dish._key);
-                      }}
-                      className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-                        showRecipeByCard[dish._key]
-                          ? "bg-white text-black"
-                          : "text-white/90"
-                      }`}
-                    >
-                      recipe
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="absolute inset-0">
-                {showRecipeByCard[dish._key] ? (
-                  <div className="absolute inset-0 bg-[#101216] text-white p-6 overflow-y-auto">
-                    <h3 className="text-2xl font-bold mb-2">{dish.name}</h3>
-                    <p className="text-sm text-white/70 mb-5">
-                      {dish.ownerName || "Unknown"}
-                    </p>
-                    <h4 className="text-sm uppercase tracking-wide text-white/70 mb-2">
-                      Ingredients
-                    </h4>
-                    <p className="text-sm whitespace-pre-wrap mb-5">
-                      {dish.recipeIngredients || "No ingredients provided."}
-                    </p>
-                    <h4 className="text-sm uppercase tracking-wide text-white/70 mb-2">
-                      Method
-                    </h4>
-                    <p className="text-sm whitespace-pre-wrap">
-                      {dish.recipeMethod || "No method provided."}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0">
-                    {renderImage(dish)}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute bottom-20 left-5 right-5 text-white">
-                      <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
-                      <h2 className="text-2xl font-bold">{dish.name}</h2>
-                      <p className="text-sm text-white/80 line-clamp-2">
-                        {dish.description || "No description yet."}
-                      </p>
-                    </div>
-                  </div>
-                )}
+              {renderImage(dish)}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-20 left-5 right-5 text-white">
+                <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
+                <h2 className="text-2xl font-bold">{dish.name}</h2>
+                <p className="text-sm text-white/80 line-clamp-2">
+                  {dish.description || "No description yet."}
+                </p>
               </div>
-
               <div className="absolute bottom-6 right-6">
-                {(() => {
-                  const isDefaultAddAction =
-                    typeof onAction !== "function" && !actionClassName && actionLabel === "+";
-                  if (isDefaultAddAction) {
-                    return (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await handleAddToMyList(dish);
-                        }}
-                        onTouchEnd={async (e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          await handleAddToMyList(dish);
-                        }}
-                        onPointerUp={async (e) => {
-                          if (e.pointerType !== "touch") return;
-                          e.stopPropagation();
-                          e.preventDefault();
-                          await handleAddToMyList(dish);
-                        }}
-                        className="w-24 h-24 -m-5 flex items-center justify-center"
-                        style={{ touchAction: "manipulation" }}
-                        aria-label="Action"
-                      >
-                        <span className="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg">
-                          +
-                        </span>
-                      </button>
-                    );
-                  }
-                  return (
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
@@ -323,8 +269,6 @@ export default function SwipeDeck({
                 >
                   {actionLabel}
                 </button>
-                  );
-                })()}
               </div>
             </motion.div>
           </TinderCard>

@@ -21,9 +21,11 @@ export default function SwipeDeck({
   onAuthRequired,
   preserveContinuity = true,
 }) {
+  const SWIPE_EJECT_THRESHOLD = 110;
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const dismissedKeys = useRef(new Set());
   const touchStart = useRef({ x: 0, y: 0 });
   const touchMoved = useRef(false);
   const didDrag = useRef(false);
@@ -34,10 +36,16 @@ export default function SwipeDeck({
       ...d,
       _key: `${d.id || "local"}-${i}`,
     }));
+
+    if (formatted.length === 0) {
+      dismissedKeys.current = new Set();
+    }
+
+    const visibleFormatted = formatted.filter((c) => !dismissedKeys.current.has(c._key));
     setCards((prev) => {
       if (prev.length === 0) {
-        setDeckEmpty(formatted.length === 0);
-        return formatted;
+        setDeckEmpty(visibleFormatted.length === 0);
+        return visibleFormatted;
       }
 
       // Keep continuity: once a deck session starts, don't reset/reshuffle it
@@ -48,7 +56,7 @@ export default function SwipeDeck({
 
       // Soft merge for pagination so current swipe state is preserved.
       const existingKeys = new Set(prev.map((c) => c._key));
-      const appended = formatted.filter((c) => !existingKeys.has(c._key));
+      const appended = visibleFormatted.filter((c) => !existingKeys.has(c._key));
       const merged = appended.length > 0 ? [...prev, ...appended] : prev;
       setDeckEmpty(merged.length === 0);
       return merged;
@@ -56,6 +64,7 @@ export default function SwipeDeck({
   }, [dishes, preserveContinuity]);
 
   const dismissCard = (dish) => {
+    dismissedKeys.current.add(dish._key);
     setCards((prev) => {
       const updated = prev.filter((d) => d._key !== dish._key);
       if (updated.length === 0) {
@@ -67,8 +76,7 @@ export default function SwipeDeck({
   };
 
   const handleSwipeEnd = async (info, dish) => {
-    const threshold = 120;
-    if (Math.abs(info.deltaX) > threshold) {
+    if (Math.abs(info.deltaX) >= SWIPE_EJECT_THRESHOLD) {
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
       dismissCard(dish);
     }

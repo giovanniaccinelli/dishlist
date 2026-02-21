@@ -65,15 +65,13 @@ export default function SwipeDeck({
     });
   };
 
-  const handleSwipeEnd = async (info, dish) => {
-    const threshold = 120;
-    if (Math.abs(info.deltaX) > threshold) {
-      if (trackSwipes && user && dish.id) {
-        await saveSwipedDishForUser(user.uid, dish.id);
-        if (typeof onSwiped === "function") onSwiped(dish.id);
-      }
-      dismissCard(dish);
+  const handleSwipe = async (direction, dish) => {
+    if (direction !== "left" && direction !== "right") return;
+    if (trackSwipes && user && dish.id) {
+      await saveSwipedDishForUser(user.uid, dish.id);
+      if (typeof onSwiped === "function") onSwiped(dish.id);
     }
+    dismissCard(dish);
   };
 
   const handleAddToMyList = async (dish) => {
@@ -163,10 +161,9 @@ export default function SwipeDeck({
             preventSwipe={["up", "down"]}
             className="absolute w-full"
             swipeRequirementType="position"
+            onSwipe={(dir) => handleSwipe(dir, dish)}
           >
             <motion.div
-              drag="x"
-              onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
@@ -235,25 +232,9 @@ export default function SwipeDeck({
                 </button>
               </div>
 
-              <div className="absolute inset-0 [perspective:1200px]">
-                <motion.div
-                  className="relative w-full h-full [transform-style:preserve-3d]"
-                  animate={{ rotateY: showRecipeByCard[dish._key] ? 180 : 0 }}
-                  transition={{ duration: 0.45, ease: "easeInOut" }}
-                >
-                  <div className="absolute inset-0 [backface-visibility:hidden]">
-                    {renderImage(dish)}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute bottom-20 left-5 right-5 text-white">
-                      <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
-                      <h2 className="text-2xl font-bold">{dish.name}</h2>
-                      <p className="text-sm text-white/80 line-clamp-2">
-                        {dish.description || "No description yet."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#101216] text-white p-6 overflow-y-auto">
+              <div className="absolute inset-0">
+                {showRecipeByCard[dish._key] ? (
+                  <div className="absolute inset-0 bg-[#101216] text-white p-6 overflow-y-auto">
                     <h3 className="text-2xl font-bold mb-2">{dish.name}</h3>
                     <p className="text-sm text-white/70 mb-5">
                       {dish.ownerName || "Unknown"}
@@ -271,7 +252,19 @@ export default function SwipeDeck({
                       {dish.recipeMethod || "No method provided."}
                     </p>
                   </div>
-                </motion.div>
+                ) : (
+                  <div className="absolute inset-0">
+                    {renderImage(dish)}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute bottom-20 left-5 right-5 text-white">
+                      <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
+                      <h2 className="text-2xl font-bold">{dish.name}</h2>
+                      <p className="text-sm text-white/80 line-clamp-2">
+                        {dish.description || "No description yet."}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="absolute bottom-6 right-6">

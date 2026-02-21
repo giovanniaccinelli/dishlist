@@ -10,6 +10,7 @@ import { getAllDishesFromFirestore, saveDishToUserList } from "./lib/firebaseHel
 export default function Feed() {
   const { user, loading } = useAuth();
   const [deckList, setDeckList] = useState([]);
+  const [addedDishIds, setAddedDishIds] = useState(() => new Set());
   const [loadingDishes, setLoadingDishes] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -27,6 +28,7 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       setLoadError("");
+      setAddedDishIds(new Set());
       try {
         const all = await getAllDishesFromFirestore();
         const publicDishes = all.filter((dish) => dish.isPublic !== false);
@@ -47,7 +49,10 @@ export default function Feed() {
     })();
   }, []);
 
-  const orderedList = useMemo(() => deckList, [deckList]);
+  const orderedList = useMemo(
+    () => deckList.filter((dish) => !addedDishIds.has(dish.id)),
+    [deckList, addedDishIds]
+  );
 
   const handleAdd = async (dishToAdd) => {
     if (!user) {
@@ -57,7 +62,14 @@ export default function Feed() {
     if (!dishToAdd?.id) return false;
     try {
       const saved = await saveDishToUserList(user.uid, dishToAdd.id, dishToAdd);
-      return Boolean(saved);
+      if (!saved) return false;
+      setAddedDishIds((prev) => {
+        const next = new Set(prev);
+        next.add(dishToAdd.id);
+        return next;
+      });
+      setDeckList((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+      return true;
     } catch (err) {
       console.error("Failed to save dish from feed:", err);
       return false;

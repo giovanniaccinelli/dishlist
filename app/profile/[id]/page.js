@@ -18,6 +18,7 @@ export default function PublicProfile() {
   const [dishes, setDishes] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [toast, setToast] = useState("");
 
   // Fetch profile data
   const fetchProfileData = async () => {
@@ -72,6 +73,8 @@ export default function PublicProfile() {
       return;
     }
     await saveDishToUserList(user.uid, dish.id, dish);
+    setToast("ADDING TO YOUR DISHLIST");
+    setTimeout(() => setToast(""), 1200);
   };
 
   if (!profileUser) {
@@ -263,6 +266,18 @@ export default function PublicProfile() {
 
       <BottomNav />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

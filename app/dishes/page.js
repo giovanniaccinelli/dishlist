@@ -5,6 +5,7 @@ import BottomNav from "../../components/BottomNav";
 import { getAllDishesFromFirestore, getDishesPage, saveDishToUserList } from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
+import { AnimatePresence, motion } from "framer-motion";
 
 const DISHES_PAGE_SIZE = 24;
 
@@ -20,6 +21,7 @@ export default function Dishes() {
   const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [toast, setToast] = useState("");
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -136,6 +138,8 @@ export default function Dishes() {
       return;
     }
     await saveDishToUserList(user.uid, dish.id, dish);
+    setToast("ADDING TO YOUR DISHLIST");
+    setTimeout(() => setToast(""), 1200);
   };
 
   return (
@@ -245,6 +249,18 @@ export default function Dishes() {
 
       <BottomNav />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -26,7 +26,6 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
-  const actionLocksRef = useRef(new Set());
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -110,20 +109,6 @@ export default function SwipeDeck({
     }
   };
 
-  const runLockedAction = async (dish, runner) => {
-    const key = dish?._key || dish?.id;
-    if (!key) return;
-    if (actionLocksRef.current.has(key)) return;
-    actionLocksRef.current.add(key);
-    try {
-      await runner();
-    } finally {
-      setTimeout(() => {
-        actionLocksRef.current.delete(key);
-      }, 150);
-    }
-  };
-
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -185,7 +170,6 @@ export default function SwipeDeck({
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
-              whileTap={{ scale: 0.98 }}
             >
               {renderImage(dish)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -239,13 +223,10 @@ export default function SwipeDeck({
                   </button>
                 ) : (
                   <button
-                    onPointerUp={async (e) => {
-                      if (e.pointerType !== "touch" && e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+                    onPointerDown={async (e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      await runLockedAction(dish, async () => {
-                        await handleAddToMyList(dish, { dismissFirst: true });
-                      });
+                      await handleAddToMyList(dish, { dismissFirst: true });
                     }}
                     className="w-24 h-24 -m-5 flex items-center justify-center"
                     aria-label="Add to dishlist"

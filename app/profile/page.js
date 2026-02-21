@@ -319,13 +319,13 @@ export default function Profile() {
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl border border-black/10"
+              className="bg-white p-6 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -428,8 +428,8 @@ export default function Profile() {
       {/* Edit Profile Modal */}
       <AnimatePresence>
         {editProfileModal && (
-          <motion.div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-            <motion.div className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl border border-black/10">
+          <motion.div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto">
+            <motion.div className="bg-white p-6 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6">
               <h2 className="text-2xl font-semibold mb-2 text-black">Edit Profile</h2>
               <p className="text-sm text-black/60 mb-4">Update your display name.</p>
               <input

@@ -224,8 +224,8 @@ export default function DishDetail() {
       </div>
 
       {editOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-black/10">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6">
             <h2 className="text-xl font-semibold mb-4">Edit Dish</h2>
             <input
               type="text"

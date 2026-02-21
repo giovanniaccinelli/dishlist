@@ -30,7 +30,7 @@ export default function SwipeDeck({
   const touchStart = useRef({ x: 0, y: 0 });
   const touchMoved = useRef(false);
   const didDrag = useRef(false);
-  const skipClick = useRef(false);
+  const actionInFlight = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -83,12 +83,12 @@ export default function SwipeDeck({
   const handleAddToMyList = async (dish) => {
     if (!user) {
       if (typeof onAuthRequired === "function") onAuthRequired();
-      return;
+      return false;
     }
     if (!dish?.id) {
       setToast("SAVE FAILED");
       setTimeout(() => setToast(""), 1500);
-      return;
+      return false;
     }
     try {
       const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
@@ -101,15 +101,9 @@ export default function SwipeDeck({
       console.error("Save failed:", err);
       setToast("SAVE FAILED");
       setTimeout(() => setToast(""), 1500);
-      return;
+      return false;
     }
-    setToast("ADDING TO YOUR DISHLIST");
-    setTimeout(() => setToast(""), 1200);
-    dismissCard(dish);
-  };
-
-  const handleCardSave = async (dish) => {
-    await handleAddToMyList(dish);
+    return true;
   };
 
   const renderImage = (dish) => {
@@ -176,7 +170,6 @@ export default function SwipeDeck({
               }}
               onPointerDown={(e) => {
                 didDrag.current = false;
-                skipClick.current = false;
                 if (e.pointerType === "touch") {
                   touchStart.current = { x: e.clientX, y: e.clientY };
                   touchMoved.current = false;
@@ -191,19 +184,8 @@ export default function SwipeDeck({
               }}
               onPointerUp={(e) => {
                 if (e.pointerType === "touch") {
-                  const moved = touchMoved.current || didDrag.current;
-                  skipClick.current = true;
-                  if (!moved) {
-                    handleCardSave(dish);
-                  }
+                  touchMoved.current = false;
                 }
-              }}
-              onClick={() => {
-                if (skipClick.current || didDrag.current) {
-                  skipClick.current = false;
-                  return;
-                }
-                handleCardSave(dish);
               }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
@@ -220,47 +202,25 @@ export default function SwipeDeck({
               </div>
               <div className="absolute bottom-6 right-6">
                 <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (typeof onAction === "function") {
-                      await onAction(dish);
-                      if (actionToast) {
-                        setToast(actionToast);
-                        setTimeout(() => setToast(""), 1200);
-                      }
-                      if (dismissOnAction) dismissCard(dish);
-                      return;
-                    }
-                    await handleAddToMyList(dish);
-                  }}
-                  onTouchEnd={async (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (typeof onAction === "function") {
-                      await onAction(dish);
-                      if (actionToast) {
-                        setToast(actionToast);
-                        setTimeout(() => setToast(""), 1200);
-                      }
-                      if (dismissOnAction) dismissCard(dish);
-                      return;
-                    }
-                    await handleAddToMyList(dish);
-                  }}
                   onPointerUp={async (e) => {
-                    if (e.pointerType !== "touch") return;
                     e.stopPropagation();
                     e.preventDefault();
-                    if (typeof onAction === "function") {
-                      await onAction(dish);
-                      if (actionToast) {
-                        setToast(actionToast);
-                        setTimeout(() => setToast(""), 1200);
+                    if (actionInFlight.current) return;
+                    actionInFlight.current = true;
+                    try {
+                      let ok = true;
+                      if (typeof onAction === "function") {
+                        await onAction(dish);
+                      } else {
+                        ok = await handleAddToMyList(dish);
                       }
+                      if (!ok) return;
+                      setToast(actionToast || "ADDING TO YOUR DISHLIST");
+                      setTimeout(() => setToast(""), 1200);
                       if (dismissOnAction) dismissCard(dish);
-                      return;
+                    } finally {
+                      actionInFlight.current = false;
                     }
-                    await handleAddToMyList(dish);
                   }}
                   className={
                     actionClassName ||

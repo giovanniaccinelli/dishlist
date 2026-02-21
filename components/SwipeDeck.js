@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import TinderCard from "react-tinder-card";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SwipeDeck({
@@ -22,55 +21,62 @@ export default function SwipeDeck({
   preserveContinuity = true,
 }) {
   const SWIPE_EJECT_THRESHOLD = 70;
-  const [cards, setCards] = useState([]);
+
+  const [deck, setDeck] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [deckInitialized, setDeckInitialized] = useState(false);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
-  const dismissedKeys = useRef(new Set());
-  const deckInitialized = useRef(false);
-  const touchStart = useRef({ x: 0, y: 0 });
-  const touchMoved = useRef(false);
-  const didDrag = useRef(false);
 
   useEffect(() => {
-    const formatted = dishes.map((d) => ({
+    const formatted = dishes.map((d, i) => ({
       ...d,
-      _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${d.createdAt?.seconds || Date.now()}`,
+      _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${i}`,
     }));
-    const visibleFormatted = formatted.filter((c) => !dismissedKeys.current.has(c._key));
-    setCards((prev) => {
-      if (!deckInitialized.current && prev.length === 0 && visibleFormatted.length > 0) {
-        deckInitialized.current = true;
-        setDeckEmpty(visibleFormatted.length === 0);
-        return visibleFormatted;
+
+    if (!deckInitialized) {
+      if (formatted.length > 0) {
+        setDeck(formatted);
+        setCurrentIndex(0);
+        setDeckInitialized(true);
+        setDeckEmpty(false);
+      } else {
+        setDeckEmpty(true);
       }
+      return;
+    }
 
-      // Hard lock: never rebuild/reset an active deck from upstream changes.
-      return prev;
-    });
-  }, [dishes, preserveContinuity]);
+    if (!preserveContinuity) {
+      setDeck((prev) => {
+        const existing = new Set(prev.map((d) => d._key));
+        const appended = formatted.filter((d) => !existing.has(d._key));
+        return appended.length > 0 ? [...prev, ...appended] : prev;
+      });
+    }
+  }, [dishes, deckInitialized, preserveContinuity]);
 
-  const dismissCard = (dish) => {
-    dismissedKeys.current.add(dish._key);
-    setCards((prev) => {
-      const updated = prev.filter((d) => d._key !== dish._key);
-      if (updated.length === 0) {
+  const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+
+  const advanceCard = () => {
+    setCurrentIndex((prev) => {
+      const next = prev + 1;
+      if (next >= deck.length) {
         setDeckEmpty(true);
         if (typeof onDeckEmpty === "function") onDeckEmpty();
       }
-      return updated;
+      return next;
     });
   };
 
-  const handleSwipeEnd = async (info, dish) => {
-    if (Math.abs(info.deltaX) >= SWIPE_EJECT_THRESHOLD) {
+  const handleSwipeEnd = (info, dish) => {
+    if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
-      dismissCard(dish);
+      advanceCard();
     }
   };
 
   const renderImage = (dish) => {
-    const imageSrc =
-      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+    const imageSrc = dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
     if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-gray-500">
@@ -90,7 +96,7 @@ export default function SwipeDeck({
     );
   };
 
-  if (deckEmpty) {
+  if (deckEmpty || !currentCard) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500 text-lg">
         You&apos;re all caught up!
@@ -117,96 +123,70 @@ export default function SwipeDeck({
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-full max-w-md h-[70vh]">
-        {cards[0] ? (
-          <TinderCard
-            key={cards[0]._key}
-            preventSwipe={["up", "down"]}
-            className="absolute w-full"
-            swipeRequirementType="position"
-          >
-            <motion.div
-              drag="x"
-              onDragEnd={(e, info) => handleSwipeEnd(info, cards[0])}
-              onDragStart={() => {
-                didDrag.current = true;
-              }}
-              onPointerDown={(e) => {
-                didDrag.current = false;
-                if (e.pointerType === "touch") {
-                  touchStart.current = { x: e.clientX, y: e.clientY };
-                  touchMoved.current = false;
-                }
-              }}
-              onPointerMove={(e) => {
-                if (e.pointerType === "touch") {
-                  const dx = Math.abs(e.clientX - touchStart.current.x);
-                  const dy = Math.abs(e.clientY - touchStart.current.y);
-                  if (dx > 6 || dy > 6) touchMoved.current = true;
-                }
-              }}
+        <motion.div
+          key={currentCard._key}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.9}
+          onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
+          className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
+          whileTap={{ scale: 0.98 }}
+        >
+          {renderImage(currentCard)}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute bottom-20 left-5 right-5 text-white">
+            <p className="text-lg font-semibold">{currentCard.ownerName || "Unknown"}</p>
+            <h2 className="text-2xl font-bold">{currentCard.name}</h2>
+            <p className="text-sm text-white/80 line-clamp-2">
+              {currentCard.description || "No description yet."}
+            </p>
+          </div>
+          <div className="absolute bottom-6 right-6">
+            <button
               onPointerUp={(e) => {
-                if (e.pointerType === "touch") {
-                  touchMoved.current = false;
+                e.stopPropagation();
+                e.preventDefault();
+
+                const card = currentCard;
+                if (dismissOnAction) advanceCard();
+
+                if (typeof onAction !== "function") {
+                  if (typeof onAuthRequired === "function") onAuthRequired();
+                  return;
                 }
-              }}
-              className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
-              whileTap={{ scale: 0.98 }}
-            >
-              {renderImage(cards[0])}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-20 left-5 right-5 text-white">
-                <p className="text-lg font-semibold">{cards[0].ownerName || "Unknown"}</p>
-                <h2 className="text-2xl font-bold">{cards[0].name}</h2>
-                <p className="text-sm text-white/80 line-clamp-2">
-                  {cards[0].description || "No description yet."}
-                </p>
-              </div>
-              <div className="absolute bottom-6 right-6">
-                <button
-                  onPointerUp={async (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (typeof onAction !== "function") {
-                      if (typeof onAuthRequired === "function") onAuthRequired();
+
+                Promise.resolve(onAction(card))
+                  .then((result) => {
+                    if (result === false) {
+                      setToast("ACTION FAILED");
+                      setTimeout(() => setToast(""), 1200);
                       return;
                     }
-
-                    if (dismissOnAction) dismissCard(cards[0]);
-
-                    Promise.resolve(onAction(cards[0]))
-                      .then((result) => {
-                        if (result === false) {
-                          setToast("ACTION FAILED");
-                          setTimeout(() => setToast(""), 1200);
-                          return;
-                        }
-                        setToast(actionToast || "ADDING TO YOUR DISHLIST");
-                        setTimeout(() => setToast(""), 1200);
-                      })
-                      .catch((err) => {
-                        console.error("Deck action failed:", err);
-                        setToast("ACTION FAILED");
-                        setTimeout(() => setToast(""), 1200);
-                      });
-                  }}
-                  className={
-                    actionClassName ||
-                    "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center"
-                  }
-                  aria-label="Action"
-                >
-                  {actionLabel}
-                </button>
-              </div>
-            </motion.div>
-          </TinderCard>
-        ) : null}
+                    setToast(actionToast || "ADDING TO YOUR DISHLIST");
+                    setTimeout(() => setToast(""), 1200);
+                  })
+                  .catch((err) => {
+                    console.error("Deck action failed:", err);
+                    setToast("ACTION FAILED");
+                    setTimeout(() => setToast(""), 1200);
+                  });
+              }}
+              className={
+                actionClassName ||
+                "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center"
+              }
+              aria-label="Action"
+            >
+              {actionLabel}
+            </button>
+          </div>
+        </motion.div>
       </div>
 
       <AnimatePresence>
         {toast && (
           <motion.div
-            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
+            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

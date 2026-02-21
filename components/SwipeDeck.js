@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -26,6 +26,10 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchMoved = useRef(false);
+  const didDrag = useRef(false);
+  const skipClick = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -103,6 +107,10 @@ export default function SwipeDeck({
     dismissCard(dish);
   };
 
+  const handleCardSave = async (dish) => {
+    await handleAddToMyList(dish);
+  };
+
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -162,6 +170,40 @@ export default function SwipeDeck({
             <motion.div
               drag="x"
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
+              onDragStart={() => {
+                didDrag.current = true;
+              }}
+              onPointerDown={(e) => {
+                didDrag.current = false;
+                skipClick.current = false;
+                if (e.pointerType === "touch") {
+                  touchStart.current = { x: e.clientX, y: e.clientY };
+                  touchMoved.current = false;
+                }
+              }}
+              onPointerMove={(e) => {
+                if (e.pointerType === "touch") {
+                  const dx = Math.abs(e.clientX - touchStart.current.x);
+                  const dy = Math.abs(e.clientY - touchStart.current.y);
+                  if (dx > 6 || dy > 6) touchMoved.current = true;
+                }
+              }}
+              onPointerUp={(e) => {
+                if (e.pointerType === "touch") {
+                  const moved = touchMoved.current || didDrag.current;
+                  skipClick.current = true;
+                  if (!moved) {
+                    handleCardSave(dish);
+                  }
+                }
+              }}
+              onClick={() => {
+                if (skipClick.current || didDrag.current) {
+                  skipClick.current = false;
+                  return;
+                }
+                handleCardSave(dish);
+              }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
@@ -176,76 +218,57 @@ export default function SwipeDeck({
                 </p>
               </div>
               <div className="absolute bottom-6 right-6">
-                {typeof onAction === "function" ? (
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (typeof onAction === "function") {
                       await onAction(dish);
                       if (actionToast) {
                         setToast(actionToast);
                         setTimeout(() => setToast(""), 1200);
                       }
                       if (dismissOnAction) dismissCard(dish);
-                    }}
-                    onTouchEnd={async (e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      await onAction(dish);
-                      if (actionToast) {
-                        setToast(actionToast);
-                        setTimeout(() => setToast(""), 1200);
-                      }
-                      if (dismissOnAction) dismissCard(dish);
-                    }}
-                    onPointerUp={async (e) => {
-                      if (e.pointerType !== "touch") return;
-                      e.stopPropagation();
-                      e.preventDefault();
-                      await onAction(dish);
-                      if (actionToast) {
-                        setToast(actionToast);
-                        setTimeout(() => setToast(""), 1200);
-                      }
-                      if (dismissOnAction) dismissCard(dish);
-                    }}
-                    className={
-                      actionClassName ||
-                      "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                      return;
                     }
-                    aria-label="Action"
-                  >
-                    {actionLabel}
-                  </button>
-                ) : (
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      await handleAddToMyList(dish);
-                    }}
-                    onTouchEnd={async (e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      await handleAddToMyList(dish);
-                    }}
-                    onPointerUp={async (e) => {
-                      if (e.pointerType !== "touch") return;
-                      e.stopPropagation();
-                      e.preventDefault();
-                      await handleAddToMyList(dish);
-                    }}
-                    className="w-24 h-24 -m-5 flex items-center justify-center"
-                    aria-label="Add to dishlist"
-                  >
-                    <span
-                      className={
-                        actionClassName ||
-                        "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                    await handleAddToMyList(dish);
+                  }}
+                  onTouchEnd={async (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (typeof onAction === "function") {
+                      await onAction(dish);
+                      if (actionToast) {
+                        setToast(actionToast);
+                        setTimeout(() => setToast(""), 1200);
                       }
-                    >
-                      {actionLabel}
-                    </span>
-                  </button>
-                )}
+                      if (dismissOnAction) dismissCard(dish);
+                      return;
+                    }
+                    await handleAddToMyList(dish);
+                  }}
+                  onPointerUp={async (e) => {
+                    if (e.pointerType !== "touch") return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (typeof onAction === "function") {
+                      await onAction(dish);
+                      if (actionToast) {
+                        setToast(actionToast);
+                        setTimeout(() => setToast(""), 1200);
+                      }
+                      if (dismissOnAction) dismissCard(dish);
+                      return;
+                    }
+                    await handleAddToMyList(dish);
+                  }}
+                  className={
+                    actionClassName ||
+                    "w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg"
+                  }
+                  aria-label="Action"
+                >
+                  {actionLabel}
+                </button>
               </div>
             </motion.div>
           </TinderCard>

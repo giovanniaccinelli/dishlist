@@ -263,7 +263,44 @@ export async function clearSwipedDishesForUser(userId) {
 
 // Alias for naming consistency
 export async function saveDishToUserList(userId, dishId, dishData = null) {
-  return saveDishReferenceToUser(userId, dishId, dishData);
+  if (!userId || !dishId) return false;
+
+  const payload = dishData
+    ? {
+        dishId,
+        name: dishData.name || "",
+        description: dishData.description || "",
+        recipeIngredients: dishData.recipeIngredients || "",
+        recipeMethod: dishData.recipeMethod || "",
+        isPublic: dishData.isPublic !== false,
+        imageURL:
+          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
+        owner: dishData.owner || "",
+        ownerName: dishData.ownerName || "",
+        createdAt: dishData.createdAt || new Date(),
+      }
+    : { dishId, createdAt: new Date() };
+
+  const userRef = doc(db, "users", userId);
+  try {
+    await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
+  } catch (err) {
+    try {
+      await setDoc(userRef, { savedDishes: [dishId] }, { merge: true });
+    } catch (fallbackErr) {
+      console.error("Failed to update savedDishes array:", fallbackErr);
+      return false;
+    }
+  }
+
+  try {
+    await setDoc(doc(db, "users", userId, "saved", dishId), payload, { merge: true });
+  } catch (err) {
+    console.error("Failed to persist saved dish doc:", err);
+    return false;
+  }
+
+  return true;
 }
 
 // Get dishes saved by user

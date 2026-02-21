@@ -72,7 +72,12 @@ export default function PublicProfile() {
       setShowAuthPrompt(true);
       return;
     }
-    await saveDishToUserList(user.uid, dish.id, dish);
+    const saved = await saveDishToUserList(user.uid, dish.id, dish);
+    if (!saved) {
+      setToast("SAVE FAILED");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
     setToast("ADDING TO YOUR DISHLIST");
     setTimeout(() => setToast(""), 1200);
   };

@@ -167,70 +167,42 @@ export default function SwipeDeck({
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
             >
-              <div
-                className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-sm rounded-full p-1 flex gap-1"
-                data-no-swipe="1"
-                style={{ touchAction: "manipulation" }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                }}
-                onTouchStart={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
-                  }}
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPointerUp={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
-                  }}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-                    !showRecipeByCard[dish._key]
-                      ? "bg-white text-black"
-                      : "text-white/90"
-                  }`}
-                >
-                  dish
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleRecipeView(dish._key);
-                  }}
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPointerUp={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleRecipeView(dish._key);
-                  }}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-                    showRecipeByCard[dish._key]
-                      ? "bg-white text-black"
-                      : "text-white/90"
-                  }`}
-                >
-                  recipe
-                </button>
-              </div>
+              {index === 0 && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+                  <div className="bg-black/40 rounded-full p-1 flex gap-1 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
+                      }}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+                        !showRecipeByCard[dish._key]
+                          ? "bg-white text-black"
+                          : "text-white/90"
+                      }`}
+                    >
+                      dish
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleRecipeView(dish._key);
+                      }}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+                        showRecipeByCard[dish._key]
+                          ? "bg-white text-black"
+                          : "text-white/90"
+                      }`}
+                    >
+                      recipe
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="absolute inset-0">
                 {showRecipeByCard[dish._key] ? (

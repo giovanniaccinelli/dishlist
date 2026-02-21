@@ -29,7 +29,6 @@ export default function SwipeDeck({
   const touchStart = useRef({ x: 0, y: 0 });
   const touchMoved = useRef(false);
   const didDrag = useRef(false);
-  const actionInFlight = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d) => ({
@@ -181,21 +180,29 @@ export default function SwipeDeck({
                   onPointerUp={async (e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    if (actionInFlight.current) return;
-                    actionInFlight.current = true;
-                    try {
-                      if (typeof onAction !== "function") {
-                        if (typeof onAuthRequired === "function") onAuthRequired();
-                        return;
-                      }
-                      const result = await onAction(dish);
-                      if (result === false) return;
-                      setToast(actionToast || "ADDING TO YOUR DISHLIST");
-                      setTimeout(() => setToast(""), 1200);
-                      if (dismissOnAction) dismissCard(dish);
-                    } finally {
-                      actionInFlight.current = false;
+                    if (typeof onAction !== "function") {
+                      if (typeof onAuthRequired === "function") onAuthRequired();
+                      return;
                     }
+
+                    // Immediate eject: behave like a swipe and move on instantly.
+                    if (dismissOnAction) dismissCard(dish);
+
+                    Promise.resolve(onAction(dish))
+                      .then((result) => {
+                        if (result === false) {
+                          setToast("ACTION FAILED");
+                          setTimeout(() => setToast(""), 1200);
+                          return;
+                        }
+                        setToast(actionToast || "ADDING TO YOUR DISHLIST");
+                        setTimeout(() => setToast(""), 1200);
+                      })
+                      .catch((err) => {
+                        console.error("Deck action failed:", err);
+                        setToast("ACTION FAILED");
+                        setTimeout(() => setToast(""), 1200);
+                      });
                   }}
                   className={
                     actionClassName ||

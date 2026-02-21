@@ -21,6 +21,7 @@ export default function SwipeDeck({
   actionToast,
   trackSwipes = true,
   onAuthRequired,
+  preserveContinuity = true,
 }) {
   const { user } = useAuth();
   const [cards, setCards] = useState([]);
@@ -42,10 +43,10 @@ export default function SwipeDeck({
         return formatted;
       }
 
-      // Hard reset when upstream list is replaced (e.g. feed reset).
-      if (formatted.length < prev.length) {
-        setDeckEmpty(formatted.length === 0);
-        return formatted;
+      // Keep continuity: once a deck session starts, don't reset/reshuffle it
+      // from upstream data updates until this deck is exhausted.
+      if (preserveContinuity) {
+        return prev;
       }
 
       // Soft merge for pagination so current swipe state is preserved.
@@ -55,7 +56,7 @@ export default function SwipeDeck({
       setDeckEmpty(merged.length === 0);
       return merged;
     });
-  }, [dishes]);
+  }, [dishes, preserveContinuity]);
 
   const dismissCard = (dish) => {
     setCards((prev) => {

@@ -29,7 +29,7 @@ export default function DishDetail() {
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const [dish, setDish] = useState(null);
-  const [list, setList] = useState([]);
+  const [deckList, setDeckList] = useState([]);
   const [removedDishIds, setRemovedDishIds] = useState(() => new Set());
   const [loadingDish, setLoadingDish] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -42,6 +42,15 @@ export default function DishDetail() {
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const shuffleArray = (arr) => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
 
   useEffect(() => {
     if (!dishId || !userId) return;
@@ -60,33 +69,31 @@ export default function DishDetail() {
           const bTime = b?.createdAt?.seconds || 0;
           return bTime - aTime;
         });
-      setList(items);
       const found = items.find((d) => d.id === dishId) || null;
       if (found) {
         setDish(found);
+        if (mode === "shuffle") {
+          const others = items.filter((d) => d.id !== dishId);
+          setDeckList([found, ...shuffleArray(others)]);
+        } else {
+          setDeckList([found]);
+        }
         setLoadingDish(false);
         return;
       }
       const snap = await getDoc(doc(db, "dishes", dishId));
-      setDish(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+      const fallbackDish = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+      setDish(fallbackDish);
+      setDeckList(fallbackDish ? [fallbackDish] : []);
       setLoadingDish(false);
     })();
-  }, [dishId, userId, source]);
+  }, [dishId, userId, source, mode]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
-    const base =
-      mode === "single"
-        ? [dish]
-        : [
-            dish,
-            ...list
-              .filter((d) => d.id !== dish.id)
-              .slice()
-              .sort(() => Math.random() - 0.5),
-          ];
+    const base = mode === "single" ? [dish] : deckList;
     return base.filter((d) => !removedDishIds.has(d.id));
-  }, [dish, list, mode, removedDishIds]);
+  }, [dish, deckList, mode, removedDishIds]);
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return;
@@ -104,7 +111,7 @@ export default function DishDetail() {
       next.add(dishToRemove.id);
       return next;
     });
-    setList((prev) => prev.filter((d) => d.id !== dishToRemove.id));
+    setDeckList((prev) => prev.filter((d) => d.id !== dishToRemove.id));
   };
 
   const canEditUploaded = source === "uploaded";
@@ -210,6 +217,7 @@ export default function DishDetail() {
       <div className="px-5">
         <SwipeDeck
           dishes={orderedList}
+          preserveContinuity={false}
           onAction={canEditUploaded ? openEditModal : handleRemove}
           dismissOnAction={!canEditUploaded}
           actionLabel={canEditUploaded ? "Edit" : "Remove"}

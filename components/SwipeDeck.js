@@ -26,6 +26,7 @@ export default function SwipeDeck({
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
   const dismissedKeys = useRef(new Set());
+  const deckInitialized = useRef(false);
   const touchStart = useRef({ x: 0, y: 0 });
   const touchMoved = useRef(false);
   const didDrag = useRef(false);
@@ -35,30 +36,16 @@ export default function SwipeDeck({
       ...d,
       _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${d.createdAt?.seconds || Date.now()}`,
     }));
-
-    if (formatted.length === 0) {
-      dismissedKeys.current = new Set();
-    }
-
     const visibleFormatted = formatted.filter((c) => !dismissedKeys.current.has(c._key));
     setCards((prev) => {
-      if (prev.length === 0) {
+      if (!deckInitialized.current && prev.length === 0 && visibleFormatted.length > 0) {
+        deckInitialized.current = true;
         setDeckEmpty(visibleFormatted.length === 0);
         return visibleFormatted;
       }
 
-      // Keep continuity: once a deck session starts, don't reset/reshuffle it
-      // from upstream data updates until this deck is exhausted.
-      if (preserveContinuity) {
-        return prev;
-      }
-
-      // Soft merge for pagination so current swipe state is preserved.
-      const existingKeys = new Set(prev.map((c) => c._key));
-      const appended = visibleFormatted.filter((c) => !existingKeys.has(c._key));
-      const merged = appended.length > 0 ? [...prev, ...appended] : prev;
-      setDeckEmpty(merged.length === 0);
-      return merged;
+      // Hard lock: never rebuild/reset an active deck from upstream changes.
+      return prev;
     });
   }, [dishes, preserveContinuity]);
 

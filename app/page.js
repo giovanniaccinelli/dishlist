@@ -81,7 +81,7 @@ export default function Feed() {
       <div className="px-5">
         <SwipeDeck
           dishes={orderedList}
-          preserveContinuity={false}
+          preserveContinuity
           onAction={handleAdd}
           dismissOnAction
           actionLabel="+"

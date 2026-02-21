@@ -224,7 +224,7 @@ export default function DishDetail() {
       <div className="px-5">
         <SwipeDeck
           dishes={orderedList}
-          preserveContinuity={false}
+          preserveContinuity
           onAction={canEditUploaded ? openEditModal : handleRemove}
           dismissOnAction={!canEditUploaded}
           actionLabel={canEditUploaded ? "Edit" : "Remove"}

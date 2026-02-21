@@ -70,10 +70,18 @@ export default function Dishes() {
     setLoadingMore(true);
     setLoadError("");
     try {
-      const nextPage = await getDishesPage({
-        pageSize: DISHES_PAGE_SIZE,
-        cursor: lastDoc,
-      });
+      let cursor = lastDoc;
+      let nextPage = { items: [], lastDoc: null };
+      let guard = 0;
+      while (cursor && guard < 8) {
+        nextPage = await getDishesPage({
+          pageSize: DISHES_PAGE_SIZE,
+          cursor,
+        });
+        if (nextPage.items.length > 0 || !nextPage.lastDoc) break;
+        cursor = nextPage.lastDoc;
+        guard += 1;
+      }
       setDishes((prev) => {
         const ids = new Set(prev.map((d) => d.id));
         const merged = [...prev];
@@ -86,7 +94,27 @@ export default function Dishes() {
       setHasMore(Boolean(nextPage.lastDoc));
     } catch (err) {
       console.error("Failed to load more dishes:", err);
-      setLoadError("Could not load more dishes.");
+      try {
+        const all = await getAllDishesFromFirestore();
+        setFallbackPool(all);
+        setUsingFallbackPagination(true);
+        let mergedLength = 0;
+        setDishes((prev) => {
+          const ids = new Set(prev.map((d) => d.id));
+          const merged = [...prev];
+          all.forEach((item) => {
+            if (!ids.has(item.id) && merged.length < prev.length + DISHES_PAGE_SIZE) {
+              merged.push(item);
+            }
+          });
+          mergedLength = merged.length;
+          return merged;
+        });
+        setHasMore(mergedLength < all.length);
+      } catch (fallbackErr) {
+        console.error("Fallback load more failed:", fallbackErr);
+        setLoadError("Could not load more dishes.");
+      }
     } finally {
       setLoadingMore(false);
     }

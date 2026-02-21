@@ -56,12 +56,6 @@ export default function SwipeDeck({
     });
   }, [dishes]);
 
-  useEffect(() => {
-    if (cards.length > 0 && cards.length <= 5 && hasMore && !loadingMore && loadMoreDishes) {
-      loadMoreDishes();
-    }
-  }, [cards.length, hasMore, loadingMore, loadMoreDishes]);
-
   const dismissCard = (dish) => {
     setCards((prev) => {
       const updated = prev.filter((d) => d._key !== dish._key);

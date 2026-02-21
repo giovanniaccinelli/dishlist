@@ -55,6 +55,18 @@ export default function Feed() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+    if (params.get("auth") !== "1") return;
+    if (userId) return;
+    setShowAuthPrompt(true);
+    params.delete("auth");
+    const nextQuery = params.toString();
+    const nextUrl = nextQuery ? `/?${nextQuery}` : "/";
+    window.history.replaceState({}, "", nextUrl);
+  }, [userId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
     if (params.get("recountSaves") !== "1") return;
     recountDishSavesFromUsers()
       .then(() => getAllDishesFromFirestore().then((items) => {

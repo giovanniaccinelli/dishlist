@@ -190,7 +190,7 @@ export default function SwipeDeck({
   }
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex min-h-[72vh] flex-col items-center justify-center">
       <div className="relative w-full max-w-md h-[70vh]">
         <motion.div
           key={currentCard._key}

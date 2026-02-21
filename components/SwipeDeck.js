@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -27,10 +27,6 @@ export default function SwipeDeck({
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
   const [showRecipeByCard, setShowRecipeByCard] = useState({});
-  const touchStart = useRef({ x: 0, y: 0 });
-  const touchMoved = useRef(false);
-  const didDrag = useRef(false);
-  const skipClick = useRef(false);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -108,10 +104,6 @@ export default function SwipeDeck({
     dismissCard(dish);
   };
 
-  const handleCardSave = async (dish) => {
-    await handleAddToMyList(dish);
-  };
-
   const renderImage = (dish) => {
     const imageSrc =
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -175,51 +167,25 @@ export default function SwipeDeck({
             <motion.div
               drag="x"
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
-              onDragStart={() => {
-                didDrag.current = true;
-              }}
-              onPointerDown={(e) => {
-                didDrag.current = false;
-                skipClick.current = false;
-                if (e.pointerType === "touch") {
-                  touchStart.current = { x: e.clientX, y: e.clientY };
-                  touchMoved.current = false;
-                }
-              }}
-              onPointerMove={(e) => {
-                if (e.pointerType === "touch") {
-                  const dx = Math.abs(e.clientX - touchStart.current.x);
-                  const dy = Math.abs(e.clientY - touchStart.current.y);
-                  if (dx > 6 || dy > 6) touchMoved.current = true;
-                }
-              }}
-              onPointerUp={(e) => {
-                if (e.pointerType === "touch") {
-                  const moved = touchMoved.current || didDrag.current;
-                  skipClick.current = true;
-                  if (!moved) {
-                    handleCardSave(dish);
-                  }
-                }
-              }}
-              onClick={() => {
-                if (skipClick.current || didDrag.current) {
-                  skipClick.current = false;
-                  return;
-                }
-                handleCardSave(dish);
-              }}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-sm rounded-full p-1 flex gap-1">
+              <div
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-sm rounded-full p-1 flex gap-1"
+                data-no-swipe="1"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                }}
+              >
                 <button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    skipClick.current = true;
                     setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
                   }}
                   onPointerDown={(e) => {
@@ -227,6 +193,11 @@ export default function SwipeDeck({
                   }}
                   onPointerUp={(e) => {
                     e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
                   }}
                   className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
                     !showRecipeByCard[dish._key]
@@ -241,7 +212,6 @@ export default function SwipeDeck({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    skipClick.current = true;
                     toggleRecipeView(dish._key);
                   }}
                   onPointerDown={(e) => {
@@ -249,6 +219,11 @@ export default function SwipeDeck({
                   }}
                   onPointerUp={(e) => {
                     e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleRecipeView(dish._key);
                   }}
                   className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
                     showRecipeByCard[dish._key]
@@ -300,6 +275,37 @@ export default function SwipeDeck({
               </div>
 
               <div className="absolute bottom-6 right-6">
+                {(() => {
+                  const isDefaultAddAction =
+                    typeof onAction !== "function" && !actionClassName && actionLabel === "+";
+                  if (isDefaultAddAction) {
+                    return (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleAddToMyList(dish);
+                        }}
+                        onTouchEnd={async (e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          await handleAddToMyList(dish);
+                        }}
+                        onPointerUp={async (e) => {
+                          if (e.pointerType !== "touch") return;
+                          e.stopPropagation();
+                          e.preventDefault();
+                          await handleAddToMyList(dish);
+                        }}
+                        className="w-24 h-24 -m-5 flex items-center justify-center"
+                        aria-label="Action"
+                      >
+                        <span className="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg">
+                          +
+                        </span>
+                      </button>
+                    );
+                  }
+                  return (
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
@@ -351,6 +357,8 @@ export default function SwipeDeck({
                 >
                   {actionLabel}
                 </button>
+                  );
+                })()}
               </div>
             </motion.div>
           </TinderCard>

@@ -67,6 +67,22 @@ export async function deleteDishAndImage(dishId, imageURL) {
   await deleteDoc(doc(db, "dishes", dishId));
 }
 
+export async function updateDishAndSavedCopies(dishId, updates) {
+  if (!dishId || !updates || Object.keys(updates).length === 0) return;
+  await updateDoc(doc(db, "dishes", dishId), updates);
+
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("savedDishes", "array-contains", dishId));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return;
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((userDoc) => {
+    batch.set(doc(db, "users", userDoc.id, "saved", dishId), updates, { merge: true });
+  });
+  await batch.commit();
+}
+
 // Save dish to global dishes collection
 export async function saveDishToFirestore(dish) {
   await addDoc(collection(db, "dishes"), dish);

@@ -15,6 +15,7 @@ export default function SwipeDeck({
   loadingMore,
   onResetFeed,
   onAction,
+  dismissOnAction = true,
   actionLabel = "+",
   actionClassName,
   actionToast,
@@ -226,7 +227,7 @@ export default function SwipeDeck({
                         setToast(actionToast);
                         setTimeout(() => setToast(""), 1200);
                       }
-                      dismissCard(dish);
+                      if (dismissOnAction) dismissCard(dish);
                       return;
                     }
                     await handleAddToMyList(dish);
@@ -240,7 +241,7 @@ export default function SwipeDeck({
                         setToast(actionToast);
                         setTimeout(() => setToast(""), 1200);
                       }
-                      dismissCard(dish);
+                      if (dismissOnAction) dismissCard(dish);
                       return;
                     }
                     await handleAddToMyList(dish);
@@ -255,7 +256,7 @@ export default function SwipeDeck({
                         setToast(actionToast);
                         setTimeout(() => setToast(""), 1200);
                       }
-                      dismissCard(dish);
+                      if (dismissOnAction) dismissCard(dish);
                       return;
                     }
                     await handleAddToMyList(dish);

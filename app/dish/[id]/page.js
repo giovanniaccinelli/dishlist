@@ -9,10 +9,13 @@ import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
 import {
   deleteDishAndImage,
+  deleteImageByUrl,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   removeDishFromAllUsers,
   removeSavedDishFromUser,
+  updateDishAndSavedCopies,
+  uploadImage,
 } from "../../lib/firebaseHelpers";
 
 export default function DishDetail() {
@@ -28,6 +31,13 @@ export default function DishDetail() {
   const [dish, setDish] = useState(null);
   const [list, setList] = useState([]);
   const [loadingDish, setLoadingDish] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingDish, setEditingDish] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editPreview, setEditPreview] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     if (!dishId || !userId) return;
@@ -82,6 +92,68 @@ export default function DishDetail() {
     router.back();
   };
 
+  const canEditUploaded = source === "uploaded";
+
+  const openEditModal = (dishToEdit) => {
+    if (!canEditUploaded || dishToEdit?.owner !== userId) return;
+    setEditingDish(dishToEdit);
+    setEditName(dishToEdit?.name || "");
+    setEditDescription(dishToEdit?.description || "");
+    setEditImageFile(null);
+    setEditPreview(
+      dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
+    );
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingDish?.id || !userId) return;
+    if (editingDish.owner !== userId) {
+      alert("You can only edit your own uploaded dishes.");
+      return;
+    }
+    if (!editName.trim()) {
+      alert("Dish name is required.");
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      let nextImageURL =
+        editingDish.imageURL || editingDish.imageUrl || editingDish.image_url || editingDish.image || "";
+      if (editImageFile) {
+        const uploadedUrl = await uploadImage(editImageFile, userId);
+        if (uploadedUrl) {
+          if (nextImageURL && nextImageURL !== uploadedUrl) {
+            await deleteImageByUrl(nextImageURL);
+          }
+          nextImageURL = uploadedUrl;
+        }
+      }
+
+      const updates = {
+        name: editName.trim(),
+        description: editDescription.trim(),
+        imageURL: nextImageURL || "",
+      };
+
+      await updateDishAndSavedCopies(editingDish.id, updates);
+
+      setDish((prev) => (prev?.id === editingDish.id ? { ...prev, ...updates } : prev));
+      setList((prev) =>
+        prev.map((item) => (item.id === editingDish.id ? { ...item, ...updates } : item))
+      );
+
+      setEditOpen(false);
+      setEditingDish(null);
+    } catch (err) {
+      console.error("Failed to update dish:", err);
+      alert("Failed to update dish.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   if (loading || loadingDish) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -117,13 +189,77 @@ export default function DishDetail() {
       <div className="px-5">
         <SwipeDeck
           dishes={orderedList}
-          onAction={handleRemove}
-          actionLabel="Remove"
-          actionClassName="px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
-          actionToast="Removed"
+          onAction={canEditUploaded ? openEditModal : handleRemove}
+          dismissOnAction={!canEditUploaded}
+          actionLabel={canEditUploaded ? "Edit" : "Remove"}
+          actionClassName={
+            canEditUploaded
+              ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
+              : "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
+          }
+          actionToast={canEditUploaded ? "Edit Dish" : "Removed"}
           trackSwipes={false}
         />
       </div>
+
+      {editOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-black/10">
+            <h2 className="text-xl font-semibold mb-4">Edit Dish</h2>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Dish name"
+              className="w-full p-3 rounded-full bg-[#F6F6F2] border border-black/10 mb-3"
+              disabled={savingEdit}
+            />
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Description"
+              rows={3}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
+              disabled={savingEdit}
+            />
+            <label className="block text-sm font-medium mb-2">Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setEditImageFile(file);
+                if (file) setEditPreview(URL.createObjectURL(file));
+              }}
+              className="w-full mb-3"
+              disabled={savingEdit}
+            />
+            {editPreview ? (
+              <img src={editPreview} alt="Edit preview" className="w-full h-40 object-cover rounded-xl mb-4" />
+            ) : (
+              <div className="w-full h-40 rounded-xl mb-4 bg-neutral-200 flex items-center justify-center text-gray-500">
+                No image
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="flex-1 py-3 rounded-full border border-black/20"
+                disabled={savingEdit}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 py-3 rounded-full bg-black text-white font-semibold"
+                disabled={savingEdit}
+              >
+                {savingEdit ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

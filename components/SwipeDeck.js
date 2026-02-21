@@ -75,8 +75,7 @@ export default function SwipeDeck({
     }
   };
 
-  const handleAddToMyList = async (dish, options = {}) => {
-    const { dismissFirst = false } = options;
+  const handleAddToMyList = async (dish) => {
     if (!user) {
       if (typeof onAuthRequired === "function") onAuthRequired();
       return;
@@ -85,9 +84,6 @@ export default function SwipeDeck({
       setToast("SAVE FAILED");
       setTimeout(() => setToast(""), 1500);
       return;
-    }
-    if (dismissFirst) {
-      dismissCard(dish);
     }
     try {
       const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
@@ -104,9 +100,7 @@ export default function SwipeDeck({
     }
     setToast("ADDING TO YOUR DISHLIST");
     setTimeout(() => setToast(""), 1200);
-    if (!dismissFirst) {
-      dismissCard(dish);
-    }
+    dismissCard(dish);
   };
 
   const renderImage = (dish) => {
@@ -170,6 +164,7 @@ export default function SwipeDeck({
               onDragEnd={(e, info) => handleSwipeEnd(info, dish)}
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
+              whileTap={{ scale: 0.98 }}
             >
               {renderImage(dish)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -223,10 +218,20 @@ export default function SwipeDeck({
                   </button>
                 ) : (
                   <button
-                    onPointerDown={async (e) => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await handleAddToMyList(dish);
+                    }}
+                    onTouchEnd={async (e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      await handleAddToMyList(dish, { dismissFirst: true });
+                      await handleAddToMyList(dish);
+                    }}
+                    onPointerUp={async (e) => {
+                      if (e.pointerType !== "touch") return;
+                      e.stopPropagation();
+                      e.preventDefault();
+                      await handleAddToMyList(dish);
                     }}
                     className="w-24 h-24 -m-5 flex items-center justify-center"
                     aria-label="Add to dishlist"

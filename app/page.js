@@ -1,7 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import SwipeDeck from "../components/SwipeDeck";
-import { getAllDishesFromFirestore, getDishesPage, cleanupDishIdField } from "./lib/firebaseHelpers";
+import {
+  getAllDishesFromFirestore,
+  getDishesPage,
+  cleanupDishIdField,
+  cleanupNamelessDishes,
+} from "./lib/firebaseHelpers";
 import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
@@ -96,6 +101,17 @@ export default function Feed() {
         .catch((err) => {
           console.error("Cleanup failed:", err);
           alert("Cleanup failed. Check console.");
+        });
+    }
+    if (params.get("cleanupNameless") === "1" && user) {
+      cleanupNamelessDishes()
+        .then((count) => {
+          alert(`Cleanup done. Deleted ${count} nameless dishes.`);
+          loadInitialDishes();
+        })
+        .catch((err) => {
+          console.error("Nameless cleanup failed:", err);
+          alert("Nameless cleanup failed. Check console.");
         });
     }
   }, [user]);

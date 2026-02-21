@@ -75,7 +75,9 @@ export async function saveDishToFirestore(dish) {
 // Get all dishes (for feed)
 export async function getAllDishesFromFirestore() {
   const snapshot = await getDocs(collection(db, "dishes"));
-  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  return snapshot.docs
+    .map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
 }
 
 // Get a paginated page of dishes, newest first
@@ -95,7 +97,9 @@ export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
     : baseQuery;
 
   const snapshot = await getDocs(pagedQuery);
-  const items = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  const items = snapshot.docs
+    .map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
   const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
   return { items, lastDoc };
 }
@@ -346,5 +350,24 @@ export async function cleanupDishIdField() {
     await batch.commit();
   }
 
+  return total;
+}
+
+// One-time cleanup: delete dishes with missing/blank name, and remove references.
+export async function cleanupNamelessDishes() {
+  const snapshot = await getDocs(collection(db, "dishes"));
+  let total = 0;
+  for (const dishSnap of snapshot.docs) {
+    const dish = dishSnap.data();
+    const hasValidName = typeof dish?.name === "string" && dish.name.trim().length > 0;
+    if (hasValidName) continue;
+
+    await deleteDishAndImage(
+      dishSnap.id,
+      dish?.imageURL || dish?.imageUrl || dish?.image_url || dish?.image || ""
+    );
+    await removeDishFromAllUsers(dishSnap.id);
+    total += 1;
+  }
   return total;
 }

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "dishlist-v1";
+const CACHE_VERSION = "dishlist-v2";
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const APP_SHELL = [
   "/",
@@ -30,7 +30,13 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  const url = new URL(request.url);
   if (request.method !== "GET") return;
+
+  // Never intercept Firebase/Google APIs.
+  if (url.hostname.includes("googleapis.com") || url.hostname.includes("gstatic.com")) {
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(
@@ -49,6 +55,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Do not return HTML fallback for non-navigation requests to avoid app crashes.
+  if (url.origin !== self.location.origin) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -60,8 +72,7 @@ self.addEventListener("fetch", (event) => {
           const copy = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
           return response;
-        })
-        .catch(() => caches.match("/offline.html"));
+        });
     })
   );
 });

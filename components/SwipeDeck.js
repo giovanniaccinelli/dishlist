@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
@@ -26,6 +26,7 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const actionLocksRef = useRef(new Set());
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -75,7 +76,8 @@ export default function SwipeDeck({
     }
   };
 
-  const handleAddToMyList = async (dish) => {
+  const handleAddToMyList = async (dish, options = {}) => {
+    const { dismissFirst = false } = options;
     if (!user) {
       if (typeof onAuthRequired === "function") onAuthRequired();
       return;
@@ -84,6 +86,9 @@ export default function SwipeDeck({
       setToast("SAVE FAILED");
       setTimeout(() => setToast(""), 1500);
       return;
+    }
+    if (dismissFirst) {
+      dismissCard(dish);
     }
     try {
       const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
@@ -100,7 +105,23 @@ export default function SwipeDeck({
     }
     setToast("ADDING TO YOUR DISHLIST");
     setTimeout(() => setToast(""), 1200);
-    dismissCard(dish);
+    if (!dismissFirst) {
+      dismissCard(dish);
+    }
+  };
+
+  const runLockedAction = async (dish, runner) => {
+    const key = dish?._key || dish?.id;
+    if (!key) return;
+    if (actionLocksRef.current.has(key)) return;
+    actionLocksRef.current.add(key);
+    try {
+      await runner();
+    } finally {
+      setTimeout(() => {
+        actionLocksRef.current.delete(key);
+      }, 150);
+    }
   };
 
   const renderImage = (dish) => {
@@ -218,20 +239,13 @@ export default function SwipeDeck({
                   </button>
                 ) : (
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      await handleAddToMyList(dish);
-                    }}
-                    onTouchEnd={async (e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      await handleAddToMyList(dish);
-                    }}
                     onPointerUp={async (e) => {
-                      if (e.pointerType !== "touch") return;
+                      if (e.pointerType !== "touch" && e.pointerType !== "mouse" && e.pointerType !== "pen") return;
                       e.stopPropagation();
                       e.preventDefault();
-                      await handleAddToMyList(dish);
+                      await runLockedAction(dish, async () => {
+                        await handleAddToMyList(dish, { dismissFirst: true });
+                      });
                     }}
                     className="w-24 h-24 -m-5 flex items-center justify-center"
                     aria-label="Add to dishlist"

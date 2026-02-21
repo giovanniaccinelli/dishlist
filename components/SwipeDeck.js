@@ -32,9 +32,9 @@ export default function SwipeDeck({
   const actionInFlight = useRef(false);
 
   useEffect(() => {
-    const formatted = dishes.map((d, i) => ({
+    const formatted = dishes.map((d) => ({
       ...d,
-      _key: `${d.id || "local"}-${i}`,
+      _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${d.createdAt?.seconds || Date.now()}`,
     }));
 
     if (formatted.length === 0) {

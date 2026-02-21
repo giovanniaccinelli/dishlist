@@ -166,11 +166,11 @@ export default function SwipeDeck({
             <motion.div
               className="relative bg-white rounded-[28px] shadow-2xl overflow-hidden w-full h-[70vh] cursor-grab"
               style={{ zIndex: cards.length - index }}
-              whileTap={{ scale: 0.98 }}
             >
               <div
                 className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-sm rounded-full p-1 flex gap-1"
                 data-no-swipe="1"
+                style={{ touchAction: "manipulation" }}
                 onPointerDown={(e) => {
                   e.stopPropagation();
                 }}
@@ -290,6 +290,7 @@ export default function SwipeDeck({
                           await handleAddToMyList(dish);
                         }}
                         className="w-24 h-24 -m-5 flex items-center justify-center"
+                        style={{ touchAction: "manipulation" }}
                         aria-label="Action"
                       >
                         <span className="w-14 h-14 rounded-full bg-[#2BD36B] text-black text-3xl font-bold flex items-center justify-center shadow-lg">

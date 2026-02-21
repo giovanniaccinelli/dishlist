@@ -30,6 +30,7 @@ export default function DishDetail() {
   const userId = user?.uid || null;
   const [dish, setDish] = useState(null);
   const [list, setList] = useState([]);
+  const [removedDishIds, setRemovedDishIds] = useState(() => new Set());
   const [loadingDish, setLoadingDish] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editingDish, setEditingDish] = useState(null);
@@ -41,6 +42,7 @@ export default function DishDetail() {
 
   useEffect(() => {
     if (!dishId || !userId) return;
+    setRemovedDishIds(new Set());
     (async () => {
       let items = [];
       if (source === "uploaded") {
@@ -70,13 +72,18 @@ export default function DishDetail() {
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
-    if (mode === "single") return [dish];
-    const others = list.filter((d) => d.id !== dish.id);
-    const shuffledOthers = others
-      .slice()
-      .sort(() => Math.random() - 0.5);
-    return [dish, ...shuffledOthers];
-  }, [dish, list, mode]);
+    const base =
+      mode === "single"
+        ? [dish]
+        : [
+            dish,
+            ...list
+              .filter((d) => d.id !== dish.id)
+              .slice()
+              .sort(() => Math.random() - 0.5),
+          ];
+    return base.filter((d) => !removedDishIds.has(d.id));
+  }, [dish, list, mode, removedDishIds]);
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return;
@@ -89,7 +96,12 @@ export default function DishDetail() {
     } else {
       await removeSavedDishFromUser(userId, dishToRemove.id);
     }
-    router.back();
+    setRemovedDishIds((prev) => {
+      const next = new Set(prev);
+      next.add(dishToRemove.id);
+      return next;
+    });
+    setList((prev) => prev.filter((d) => d.id !== dishToRemove.id));
   };
 
   const canEditUploaded = source === "uploaded";

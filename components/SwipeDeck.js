@@ -137,11 +137,15 @@ export default function SwipeDeck({
           className="relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
           whileTap={{ scale: 0.98 }}
         >
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+          <div
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerMoveCapture={(e) => e.stopPropagation()}
+            onPointerUpCapture={(e) => e.stopPropagation()}
+          >
             <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => {
+                onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
                   setShowRecipe(false);
@@ -153,8 +157,7 @@ export default function SwipeDeck({
                 dish
               </button>
               <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => {
+                onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
                   setShowRecipe(true);

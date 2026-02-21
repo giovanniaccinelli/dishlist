@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { saveDishToUserList, saveSwipedDishForUser } from "../app/lib/firebaseHelpers";
-import { useAuth } from "../app/lib/auth";
 
 export default function SwipeDeck({
   dishes,
@@ -23,7 +21,6 @@ export default function SwipeDeck({
   onAuthRequired,
   preserveContinuity = true,
 }) {
-  const { user } = useAuth();
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
@@ -72,38 +69,9 @@ export default function SwipeDeck({
   const handleSwipeEnd = async (info, dish) => {
     const threshold = 120;
     if (Math.abs(info.deltaX) > threshold) {
-      if (trackSwipes && user && dish.id) {
-        await saveSwipedDishForUser(user.uid, dish.id);
-        if (typeof onSwiped === "function") onSwiped(dish.id);
-      }
+      if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
       dismissCard(dish);
     }
-  };
-
-  const handleAddToMyList = async (dish) => {
-    if (!user) {
-      if (typeof onAuthRequired === "function") onAuthRequired();
-      return false;
-    }
-    if (!dish?.id) {
-      setToast("SAVE FAILED");
-      setTimeout(() => setToast(""), 1500);
-      return false;
-    }
-    try {
-      const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
-      if (!savedOk) {
-        throw new Error("Save did not persist.");
-      }
-      await saveSwipedDishForUser(user.uid, dish.id);
-      if (typeof onSwiped === "function") onSwiped(dish.id);
-    } catch (err) {
-      console.error("Save failed:", err);
-      setToast("SAVE FAILED");
-      setTimeout(() => setToast(""), 1500);
-      return false;
-    }
-    return true;
   };
 
   const renderImage = (dish) => {
@@ -208,13 +176,12 @@ export default function SwipeDeck({
                     if (actionInFlight.current) return;
                     actionInFlight.current = true;
                     try {
-                      let ok = true;
-                      if (typeof onAction === "function") {
-                        await onAction(dish);
-                      } else {
-                        ok = await handleAddToMyList(dish);
+                      if (typeof onAction !== "function") {
+                        if (typeof onAuthRequired === "function") onAuthRequired();
+                        return;
                       }
-                      if (!ok) return;
+                      const result = await onAction(dish);
+                      if (result === false) return;
                       setToast(actionToast || "ADDING TO YOUR DISHLIST");
                       setTimeout(() => setToast(""), 1200);
                       if (dismissOnAction) dismissCard(dish);

@@ -5,6 +5,8 @@ import {
   getAllDishesFromFirestore,
   cleanupDishIdField,
   cleanupNamelessDishes,
+  saveDishToUserList,
+  saveSwipedDishForUser,
 } from "./lib/firebaseHelpers";
 import { useAuth } from "./lib/auth";
 import BottomNav from "../components/BottomNav";
@@ -37,6 +39,36 @@ export default function Feed() {
       setLoadError("Failed to load feed. Please retry.");
     } finally {
       setLoadingDishes(false);
+    }
+  };
+
+  const handleFeedSave = async (dish) => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return false;
+    }
+    if (!dish?.id) return false;
+    try {
+      const savedOk = await saveDishToUserList(user.uid, dish.id, dish);
+      if (!savedOk) return false;
+      try {
+        await saveSwipedDishForUser(user.uid, dish.id);
+      } catch (err) {
+        console.warn("Failed to track swiped dish after save:", err);
+      }
+      return true;
+    } catch (err) {
+      console.error("Feed save failed:", err);
+      return false;
+    }
+  };
+
+  const handleFeedSwipe = async (dishId) => {
+    if (!user || !dishId) return;
+    try {
+      await saveSwipedDishForUser(user.uid, dishId);
+    } catch (err) {
+      console.warn("Failed to track swiped dish:", err);
     }
   };
 
@@ -121,7 +153,12 @@ export default function Feed() {
       ) : (
         <SwipeDeck
           dishes={dishes}
-          trackSwipes={false}
+          trackSwipes
+          onSwiped={handleFeedSwipe}
+          onAction={handleFeedSave}
+          dismissOnAction
+          actionLabel="+"
+          actionToast="ADDING TO YOUR DISHLIST"
           onAuthRequired={() => setShowAuthPrompt(true)}
           hasMore={false}
           loadingMore={false}

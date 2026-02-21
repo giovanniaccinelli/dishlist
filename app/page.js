@@ -9,10 +9,11 @@ import { getAllDishesFromFirestore, saveDishToUserList } from "./lib/firebaseHel
 
 export default function Feed() {
   const { user, loading } = useAuth();
+  const userId = user?.uid || null;
+
   const [deckList, setDeckList] = useState([]);
   const [addedDishIds, setAddedDishIds] = useState(() => new Set());
   const [loadingDishes, setLoadingDishes] = useState(true);
-  const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const shuffleArray = (arr) => {
@@ -25,14 +26,12 @@ export default function Feed() {
   };
 
   useEffect(() => {
+    setAddedDishIds(new Set());
     (async () => {
-      setLoadingDishes(true);
-      setLoadError("");
-      setAddedDishIds(new Set());
       try {
-        const all = await getAllDishesFromFirestore();
-        const publicDishes = all.filter((dish) => dish.isPublic !== false);
-        const ordered = publicDishes
+        const items = await getAllDishesFromFirestore();
+        const publicItems = items.filter((dish) => dish.isPublic !== false);
+        const ordered = publicItems
           .slice()
           .sort((a, b) => {
             const aTime = a?.createdAt?.seconds || 0;
@@ -42,52 +41,37 @@ export default function Feed() {
         setDeckList(shuffleArray(ordered));
       } catch (err) {
         console.error("Failed to load feed dishes:", err);
-        setLoadError("Failed to load feed.");
+        setDeckList([]);
       } finally {
         setLoadingDishes(false);
       }
     })();
   }, []);
 
-  const orderedList = useMemo(
-    () => deckList.filter((dish) => !addedDishIds.has(dish.id)),
-    [deckList, addedDishIds]
-  );
+  const orderedList = useMemo(() => {
+    return deckList.filter((d) => !addedDishIds.has(d.id));
+  }, [deckList, addedDishIds]);
 
   const handleAdd = async (dishToAdd) => {
-    if (!user) {
+    if (!userId) {
       setShowAuthPrompt(true);
       return false;
     }
-    if (!dishToAdd?.id) return false;
-    try {
-      const saved = await saveDishToUserList(user.uid, dishToAdd.id, dishToAdd);
-      if (!saved) return false;
-      setAddedDishIds((prev) => {
-        const next = new Set(prev);
-        next.add(dishToAdd.id);
-        return next;
-      });
-      setDeckList((prev) => prev.filter((d) => d.id !== dishToAdd.id));
-      return true;
-    } catch (err) {
-      console.error("Failed to save dish from feed:", err);
-      return false;
-    }
+    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
+    if (!saved) return false;
+    setAddedDishIds((prev) => {
+      const next = new Set(prev);
+      next.add(dishToAdd.id);
+      return next;
+    });
+    setDeckList((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+    return true;
   };
 
   if (loading || loadingDishes) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
         Loading...
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
-        {loadError}
       </div>
     );
   }
@@ -107,7 +91,6 @@ export default function Feed() {
           onAuthRequired={() => setShowAuthPrompt(true)}
         />
       </div>
-
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
       <BottomNav />
     </div>

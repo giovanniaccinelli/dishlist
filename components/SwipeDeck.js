@@ -26,6 +26,7 @@ export default function SwipeDeck({
   const [cards, setCards] = useState([]);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const [showRecipeByCard, setShowRecipeByCard] = useState({});
   const touchStart = useRef({ x: 0, y: 0 });
   const touchMoved = useRef(false);
   const didDrag = useRef(false);
@@ -133,6 +134,10 @@ export default function SwipeDeck({
     );
   };
 
+  const toggleRecipeView = (dishKey) => {
+    setShowRecipeByCard((prev) => ({ ...prev, [dishKey]: !prev[dishKey] }));
+  };
+
   if (deckEmpty) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500 text-lg">
@@ -208,15 +213,92 @@ export default function SwipeDeck({
               style={{ zIndex: cards.length - index }}
               whileTap={{ scale: 0.98 }}
             >
-              {renderImage(dish)}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-20 left-5 right-5 text-white">
-                <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
-                <h2 className="text-2xl font-bold">{dish.name}</h2>
-                <p className="text-sm text-white/80 line-clamp-2">
-                  {dish.description || "No description yet."}
-                </p>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-sm rounded-full p-1 flex gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    skipClick.current = true;
+                    setShowRecipeByCard((prev) => ({ ...prev, [dish._key]: false }));
+                  }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPointerUp={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+                    !showRecipeByCard[dish._key]
+                      ? "bg-white text-black"
+                      : "text-white/90"
+                  }`}
+                >
+                  dish
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    skipClick.current = true;
+                    toggleRecipeView(dish._key);
+                  }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPointerUp={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+                    showRecipeByCard[dish._key]
+                      ? "bg-white text-black"
+                      : "text-white/90"
+                  }`}
+                >
+                  recipe
+                </button>
               </div>
+
+              <div className="absolute inset-0 [perspective:1200px]">
+                <motion.div
+                  className="relative w-full h-full [transform-style:preserve-3d]"
+                  animate={{ rotateY: showRecipeByCard[dish._key] ? 180 : 0 }}
+                  transition={{ duration: 0.45, ease: "easeInOut" }}
+                >
+                  <div className="absolute inset-0 [backface-visibility:hidden]">
+                    {renderImage(dish)}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute bottom-20 left-5 right-5 text-white">
+                      <p className="text-lg font-semibold">{dish.ownerName || "Unknown"}</p>
+                      <h2 className="text-2xl font-bold">{dish.name}</h2>
+                      <p className="text-sm text-white/80 line-clamp-2">
+                        {dish.description || "No description yet."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#101216] text-white p-6 overflow-y-auto">
+                    <h3 className="text-2xl font-bold mb-2">{dish.name}</h3>
+                    <p className="text-sm text-white/70 mb-5">
+                      {dish.ownerName || "Unknown"}
+                    </p>
+                    <h4 className="text-sm uppercase tracking-wide text-white/70 mb-2">
+                      Ingredients
+                    </h4>
+                    <p className="text-sm whitespace-pre-wrap mb-5">
+                      {dish.recipeIngredients || "No ingredients provided."}
+                    </p>
+                    <h4 className="text-sm uppercase tracking-wide text-white/70 mb-2">
+                      Method
+                    </h4>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {dish.recipeMethod || "No method provided."}
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+
               <div className="absolute bottom-6 right-6">
                 <button
                   onClick={async (e) => {

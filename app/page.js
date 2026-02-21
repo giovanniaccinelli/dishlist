@@ -31,7 +31,7 @@ export default function Feed() {
     setLoadError("");
     try {
       const all = await getAllDishesFromFirestore();
-      setDishes(shuffle(all));
+      setDishes(shuffle(all.filter((dish) => dish.isPublic !== false)));
     } catch (err) {
       console.error("Failed to load dishes:", err);
       setLoadError("Failed to load feed. Please retry.");

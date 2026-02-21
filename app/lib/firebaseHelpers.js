@@ -143,6 +143,9 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
         dishId,
         name: dishData.name || "",
         description: dishData.description || "",
+        recipeIngredients: dishData.recipeIngredients || "",
+        recipeMethod: dishData.recipeMethod || "",
+        isPublic: dishData.isPublic !== false,
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
@@ -152,7 +155,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     : { dishId, createdAt: new Date() };
 
   // If payload is missing core fields, fetch from dishes/{id} to guarantee a complete saved card
-  if (!payload.name || !payload.imageURL) {
+  if (!payload.name) {
     try {
       const dishSnap = await getDoc(doc(db, "dishes", dishId));
       if (dishSnap.exists()) {
@@ -161,6 +164,9 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
           dishId,
           name: data.name || payload.name || "",
           description: data.description || payload.description || "",
+          recipeIngredients: data.recipeIngredients || payload.recipeIngredients || "",
+          recipeMethod: data.recipeMethod || payload.recipeMethod || "",
+          isPublic: data.isPublic !== false,
           imageURL:
             data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
           owner: data.owner || payload.owner || "",

@@ -36,6 +36,9 @@ export default function DishDetail() {
   const [editingDish, setEditingDish] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
+  const [editRecipeMethod, setEditRecipeMethod] = useState("");
+  const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -111,6 +114,9 @@ export default function DishDetail() {
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
+    setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
+    setEditRecipeMethod(dishToEdit?.recipeMethod || "");
+    setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditImageFile(null);
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
@@ -146,6 +152,9 @@ export default function DishDetail() {
       const updates = {
         name: editName.trim(),
         description: editDescription.trim(),
+        recipeIngredients: editRecipeIngredients.trim(),
+        recipeMethod: editRecipeMethod.trim(),
+        isPublic: editIsPublic,
         imageURL: nextImageURL || "",
       };
 
@@ -234,6 +243,31 @@ export default function DishDetail() {
               className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
               disabled={savingEdit}
             />
+            <textarea
+              value={editRecipeIngredients}
+              onChange={(e) => setEditRecipeIngredients(e.target.value)}
+              placeholder="Recipe ingredients"
+              rows={3}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
+              disabled={savingEdit}
+            />
+            <textarea
+              value={editRecipeMethod}
+              onChange={(e) => setEditRecipeMethod(e.target.value)}
+              placeholder="Recipe method"
+              rows={4}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
+              disabled={savingEdit}
+            />
+            <label className="flex items-center gap-2 mb-3 text-sm font-medium text-black">
+              <input
+                type="checkbox"
+                checked={editIsPublic}
+                onChange={(e) => setEditIsPublic(e.target.checked)}
+                disabled={savingEdit}
+              />
+              Public dish (visible in feed)
+            </label>
             <label className="block text-sm font-medium mb-2">Image</label>
             <input
               type="file"

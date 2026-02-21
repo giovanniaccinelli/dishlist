@@ -30,6 +30,9 @@ export default function Profile() {
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [] });
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
+  const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
+  const [dishRecipeMethod, setDishRecipeMethod] = useState("");
+  const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [dragActive, setDragActive] = useState(false);
@@ -112,6 +115,9 @@ export default function Profile() {
       await saveDishToFirestore({
         name: dishName,
         description: dishDescription || "",
+        recipeIngredients: dishRecipeIngredients || "",
+        recipeMethod: dishRecipeMethod || "",
+        isPublic: dishIsPublic,
         imageURL,
         owner: user.uid,
         ownerName: user.displayName || "Anonymous",
@@ -121,6 +127,9 @@ export default function Profile() {
       setUploadedDishes(updatedDishes);
       setDishName("");
       setDishDescription("");
+      setDishRecipeIngredients("");
+      setDishRecipeMethod("");
+      setDishIsPublic(true);
       setDishImage(null);
       setPreview(null);
       setIsModalOpen(false);
@@ -339,6 +348,31 @@ export default function Profile() {
                 rows={3}
                 disabled={loadingUpload}
               />
+              <textarea
+                placeholder="Recipe ingredients"
+                value={dishRecipeIngredients}
+                onChange={(e) => setDishRecipeIngredients(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                rows={3}
+                disabled={loadingUpload}
+              />
+              <textarea
+                placeholder="Recipe method"
+                value={dishRecipeMethod}
+                onChange={(e) => setDishRecipeMethod(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                rows={4}
+                disabled={loadingUpload}
+              />
+              <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
+                <input
+                  type="checkbox"
+                  checked={dishIsPublic}
+                  onChange={(e) => setDishIsPublic(e.target.checked)}
+                  disabled={loadingUpload}
+                />
+                Public dish (visible in feed)
+              </label>
               <div
                 onDragOver={(e) => {
                   e.preventDefault();

@@ -16,6 +16,8 @@ export default function Dishes() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
+  const [fallbackPool, setFallbackPool] = useState([]);
+  const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -27,11 +29,16 @@ export default function Dishes() {
       setDishes(firstPage.items);
       setLastDoc(firstPage.lastDoc);
       setHasMore(Boolean(firstPage.lastDoc));
+      setFallbackPool([]);
+      setUsingFallbackPagination(false);
     } catch (err) {
       console.error("Failed to load dishes page:", err);
       try {
         const all = await getAllDishesFromFirestore();
         setDishes(all.slice(0, DISHES_PAGE_SIZE));
+        setFallbackPool(all);
+        setUsingFallbackPagination(true);
+        setLastDoc(null);
         setHasMore(all.length > DISHES_PAGE_SIZE);
       } catch (fallbackErr) {
         console.error("Fallback dishes load failed:", fallbackErr);
@@ -42,7 +49,24 @@ export default function Dishes() {
   };
 
   const fetchMoreDishes = async () => {
-    if (!lastDoc || loadingMore || loading) return;
+    if (loadingMore || loading) return;
+
+    if (usingFallbackPagination) {
+      setLoadingMore(true);
+      try {
+        setDishes((prev) => {
+          const nextSlice = fallbackPool.slice(prev.length, prev.length + DISHES_PAGE_SIZE);
+          const merged = [...prev, ...nextSlice];
+          setHasMore(merged.length < fallbackPool.length);
+          return merged;
+        });
+      } finally {
+        setLoadingMore(false);
+      }
+      return;
+    }
+
+    if (!lastDoc) return;
     setLoadingMore(true);
     setLoadError("");
     try {

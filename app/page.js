@@ -20,6 +20,8 @@ export default function Feed() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
+  const [fallbackPool, setFallbackPool] = useState([]);
+  const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -40,12 +42,17 @@ export default function Feed() {
       setDishes(shuffle(firstPage.items));
       setLastDoc(firstPage.lastDoc);
       setHasMore(Boolean(firstPage.lastDoc));
+      setFallbackPool([]);
+      setUsingFallbackPagination(false);
     } catch (err) {
       console.error("Failed to load dishes:", err);
       // Fallback: if paginated query fails due to older data shape, fetch all once.
       try {
-        const all = await getAllDishesFromFirestore();
-        setDishes(shuffle(all.slice(0, FEED_PAGE_SIZE)));
+        const all = shuffle(await getAllDishesFromFirestore());
+        setDishes(all.slice(0, FEED_PAGE_SIZE));
+        setFallbackPool(all);
+        setUsingFallbackPagination(true);
+        setLastDoc(null);
         setHasMore(all.length > FEED_PAGE_SIZE);
       } catch (fallbackErr) {
         console.error("Fallback feed load failed:", fallbackErr);
@@ -57,7 +64,24 @@ export default function Feed() {
   };
 
   const loadMoreDishes = async () => {
-    if (!lastDoc || loadingMore || loadingDishes) return;
+    if (loadingMore || loadingDishes) return;
+
+    if (usingFallbackPagination) {
+      setLoadingMore(true);
+      try {
+        setDishes((prev) => {
+          const nextSlice = fallbackPool.slice(prev.length, prev.length + FEED_PAGE_SIZE);
+          const merged = [...prev, ...nextSlice];
+          setHasMore(merged.length < fallbackPool.length);
+          return merged;
+        });
+      } finally {
+        setLoadingMore(false);
+      }
+      return;
+    }
+
+    if (!lastDoc) return;
     setLoadingMore(true);
     setLoadError("");
     try {

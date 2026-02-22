@@ -31,7 +31,6 @@ export default function SwipeDeck({
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
-  const [swipeHintDirection, setSwipeHintDirection] = useState(null);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const currentCardRef = useRef(null);
@@ -43,7 +42,6 @@ export default function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
-    setSwipeHintDirection(null);
   }, [currentCard?._key]);
 
   useEffect(() => {
@@ -226,60 +224,11 @@ export default function SwipeDeck({
           swipeRequirementType="position"
           swipeThreshold={90}
           onSwipe={handleSwipe}
-          onSwipeRequirementFulfilled={(dir) => {
-            if (dir === "left" || dir === "right") setSwipeHintDirection(dir);
-          }}
-          onSwipeRequirementUnfulfilled={() => {
-            setSwipeHintDirection(null);
-          }}
-          onCardLeftScreen={() => {
-            setSwipeHintDirection(null);
-          }}
         >
           <motion.div className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab">
-            <AnimatePresence>
-              {swipeHintDirection === "right" && (
-                <motion.div
-                  className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-[#2BD36B]/25"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0.8 }}
-                    className="w-44 h-44 rounded-full border-4 border-white/80 bg-[#2BD36B]/35 backdrop-blur-sm flex items-center justify-center"
-                  >
-                    <Plus size={96} strokeWidth={2.2} className="text-white" />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {swipeHintDirection === "left" && (
-                <motion.div
-                  className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/30"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0.8 }}
-                    className="w-44 h-44 rounded-full border-4 border-white/80 bg-black/35 backdrop-blur-sm flex items-center justify-center text-white text-[100px] leading-none font-light"
-                  >
-                    ×
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div
               data-no-drag="true"
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-50"
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
               onPointerDownCapture={(e) => e.stopPropagation()}
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}

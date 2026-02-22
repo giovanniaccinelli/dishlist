@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import TinderCard from "react-tinder-card";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  useDragControls,
+} from "framer-motion";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
@@ -24,25 +29,21 @@ export default function SwipeDeck({
   preserveContinuity = true,
   disabled = false,
 }) {
+  const SWIPE_EJECT_THRESHOLD = 70;
+
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [deckInitialized, setDeckInitialized] = useState(false);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
-  const [actionBusy, setActionBusy] = useState(false);
-
-  const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
-  const currentCardRef = useRef(null);
+  const dragControls = useDragControls();
+  const dragX = useMotionValue(0);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
-
-  useEffect(() => {
-    currentCardRef.current = currentCard;
-  }, [currentCard]);
-
-  useEffect(() => {
-    setShowRecipe(false);
-  }, [currentCard?._key]);
+  const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
+  const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
+  const rightCueScale = useTransform(dragX, [0, 50, 160], [0.7, 0.9, 1.1]);
+  const leftCueScale = useTransform(dragX, [0, -50, -160], [0.7, 0.9, 1.1]);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -63,53 +64,19 @@ export default function SwipeDeck({
     }
 
     if (!preserveContinuity) {
-      setDeck(formatted);
-      setCurrentIndex(0);
-      setDeckEmpty(formatted.length === 0);
-      return;
+      setDeck((prev) => {
+        const existing = new Set(prev.map((d) => d._key));
+        const appended = formatted.filter((d) => !existing.has(d._key));
+        return appended.length > 0 ? [...prev, ...appended] : prev;
+      });
     }
-
-    setDeck((prev) => {
-      const existing = new Set(prev.map((d) => d._key));
-      const appended = formatted.filter((d) => !existing.has(d._key));
-      if (appended.length === 0) return prev;
-      setDeckEmpty(false);
-      return [...prev, ...appended];
-    });
   }, [dishes, deckInitialized, preserveContinuity]);
 
+  const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+
   useEffect(() => {
-    const remaining = deck.length - (currentIndex + 1);
-    if (remaining <= 5 && hasMore && !loadingMore && typeof loadMoreDishes === "function") {
-      loadMoreDishes();
-    }
-  }, [currentIndex, deck.length, hasMore, loadingMore, loadMoreDishes]);
-
-  const showToast = (text) => {
-    setToast(text);
-    setTimeout(() => setToast(""), 1200);
-  };
-
-  const runAction = async (card) => {
-    if (!card) return false;
-    if (typeof onAction !== "function") {
-      if (typeof onAuthRequired === "function") onAuthRequired();
-      return false;
-    }
-    try {
-      const result = await onAction(card);
-      if (result === false) {
-        showToast("ACTION FAILED");
-        return false;
-      }
-      showToast(actionToast || "ADDING TO YOUR DISHLIST");
-      return true;
-    } catch (err) {
-      console.error("Deck action failed:", err);
-      showToast("ACTION FAILED");
-      return false;
-    }
-  };
+    setShowRecipe(false);
+  }, [currentCard?._key]);
 
   const advanceCard = () => {
     setCurrentIndex((prev) => {
@@ -122,42 +89,36 @@ export default function SwipeDeck({
     });
   };
 
-  const handleSwipe = async (direction) => {
-    if (disabled) return;
-    const card = currentCardRef.current;
-    if (!card) return;
-
-    if (swipeAddEnabled && direction === "right") {
-      await runAction(card);
+  const runAction = (card) => {
+    if (typeof onAction !== "function") {
+      if (typeof onAuthRequired === "function") onAuthRequired();
+      return;
     }
-
-    if (trackSwipes && typeof onSwiped === "function" && card.id) {
-      await onSwiped(card.id);
-    }
-
-    advanceCard();
+    Promise.resolve(onAction(card))
+      .then((result) => {
+        if (result === false) {
+          setToast("ACTION FAILED");
+          setTimeout(() => setToast(""), 1200);
+          return;
+        }
+        setToast(actionToast || "ADDING TO YOUR DISHLIST");
+        setTimeout(() => setToast(""), 1200);
+      })
+      .catch((err) => {
+        console.error("Deck action failed:", err);
+        setToast("ACTION FAILED");
+        setTimeout(() => setToast(""), 1200);
+      });
   };
 
-  const handleActionPress = async (e) => {
+  const handleActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || actionBusy) return;
-
-    const card = currentCardRef.current;
-    if (!card) return;
-
-    setActionBusy(true);
-    try {
-      const ok = await runAction(card);
-      if (!ok || !dismissOnAction) return;
-
-      if (trackSwipes && typeof onSwiped === "function" && card.id) {
-        await onSwiped(card.id);
-      }
-      advanceCard();
-    } finally {
-      setActionBusy(false);
-    }
+    if (disabled) return;
+    const card = currentCard;
+    if (dismissOnAction) advanceCard();
+    dragX.set(0);
+    runAction(card);
   };
 
   const handleStartOver = () => {
@@ -168,6 +129,19 @@ export default function SwipeDeck({
     setCurrentIndex(0);
     setDeckEmpty(false);
     setShowRecipe(false);
+    dragX.set(0);
+  };
+
+  const handleSwipeEnd = (info, dish) => {
+    if (disabled) return;
+    if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
+      if (swipeAddEnabled && info.offset.x > 0) {
+        runAction(dish);
+      }
+      if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
+      advanceCard();
+    }
+    dragX.set(0);
   };
 
   const renderImage = (dish) => {
@@ -218,156 +192,216 @@ export default function SwipeDeck({
   return (
     <div className="flex min-h-[72vh] flex-col items-center justify-center">
       <div className="relative w-full max-w-md h-[70vh]">
-        <TinderCard
+        <motion.div
           key={currentCard._key}
-          preventSwipe={["up", "down"]}
-          swipeRequirementType="position"
-          swipeThreshold={90}
-          onSwipe={handleSwipe}
+          drag={disabled ? false : "x"}
+          dragListener={false}
+          dragControls={dragControls}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.9}
+          style={{ x: dragX }}
+          onPointerDown={(e) => {
+            if (disabled) return;
+            const target = e.target;
+            if (target instanceof Element && target.closest("[data-no-drag='true']")) return;
+            dragControls.start(e);
+          }}
+          onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
+          className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
         >
-          <motion.div className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab">
-            <div
-              data-no-drag="true"
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              onPointerMoveCapture={(e) => e.stopPropagation()}
-              onPointerUpCapture={(e) => e.stopPropagation()}
-            >
-              <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
-                <button
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShowRecipe(false);
-                  }}
-                  className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                    !showRecipe ? "bg-white text-black" : "text-white/80"
-                  }`}
-                >
-                  dish
-                </button>
-                <button
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShowRecipe(true);
-                  }}
-                  className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                    showRecipe ? "bg-white text-black" : "text-white/80"
-                  }`}
-                >
-                  recipe
-                </button>
-              </div>
-            </div>
-
-            <div className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full">
-              saves: {Number(currentCard.saves || 0)}
-            </div>
-
+          {swipeAddEnabled && (
             <motion.div
-              className="absolute inset-0"
-              style={{ transformStyle: "preserve-3d" }}
-              animate={{ rotateY: showRecipe ? 180 : 0 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#2BD36B]/25"
+              style={{ opacity: rightCueOpacity }}
             >
-              <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
-                <button
-                  type="button"
-                  className="absolute inset-x-0 top-0 bottom-36 z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowRecipe((prev) => !prev);
-                  }}
-                  aria-label="Toggle dish and recipe view"
-                />
-                {renderImage(currentCard)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute bottom-20 left-5 right-5 text-white z-20">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
-                      {currentCard.ownerPhotoURL ? (
-                        <img
-                          src={currentCard.ownerPhotoURL}
-                          alt={currentCard.ownerName || "User"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        (currentCard.ownerName?.[0] || "U").toUpperCase()
-                      )}
-                    </div>
-                    {currentCard.owner ? (
-                      <Link
-                        data-no-drag="true"
-                        href={`/profile/${currentCard.owner}`}
-                        className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {currentCard.ownerName || "Unknown"}
-                      </Link>
-                    ) : (
-                      <p className="text-lg font-semibold leading-none">
-                        {currentCard.ownerName || "Unknown"}
-                      </p>
-                    )}
-                  </div>
-                  <h2 className="text-2xl font-bold">{currentCard.name}</h2>
-                  <p className="text-sm text-white/80 line-clamp-2">
-                    {currentCard.description || "No description yet."}
-                  </p>
-                </div>
-              </div>
-
-              <div
-                className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-y-auto"
-                style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
+              <motion.div
+                style={{ scale: rightCueScale }}
+                className="w-48 h-48 rounded-full border-4 border-white/80 bg-[#2BD36B]/35 backdrop-blur-sm flex items-center justify-center"
               >
-                <button
-                  type="button"
-                  className="absolute inset-x-0 top-0 bottom-36 z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowRecipe((prev) => !prev);
-                  }}
-                  aria-label="Toggle dish and recipe view"
-                />
-                <p className="text-sm font-semibold text-black/60 mb-1">
-                  {currentCard.ownerName || "Unknown"}
-                </p>
-                <h2 className="text-2xl font-bold mb-3">{currentCard.name}</h2>
-                {currentCard.description ? (
-                  <p className="text-sm text-black/70 mb-4">{currentCard.description}</p>
-                ) : null}
-                <div className="mb-4">
-                  <h3 className="text-base font-semibold mb-1">Ingredients</h3>
-                  <p className="text-sm text-black/80 whitespace-pre-wrap">
-                    {currentCard.recipeIngredients || "No ingredients provided."}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold mb-1">Method</h3>
-                  <p className="text-sm text-black/80 whitespace-pre-wrap">
-                    {currentCard.recipeMethod || "No method provided."}
-                  </p>
-                </div>
-              </div>
+                <Plus size={110} strokeWidth={2.1} className="text-white" />
+              </motion.div>
             </motion.div>
-
-            <div className="absolute bottom-6 right-6">
+          )}
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30"
+            style={{ opacity: leftCueOpacity }}
+          >
+            <motion.div
+              style={{ scale: leftCueScale }}
+              className="w-48 h-48 rounded-full border-4 border-white/80 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white text-[110px] leading-none font-light"
+            >
+              ×
+            </motion.div>
+          </motion.div>
+          <div
+            data-no-drag="true"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerMoveCapture={(e) => e.stopPropagation()}
+            onPointerUpCapture={(e) => e.stopPropagation()}
+          >
+            <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
                 data-no-drag="true"
-                onClick={handleActionPress}
-                className={actionClassName || "add-action-btn w-14 h-14 text-[36px]"}
-                aria-label="Action"
-                disabled={disabled || actionBusy}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowRecipe(false);
+                }}
+                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                  !showRecipe ? "bg-white text-black" : "text-white/80"
+                }`}
               >
-                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+                dish
+              </button>
+              <button
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowRecipe(true);
+                }}
+                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                  showRecipe ? "bg-white text-black" : "text-white/80"
+                }`}
+              >
+                recipe
               </button>
             </div>
+          </div>
+          <div className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            saves: {Number(currentCard.saves || 0)}
+          </div>
+
+          <motion.div
+            className="absolute inset-0"
+            style={{ transformStyle: "preserve-3d" }}
+            animate={{ rotateY: showRecipe ? 180 : 0 }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+          >
+            <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
+              <button
+                type="button"
+                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRecipe((prev) => !prev);
+                }}
+                aria-label="Toggle dish and recipe view"
+              />
+              {renderImage(currentCard)}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-20 left-5 right-5 text-white z-20">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
+                    {currentCard.ownerPhotoURL ? (
+                      <img
+                        src={currentCard.ownerPhotoURL}
+                        alt={currentCard.ownerName || "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      (currentCard.ownerName?.[0] || "U").toUpperCase()
+                    )}
+                  </div>
+                  {currentCard.owner ? (
+                    <Link
+                      data-no-drag="true"
+                      href={`/profile/${currentCard.owner}`}
+                      className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {currentCard.ownerName || "Unknown"}
+                    </Link>
+                  ) : (
+                    <p className="text-lg font-semibold leading-none">
+                      {currentCard.ownerName || "Unknown"}
+                    </p>
+                  )}
+                </div>
+                <h2 className="text-2xl font-bold">{currentCard.name}</h2>
+                <p className="text-sm text-white/80 line-clamp-2">
+                  {currentCard.description || "No description yet."}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-y-auto"
+              style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
+            >
+              <button
+                type="button"
+                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRecipe((prev) => !prev);
+                }}
+                aria-label="Toggle dish and recipe view"
+              />
+              <p className="text-sm font-semibold text-black/60 mb-1">
+                {currentCard.ownerName || "Unknown"}
+              </p>
+              <h2 className="text-2xl font-bold mb-3">{currentCard.name}</h2>
+              {currentCard.description ? (
+                <p className="text-sm text-black/70 mb-4">{currentCard.description}</p>
+              ) : null}
+              <div className="mb-4">
+                <h3 className="text-base font-semibold mb-1">Ingredients</h3>
+                <p className="text-sm text-black/80 whitespace-pre-wrap">
+                  {currentCard.recipeIngredients || "No ingredients provided."}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold mb-1">Method</h3>
+                <p className="text-sm text-black/80 whitespace-pre-wrap">
+                  {currentCard.recipeMethod || "No method provided."}
+                </p>
+              </div>
+            </div>
           </motion.div>
-        </TinderCard>
+
+          <div className="absolute bottom-6 right-6">
+            <button
+              data-no-drag="true"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {}
+              }}
+              onPointerMove={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {}
+                handleActionPress(e);
+              }}
+              className={
+                actionClassName ||
+                "add-action-btn w-14 h-14 text-[36px]"
+              }
+              aria-label="Action"
+              disabled={disabled}
+            >
+              {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+            </button>
+          </div>
+        </motion.div>
       </div>
 
       <AnimatePresence>

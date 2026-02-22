@@ -7,6 +7,7 @@ import {
   useMotionValue,
   useTransform,
   useDragControls,
+  animate,
 } from "framer-motion";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -37,8 +38,10 @@ export default function SwipeDeck({
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
+  const [isEjecting, setIsEjecting] = useState(false);
   const dragControls = useDragControls();
   const dragX = useMotionValue(0);
+  const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
@@ -114,7 +117,7 @@ export default function SwipeDeck({
   const handleActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled) return;
+    if (disabled || isEjecting) return;
     const card = currentCard;
     if (dismissOnAction) advanceCard();
     dragX.set(0);
@@ -132,16 +135,37 @@ export default function SwipeDeck({
     dragX.set(0);
   };
 
-  const handleSwipeEnd = (info, dish) => {
-    if (disabled) return;
+  const handleSwipeEnd = async (info, dish) => {
+    if (disabled || isEjecting) return;
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
+      const direction = info.offset.x > 0 ? 1 : -1;
+      setIsEjecting(true);
       if (swipeAddEnabled && info.offset.x > 0) {
         runAction(dish);
       }
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
+
+      const targetX =
+        direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
+      try {
+        await animate(dragX, targetX, {
+          type: "spring",
+          stiffness: 280,
+          damping: 28,
+          mass: 0.6,
+        }).finished;
+      } catch {}
       advanceCard();
+      setIsEjecting(false);
+      dragX.set(0);
+      return;
     }
-    dragX.set(0);
+    animate(dragX, 0, {
+      type: "spring",
+      stiffness: 420,
+      damping: 34,
+      mass: 0.55,
+    });
   };
 
   const renderImage = (dish) => {
@@ -194,12 +218,12 @@ export default function SwipeDeck({
       <div className="relative w-full max-w-md h-[70vh]">
         <motion.div
           key={currentCard._key}
-          drag={disabled ? false : "x"}
+          drag={disabled || isEjecting ? false : "x"}
           dragListener={false}
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX }}
+          style={{ x: dragX, rotate: cardRotate }}
           onPointerDown={(e) => {
             if (disabled) return;
             const target = e.target;

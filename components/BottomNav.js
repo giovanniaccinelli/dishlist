@@ -14,8 +14,8 @@ export default function BottomNav() {
 
   const navItems = [
     { href: "/", icon: Home, label: "feed" },
-    { href: "/dishlists", icon: LayoutGrid, label: "dishlists" },
-    { href: "/dishes", icon: Utensils, label: "dishes" },
+    { href: "/dishlists", icon: LayoutGrid, label: "people" },
+    { href: "/dishes", icon: Utensils, label: "explore" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];
 

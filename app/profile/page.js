@@ -34,6 +34,8 @@ export default function Profile() {
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
+  const [dishCost, setDishCost] = useState(1);
+  const [dishDifficulty, setDishDifficulty] = useState(1);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -127,6 +129,8 @@ export default function Profile() {
         description: dishDescription || "",
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
+        cost: dishCost,
+        difficulty: dishDifficulty,
         isPublic: dishIsPublic,
         imageURL,
         owner: user.uid,
@@ -140,6 +144,8 @@ export default function Profile() {
       setDishDescription("");
       setDishRecipeIngredients("");
       setDishRecipeMethod("");
+      setDishCost(1);
+      setDishDifficulty(1);
       setDishIsPublic(true);
       setDishImage(null);
       setPreview(null);
@@ -315,6 +321,25 @@ export default function Profile() {
     </>
   );
 
+  const LevelSelector = ({ label, value, onChange, colorClass }) => (
+    <div>
+      <p className="text-sm font-medium text-black mb-2">{label}</p>
+      <div className="flex items-center gap-2">
+        {[1, 2, 3].map((level) => (
+          <button
+            key={level}
+            type="button"
+            onClick={() => onChange(level)}
+            className={`w-7 h-7 rounded-full border-2 transition ${colorClass} ${
+              value >= level ? "opacity-100" : "opacity-25"
+            }`}
+            aria-label={`${label} ${level} out of 3`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <div className="flex items-center gap-4 mb-6">
@@ -429,6 +454,20 @@ export default function Profile() {
                 rows={4}
                 disabled={loadingUpload}
               />
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <LevelSelector
+                  label="Cost ($)"
+                  value={dishCost}
+                  onChange={setDishCost}
+                  colorClass="border-[#2BD36B] bg-[#2BD36B]"
+                />
+                <LevelSelector
+                  label="Difficulty (hourglass)"
+                  value={dishDifficulty}
+                  onChange={setDishDifficulty}
+                  colorClass="border-[#FACC15] bg-[#FACC15]"
+                />
+              </div>
               <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
                 <input
                   type="checkbox"

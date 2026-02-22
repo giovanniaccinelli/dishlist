@@ -41,6 +41,8 @@ export default function DishDetail() {
   const [editDescription, setEditDescription] = useState("");
   const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
+  const [editCost, setEditCost] = useState(1);
+  const [editDifficulty, setEditDifficulty] = useState(1);
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
@@ -178,6 +180,25 @@ export default function DishDetail() {
   const canEditUploaded = source === "uploaded";
   const isPublicSource = source === "public";
 
+  const LevelSelector = ({ label, value, onChange, colorClass }) => (
+    <div>
+      <p className="text-sm font-medium text-black mb-2">{label}</p>
+      <div className="flex items-center gap-2">
+        {[1, 2, 3].map((level) => (
+          <button
+            key={level}
+            type="button"
+            onClick={() => onChange(level)}
+            className={`w-7 h-7 rounded-full border-2 transition ${colorClass} ${
+              value >= level ? "opacity-100" : "opacity-25"
+            }`}
+            aria-label={`${label} ${level} out of 3`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   const openEditModal = (dishToEdit) => {
     if (!canEditUploaded || dishToEdit?.owner !== userId) return;
     setEditingDish(dishToEdit);
@@ -185,6 +206,8 @@ export default function DishDetail() {
     setEditDescription(dishToEdit?.description || "");
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
+    setEditCost(Math.max(1, Math.min(3, Number(dishToEdit?.cost) || 1)));
+    setEditDifficulty(Math.max(1, Math.min(3, Number(dishToEdit?.difficulty) || 1)));
     setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditImageFile(null);
     setEditPreview(
@@ -223,6 +246,8 @@ export default function DishDetail() {
         description: editDescription.trim(),
         recipeIngredients: editRecipeIngredients.trim(),
         recipeMethod: editRecipeMethod.trim(),
+        cost: editCost,
+        difficulty: editDifficulty,
         isPublic: editIsPublic,
         imageURL: nextImageURL || "",
       };
@@ -340,6 +365,20 @@ export default function DishDetail() {
               className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
               disabled={savingEdit}
             />
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <LevelSelector
+                label="Cost ($)"
+                value={editCost}
+                onChange={setEditCost}
+                colorClass="border-[#2BD36B] bg-[#2BD36B]"
+              />
+              <LevelSelector
+                label="Difficulty (hourglass)"
+                value={editDifficulty}
+                onChange={setEditDifficulty}
+                colorClass="border-[#FACC15] bg-[#FACC15]"
+              />
+            </div>
             <label className="flex items-center gap-2 mb-3 text-sm font-medium text-black">
               <input
                 type="checkbox"

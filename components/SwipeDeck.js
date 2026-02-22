@@ -10,7 +10,7 @@ import {
   animate,
 } from "framer-motion";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { DollarSign, Hourglass, Plus } from "lucide-react";
 
 export default function SwipeDeck({
   dishes,
@@ -189,6 +189,25 @@ export default function SwipeDeck({
     );
   };
 
+  const normalizeLevel = (value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 1;
+    return Math.max(1, Math.min(3, Math.round(n)));
+  };
+
+  const renderLevelDots = (level, colorClass) => (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3].map((idx) => (
+        <span
+          key={idx}
+          className={`w-2.5 h-2.5 rounded-full border ${colorClass} ${
+            idx <= level ? "opacity-100" : "opacity-25"
+          }`}
+        />
+      ))}
+    </div>
+  );
+
   if (deckEmpty || !currentCard) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500 text-lg">
@@ -295,6 +314,19 @@ export default function SwipeDeck({
           </div>
           <div className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full">
             saves: {Number(currentCard.saves || 0)}
+          </div>
+          <div className="absolute right-4 top-14 z-30 bg-black/65 rounded-2xl px-3 py-2.5 flex flex-col gap-2 text-white">
+            <div className="flex items-center gap-1.5 text-[#2BD36B]">
+              <DollarSign size={14} strokeWidth={2.2} />
+              {renderLevelDots(normalizeLevel(currentCard.cost), "border-[#2BD36B] bg-[#2BD36B]")}
+            </div>
+            <div className="flex items-center gap-1.5 text-[#FACC15]">
+              <Hourglass size={14} strokeWidth={2.2} />
+              {renderLevelDots(
+                normalizeLevel(currentCard.difficulty),
+                "border-[#FACC15] bg-[#FACC15]"
+              )}
+            </div>
           </div>
 
           <motion.div

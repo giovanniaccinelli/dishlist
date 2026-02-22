@@ -180,7 +180,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
         cost: Math.max(1, Math.min(3, Number(dishData.cost) || 1)),
-        difficulty: Math.max(1, Math.min(3, Number(dishData.difficulty) || 1)),
+        time: Math.max(1, Math.min(3, Number(dishData.time ?? dishData.difficulty) || 1)),
         isPublic: dishData.isPublic !== false,
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
@@ -204,7 +204,10 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
           recipeIngredients: data.recipeIngredients || payload.recipeIngredients || "",
           recipeMethod: data.recipeMethod || payload.recipeMethod || "",
           cost: Math.max(1, Math.min(3, Number(data.cost) || Number(payload.cost) || 1)),
-          difficulty: Math.max(1, Math.min(3, Number(data.difficulty) || Number(payload.difficulty) || 1)),
+          time: Math.max(
+            1,
+            Math.min(3, Number(data.time ?? data.difficulty ?? payload.time ?? payload.difficulty) || 1)
+          ),
           isPublic: data.isPublic !== false,
           imageURL:
             data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
@@ -314,7 +317,7 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
         cost: Math.max(1, Math.min(3, Number(dishData.cost) || 1)),
-        difficulty: Math.max(1, Math.min(3, Number(dishData.difficulty) || 1)),
+        time: Math.max(1, Math.min(3, Number(dishData.time ?? dishData.difficulty) || 1)),
         isPublic: dishData.isPublic !== false,
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
@@ -401,7 +404,10 @@ export async function getSavedDishesFromFirestore(userId) {
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       cost: Math.max(1, Math.min(3, Number(canonical.cost) || Number(dish.cost) || 1)),
-      difficulty: Math.max(1, Math.min(3, Number(canonical.difficulty) || Number(dish.difficulty) || 1)),
+      time: Math.max(
+        1,
+        Math.min(3, Number(canonical.time ?? canonical.difficulty ?? dish.time ?? dish.difficulty) || 1)
+      ),
       isPublic: canonical.isPublic !== false,
       imageURL:
         canonical.imageURL ||

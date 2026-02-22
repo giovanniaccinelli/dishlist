@@ -35,7 +35,7 @@ export default function Profile() {
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [dishCost, setDishCost] = useState(1);
-  const [dishDifficulty, setDishDifficulty] = useState(1);
+  const [dishTime, setDishTime] = useState(1);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -130,7 +130,7 @@ export default function Profile() {
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
         cost: dishCost,
-        difficulty: dishDifficulty,
+        time: dishTime,
         isPublic: dishIsPublic,
         imageURL,
         owner: user.uid,
@@ -145,7 +145,7 @@ export default function Profile() {
       setDishRecipeIngredients("");
       setDishRecipeMethod("");
       setDishCost(1);
-      setDishDifficulty(1);
+      setDishTime(1);
       setDishIsPublic(true);
       setDishImage(null);
       setPreview(null);
@@ -462,9 +462,9 @@ export default function Profile() {
                   colorClass="border-[#2BD36B] bg-[#2BD36B]"
                 />
                 <LevelSelector
-                  label="Difficulty (hourglass)"
-                  value={dishDifficulty}
-                  onChange={setDishDifficulty}
+                  label="Time (hourglass)"
+                  value={dishTime}
+                  onChange={setDishTime}
                   colorClass="border-[#FACC15] bg-[#FACC15]"
                 />
               </div>

@@ -323,7 +323,7 @@ export default function SwipeDeck({
             <div className="flex items-center gap-1.5 text-[#FACC15]">
               <Hourglass size={14} strokeWidth={2.2} />
               {renderLevelDots(
-                normalizeLevel(currentCard.difficulty),
+                normalizeLevel(currentCard.time ?? currentCard.difficulty),
                 "border-[#FACC15] bg-[#FACC15]"
               )}
             </div>

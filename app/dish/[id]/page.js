@@ -42,7 +42,7 @@ export default function DishDetail() {
   const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
   const [editCost, setEditCost] = useState(1);
-  const [editDifficulty, setEditDifficulty] = useState(1);
+  const [editTime, setEditTime] = useState(1);
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
@@ -207,7 +207,7 @@ export default function DishDetail() {
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
     setEditCost(Math.max(1, Math.min(3, Number(dishToEdit?.cost) || 1)));
-    setEditDifficulty(Math.max(1, Math.min(3, Number(dishToEdit?.difficulty) || 1)));
+    setEditTime(Math.max(1, Math.min(3, Number(dishToEdit?.time ?? dishToEdit?.difficulty) || 1)));
     setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditImageFile(null);
     setEditPreview(
@@ -247,7 +247,7 @@ export default function DishDetail() {
         recipeIngredients: editRecipeIngredients.trim(),
         recipeMethod: editRecipeMethod.trim(),
         cost: editCost,
-        difficulty: editDifficulty,
+        time: editTime,
         isPublic: editIsPublic,
         imageURL: nextImageURL || "",
       };
@@ -373,9 +373,9 @@ export default function DishDetail() {
                 colorClass="border-[#2BD36B] bg-[#2BD36B]"
               />
               <LevelSelector
-                label="Difficulty (hourglass)"
-                value={editDifficulty}
-                onChange={setEditDifficulty}
+                label="Time (hourglass)"
+                value={editTime}
+                onChange={setEditTime}
                 colorClass="border-[#FACC15] bg-[#FACC15]"
               />
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
 import {
@@ -21,6 +21,7 @@ const INITIAL_USERS_LIMIT = 10;
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [allUsersPool, setAllUsersPool] = useState(null);
   const [search, setSearch] = useState("");
@@ -34,18 +35,18 @@ export default function Dishlists() {
       usersList.map(async (u) => {
         const previewImages = [];
         const pushImage = (dishData) => {
-          if (!dishData || previewImages.length >= 6) return;
+          if (!dishData || previewImages.length >= 9) return;
           const imageSrc =
             dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "";
           if (imageSrc) previewImages.push(imageSrc);
         };
 
-        const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(6)));
+        const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(9)));
         savedSnap.docs.forEach((d) => pushImage(d.data()));
 
-        if (previewImages.length < 6) {
+        if (previewImages.length < 9) {
           const uploadedSnap = await getDocs(
-            query(collection(db, "dishes"), where("owner", "==", u.id), limit(6 - previewImages.length))
+            query(collection(db, "dishes"), where("owner", "==", u.id), limit(9 - previewImages.length))
           );
           uploadedSnap.docs.forEach((d) => pushImage(d.data()));
         }
@@ -146,8 +147,21 @@ export default function Dishlists() {
     await updateDoc(currentRef, {
       following: alreadyFollowing ? arrayRemove(userId) : arrayUnion(userId),
     });
-    fetchUsers();
-    if (allUsersPool) setAllUsersPool(null);
+    const updateList = (list) =>
+      list.map((u) => {
+        if (u.id !== userId) return u;
+        const followers = Array.isArray(u.followers) ? u.followers : [];
+        const nextFollowers = alreadyFollowing
+          ? followers.filter((id) => id !== user.uid)
+          : Array.from(new Set([...followers, user.uid]));
+        return {
+          ...u,
+          followers: nextFollowers,
+          followersCount: nextFollowers.length,
+        };
+      });
+    setUsers((prev) => updateList(prev));
+    setAllUsersPool((prev) => (Array.isArray(prev) ? updateList(prev) : prev));
   };
 
   if (loading) {
@@ -183,14 +197,14 @@ export default function Dishlists() {
             {filteredUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
-              const previewCells = Array.from({ length: 6 }, (_, idx) => u.previewImages?.[idx] || "");
+              const previewCells = Array.from({ length: 9 }, (_, idx) => u.previewImages?.[idx] || "");
               return (
-                <div key={u.id} className="bg-white rounded-2xl p-3 shadow-md relative overflow-hidden">
-                  <Link href={`/profile/${u.id}`} className="absolute inset-0 z-10">
-                    <span className="sr-only">Open profile</span>
-                  </Link>
-
-                  <div className="flex items-center gap-3 mb-3 relative z-20">
+                <div
+                  key={u.id}
+                  className="bg-white rounded-2xl p-3 shadow-md relative overflow-hidden cursor-pointer"
+                  onClick={() => router.push(`/profile/${u.id}`)}
+                >
+                  <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold">
                       {u.photoURL ? (
                         <img src={u.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
@@ -198,12 +212,14 @@ export default function Dishlists() {
                         u.displayName?.[0] || "U"
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold truncate">{u.displayName || "User"}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold leading-tight max-h-9 overflow-hidden">
+                        {u.displayName || "User"}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 mb-3 relative z-20">
+                  <div className="grid grid-cols-3 gap-1.5 mb-3">
                     {previewCells.map((imageSrc, idx) => (
                       <div
                         key={`${u.id}-preview-${idx}`}
@@ -225,8 +241,7 @@ export default function Dishlists() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between relative z-20">
-                    <div className="text-xs text-black/60">{u.followersCount || 0} followers</div>
+                  <div className="flex items-center justify-end">
                     {!isMe && (
                       <button
                         onClick={(e) => {

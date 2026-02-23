@@ -499,7 +499,7 @@ export default function SwipeDeck({
             </div>
           </motion.div>
 
-          <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
+          <div className="absolute right-6 z-30" style={{ bottom: actionBottom }}>
             <button
               data-no-drag="true"
               onPointerDown={(e) => {
@@ -541,7 +541,7 @@ export default function SwipeDeck({
           </div>
 
           {secondaryActionLabel && (
-            <div className="absolute right-6 z-30" style={{ bottom: actionBottom }}>
+            <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {

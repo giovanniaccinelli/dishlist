@@ -319,6 +319,35 @@ export default function DishDetail() {
     }
   };
 
+  const handleDeleteEditedDish = async () => {
+    if (!editingDish?.id || !userId) return;
+    if (!confirm("Delete this dish?")) return;
+    try {
+      await deleteDishAndImage(
+        editingDish.id,
+        editingDish.imageURL || editingDish.imageUrl || editingDish.image_url || editingDish.image
+      );
+      await removeDishFromAllUsers(editingDish.id);
+      setRemovedDishIds((prev) => {
+        const next = new Set(prev);
+        next.add(editingDish.id);
+        return next;
+      });
+      setDeckList((prev) => prev.filter((item) => item.id !== editingDish.id));
+      setDish((prev) => (prev?.id === editingDish.id ? null : prev));
+      setEditOpen(false);
+      setEditingDish(null);
+      setPageToast("Dish deleted");
+      setTimeout(() => setPageToast(""), 1200);
+      if (deckList.length <= 1) {
+        router.back();
+      }
+    } catch (err) {
+      console.error("Failed to delete dish:", err);
+      alert("Failed to delete dish.");
+    }
+  };
+
   const handleOpenSavers = async (dishCard) => {
     setSaversOpen(true);
     setSaversLoading(true);
@@ -396,7 +425,9 @@ export default function DishDetail() {
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isPublicSource
                 ? "add-action-btn w-11 h-11"
-                : "px-4 py-2 rounded-full bg-[#2BD36B] text-black text-sm font-semibold shadow-lg"
+                : isToTrySource
+                  ? "px-4 py-2 rounded-full bg-[#2BD36B] text-black text-sm font-semibold shadow-lg"
+                  : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
             isToTrySource
@@ -523,6 +554,13 @@ export default function DishDetail() {
               </div>
             )}
             <div className="flex gap-3">
+              <button
+                onClick={handleDeleteEditedDish}
+                className="py-3 px-4 rounded-full bg-red-500 text-white font-semibold"
+                disabled={savingEdit}
+              >
+                Delete
+              </button>
               <button
                 onClick={() => setEditOpen(false)}
                 className="flex-1 py-3 rounded-full border border-black/20"

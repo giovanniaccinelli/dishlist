@@ -29,13 +29,32 @@ export default function Dishlists() {
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
 
-  const attachDishCounts = async (usersList) => {
+  const attachPreviewData = async (usersList) => {
     return Promise.all(
       usersList.map(async (u) => {
-        const dishSnap = await getDocs(
-          query(collection(db, "dishes"), where("owner", "==", u.id))
-        );
-        return { ...u, dishCount: dishSnap.size || 0 };
+        const previewImages = [];
+        const pushImage = (dishData) => {
+          if (!dishData || previewImages.length >= 6) return;
+          const imageSrc =
+            dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "";
+          if (imageSrc) previewImages.push(imageSrc);
+        };
+
+        const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(6)));
+        savedSnap.docs.forEach((d) => pushImage(d.data()));
+
+        if (previewImages.length < 6) {
+          const uploadedSnap = await getDocs(
+            query(collection(db, "dishes"), where("owner", "==", u.id), limit(6 - previewImages.length))
+          );
+          uploadedSnap.docs.forEach((d) => pushImage(d.data()));
+        }
+
+        return {
+          ...u,
+          previewImages,
+          followersCount: Array.isArray(u.followers) ? u.followers.length : 0,
+        };
       })
     );
   };
@@ -47,8 +66,8 @@ export default function Dishlists() {
       id: docSnap.id,
       ...docSnap.data(),
     }));
-    const withCounts = await attachDishCounts(usersList);
-    setUsers(withCounts);
+    const withPreview = await attachPreviewData(usersList);
+    setUsers(withPreview);
     setHasMoreUsers(usersList.length === INITIAL_USERS_LIMIT);
     setLoadingUsers(false);
   };
@@ -62,10 +81,10 @@ export default function Dishlists() {
         id: docSnap.id,
         ...docSnap.data(),
       }));
-      const withCounts = await attachDishCounts(usersList);
-      setAllUsersPool(withCounts);
+      const withPreview = await attachPreviewData(usersList);
+      setAllUsersPool(withPreview);
       if (!search.trim()) {
-        setHasMoreUsers(users.length < withCounts.length);
+        setHasMoreUsers(users.length < withPreview.length);
       }
     } finally {
       setSearchLoading(false);
@@ -83,7 +102,7 @@ export default function Dishlists() {
           id: docSnap.id,
           ...docSnap.data(),
         }));
-        pool = await attachDishCounts(usersList);
+        pool = await attachPreviewData(usersList);
         setAllUsersPool(pool);
       }
 
@@ -160,35 +179,67 @@ export default function Dishlists() {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {filteredUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
+              const previewCells = Array.from({ length: 6 }, (_, idx) => u.previewImages?.[idx] || "");
               return (
-                <div key={u.id} className="bg-white rounded-2xl p-4 shadow-md flex items-center justify-between">
-                  <Link href={`/profile/${u.id}`} className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center text-xl font-bold">
+                <div key={u.id} className="bg-white rounded-2xl p-3 shadow-md relative overflow-hidden">
+                  <Link href={`/profile/${u.id}`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Open profile</span>
+                  </Link>
+
+                  <div className="flex items-center gap-3 mb-3 relative z-20">
+                    <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold">
                       {u.photoURL ? (
-                        <img src={u.photoURL} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
+                        <img src={u.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
                       ) : (
                         u.displayName?.[0] || "U"
                       )}
                     </div>
-                    <div>
-                      <div className="text-lg font-semibold">{u.displayName || "User"}</div>
-                      <div className="text-xs text-black/60">
-                        {u.dishCount || 0} dishes · {u.followers?.length || 0} followers
-                      </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold truncate">{u.displayName || "User"}</div>
                     </div>
-                  </Link>
-                  {!isMe && (
-                    <button
-                      onClick={() => handleFollow(u.id, alreadyFollowing)}
-                      className="bg-black text-white px-3 py-2 rounded-full text-xs font-semibold"
-                    >
-                      {alreadyFollowing ? "Unfollow" : "Follow"}
-                    </button>
-                  )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 mb-3 relative z-20">
+                    {previewCells.map((imageSrc, idx) => (
+                      <div
+                        key={`${u.id}-preview-${idx}`}
+                        className="aspect-square rounded-lg bg-neutral-100 overflow-hidden"
+                      >
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt="Dish preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "/file.svg";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-neutral-200" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between relative z-20">
+                    <div className="text-xs text-black/60">{u.followersCount || 0} followers</div>
+                    {!isMe && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleFollow(u.id, alreadyFollowing);
+                        }}
+                        className="bg-black text-white px-3 py-1.5 rounded-full text-xs font-semibold"
+                      >
+                        {alreadyFollowing ? "Unfollow" : "Follow"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

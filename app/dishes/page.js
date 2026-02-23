@@ -10,6 +10,27 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
 const DISHES_PAGE_SIZE = 24;
+const TAG_OPTIONS = [
+  "fit",
+  "high protein",
+  "veg",
+  "vegan",
+  "light",
+  "easy",
+  "quick",
+  "fancy",
+  "comfort",
+  "carb heavy",
+  "low carb",
+  "spicy",
+  "late night",
+  "cheat",
+  "budget",
+  "premium",
+  "summer",
+  "winter",
+  "gourmet",
+];
 
 export default function Dishes() {
   const { user } = useAuth();
@@ -26,6 +47,8 @@ export default function Dishes() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
+  const [showTagsPicker, setShowTagsPicker] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -154,16 +177,24 @@ export default function Dishes() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return dishes;
     const source = searchPool || dishes;
-    return source.filter((d) => {
+    const tagFiltered =
+      selectedTags.length === 0
+        ? source
+        : source.filter((d) =>
+            Array.isArray(d.tags) && d.tags.some((tag) => selectedTags.includes(String(tag)))
+          );
+    if (!term) return tagFiltered;
+    return tagFiltered.filter((d) => {
       const nameMatch = d.name?.toLowerCase().includes(term);
       const tagMatch = Array.isArray(d.tags)
         ? d.tags.some((tag) => String(tag).toLowerCase().includes(term))
         : false;
       return nameMatch || tagMatch;
     });
-  }, [dishes, search, searchPool]);
+  }, [dishes, search, searchPool, selectedTags]);
+
+  const visibleDishes = filtered;
 
   const handleSave = async (dish) => {
     if (!user) {
@@ -180,22 +211,61 @@ export default function Dishes() {
     setTimeout(() => setToast(""), 1200);
   };
 
+  const toggleTagFilter = (tag) => {
+    setSelectedTags((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      return [...prev, tag];
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
-      <input
-        type="text"
-        placeholder="Search dishes or tags..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
-      />
+      <div className="relative mb-6">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search dishes or tags..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 p-3 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
+          />
+          <button
+            type="button"
+            onClick={() => setShowTagsPicker((prev) => !prev)}
+            className="px-3 rounded-xl bg-black text-white text-sm font-semibold whitespace-nowrap"
+          >
+            all tags
+          </button>
+        </div>
+        {showTagsPicker && (
+          <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
+            <div className="flex flex-wrap gap-2">
+              {TAG_OPTIONS.map((tag) => {
+                const active = selectedTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTagFilter(tag)}
+                    className={`px-3 py-1 rounded-full text-xs border ${
+                      active ? "bg-black text-white border-black" : "bg-white text-black border-black/20"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="text-black/60">Loading dishes...</div>
       ) : search.trim() && searchLoading ? (
         <div className="text-black/60">Searching all dishes...</div>
-      ) : loadError && filtered.length === 0 ? (
+      ) : loadError && visibleDishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
           <p>{loadError}</p>
           <button
@@ -205,13 +275,13 @@ export default function Dishes() {
             Retry
           </button>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : visibleDishes.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
           No dishes found.
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
-          {filtered.map((dish, index) => {
+          {visibleDishes.map((dish, index) => {
             const imageSrc =
               dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
             return (

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
+  getToTryDishesFromFirestore,
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
@@ -21,7 +22,9 @@ export default function PublicProfile() {
   const { user } = useAuth();
   const [profileUser, setProfileUser] = useState(null);
   const [savedDishes, setSavedDishes] = useState([]);
+  const [toTryDishes, setToTryDishes] = useState([]);
   const [dishes, setDishes] = useState([]);
+  const [profileTab, setProfileTab] = useState("my");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
@@ -43,6 +46,8 @@ export default function PublicProfile() {
 
     const fetchedSavedDishes = await getSavedDishesFromFirestore(id);
     setSavedDishes(fetchedSavedDishes);
+    const fetchedToTryDishes = await getToTryDishesFromFirestore(id);
+    setToTryDishes(fetchedToTryDishes);
   };
 
   useEffect(() => {
@@ -126,7 +131,7 @@ export default function PublicProfile() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
           <p className="text-black/60 text-sm">
-            {savedDishes.length} saved · {dishes.length} uploaded
+            {savedDishes.length} saved · {toTryDishes.length} to try · {dishes.length} uploaded
           </p>
           {user && user.uid !== id && (
             <button
@@ -160,153 +165,225 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">DishList</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {savedDishes.length === 0 && (
-          <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
-            No saved dishes yet.
-          </div>
-        )}
-        <AnimatePresence>
-          {savedDishes.map((dish, index) => (
-            <motion.div
-              key={`saved-${dish.id || index}`}
-              className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            >
-              <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
-                <span className="sr-only">Open dish card</span>
-              </Link>
-              {(() => {
-                const imageSrc =
-                  dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                if (!imageSrc) {
-                  return (
-                    <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                      No image
-                    </div>
-                  );
-                }
-                return (
-                  <img
-                    src={imageSrc}
-                    alt={dish.name}
-                    className="w-full h-28 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/file.svg";
-                    }}
-                  />
-                );
-              })()}
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
-                <div className="text-[11px] font-semibold leading-tight truncate">
-                  {dish.name || "Untitled dish"}
-                </div>
-                <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                onPointerUp={(e) => {
-                  if (e.pointerType !== "touch") return;
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
-                aria-label="Add to dishlist"
-              >
-                <Plus size={20} strokeWidth={2.1} />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="mb-5 flex justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => setProfileTab("my")}
+          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
+            profileTab === "my"
+              ? "bg-[#2BD36B] border-[#2BD36B] text-black"
+              : "bg-white border-black/15 text-black/60"
+          }`}
+        >
+          My DishList
+        </button>
+        <button
+          type="button"
+          onClick={() => setProfileTab("totry")}
+          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
+            profileTab === "totry"
+              ? "bg-[#FACC15] border-[#FACC15] text-black"
+              : "bg-white border-black/15 text-black/60"
+          }`}
+        >
+          To Try
+        </button>
       </div>
 
-      <h2 className="text-xl font-semibold my-4">Uploaded</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {dishes.length === 0 && (
-          <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
-            No uploaded dishes yet.
-          </div>
-        )}
-        <AnimatePresence>
-          {dishes.map((dish, index) => (
-            <motion.div
-              key={`uploaded-${dish.id || index}`}
-              className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            >
-              <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
-                <span className="sr-only">Open dish card</span>
-              </Link>
-              {(() => {
-                const imageSrc =
-                  dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                if (!imageSrc) {
-                  return (
-                    <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                      No image
-                    </div>
-                  );
-                }
-                return (
-                  <img
-                    src={imageSrc}
-                    alt={dish.name}
-                    className="w-full h-28 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/file.svg";
-                    }}
-                  />
-                );
-              })()}
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
-                <div className="text-[11px] font-semibold leading-tight truncate">
-                  {dish.name || "Untitled dish"}
-                </div>
-                <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+      {profileTab === "my" ? (
+        <>
+          <h2 className="text-xl font-semibold mb-4">Saved</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {savedDishes.length === 0 && (
+              <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+                No saved dishes yet.
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                onPointerUp={(e) => {
-                  if (e.pointerType !== "touch") return;
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleSaveDish(dish);
-                }}
-                className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
-                aria-label="Add to dishlist"
-              >
-                <Plus size={20} strokeWidth={2.1} />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+            )}
+            <AnimatePresence>
+              {savedDishes.map((dish, index) => (
+                <motion.div
+                  key={`saved-${dish.id || index}`}
+                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Open dish card</span>
+                  </Link>
+                  {(() => {
+                    const imageSrc =
+                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+                    if (!imageSrc) {
+                      return (
+                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                          No image
+                        </div>
+                      );
+                    }
+                    return (
+                      <img
+                        src={imageSrc}
+                        alt={dish.name}
+                        className="w-full h-28 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/file.svg";
+                        }}
+                      />
+                    );
+                  })()}
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                    <div className="text-[11px] font-semibold leading-tight truncate">
+                      {dish.name || "Untitled dish"}
+                    </div>
+                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleSaveDish(dish);
+                    }}
+                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    aria-label="Add to dishlist"
+                  >
+                    <Plus size={20} strokeWidth={2.1} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          <h2 className="text-xl font-semibold my-4">Uploaded</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {dishes.length === 0 && (
+              <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+                No uploaded dishes yet.
+              </div>
+            )}
+            <AnimatePresence>
+              {dishes.map((dish, index) => (
+                <motion.div
+                  key={`uploaded-${dish.id || index}`}
+                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Open dish card</span>
+                  </Link>
+                  {(() => {
+                    const imageSrc =
+                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+                    if (!imageSrc) {
+                      return (
+                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                          No image
+                        </div>
+                      );
+                    }
+                    return (
+                      <img
+                        src={imageSrc}
+                        alt={dish.name}
+                        className="w-full h-28 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/file.svg";
+                        }}
+                      />
+                    );
+                  })()}
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                    <div className="text-[11px] font-semibold leading-tight truncate">
+                      {dish.name || "Untitled dish"}
+                    </div>
+                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleSaveDish(dish);
+                    }}
+                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    aria-label="Add to dishlist"
+                  >
+                    <Plus size={20} strokeWidth={2.1} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl font-semibold mb-4">To Try</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {toTryDishes.length === 0 && (
+              <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+                No dishes in To Try.
+              </div>
+            )}
+            <AnimatePresence>
+              {toTryDishes.map((dish, index) => (
+                <motion.div
+                  key={`totry-${dish.id || index}`}
+                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Open dish card</span>
+                  </Link>
+                  {(() => {
+                    const imageSrc =
+                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+                    if (!imageSrc) {
+                      return (
+                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                          No image
+                        </div>
+                      );
+                    }
+                    return (
+                      <img
+                        src={imageSrc}
+                        alt={dish.name}
+                        className="w-full h-28 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/file.svg";
+                        }}
+                      />
+                    );
+                  })()}
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                    <div className="text-[11px] font-semibold leading-tight truncate">
+                      {dish.name || "Untitled dish"}
+                    </div>
+                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleSaveDish(dish);
+                    }}
+                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    aria-label="Add to dishlist"
+                  >
+                    <Plus size={20} strokeWidth={2.1} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
 
       <BottomNav />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />

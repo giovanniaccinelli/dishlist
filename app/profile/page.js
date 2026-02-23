@@ -460,12 +460,14 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="bg-white/70 border border-black/10 rounded-2xl p-1 mb-5 inline-flex gap-1">
+      <div className="mb-5 flex justify-center gap-3">
         <button
           type="button"
           onClick={() => setProfileTab("my")}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-            profileTab === "my" ? "bg-black text-white" : "text-black/60"
+          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
+            profileTab === "my"
+              ? "bg-[#2BD36B] border-[#2BD36B] text-black"
+              : "bg-white border-black/15 text-black/60"
           }`}
         >
           My DishList
@@ -473,8 +475,10 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setProfileTab("totry")}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold ${
-            profileTab === "totry" ? "bg-black text-white" : "text-black/60"
+          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
+            profileTab === "totry"
+              ? "bg-[#FACC15] border-[#FACC15] text-black"
+              : "bg-white border-black/15 text-black/60"
           }`}
         >
           To Try

@@ -22,6 +22,7 @@ export default function SwipeDeck({
   onResetFeed,
   onAction,
   onRightSwipe,
+  onSavesPress,
   actionOnRightSwipe = true,
   dismissOnAction = true,
   onSecondaryAction,
@@ -298,7 +299,7 @@ export default function SwipeDeck({
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: "pan-x" }}
           onPointerDown={(e) => {
             if (disabled) return;
             const target = e.target;
@@ -368,9 +369,18 @@ export default function SwipeDeck({
               </button>
             </div>
           </div>
-          <div className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full">
+          <button
+            type="button"
+            data-no-drag="true"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (typeof onSavesPress === "function") onSavesPress(currentCard);
+            }}
+            className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full"
+          >
             saves: {Number(currentCard.saves || 0)}
-          </div>
+          </button>
           <div className="absolute right-4 top-14 z-30 bg-black/65 rounded-2xl px-3 py-2.5 flex flex-col gap-2 text-white">
             <div className="flex items-center gap-1.5 text-[#2BD36B]">
               <DollarSign size={14} strokeWidth={2.2} />

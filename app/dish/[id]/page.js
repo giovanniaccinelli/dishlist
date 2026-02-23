@@ -16,6 +16,7 @@ import {
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
+  getUsersWhoSavedDish,
   removeDishFromAllUsers,
   removeDishFromToTry,
   removeSavedDishFromUser,
@@ -25,6 +26,7 @@ import {
   uploadImage,
 } from "../../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
+import SaversModal from "../../../components/SaversModal";
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -54,6 +56,9 @@ export default function DishDetail() {
   const [editPreview, setEditPreview] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [pageToast, setPageToast] = useState("");
+  const [saversOpen, setSaversOpen] = useState(false);
+  const [saversLoading, setSaversLoading] = useState(false);
+  const [saversUsers, setSaversUsers] = useState([]);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -314,6 +319,17 @@ export default function DishDetail() {
     }
   };
 
+  const handleOpenSavers = async (dishCard) => {
+    setSaversOpen(true);
+    setSaversLoading(true);
+    try {
+      const usersList = await getUsersWhoSavedDish(dishCard?.id);
+      setSaversUsers(usersList);
+    } finally {
+      setSaversLoading(false);
+    }
+  };
+
   if (loading || loadingDish) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -361,6 +377,7 @@ export default function DishDetail() {
                   : handleRemove
           }
           onSecondaryAction={isToTrySource ? handleRemove : undefined}
+          onSavesPress={handleOpenSavers}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
           dismissOnAction={!canEditUploaded}
@@ -537,6 +554,14 @@ export default function DishDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SaversModal
+        open={saversOpen}
+        onClose={() => setSaversOpen(false)}
+        loading={saversLoading}
+        users={saversUsers}
+        currentUserId={user?.uid}
+      />
 
       <BottomNav />
     </div>

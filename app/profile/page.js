@@ -15,13 +15,15 @@ import {
   removeDishFromAllUsers,
   deleteDishAndImage,
   updateOwnerNameForDishes,
+  getUsersWhoSavedDish,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Plus } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import SaversModal from "../../components/SaversModal";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -53,6 +55,11 @@ export default function Profile() {
   const [connectionsTitle, setConnectionsTitle] = useState("");
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [connectionsUsers, setConnectionsUsers] = useState([]);
+  const [profileOptionsOpen, setProfileOptionsOpen] = useState(false);
+  const [removePhoto, setRemovePhoto] = useState(false);
+  const [saversOpen, setSaversOpen] = useState(false);
+  const [saversLoading, setSaversLoading] = useState(false);
+  const [saversUsers, setSaversUsers] = useState([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -188,6 +195,9 @@ export default function Profile() {
   const handleEditProfile = async () => {
     try {
       let nextPhotoURL = user?.photoURL || profileMeta.photoURL || "";
+      if (removePhoto) {
+        nextPhotoURL = "";
+      }
       if (newPhotoFile) {
         nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
       }
@@ -201,6 +211,7 @@ export default function Profile() {
       alert("Profile updated!");
       setEditProfileModal(false);
       setNewPhotoFile(null);
+      setRemovePhoto(false);
     } catch {
       alert("Failed to update profile.");
     }
@@ -239,6 +250,17 @@ export default function Profile() {
       setConnectionsUsers([]);
     } finally {
       setConnectionsLoading(false);
+    }
+  };
+
+  const handleOpenSavers = async (dish) => {
+    setSaversOpen(true);
+    setSaversLoading(true);
+    try {
+      const usersList = await getUsersWhoSavedDish(dish?.id);
+      setSaversUsers(usersList);
+    } finally {
+      setSaversLoading(false);
     }
   };
 
@@ -319,7 +341,17 @@ export default function Profile() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
-                  <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleOpenSavers(dish);
+                    }}
+                    className="text-[10px] text-white/80 underline pointer-events-auto"
+                  >
+                    saves: {Number(dish.saves || 0)}
+                  </button>
                 </div>
                 {allowDelete && (
                   <button
@@ -366,7 +398,42 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-start justify-between mb-6">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setProfileOptionsOpen((prev) => !prev)}
+            className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center"
+            aria-label="Profile options"
+          >
+            <Settings size={18} />
+          </button>
+          {profileOptionsOpen && (
+            <div className="absolute mt-2 left-0 z-30 bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-44">
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOptionsOpen(false);
+                  setEditProfileModal(true);
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
+              >
+                Edit Profile
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOptionsOpen(false);
+                  handleLogout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
+              >
+                Log Out
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
           {user.photoURL || profileMeta.photoURL ? (
             <img
@@ -380,10 +447,7 @@ export default function Profile() {
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-          <div className="flex gap-3 mt-2">
-            <button onClick={() => setEditProfileModal(true)} className="bg-black text-white py-1 px-3 rounded-full text-sm">Edit Profile</button>
-            <button onClick={handleLogout} className="bg-white border border-black/20 py-1 px-3 rounded-full text-sm">Log Out</button>
-          </div>
+        </div>
         </div>
       </div>
 
@@ -692,7 +756,10 @@ export default function Profile() {
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
                   setNewPhotoFile(file);
-                  if (file) setNewPhotoPreview(URL.createObjectURL(file));
+                  if (file) {
+                    setNewPhotoPreview(URL.createObjectURL(file));
+                    setRemovePhoto(false);
+                  }
                 }}
                 className="w-full mb-3"
               />
@@ -703,6 +770,17 @@ export default function Profile() {
                   className="w-24 h-24 rounded-full object-cover mb-4 border border-black/10"
                 />
               ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setNewPhotoFile(null);
+                  setNewPhotoPreview("");
+                  setRemovePhoto(true);
+                }}
+                className="w-full mb-4 bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black text-sm"
+              >
+                Remove profile picture
+              </button>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleEditProfile}
@@ -777,6 +855,14 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SaversModal
+        open={saversOpen}
+        onClose={() => setSaversOpen(false)}
+        loading={saversLoading}
+        users={saversUsers}
+        currentUserId={user?.uid}
+      />
 
       <BottomNav />
     </div>

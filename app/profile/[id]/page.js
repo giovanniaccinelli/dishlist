@@ -12,10 +12,12 @@ import {
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
+  getUsersWhoSavedDish,
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { Plus } from "lucide-react";
+import SaversModal from "../../../components/SaversModal";
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -32,6 +34,9 @@ export default function PublicProfile() {
   const [connectionsTitle, setConnectionsTitle] = useState("");
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [connectionsUsers, setConnectionsUsers] = useState([]);
+  const [saversOpen, setSaversOpen] = useState(false);
+  const [saversLoading, setSaversLoading] = useState(false);
+  const [saversUsers, setSaversUsers] = useState([]);
 
   // Fetch profile data
   const fetchProfileData = async () => {
@@ -106,6 +111,17 @@ export default function PublicProfile() {
       setConnectionsUsers([]);
     } finally {
       setConnectionsLoading(false);
+    }
+  };
+
+  const handleOpenSavers = async (dish) => {
+    setSaversOpen(true);
+    setSaversLoading(true);
+    try {
+      const usersList = await getUsersWhoSavedDish(dish?.id);
+      setSaversUsers(usersList);
+    } finally {
+      setSaversLoading(false);
     }
   };
 
@@ -237,7 +253,17 @@ export default function PublicProfile() {
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>
-                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleOpenSavers(dish);
+                      }}
+                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                    >
+                      saves: {Number(dish.saves || 0)}
+                    </button>
                   </div>
                   <button
                     onClick={(e) => {
@@ -300,7 +326,17 @@ export default function PublicProfile() {
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>
-                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleOpenSavers(dish);
+                      }}
+                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                    >
+                      saves: {Number(dish.saves || 0)}
+                    </button>
                   </div>
                   <button
                     onClick={(e) => {
@@ -365,7 +401,17 @@ export default function PublicProfile() {
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>
-                    <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleOpenSavers(dish);
+                      }}
+                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                    >
+                      saves: {Number(dish.saves || 0)}
+                    </button>
                   </div>
                   <button
                     onClick={(e) => {
@@ -387,6 +433,13 @@ export default function PublicProfile() {
 
       <BottomNav />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
+      <SaversModal
+        open={saversOpen}
+        onClose={() => setSaversOpen(false)}
+        loading={saversLoading}
+        users={saversUsers}
+        currentUserId={user?.uid}
+      />
       <AnimatePresence>
         {connectionsOpen && (
           <motion.div

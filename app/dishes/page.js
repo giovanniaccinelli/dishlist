@@ -3,12 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
-import { getAllDishesFromFirestore, getDishesPage, saveDishToUserList } from "../lib/firebaseHelpers";
+import {
+  getAllDishesFromFirestore,
+  getDishesPage,
+  getUsersWhoSavedDish,
+  saveDishToUserList,
+} from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import SaversModal from "../../components/SaversModal";
 
 const DISHES_PAGE_SIZE = 24;
 
@@ -34,6 +40,9 @@ export default function Dishes() {
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
   const [applyingFilters, setApplyingFilters] = useState(false);
+  const [saversOpen, setSaversOpen] = useState(false);
+  const [saversLoading, setSaversLoading] = useState(false);
+  const [saversUsers, setSaversUsers] = useState([]);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -249,6 +258,17 @@ export default function Dishes() {
     setApplyingFilters(false);
   };
 
+  const handleOpenSavers = async (dish) => {
+    setSaversOpen(true);
+    setSaversLoading(true);
+    try {
+      const usersList = await getUsersWhoSavedDish(dish?.id);
+      setSaversUsers(usersList);
+    } finally {
+      setSaversLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
@@ -397,8 +417,18 @@ export default function Dishes() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
-                  <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleOpenSavers(dish);
+                  }}
+                  className="absolute top-2 right-2 z-30 bg-black/65 text-white text-[10px] font-semibold px-2 py-1 rounded-full"
+                >
+                  saves: {Number(dish.saves || 0)}
+                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -452,6 +482,13 @@ export default function Dishes() {
 
       <BottomNav />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
+      <SaversModal
+        open={saversOpen}
+        onClose={() => setSaversOpen(false)}
+        loading={saversLoading}
+        users={saversUsers}
+        currentUserId={user?.uid}
+      />
       <AnimatePresence>
         {toast && (
           <motion.div

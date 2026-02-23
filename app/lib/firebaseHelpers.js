@@ -419,6 +419,18 @@ export async function getToTryDishesFromFirestore(userId) {
   return enrichWithOwnerPhotos(results);
 }
 
+export async function getUsersWhoSavedDish(dishId) {
+  if (!dishId) return [];
+  try {
+    const q = query(collection(db, "users"), where("savedDishes", "array-contains", dishId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (err) {
+    console.error("Failed to fetch users who saved dish:", err);
+    return [];
+  }
+}
+
 // Get dishes saved by user
 export async function getSavedDishesFromFirestore(userId) {
   const userRef = doc(db, "users", userId);

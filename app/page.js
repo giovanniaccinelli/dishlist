@@ -8,9 +8,11 @@ import { useAuth } from "./lib/auth";
 import {
   addDishToToTryList,
   getAllDishesFromFirestore,
+  getUsersWhoSavedDish,
   recountDishSavesFromUsers,
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
+import SaversModal from "../components/SaversModal";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -20,6 +22,9 @@ export default function Feed() {
   const [addedDishIds, setAddedDishIds] = useState(() => new Set());
   const [loadingDishes, setLoadingDishes] = useState(true);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [saversOpen, setSaversOpen] = useState(false);
+  const [saversLoading, setSaversLoading] = useState(false);
+  const [saversUsers, setSaversUsers] = useState([]);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -127,6 +132,17 @@ export default function Feed() {
     }
   };
 
+  const handleOpenSavers = async (dish) => {
+    setSaversOpen(true);
+    setSaversLoading(true);
+    try {
+      const usersList = await getUsersWhoSavedDish(dish?.id);
+      setSaversUsers(usersList);
+    } finally {
+      setSaversLoading(false);
+    }
+  };
+
   if (loading || loadingDishes) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -136,17 +152,18 @@ export default function Feed() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] text-black relative pb-24">
-      <div className="px-5 pt-6 pb-3 flex items-center gap-3">
+    <div className="h-screen bg-[#F6F6F2] text-black relative pb-24 overflow-hidden">
+      <div className="px-5 pt-6 pb-3 flex items-center gap-3 shrink-0">
         <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
         <h1 className="text-3xl font-bold">DishList</h1>
       </div>
-      <div className="px-5">
+      <div className="px-5 h-[calc(100vh-132px)] overflow-hidden">
         <SwipeDeck
           dishes={orderedList}
           preserveContinuity
           onAction={handleAdd}
           onRightSwipe={handleRightSwipeToTry}
+          onSavesPress={handleOpenSavers}
           actionOnRightSwipe={false}
           dismissOnAction
           actionLabel="+"
@@ -158,6 +175,13 @@ export default function Feed() {
         />
       </div>
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
+      <SaversModal
+        open={saversOpen}
+        onClose={() => setSaversOpen(false)}
+        loading={saversLoading}
+        users={saversUsers}
+        currentUserId={user?.uid}
+      />
       <BottomNav />
     </div>
   );

@@ -60,6 +60,8 @@ export default function Profile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const effectiveProfilePhotoURL =
+    typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -87,6 +89,14 @@ export default function Profile() {
       })();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!editProfileModal) return;
+    setNewName(user?.displayName || "");
+    setNewPhotoFile(null);
+    setRemovePhoto(false);
+    setNewPhotoPreview(effectiveProfilePhotoURL);
+  }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL]);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -157,7 +167,7 @@ export default function Profile() {
         imageURL,
         owner: user.uid,
         ownerName: user.displayName || "Anonymous",
-        ownerPhotoURL: user.photoURL || profileMeta.photoURL || "",
+        ownerPhotoURL: effectiveProfilePhotoURL || "",
         createdAt: new Date(),
       });
       const updatedDishes = await getDishesFromFirestore(user.uid);
@@ -202,6 +212,7 @@ export default function Profile() {
         nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
       }
       await updateProfile(auth.currentUser, { displayName: newName, photoURL: nextPhotoURL || null });
+      await auth.currentUser?.reload();
       await setDoc(
         doc(db, "users", user.uid),
         { displayName: newName, photoURL: nextPhotoURL || "" },
@@ -404,9 +415,9 @@ export default function Profile() {
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
-          {user.photoURL || profileMeta.photoURL ? (
+          {effectiveProfilePhotoURL ? (
             <img
-              src={user.photoURL || profileMeta.photoURL}
+              src={effectiveProfilePhotoURL}
               alt="Profile"
               className="w-16 h-16 rounded-full object-cover"
             />

@@ -12,8 +12,6 @@ import {
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
-  removeDishFromToTry,
-  upgradeToMyDishlist,
   removeDishFromAllUsers,
   deleteDishAndImage,
   updateOwnerNameForDishes,
@@ -36,7 +34,6 @@ export default function Profile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [] });
   const [profileTab, setProfileTab] = useState("my");
-  const [selectedToTryId, setSelectedToTryId] = useState(null);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
@@ -340,26 +337,6 @@ export default function Profile() {
     </>
   );
 
-  const handleDiscardToTry = async (dish) => {
-    if (!user) return;
-    const ok = await removeDishFromToTry(user.uid, dish.id);
-    if (!ok) {
-      alert("Failed to discard dish.");
-      return;
-    }
-    setSelectedToTryId(null);
-  };
-
-  const handleUpgradeToMyDishlist = async (dish) => {
-    if (!user) return;
-    const ok = await upgradeToMyDishlist(user.uid, dish);
-    if (!ok) {
-      alert("Failed to upgrade dish.");
-      return;
-    }
-    setSelectedToTryId(null);
-  };
-
   const LevelSelector = ({ label, value, onChange, colorClass }) => (
     <div>
       <p className="text-sm font-medium text-black mb-2">{label}</p>
@@ -488,14 +465,9 @@ export default function Profile() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 200, damping: 20 }}
                   >
-                    <button
-                      type="button"
-                      className="absolute inset-0 z-10"
-                      onClick={() =>
-                        setSelectedToTryId((prev) => (prev === dish.id ? null : dish.id))
-                      }
-                      aria-label="Open To Try actions"
-                    />
+                    <Link href={`/dish/${dish.id}?source=to_try&mode=single`} className="absolute inset-0 z-10">
+                      <span className="sr-only">Open To Try dish</span>
+                    </Link>
                     {(() => {
                       const imageSrc =
                         dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
@@ -522,24 +494,6 @@ export default function Profile() {
                         {dish.name || "Untitled dish"}
                       </div>
                     </div>
-                    {selectedToTryId === dish.id && (
-                      <div className="absolute inset-0 z-30 bg-black/40 backdrop-blur-[1px] p-2 flex flex-col justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDiscardToTry(dish)}
-                          className="w-full rounded-full bg-red-500 text-white py-2 text-xs font-semibold"
-                        >
-                          Discard
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpgradeToMyDishlist(dish)}
-                          className="w-full rounded-full bg-[#2BD36B] text-black py-2 text-xs font-semibold"
-                        >
-                          Upgrade to My DishList
-                        </button>
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </AnimatePresence>

@@ -24,9 +24,14 @@ export default function SwipeDeck({
   onRightSwipe,
   actionOnRightSwipe = true,
   dismissOnAction = true,
+  onSecondaryAction,
+  dismissOnSecondaryAction = true,
   actionLabel = "+",
+  secondaryActionLabel,
   actionClassName,
+  secondaryActionClassName,
   actionToast,
+  secondaryActionToast,
   trackSwipes = true,
   onAuthRequired,
   preserveContinuity = true,
@@ -124,6 +129,33 @@ export default function SwipeDeck({
     if (dismissOnAction) advanceCard();
     dragX.set(0);
     runAction(card);
+  };
+
+  const handleSecondaryActionPress = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (disabled || isEjecting) return;
+    if (typeof onSecondaryAction !== "function") return;
+    const card = currentCard;
+    if (dismissOnSecondaryAction) advanceCard();
+    dragX.set(0);
+    Promise.resolve(onSecondaryAction(card))
+      .then((result) => {
+        if (result === false) {
+          setToast("ACTION FAILED");
+          setTimeout(() => setToast(""), 1200);
+          return;
+        }
+        if (secondaryActionToast) {
+          setToast(secondaryActionToast);
+          setTimeout(() => setToast(""), 1200);
+        }
+      })
+      .catch((err) => {
+        console.error("Deck secondary action failed:", err);
+        setToast("ACTION FAILED");
+        setTimeout(() => setToast(""), 1200);
+      });
   };
 
   const handleStartOver = () => {
@@ -481,6 +513,49 @@ export default function SwipeDeck({
               {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
           </div>
+
+          {secondaryActionLabel && (
+            <div className="absolute bottom-14 left-6">
+              <button
+                data-no-drag="true"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {}
+                }}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                  } catch {}
+                  handleSecondaryActionPress(e);
+                }}
+                className={
+                  secondaryActionClassName ||
+                  "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
+                }
+                aria-label="Secondary action"
+                disabled={disabled}
+              >
+                {secondaryActionLabel}
+              </button>
+            </div>
+          )}
 
           <div className="absolute left-5 right-5 bottom-4 z-30 flex flex-wrap gap-2">
             {getTags(currentCard).map((tag, idx) => (

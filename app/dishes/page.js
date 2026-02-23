@@ -30,7 +30,6 @@ export default function Dishes() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
-  const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
 
@@ -206,7 +205,7 @@ export default function Dishes() {
   };
 
   const toggleTagFilter = (tag) => {
-    setSelectedTagsDraft((prev) => {
+    setSelectedTagsApplied((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
       return [...prev, tag];
     });
@@ -226,20 +225,48 @@ export default function Dishes() {
           />
           <button
             type="button"
-            onClick={() => {
-              setSelectedTagsDraft(selectedTagsApplied);
-              setShowTagsPicker((prev) => !prev);
-            }}
+            onClick={() => setShowTagsPicker((prev) => !prev)}
             className="px-3 rounded-xl bg-black text-white text-sm font-semibold whitespace-nowrap"
           >
-            all tags
+            + filter
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2 items-center">
+          {selectedTagsApplied.map((tag) => (
+            <span
+              key={tag}
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${getTagChipClass(
+                tag,
+                true
+              )}`}
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => toggleTagFilter(tag)}
+                className="text-black/70 hover:text-black leading-none"
+                aria-label={`Remove ${tag} filter`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {selectedTagsApplied.length === 0 && (
+            <span className="text-xs text-black/50">No tag filters selected</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowTagsPicker(true)}
+            className="px-3 py-1 rounded-full border border-black/20 bg-white text-xs font-medium"
+          >
+            Add filters
           </button>
         </div>
         {showTagsPicker && (
           <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
             <div className="flex flex-wrap gap-2">
               {TAG_OPTIONS.map((tag) => {
-                const active = selectedTagsDraft.includes(tag);
+                const active = selectedTagsApplied.includes(tag);
                 return (
                   <button
                     key={tag}
@@ -255,20 +282,17 @@ export default function Dishes() {
             <div className="mt-3 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedTagsDraft([])}
+                onClick={() => setSelectedTagsApplied([])}
                 className="px-3 py-2 rounded-full border border-black/20 text-xs font-medium"
               >
                 Clear
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedTagsApplied(selectedTagsDraft);
-                  setShowTagsPicker(false);
-                }}
+                onClick={() => setShowTagsPicker(false)}
                 className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold"
               >
-                Search tags
+                Done
               </button>
             </div>
           </div>

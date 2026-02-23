@@ -15,9 +15,12 @@ import {
   getAllDishesFromFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
+  getToTryDishesFromFirestore,
   removeDishFromAllUsers,
+  removeDishFromToTry,
   removeSavedDishFromUser,
   saveDishToUserList,
+  upgradeToMyDishlist,
   updateDishAndSavedCopies,
   uploadImage,
 } from "../../lib/firebaseHelpers";
@@ -75,6 +78,8 @@ export default function DishDetail() {
         items = all.filter((d) => d.isPublic !== false);
       } else if (source === "uploaded") {
         items = await getDishesFromFirestore(userId);
+      } else if (source === "to_try") {
+        items = await getToTryDishesFromFirestore(userId);
       } else {
         items = await getSavedDishesFromFirestore(userId);
       }
@@ -113,7 +118,10 @@ export default function DishDetail() {
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return false;
-    if (source === "uploaded") {
+    if (source === "to_try") {
+      const removed = await removeDishFromToTry(userId, dishToRemove.id);
+      if (!removed) return false;
+    } else if (source === "uploaded") {
       try {
         await deleteDishAndImage(
           dishToRemove.id,
@@ -146,6 +154,11 @@ export default function DishDetail() {
     return Boolean(saved);
   };
 
+  const handleUpgrade = async (dishToUpgrade) => {
+    if (!userId) return false;
+    return upgradeToMyDishlist(userId, dishToUpgrade);
+  };
+
   const handleRightSwipeToTry = async (dishToAdd) => {
     if (!userId) return false;
     return addDishToToTryList(userId, dishToAdd.id, dishToAdd);
@@ -161,6 +174,8 @@ export default function DishDetail() {
         items = all.filter((d) => d.isPublic !== false);
       } else if (source === "uploaded") {
         items = await getDishesFromFirestore(userId);
+      } else if (source === "to_try") {
+        items = await getToTryDishesFromFirestore(userId);
       } else {
         items = await getSavedDishesFromFirestore(userId);
       }
@@ -187,6 +202,7 @@ export default function DishDetail() {
 
   const canEditUploaded = source === "uploaded";
   const isPublicSource = source === "public";
+  const isToTrySource = source === "to_try";
 
   const LevelSelector = ({ label, value, onChange, colorClass }) => (
     <div>
@@ -335,19 +351,51 @@ export default function DishDetail() {
           dishes={orderedList}
           preserveContinuity
           disabled={editOpen}
-          onAction={canEditUploaded ? openEditModal : isPublicSource ? handleAdd : handleRemove}
+          onAction={
+            canEditUploaded
+              ? openEditModal
+              : isPublicSource
+                ? handleAdd
+                : isToTrySource
+                  ? handleUpgrade
+                  : handleRemove
+          }
+          onSecondaryAction={isToTrySource ? handleRemove : undefined}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
           dismissOnAction={!canEditUploaded}
-          actionLabel={canEditUploaded ? "Edit" : isPublicSource ? "+" : "Remove"}
+          actionLabel={
+            canEditUploaded
+              ? "Edit"
+              : isPublicSource
+                ? "+"
+                : isToTrySource
+                  ? "Upgrade to My DishList"
+                  : "Remove"
+          }
+          secondaryActionLabel={isToTrySource ? "Discard" : undefined}
           actionClassName={
             canEditUploaded
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isPublicSource
                 ? "add-action-btn w-11 h-11"
-                : "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
+                : "px-4 py-2 rounded-full bg-[#2BD36B] text-black text-sm font-semibold shadow-lg"
           }
-          actionToast={canEditUploaded ? undefined : isPublicSource ? "ADDING TO YOUR DISHLIST" : "Removed"}
+          secondaryActionClassName={
+            isToTrySource
+              ? "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
+              : undefined
+          }
+          actionToast={
+            canEditUploaded
+              ? undefined
+              : isPublicSource
+                ? "ADDING TO YOUR DISHLIST"
+                : isToTrySource
+                  ? "ADDED TO MY DISHLIST"
+                  : "Removed"
+          }
+          secondaryActionToast={isToTrySource ? "REMOVED FROM TO TRY" : undefined}
           trackSwipes={false}
           onResetFeed={handleResetDeck}
         />

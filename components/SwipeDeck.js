@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -47,7 +47,9 @@ export default function SwipeDeck({
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
+  const [tagsHeight, setTagsHeight] = useState(0);
   const dragControls = useDragControls();
+  const tagsRef = useRef(null);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -88,6 +90,20 @@ export default function SwipeDeck({
   useEffect(() => {
     setShowRecipe(false);
   }, [currentCard?._key]);
+
+  useEffect(() => {
+    if (!tagsRef.current) return;
+    const el = tagsRef.current;
+    const updateHeight = () => {
+      setTagsHeight(el.offsetHeight || 0);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [currentCard?._key]);
+
+  const actionBottom = Math.max(58, tagsHeight + 24);
 
   const advanceCard = () => {
     setCurrentIndex((prev) => {
@@ -483,7 +499,7 @@ export default function SwipeDeck({
             </div>
           </motion.div>
 
-          <div className="absolute bottom-24 right-6">
+          <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
             <button
               data-no-drag="true"
               onPointerDown={(e) => {
@@ -525,7 +541,7 @@ export default function SwipeDeck({
           </div>
 
           {secondaryActionLabel && (
-            <div className="absolute bottom-24 left-6">
+            <div className="absolute right-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -567,7 +583,7 @@ export default function SwipeDeck({
             </div>
           )}
 
-          <div className="absolute left-5 right-5 bottom-4 z-30 flex flex-wrap gap-2">
+          <div ref={tagsRef} className="absolute left-5 right-5 bottom-4 z-30 flex flex-wrap gap-2">
             {getTags(currentCard).map((tag, idx) => (
               <span
                 key={`${tag}-${idx}`}

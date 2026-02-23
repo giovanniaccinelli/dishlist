@@ -337,7 +337,7 @@ export default function Profile() {
                     />
                   );
                 })()}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-white pointer-events-none">
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
@@ -399,6 +399,22 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
+          {user.photoURL || profileMeta.photoURL ? (
+            <img
+              src={user.photoURL || profileMeta.photoURL}
+              alt="Profile"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          ) : (
+            user.displayName?.[0] || "U"
+          )}
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
+        </div>
+        </div>
         <div className="relative">
           <button
             type="button"
@@ -409,7 +425,7 @@ export default function Profile() {
             <Settings size={18} />
           </button>
           {profileOptionsOpen && (
-            <div className="absolute mt-2 left-0 z-30 bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-44">
+            <div className="absolute mt-2 right-0 z-30 bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-44">
               <button
                 type="button"
                 onClick={() => {
@@ -432,22 +448,6 @@ export default function Profile() {
               </button>
             </div>
           )}
-        </div>
-        <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
-          {user.photoURL || profileMeta.photoURL ? (
-            <img
-              src={user.photoURL || profileMeta.photoURL}
-              alt="Profile"
-              className="w-16 h-16 rounded-full object-cover"
-            />
-          ) : (
-            user.displayName?.[0] || "U"
-          )}
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-        </div>
         </div>
       </div>
 

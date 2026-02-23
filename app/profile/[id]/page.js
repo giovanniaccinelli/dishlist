@@ -249,7 +249,7 @@ export default function PublicProfile() {
                       />
                     );
                   })()}
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-white pointer-events-none">
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>
@@ -322,7 +322,7 @@ export default function PublicProfile() {
                       />
                     );
                   })()}
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-white pointer-events-none">
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>
@@ -397,7 +397,7 @@ export default function PublicProfile() {
                       />
                     );
                   })()}
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-white pointer-events-none">
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish.name || "Untitled dish"}
                     </div>

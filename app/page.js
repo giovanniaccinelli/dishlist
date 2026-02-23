@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
@@ -13,6 +14,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
+import { CircleUserRound } from "lucide-react";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -153,9 +155,18 @@ export default function Feed() {
 
   return (
     <div className="h-screen bg-[#F6F6F2] text-black relative pb-24 overflow-hidden">
-      <div className="px-5 pt-6 pb-3 flex items-center gap-3 shrink-0">
-        <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
-        <h1 className="text-3xl font-bold">DishList</h1>
+      <div className="px-5 pt-6 pb-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
+          <h1 className="text-3xl font-bold">DishList</h1>
+        </div>
+        <Link
+          href={userId ? "/profile" : "/?auth=1"}
+          className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+          aria-label="Open profile"
+        >
+          <CircleUserRound size={18} />
+        </Link>
       </div>
       <div className="px-5 h-[calc(100vh-132px)] overflow-hidden">
         <SwipeDeck

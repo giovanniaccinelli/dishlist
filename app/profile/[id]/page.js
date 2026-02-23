@@ -270,7 +270,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>
@@ -343,7 +343,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>
@@ -427,7 +427,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>

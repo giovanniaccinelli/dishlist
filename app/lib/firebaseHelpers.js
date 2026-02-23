@@ -588,14 +588,19 @@ export async function syncDishSaveCount(dishId) {
 }
 
 // Update ownerName on all dishes for a user (used after profile rename)
-export async function updateOwnerNameForDishes(userId, ownerName) {
+export async function updateOwnerNameForDishes(userId, ownerName, ownerPhotoURL = null) {
   const q = query(collection(db, "dishes"), where("owner", "==", userId));
   const snapshot = await getDocs(q);
   if (snapshot.empty) return;
 
+  const updates = { ownerName };
+  if (ownerPhotoURL !== null) {
+    updates.ownerPhotoURL = ownerPhotoURL;
+  }
+
   const batch = writeBatch(db);
   snapshot.docs.forEach((dishDoc) => {
-    batch.update(dishDoc.ref, { ownerName });
+    batch.update(dishDoc.ref, updates);
   });
   await batch.commit();
 }

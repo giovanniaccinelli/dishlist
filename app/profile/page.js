@@ -207,7 +207,9 @@ export default function Profile() {
         { displayName: newName, photoURL: nextPhotoURL || "" },
         { merge: true }
       );
-      await updateOwnerNameForDishes(user.uid, newName);
+      await updateOwnerNameForDishes(user.uid, newName, nextPhotoURL || "");
+      setProfileMeta((prev) => ({ ...prev, photoURL: nextPhotoURL || "" }));
+      setNewPhotoPreview(nextPhotoURL || "");
       alert("Profile updated!");
       setEditProfileModal(false);
       setNewPhotoFile(null);
@@ -349,7 +351,7 @@ export default function Profile() {
                       e.preventDefault();
                       handleOpenSavers(dish);
                     }}
-                    className="text-[10px] text-white/80 pointer-events-auto"
+                    className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
                   >
                     saves: {Number(dish.saves || 0)}
                   </button>
@@ -811,7 +813,10 @@ export default function Profile() {
                 Save
               </motion.button>
               <button
-                onClick={() => setEditProfileModal(false)}
+                onClick={() => {
+                  setEditProfileModal(false);
+                  setRemovePhoto(false);
+                }}
                 className="mt-3 w-full bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black"
               >
                 Cancel

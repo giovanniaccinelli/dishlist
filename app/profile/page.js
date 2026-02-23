@@ -11,6 +11,9 @@ import {
   saveDishToFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
+  getToTryDishesFromFirestore,
+  removeDishFromToTry,
+  upgradeToMyDishlist,
   removeDishFromAllUsers,
   deleteDishAndImage,
   updateOwnerNameForDishes,
@@ -51,7 +54,10 @@ export default function Profile() {
   const [editProfileModal, setEditProfileModal] = useState(false);
   const [uploadedDishes, setUploadedDishes] = useState([]);
   const [savedDishes, setSavedDishes] = useState([]);
+  const [toTryDishes, setToTryDishes] = useState([]);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [] });
+  const [profileTab, setProfileTab] = useState("my");
+  const [selectedToTryId, setSelectedToTryId] = useState(null);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
@@ -82,8 +88,10 @@ export default function Profile() {
     if (user) {
       (async () => {
         const uploaded = await getDishesFromFirestore(user.uid);
+        const toTry = await getToTryDishesFromFirestore(user.uid);
         const userSnap = await getDoc(doc(db, "users", user.uid));
         setUploadedDishes(uploaded);
+        setToTryDishes(toTry);
         if (userSnap.exists()) {
           const data = userSnap.data();
           setProfileMeta({
@@ -117,9 +125,16 @@ export default function Profile() {
       setSavedDishes(saved);
     });
 
+    const toTryRef = collection(db, "users", user.uid, "toTry");
+    const unsubscribeToTry = onSnapshot(toTryRef, async () => {
+      const items = await getToTryDishesFromFirestore(user.uid);
+      setToTryDishes(items);
+    });
+
     return () => {
       unsubscribeUser();
       unsubscribeSaved();
+      unsubscribeToTry();
     };
   }, [user]);
 
@@ -346,6 +361,26 @@ export default function Profile() {
     </>
   );
 
+  const handleDiscardToTry = async (dish) => {
+    if (!user) return;
+    const ok = await removeDishFromToTry(user.uid, dish.id);
+    if (!ok) {
+      alert("Failed to discard dish.");
+      return;
+    }
+    setSelectedToTryId(null);
+  };
+
+  const handleUpgradeToMyDishlist = async (dish) => {
+    if (!user) return;
+    const ok = await upgradeToMyDishlist(user.uid, dish);
+    if (!ok) {
+      alert("Failed to upgrade dish.");
+      return;
+    }
+    setSelectedToTryId(null);
+  };
+
   const LevelSelector = ({ label, value, onChange, colorClass }) => (
     <div>
       <p className="text-sm font-medium text-black mb-2">{label}</p>
@@ -425,8 +460,110 @@ export default function Profile() {
         </div>
       </div>
 
-      <DishGrid title="My DishList" dishes={savedDishes} allowDelete={false} source="saved" />
-      <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
+      <div className="bg-white/70 border border-black/10 rounded-2xl p-1 mb-5 inline-flex gap-1">
+        <button
+          type="button"
+          onClick={() => setProfileTab("my")}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+            profileTab === "my" ? "bg-black text-white" : "text-black/60"
+          }`}
+        >
+          My DishList
+        </button>
+        <button
+          type="button"
+          onClick={() => setProfileTab("totry")}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+            profileTab === "totry" ? "bg-black text-white" : "text-black/60"
+          }`}
+        >
+          To Try
+        </button>
+      </div>
+
+      {profileTab === "my" ? (
+        <>
+          <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
+          <DishGrid title="Saved" dishes={savedDishes} allowDelete={false} source="saved" />
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl font-semibold mb-4">To Try</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {toTryDishes.length === 0 ? (
+              <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+                No dishes in To Try.
+              </div>
+            ) : (
+              <AnimatePresence>
+                {toTryDishes.map((dish, index) => (
+                  <motion.div
+                    key={`${dish.id}-${index}`}
+                    className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  >
+                    <button
+                      type="button"
+                      className="absolute inset-0 z-10"
+                      onClick={() =>
+                        setSelectedToTryId((prev) => (prev === dish.id ? null : dish.id))
+                      }
+                      aria-label="Open To Try actions"
+                    />
+                    {(() => {
+                      const imageSrc =
+                        dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+                      if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
+                        return (
+                          <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                            No image
+                          </div>
+                        );
+                      }
+                      return (
+                        <img
+                          src={imageSrc}
+                          alt={dish.name}
+                          className="w-full h-28 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/file.svg";
+                          }}
+                        />
+                      );
+                    })()}
+                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                      <div className="text-[11px] font-semibold leading-tight truncate">
+                        {dish.name || "Untitled dish"}
+                      </div>
+                    </div>
+                    {selectedToTryId === dish.id && (
+                      <div className="absolute inset-0 z-30 bg-black/40 backdrop-blur-[1px] p-2 flex flex-col justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDiscardToTry(dish)}
+                          className="w-full rounded-full bg-red-500 text-white py-2 text-xs font-semibold"
+                        >
+                          Discard
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpgradeToMyDishlist(dish)}
+                          className="w-full rounded-full bg-[#2BD36B] text-black py-2 text-xs font-semibold"
+                        >
+                          Upgrade to My DishList
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Add Dish button */}
       <motion.button

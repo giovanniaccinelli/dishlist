@@ -156,7 +156,13 @@ export default function Dishes() {
     const term = search.trim().toLowerCase();
     if (!term) return dishes;
     const source = searchPool || dishes;
-    return source.filter((d) => d.name?.toLowerCase().includes(term));
+    return source.filter((d) => {
+      const nameMatch = d.name?.toLowerCase().includes(term);
+      const tagMatch = Array.isArray(d.tags)
+        ? d.tags.some((tag) => String(tag).toLowerCase().includes(term))
+        : false;
+      return nameMatch || tagMatch;
+    });
   }, [dishes, search, searchPool]);
 
   const handleSave = async (dish) => {
@@ -179,7 +185,7 @@ export default function Dishes() {
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
       <input
         type="text"
-        placeholder="Search dishes..."
+        placeholder="Search dishes or tags..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"

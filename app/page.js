@@ -6,6 +6,7 @@ import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
+  addDishToToTryList,
   getAllDishesFromFirestore,
   recountDishSavesFromUsers,
   saveDishToUserList,
@@ -99,6 +100,15 @@ export default function Feed() {
     return true;
   };
 
+  const handleRightSwipeToTry = async (dishToAdd) => {
+    if (!userId) {
+      setShowAuthPrompt(true);
+      return false;
+    }
+    if (!dishToAdd?.id) return;
+    await addDishToToTryList(userId, dishToAdd.id, dishToAdd);
+  };
+
   const handleResetFeed = async () => {
     setLoadingDishes(true);
     setAddedDishIds(new Set());
@@ -136,6 +146,8 @@ export default function Feed() {
           dishes={orderedList}
           preserveContinuity
           onAction={handleAdd}
+          onRightSwipe={handleRightSwipeToTry}
+          actionOnRightSwipe={false}
           dismissOnAction
           actionLabel="+"
           actionClassName="add-action-btn w-14 h-14 text-[36px]"

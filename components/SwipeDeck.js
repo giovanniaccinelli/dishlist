@@ -21,6 +21,8 @@ export default function SwipeDeck({
   loadingMore,
   onResetFeed,
   onAction,
+  onRightSwipe,
+  actionOnRightSwipe = true,
   dismissOnAction = true,
   actionLabel = "+",
   actionClassName,
@@ -140,8 +142,13 @@ export default function SwipeDeck({
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
       const direction = info.offset.x > 0 ? 1 : -1;
       setIsEjecting(true);
-      if (swipeAddEnabled && info.offset.x > 0) {
+      if (swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
         runAction(dish);
+      }
+      if (info.offset.x > 0 && typeof onRightSwipe === "function") {
+        Promise.resolve(onRightSwipe(dish)).catch((err) => {
+          console.error("Right swipe action failed:", err);
+        });
       }
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
 

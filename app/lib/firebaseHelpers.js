@@ -352,6 +352,73 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   }
 }
 
+export async function addDishToToTryList(userId, dishId, dishData = null) {
+  if (!userId || !dishId) return false;
+
+  const payload = dishData
+    ? {
+        dishId,
+        name: dishData.name || "",
+        description: dishData.description || "",
+        recipeIngredients: dishData.recipeIngredients || "",
+        recipeMethod: dishData.recipeMethod || "",
+        tags: normalizeTags(dishData.tags),
+        cost: Math.max(1, Math.min(3, Number(dishData.cost) || 1)),
+        time: Math.max(1, Math.min(3, Number(dishData.time ?? dishData.difficulty) || 1)),
+        isPublic: dishData.isPublic !== false,
+        imageURL:
+          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
+        owner: dishData.owner || "",
+        ownerName: dishData.ownerName || "",
+        ownerPhotoURL: dishData.ownerPhotoURL || "",
+        createdAt: dishData.createdAt || new Date(),
+      }
+    : { dishId, createdAt: new Date() };
+
+  const userRef = doc(db, "users", userId);
+  const toTryDocRef = doc(db, "users", userId, "toTry", dishId);
+  try {
+    await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
+    await setDoc(toTryDocRef, payload, { merge: true });
+    return true;
+  } catch (err) {
+    console.error("Failed to add to To Try list:", err);
+    return false;
+  }
+}
+
+export async function removeDishFromToTry(userId, dishId) {
+  if (!userId || !dishId) return false;
+  const userRef = doc(db, "users", userId);
+  const toTryDocRef = doc(db, "users", userId, "toTry", dishId);
+  try {
+    await updateDoc(userRef, { toTryDishes: arrayRemove(dishId) });
+  } catch (err) {
+    console.warn("Failed to update toTryDishes array, continuing:", err);
+  }
+  try {
+    await deleteDoc(toTryDocRef);
+    return true;
+  } catch (err) {
+    console.error("Failed to delete toTry dish doc:", err);
+    return false;
+  }
+}
+
+export async function upgradeToMyDishlist(userId, dish) {
+  if (!userId || !dish?.id) return false;
+  const saved = await saveDishToUserList(userId, dish.id, dish);
+  if (!saved) return false;
+  await removeDishFromToTry(userId, dish.id);
+  return true;
+}
+
+export async function getToTryDishesFromFirestore(userId) {
+  const toTrySub = await getDocs(collection(db, "users", userId, "toTry"));
+  const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return enrichWithOwnerPhotos(results);
+}
+
 // Get dishes saved by user
 export async function getSavedDishesFromFirestore(userId) {
   const userRef = doc(db, "users", userId);

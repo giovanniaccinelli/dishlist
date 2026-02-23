@@ -9,6 +9,7 @@ import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
 import {
+  addDishToToTryList,
   deleteDishAndImage,
   deleteImageByUrl,
   getAllDishesFromFirestore,
@@ -164,6 +165,11 @@ export default function DishDetail() {
     }
     const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
     return Boolean(saved);
+  };
+
+  const handleRightSwipeToTry = async (dishToAdd) => {
+    if (!userId) return false;
+    return addDishToToTryList(userId, dishToAdd.id, dishToAdd);
   };
 
   const handleResetDeck = async () => {
@@ -351,6 +357,8 @@ export default function DishDetail() {
           preserveContinuity
           disabled={editOpen}
           onAction={canEditUploaded ? openEditModal : isPublicSource ? handleAdd : handleRemove}
+          onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
+          actionOnRightSwipe={!isPublicSource}
           dismissOnAction={!canEditUploaded}
           actionLabel={canEditUploaded ? "Edit" : isPublicSource ? "+" : "Remove"}
           actionClassName={

@@ -21,6 +21,14 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
+function normalizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  const cleaned = tags
+    .map((t) => (typeof t === "string" ? t.trim() : ""))
+    .filter(Boolean);
+  return Array.from(new Set(cleaned)).slice(0, 6);
+}
+
 async function enrichWithOwnerPhotos(items) {
   if (!Array.isArray(items) || items.length === 0) return items;
   const ownerIds = Array.from(new Set(items.map((i) => i.owner).filter(Boolean)));
@@ -179,6 +187,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
         description: dishData.description || "",
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
+        tags: normalizeTags(dishData.tags),
         cost: Math.max(1, Math.min(3, Number(dishData.cost) || 1)),
         time: Math.max(1, Math.min(3, Number(dishData.time ?? dishData.difficulty) || 1)),
         isPublic: dishData.isPublic !== false,
@@ -203,6 +212,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
           description: data.description || payload.description || "",
           recipeIngredients: data.recipeIngredients || payload.recipeIngredients || "",
           recipeMethod: data.recipeMethod || payload.recipeMethod || "",
+          tags: normalizeTags(data.tags || payload.tags),
           cost: Math.max(1, Math.min(3, Number(data.cost) || Number(payload.cost) || 1)),
           time: Math.max(
             1,
@@ -316,6 +326,7 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
         description: dishData.description || "",
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
+        tags: normalizeTags(dishData.tags),
         cost: Math.max(1, Math.min(3, Number(dishData.cost) || 1)),
         time: Math.max(1, Math.min(3, Number(dishData.time ?? dishData.difficulty) || 1)),
         isPublic: dishData.isPublic !== false,
@@ -403,6 +414,7 @@ export async function getSavedDishesFromFirestore(userId) {
       description: canonical.description || dish.description || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
+      tags: normalizeTags(canonical.tags || dish.tags),
       cost: Math.max(1, Math.min(3, Number(canonical.cost) || Number(dish.cost) || 1)),
       time: Math.max(
         1,

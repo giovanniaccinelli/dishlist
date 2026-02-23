@@ -21,6 +21,28 @@ import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { Plus } from "lucide-react";
 
+const TAG_OPTIONS = [
+  "fit",
+  "high protein",
+  "veg",
+  "vegan",
+  "light",
+  "easy",
+  "quick",
+  "fancy",
+  "comfort",
+  "carb heavy",
+  "low carb",
+  "spicy",
+  "late night",
+  "cheat",
+  "budget",
+  "premium",
+  "summer",
+  "winter",
+  "gourmet",
+];
+
 export default function Profile() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -36,6 +58,7 @@ export default function Profile() {
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [dishCost, setDishCost] = useState(1);
   const [dishTime, setDishTime] = useState(1);
+  const [dishTags, setDishTags] = useState([]);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -129,6 +152,7 @@ export default function Profile() {
         description: dishDescription || "",
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
+        tags: dishTags,
         cost: dishCost,
         time: dishTime,
         isPublic: dishIsPublic,
@@ -146,6 +170,7 @@ export default function Profile() {
       setDishRecipeMethod("");
       setDishCost(1);
       setDishTime(1);
+      setDishTags([]);
       setDishIsPublic(true);
       setDishImage(null);
       setPreview(null);
@@ -340,6 +365,14 @@ export default function Profile() {
     </div>
   );
 
+  const toggleTag = (tag) => {
+    setDishTags((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      if (prev.length >= 6) return prev;
+      return [...prev, tag];
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <div className="flex items-center gap-4 mb-6">
@@ -467,6 +500,31 @@ export default function Profile() {
                   onChange={setDishTime}
                   colorClass="border-[#FACC15] bg-[#FACC15]"
                 />
+              </div>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-black">Tags</p>
+                  <p className="text-xs text-black/60">{dishTags.length}/6</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {TAG_OPTIONS.map((tag) => {
+                    const active = dishTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={`px-3 py-1 rounded-full text-xs border transition ${
+                          active
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-black/20"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
                 <input

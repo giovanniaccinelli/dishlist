@@ -21,6 +21,28 @@ import {
   uploadImage,
 } from "../../lib/firebaseHelpers";
 
+const TAG_OPTIONS = [
+  "fit",
+  "high protein",
+  "veg",
+  "vegan",
+  "light",
+  "easy",
+  "quick",
+  "fancy",
+  "comfort",
+  "carb heavy",
+  "low carb",
+  "spicy",
+  "late night",
+  "cheat",
+  "budget",
+  "premium",
+  "summer",
+  "winter",
+  "gourmet",
+];
+
 export default function DishDetail() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -43,6 +65,7 @@ export default function DishDetail() {
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
   const [editCost, setEditCost] = useState(1);
   const [editTime, setEditTime] = useState(1);
+  const [editTags, setEditTags] = useState([]);
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
@@ -199,6 +222,14 @@ export default function DishDetail() {
     </div>
   );
 
+  const toggleEditTag = (tag) => {
+    setEditTags((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      if (prev.length >= 6) return prev;
+      return [...prev, tag];
+    });
+  };
+
   const openEditModal = (dishToEdit) => {
     if (!canEditUploaded || dishToEdit?.owner !== userId) return;
     setEditingDish(dishToEdit);
@@ -208,6 +239,16 @@ export default function DishDetail() {
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
     setEditCost(Math.max(1, Math.min(3, Number(dishToEdit?.cost) || 1)));
     setEditTime(Math.max(1, Math.min(3, Number(dishToEdit?.time ?? dishToEdit?.difficulty) || 1)));
+    const normalizedTags = Array.isArray(dishToEdit?.tags)
+      ? Array.from(
+          new Set(
+            dishToEdit.tags
+              .map((tag) => (typeof tag === "string" ? tag.trim() : ""))
+              .filter(Boolean)
+          )
+        ).slice(0, 6)
+      : [];
+    setEditTags(normalizedTags);
     setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditImageFile(null);
     setEditPreview(
@@ -246,6 +287,7 @@ export default function DishDetail() {
         description: editDescription.trim(),
         recipeIngredients: editRecipeIngredients.trim(),
         recipeMethod: editRecipeMethod.trim(),
+        tags: editTags,
         cost: editCost,
         time: editTime,
         isPublic: editIsPublic,
@@ -378,6 +420,31 @@ export default function DishDetail() {
                 onChange={setEditTime}
                 colorClass="border-[#FACC15] bg-[#FACC15]"
               />
+            </div>
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-black">Tags</p>
+                <p className="text-xs text-black/60">{editTags.length}/6</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {TAG_OPTIONS.map((tag) => {
+                  const active = editTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleEditTag(tag)}
+                      className={`px-3 py-1 rounded-full text-xs border transition ${
+                        active
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-black/20"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <label className="flex items-center gap-2 mb-3 text-sm font-medium text-black">
               <input

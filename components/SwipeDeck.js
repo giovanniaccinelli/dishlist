@@ -189,6 +189,23 @@ export default function SwipeDeck({
     );
   };
 
+  const getTags = (dish) => {
+    if (!Array.isArray(dish?.tags)) return [];
+    return dish.tags
+      .map((tag) => (typeof tag === "string" ? tag.trim() : ""))
+      .filter(Boolean)
+      .slice(0, 6);
+  };
+
+  const TAG_COLORS = [
+    "bg-[#DFF3FF] text-[#123B52]",
+    "bg-[#E9FBD8] text-[#1D4F1A]",
+    "bg-[#FFF2D9] text-[#6A3E00]",
+    "bg-[#FFE3EC] text-[#6A1A36]",
+    "bg-[#EDE8FF] text-[#33205D]",
+    "bg-[#E5F7F4] text-[#0F4D45]",
+  ];
+
   const normalizeLevel = (value) => {
     const n = Number(value);
     if (!Number.isFinite(n)) return 1;
@@ -234,7 +251,7 @@ export default function SwipeDeck({
 
   return (
     <div className="flex min-h-[72vh] flex-col items-center justify-center">
-      <div className="relative w-full max-w-md h-[70vh]">
+      <div className="relative w-full max-w-md h-[74vh]">
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting ? false : "x"}
@@ -250,7 +267,7 @@ export default function SwipeDeck({
             dragControls.start(e);
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[70vh] cursor-grab"
+          className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[74vh] cursor-grab"
         >
           {swipeAddEnabled && (
             <motion.div
@@ -338,7 +355,7 @@ export default function SwipeDeck({
             <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
               <button
                 type="button"
-                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                className="absolute inset-x-0 top-0 bottom-44 z-10"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowRecipe((prev) => !prev);
@@ -347,7 +364,7 @@ export default function SwipeDeck({
               />
               {renderImage(currentCard)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-20 left-5 right-5 text-white z-20">
+              <div className="absolute bottom-28 left-5 right-5 text-white z-20">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
                     {currentCard.ownerPhotoURL ? (
@@ -388,7 +405,7 @@ export default function SwipeDeck({
             >
               <button
                 type="button"
-                className="absolute inset-x-0 top-0 bottom-36 z-10"
+                className="absolute inset-x-0 top-0 bottom-44 z-10"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowRecipe((prev) => !prev);
@@ -417,7 +434,7 @@ export default function SwipeDeck({
             </div>
           </motion.div>
 
-          <div className="absolute bottom-6 right-6">
+          <div className="absolute bottom-14 right-6">
             <button
               data-no-drag="true"
               onPointerDown={(e) => {
@@ -456,6 +473,19 @@ export default function SwipeDeck({
             >
               {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
+          </div>
+
+          <div className="absolute left-5 right-5 bottom-4 z-30 flex flex-wrap gap-2">
+            {getTags(currentCard).map((tag, idx) => (
+              <span
+                key={`${tag}-${idx}`}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                  TAG_COLORS[idx % TAG_COLORS.length]
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </motion.div>
       </div>

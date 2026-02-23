@@ -8,29 +8,9 @@ import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
+import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
 const DISHES_PAGE_SIZE = 24;
-const TAG_OPTIONS = [
-  "fit",
-  "high protein",
-  "veg",
-  "vegan",
-  "light",
-  "easy",
-  "quick",
-  "fancy",
-  "comfort",
-  "carb heavy",
-  "low carb",
-  "spicy",
-  "late night",
-  "cheat",
-  "budget",
-  "premium",
-  "summer",
-  "winter",
-  "gourmet",
-];
 
 export default function Dishes() {
   const { user } = useAuth();
@@ -43,12 +23,14 @@ export default function Dishes() {
   const [fallbackPool, setFallbackPool] = useState([]);
   const [usingFallbackPagination, setUsingFallbackPagination] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [searchPool, setSearchPool] = useState(null);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [allDishesPool, setAllDishesPool] = useState(null);
+  const [allDishesLoading, setAllDishesLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
+  const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
+  const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -153,36 +135,42 @@ export default function Dishes() {
     fetchDishes();
   }, []);
 
+  const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
+
   useEffect(() => {
-    const term = search.trim();
-    if (!term) return;
-    if (searchPool) return;
+    if (!usingGlobalFilter) return;
+    if (allDishesPool || allDishesLoading) return;
     let cancelled = false;
     const run = async () => {
-      setSearchLoading(true);
+      setAllDishesLoading(true);
       try {
         const all = await getAllDishesFromFirestore();
-        if (!cancelled) setSearchPool(all);
+        if (!cancelled) setAllDishesPool(all);
       } catch (err) {
         console.error("Failed to load full search pool:", err);
       } finally {
-        if (!cancelled) setSearchLoading(false);
+        if (!cancelled) setAllDishesLoading(false);
       }
     };
     run();
     return () => {
       cancelled = true;
     };
-  }, [search, searchPool]);
+  }, [allDishesLoading, allDishesPool, usingGlobalFilter]);
+
+  useEffect(() => {
+    setFilteredLimit(DISHES_PAGE_SIZE);
+  }, [search, selectedTagsApplied]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const source = searchPool || dishes;
+    const source = usingGlobalFilter ? allDishesPool || [] : dishes;
     const tagFiltered =
-      selectedTags.length === 0
+      selectedTagsApplied.length === 0
         ? source
         : source.filter((d) =>
-            Array.isArray(d.tags) && d.tags.some((tag) => selectedTags.includes(String(tag)))
+            Array.isArray(d.tags) &&
+            d.tags.some((tag) => selectedTagsApplied.includes(String(tag)))
           );
     if (!term) return tagFiltered;
     return tagFiltered.filter((d) => {
@@ -192,9 +180,9 @@ export default function Dishes() {
         : false;
       return nameMatch || tagMatch;
     });
-  }, [dishes, search, searchPool, selectedTags]);
+  }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
-  const visibleDishes = filtered;
+  const visibleDishes = usingGlobalFilter ? filtered.slice(0, filteredLimit) : filtered;
 
   const handleSave = async (dish) => {
     if (!user) {
@@ -212,7 +200,7 @@ export default function Dishes() {
   };
 
   const toggleTagFilter = (tag) => {
-    setSelectedTags((prev) => {
+    setSelectedTagsDraft((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
       return [...prev, tag];
     });
@@ -232,7 +220,10 @@ export default function Dishes() {
           />
           <button
             type="button"
-            onClick={() => setShowTagsPicker((prev) => !prev)}
+            onClick={() => {
+              setSelectedTagsDraft(selectedTagsApplied);
+              setShowTagsPicker((prev) => !prev);
+            }}
             className="px-3 rounded-xl bg-black text-white text-sm font-semibold whitespace-nowrap"
           >
             all tags
@@ -242,20 +233,37 @@ export default function Dishes() {
           <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
             <div className="flex flex-wrap gap-2">
               {TAG_OPTIONS.map((tag) => {
-                const active = selectedTags.includes(tag);
+                const active = selectedTagsDraft.includes(tag);
                 return (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => toggleTagFilter(tag)}
-                    className={`px-3 py-1 rounded-full text-xs border ${
-                      active ? "bg-black text-white border-black" : "bg-white text-black border-black/20"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, active)}`}
                   >
                     {tag}
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedTagsDraft([])}
+                className="px-3 py-2 rounded-full border border-black/20 text-xs font-medium"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTagsApplied(selectedTagsDraft);
+                  setShowTagsPicker(false);
+                }}
+                className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold"
+              >
+                Search tags
+              </button>
             </div>
           </div>
         )}
@@ -263,7 +271,7 @@ export default function Dishes() {
 
       {loading ? (
         <div className="text-black/60">Loading dishes...</div>
-      ) : search.trim() && searchLoading ? (
+      ) : usingGlobalFilter && allDishesLoading ? (
         <div className="text-black/60">Searching all dishes...</div>
       ) : loadError && visibleDishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
@@ -341,7 +349,18 @@ export default function Dishes() {
         </div>
       )}
 
-      {!loading && !search.trim() && hasMore && (
+      {!loading && usingGlobalFilter && filtered.length > visibleDishes.length && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setFilteredLimit((prev) => prev + DISHES_PAGE_SIZE)}
+            className="bg-black text-white px-6 py-3 rounded-full font-semibold"
+          >
+            Load More
+          </button>
+        </div>
+      )}
+
+      {!loading && !usingGlobalFilter && hasMore && (
         <div className="mt-6 flex justify-center">
           <button
             onClick={fetchMoreDishes}

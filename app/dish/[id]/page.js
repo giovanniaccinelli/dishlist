@@ -21,28 +21,7 @@ import {
   updateDishAndSavedCopies,
   uploadImage,
 } from "../../lib/firebaseHelpers";
-
-const TAG_OPTIONS = [
-  "fit",
-  "high protein",
-  "veg",
-  "vegan",
-  "light",
-  "easy",
-  "quick",
-  "fancy",
-  "comfort",
-  "carb heavy",
-  "low carb",
-  "spicy",
-  "late night",
-  "cheat",
-  "budget",
-  "premium",
-  "summer",
-  "winter",
-  "gourmet",
-];
+import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -442,11 +421,7 @@ export default function DishDetail() {
                       key={tag}
                       type="button"
                       onClick={() => toggleEditTag(tag)}
-                      className={`px-3 py-1 rounded-full text-xs border transition ${
-                        active
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-black border-black/20"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
                     >
                       {tag}
                     </button>

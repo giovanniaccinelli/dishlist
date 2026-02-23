@@ -33,6 +33,7 @@ export default function Dishes() {
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
+  const [applyingFilters, setApplyingFilters] = useState(false);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -139,6 +140,24 @@ export default function Dishes() {
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
 
+  const ensureAllDishesLoaded = async () => {
+    if (allDishesPool) return allDishesPool;
+    if (allDishesLoading) return null;
+    setAllDishesLoading(true);
+    setLoadError("");
+    try {
+      const all = await getAllDishesFromFirestore();
+      setAllDishesPool(all);
+      return all;
+    } catch (err) {
+      console.error("Failed to load full dishes pool:", err);
+      setLoadError("Failed to load filtered dishes.");
+      return null;
+    } finally {
+      setAllDishesLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!usingGlobalFilter) return;
     if (allDishesPool || allDishesLoading) return;
@@ -212,6 +231,24 @@ export default function Dishes() {
     });
   };
 
+  const removeAppliedTag = async (tag) => {
+    const next = selectedTagsApplied.filter((t) => t !== tag);
+    setSelectedTagsApplied(next);
+    setSelectedTagsDraft(next);
+    if (search.trim() || next.length > 0) {
+      await ensureAllDishesLoaded();
+    }
+  };
+
+  const applyTagFilters = async () => {
+    setApplyingFilters(true);
+    await ensureAllDishesLoaded();
+    setSelectedTagsApplied(selectedTagsDraft);
+    setShowTagsPicker(false);
+    setFilteredLimit(DISHES_PAGE_SIZE);
+    setApplyingFilters(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
@@ -237,7 +274,7 @@ export default function Dishes() {
               {tag}
               <button
                 type="button"
-                onClick={() => toggleTagFilter(tag)}
+                onClick={() => removeAppliedTag(tag)}
                 className="text-black/70 hover:text-black leading-none"
                 aria-label={`Remove ${tag} filter`}
               >
@@ -299,13 +336,11 @@ export default function Dishes() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedTagsApplied(selectedTagsDraft);
-                  setShowTagsPicker(false);
-                }}
+                onClick={applyTagFilters}
+                disabled={applyingFilters}
                 className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold"
               >
-                Done
+                {applyingFilters ? "Applying..." : "Done"}
               </button>
             </div>
           </div>
@@ -314,6 +349,8 @@ export default function Dishes() {
 
       {loading ? (
         <div className="text-black/60">Loading dishes...</div>
+      ) : applyingFilters || (usingGlobalFilter && allDishesLoading && !allDishesPool) ? (
+        <div className="text-black/60">Loading filtered dishes...</div>
       ) : loadError && visibleDishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
           <p>{loadError}</p>

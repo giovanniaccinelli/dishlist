@@ -348,7 +348,7 @@ export default function Profile() {
                       e.preventDefault();
                       handleOpenSavers(dish);
                     }}
-                    className="text-[10px] text-white/80 underline pointer-events-auto"
+                    className="text-[10px] text-white/80 pointer-events-auto"
                   >
                     saves: {Number(dish.saves || 0)}
                   </button>

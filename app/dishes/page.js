@@ -311,7 +311,7 @@ export default function Dishes() {
               setSelectedTagsDraft(selectedTagsApplied);
               setShowTagsPicker(true);
             }}
-            className="px-3 py-1 rounded-full border border-black/20 bg-white text-xs font-medium"
+            className="px-3 py-1 rounded-full border border-black bg-black text-white text-xs font-medium"
           >
             Add filters
           </button>
@@ -417,18 +417,18 @@ export default function Dishes() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleOpenSavers(dish);
+                    }}
+                    className="text-[10px] text-white/80 pointer-events-auto"
+                  >
+                    saves: {Number(dish.saves || 0)}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleOpenSavers(dish);
-                  }}
-                  className="absolute top-2 right-2 z-30 bg-black/65 text-white text-[10px] font-semibold px-2 py-1 rounded-full"
-                >
-                  saves: {Number(dish.saves || 0)}
-                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -446,10 +446,10 @@ export default function Dishes() {
                     e.preventDefault();
                     handleSave(dish);
                   }}
-                  className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                  className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                   aria-label="Add to dishlist"
                 >
-                  <Plus size={20} strokeWidth={2.1} />
+                  <Plus size={16} strokeWidth={2.1} />
                 </button>
               </div>
             );

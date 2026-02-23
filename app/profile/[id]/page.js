@@ -260,7 +260,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>
@@ -271,10 +271,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleSaveDish(dish);
                     }}
-                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                     aria-label="Add to dishlist"
                   >
-                    <Plus size={20} strokeWidth={2.1} />
+                    <Plus size={16} strokeWidth={2.1} />
                   </button>
                 </motion.div>
               ))}
@@ -333,7 +333,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>
@@ -344,10 +344,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleSaveDish(dish);
                     }}
-                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                     aria-label="Add to dishlist"
                   >
-                    <Plus size={20} strokeWidth={2.1} />
+                    <Plus size={16} strokeWidth={2.1} />
                   </button>
                 </motion.div>
               ))}
@@ -408,7 +408,7 @@ export default function PublicProfile() {
                         e.preventDefault();
                         handleOpenSavers(dish);
                       }}
-                      className="text-[10px] text-white/80 underline pointer-events-auto"
+                      className="text-[10px] text-white/80 pointer-events-auto"
                     >
                       saves: {Number(dish.saves || 0)}
                     </button>
@@ -419,10 +419,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleSaveDish(dish);
                     }}
-                    className="add-action-btn absolute bottom-2 right-2 z-30 w-11 h-11 text-[30px]"
+                    className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                     aria-label="Add to dishlist"
                   >
-                    <Plus size={20} strokeWidth={2.1} />
+                    <Plus size={16} strokeWidth={2.1} />
                   </button>
                 </motion.div>
               ))}

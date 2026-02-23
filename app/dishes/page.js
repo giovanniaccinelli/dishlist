@@ -12,6 +12,8 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
 const DISHES_PAGE_SIZE = 24;
 
+const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
+
 export default function Dishes() {
   const { user } = useAuth();
   const [dishes, setDishes] = useState([]);
@@ -165,18 +167,22 @@ export default function Dishes() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const source = usingGlobalFilter ? allDishesPool || [] : dishes;
+    const normalizedSelectedTags = selectedTagsApplied
+      .map((tag) => normalizeTag(tag))
+      .filter(Boolean);
     const tagFiltered =
-      selectedTagsApplied.length === 0
+      normalizedSelectedTags.length === 0
         ? source
-        : source.filter((d) =>
-            Array.isArray(d.tags) &&
-            d.tags.some((tag) => selectedTagsApplied.includes(String(tag)))
-          );
+        : source.filter((d) => {
+            if (!Array.isArray(d.tags)) return false;
+            const dishTags = d.tags.map((tag) => normalizeTag(tag)).filter(Boolean);
+            return dishTags.some((tag) => normalizedSelectedTags.includes(tag));
+          });
     if (!term) return tagFiltered;
     return tagFiltered.filter((d) => {
       const nameMatch = d.name?.toLowerCase().includes(term);
       const tagMatch = Array.isArray(d.tags)
-        ? d.tags.some((tag) => String(tag).toLowerCase().includes(term))
+        ? d.tags.some((tag) => normalizeTag(tag).includes(term))
         : false;
       return nameMatch || tagMatch;
     });

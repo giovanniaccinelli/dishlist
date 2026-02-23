@@ -426,12 +426,12 @@ export default function DishDetail() {
               : isPublicSource
                 ? "add-action-btn w-11 h-11"
                 : isToTrySource
-                  ? "px-4 py-2 rounded-full bg-[#2BD36B] text-black text-sm font-semibold shadow-lg"
+                  ? "px-4 py-2 rounded-full bg-[#8BCF9D] text-black text-sm font-semibold shadow-lg"
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
             isToTrySource
-              ? "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
+              ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
               : undefined
           }
           actionToast={

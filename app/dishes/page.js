@@ -413,7 +413,7 @@ export default function Dishes() {
                     No image
                   </div>
                 )}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-8 text-white pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>

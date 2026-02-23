@@ -223,7 +223,8 @@ export default function Profile() {
   };
 
   const openShuffleDeck = (source) => {
-    const pool = source === "uploaded" ? uploadedDishes : savedDishes;
+    const pool =
+      source === "uploaded" ? uploadedDishes : source === "to_try" ? toTryDishes : savedDishes;
     if (!pool.length) {
       alert("No dishes to shuffle.");
       return;
@@ -337,7 +338,7 @@ export default function Profile() {
                     />
                   );
                 })()}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-8 text-white pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
@@ -512,7 +513,16 @@ export default function Profile() {
         </>
       ) : (
         <>
-          <h2 className="text-xl font-semibold mb-4">To Try</h2>
+          <div className="flex items-center justify-between mt-8 mb-4">
+            <h2 className="text-xl font-semibold">To Try</h2>
+            <button
+              onClick={() => openShuffleDeck("to_try")}
+              className="bg-black text-white py-1 px-3 rounded-full text-sm font-semibold disabled:opacity-40"
+              disabled={toTryDishes.length === 0}
+            >
+              Shuffle
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {toTryDishes.length === 0 ? (
               <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
@@ -553,10 +563,22 @@ export default function Profile() {
                         />
                       );
                     })()}
-                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white pointer-events-none">
+                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                       <div className="text-[11px] font-semibold leading-tight truncate">
                         {dish.name || "Untitled dish"}
                       </div>
+                      {Array.isArray(dish.tags) && dish.tags.length > 0 && (
+                        <div className="flex gap-1 overflow-hidden">
+                          {dish.tags.slice(0, 2).map((tag, idx) => (
+                            <span
+                              key={`${dish.id}-tag-${idx}`}
+                              className="px-1.5 py-0.5 rounded-full bg-white/20 text-[9px] leading-none truncate"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}

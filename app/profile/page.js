@@ -211,7 +211,7 @@ export default function Profile() {
       if (newPhotoFile) {
         nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
       }
-      await updateProfile(auth.currentUser, { displayName: newName, photoURL: nextPhotoURL || null });
+      await updateProfile(auth.currentUser, { displayName: newName, photoURL: nextPhotoURL || "" });
       await auth.currentUser?.reload();
       await setDoc(
         doc(db, "users", user.uid),

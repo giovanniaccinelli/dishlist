@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { DollarSign, Hourglass, Plus } from "lucide-react";
 import CommentsModal from "./CommentsModal";
-import { addCommentToDish, getCommentsForDish } from "../app/lib/firebaseHelpers";
+import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 
 export default function SwipeDeck({
   dishes,
@@ -56,6 +56,7 @@ export default function SwipeDeck({
   const [comments, setComments] = useState([]);
   const [previewComment, setPreviewComment] = useState(null);
   const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
   const dragControls = useDragControls();
   const tagsRef = useRef(null);
   const dragX = useMotionValue(0);
@@ -104,6 +105,7 @@ export default function SwipeDeck({
     setComments([]);
     setPreviewComment(null);
     setNewComment("");
+    setReplyTo(null);
     (async () => {
       const top = await getCommentsForDish(currentCard.id, 1);
       setPreviewComment(top?.[0] || null);
@@ -153,9 +155,21 @@ export default function SwipeDeck({
       userName: currentUser.displayName || "User",
       userPhotoURL: currentUser.photoURL || "",
       text,
+      parentId: replyTo?.id || null,
     });
     if (!ok) return;
     setNewComment("");
+    setReplyTo(null);
+    await loadComments();
+    const top = await getCommentsForDish(currentCard.id, 1);
+    setPreviewComment(top?.[0] || null);
+  };
+
+  const handleDeleteComment = async (comment) => {
+    if (!currentCard?.id || !comment?.id) return;
+    if (comment.userId !== currentUser?.uid) return;
+    const ok = await deleteCommentThread(currentCard.id, comment.id);
+    if (!ok) return;
     await loadComments();
     const top = await getCommentsForDish(currentCard.id, 1);
     setPreviewComment(top?.[0] || null);
@@ -689,10 +703,14 @@ export default function SwipeDeck({
         onClose={() => setCommentsOpen(false)}
         comments={comments}
         loading={commentsLoading}
+        onDelete={handleDeleteComment}
         newComment={newComment}
         setNewComment={setNewComment}
         disabled={false}
         onSubmit={submitComment}
+        currentUser={currentUser}
+        replyTo={replyTo}
+        setReplyTo={setReplyTo}
       />
 
       <AnimatePresence>

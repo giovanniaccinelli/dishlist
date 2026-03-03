@@ -456,11 +456,29 @@ export async function addCommentToDish(dishId, payload) {
       userName: payload.userName || "User",
       userPhotoURL: payload.userPhotoURL || "",
       text: payload.text,
+      parentId: payload.parentId || null,
       createdAt: serverTimestamp(),
     });
     return true;
   } catch (err) {
     console.error("Failed to add comment:", err);
+    return false;
+  }
+}
+
+export async function deleteCommentThread(dishId, commentId) {
+  if (!dishId || !commentId) return false;
+  try {
+    const commentsRef = collection(db, "dishes", dishId, "comments");
+    const q = query(commentsRef, where("parentId", "==", commentId));
+    const repliesSnap = await getDocs(q);
+    const batch = writeBatch(db);
+    repliesSnap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
+    batch.delete(doc(db, "dishes", dishId, "comments", commentId));
+    await batch.commit();
+    return true;
+  } catch (err) {
+    console.error("Failed to delete comment thread:", err);
     return false;
   }
 }

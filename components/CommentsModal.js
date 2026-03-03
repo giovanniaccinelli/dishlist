@@ -8,10 +8,42 @@ export default function CommentsModal({
   comments,
   loading,
   onSubmit,
+  onDelete,
   newComment,
   setNewComment,
   disabled,
+  currentUser,
+  replyTo,
+  setReplyTo,
 }) {
+  const replyName = replyTo?.userName || "User";
+  const orderedComments = (() => {
+    const safe = Array.isArray(comments) ? comments : [];
+    const byId = new Map(safe.map((c) => [c.id, c]));
+    const parents = safe.filter((c) => !c.parentId);
+    const repliesByParent = safe.reduce((acc, c) => {
+      if (!c.parentId) return acc;
+      if (!acc[c.parentId]) acc[c.parentId] = [];
+      acc[c.parentId].push(c);
+      return acc;
+    }, {});
+    const sortByTime = (a, b) => {
+      const aTime = a?.createdAt?.seconds || 0;
+      const bTime = b?.createdAt?.seconds || 0;
+      return aTime - bTime;
+    };
+    parents.sort(sortByTime);
+    Object.values(repliesByParent).forEach((list) => list.sort(sortByTime));
+    const result = [];
+    parents.forEach((p) => {
+      result.push(p);
+      const replies = repliesByParent[p.id] || [];
+      replies.forEach((r) => {
+        if (byId.has(r.id)) result.push(r);
+      });
+    });
+    return result;
+  })();
   return (
     <AnimatePresence>
       {open && (
@@ -35,10 +67,18 @@ export default function CommentsModal({
             </div>
 
             <div className="mb-4">
+              {replyTo && (
+                <div className="mb-2 flex items-center justify-between bg-black/5 rounded-xl px-3 py-2 text-sm text-black/70">
+                  Replying to {replyName}
+                  <button onClick={() => setReplyTo(null)} className="text-black/60">
+                    Cancel
+                  </button>
+                </div>
+              )}
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
+                placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
                 className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
                 rows={3}
                 disabled={disabled}
@@ -60,23 +100,46 @@ export default function CommentsModal({
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {comments.map((c) => (
-                  <div key={c.id} className="bg-white rounded-2xl p-3 shadow-md border border-black/5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold">
-                        {c.userPhotoURL ? (
-                          <img
-                            src={c.userPhotoURL}
-                            alt="Profile"
-                            className="w-7 h-7 rounded-full object-cover"
-                          />
-                        ) : (
-                          c.userName?.[0] || "U"
-                        )}
+                {orderedComments.map((c) => (
+                  <div
+                    key={c.id}
+                    className={`bg-white rounded-2xl p-3 shadow-md border border-black/5 ${
+                      c.parentId ? "ml-6 border-l-2 border-black/10" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold">
+                          {c.userPhotoURL ? (
+                            <img
+                              src={c.userPhotoURL}
+                              alt="Profile"
+                              className="w-7 h-7 rounded-full object-cover"
+                            />
+                          ) : (
+                            c.userName?.[0] || "U"
+                          )}
+                        </div>
+                        <div className="text-sm font-semibold text-black">{c.userName || "User"}</div>
                       </div>
-                      <div className="text-sm font-semibold text-black">{c.userName || "User"}</div>
+                      {currentUser?.uid === c.userId && (
+                        <button
+                          onClick={() => onDelete(c)}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
-                    <div className="text-sm text-black/80">{c.text}</div>
+                    <div className="text-sm text-black/80 mb-2">{c.text}</div>
+                    {!c.parentId && (
+                      <button
+                        onClick={() => setReplyTo(c)}
+                        className="text-xs text-black/60 hover:text-black"
+                      >
+                        Reply
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

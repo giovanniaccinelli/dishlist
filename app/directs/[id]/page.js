@@ -111,17 +111,23 @@ export default function DirectChat() {
               <Link
                 key={m.id}
                 href={`/dish/${m.dishId}?source=public&mode=single`}
-                className={`max-w-[75%] rounded-2xl p-3 ${
-                  m.senderId === user.uid ? "bg-black text-white ml-auto" : "bg-white border border-black/10"
+                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative w-full max-w-[75%] ${
+                  m.senderId === user.uid ? "ml-auto" : "mr-auto"
                 }`}
               >
-                <div className="text-xs font-semibold mb-2">Shared a dish</div>
                 {imageSrc ? (
-                  <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-32 object-cover rounded-xl mb-2" />
+                  <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-28 object-cover" />
                 ) : (
-                  <div className="w-full h-32 rounded-xl bg-neutral-200 mb-2" />
+                  <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                    No image
+                  </div>
                 )}
-                <div className="text-sm font-semibold">{dish?.name || "Dish"}</div>
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                  <div className="text-[11px] font-semibold leading-tight truncate">
+                    {dish?.name || "Dish"}
+                  </div>
+                  <div className="text-[10px] text-white/80">tap to open</div>
+                </div>
               </Link>
             );
           }

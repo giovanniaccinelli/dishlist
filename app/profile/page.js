@@ -21,10 +21,9 @@ import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Plus, Settings, Share, Send } from "lucide-react";
+import { Plus, Settings, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
-import ShareModal from "../../components/ShareModal";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -61,8 +60,6 @@ export default function Profile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [shareDish, setShareDish] = useState(null);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
 
@@ -281,11 +278,6 @@ export default function Profile() {
     }
   };
 
-  const handleShare = (dish) => {
-    if (!user) return;
-    setShareDish(dish);
-    setShareOpen(true);
-  };
 
   if (loading) {
     return (
@@ -376,18 +368,6 @@ export default function Profile() {
                   saves: {Number(dish.saves || 0)}
                 </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleShare(dish);
-                  }}
-                  className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
-                  aria-label="Share dish"
-                >
-                  <Share size={14} />
-                </button>
                 {allowDelete && (
                   <button
                     onClick={() => handleDeleteDish(dish)}
@@ -932,12 +912,6 @@ export default function Profile() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
-      />
-      <ShareModal
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        dish={shareDish}
-        currentUser={user}
       />
 
       <BottomNav />

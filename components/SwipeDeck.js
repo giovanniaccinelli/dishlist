@@ -11,6 +11,8 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { DollarSign, Hourglass, Plus } from "lucide-react";
+import CommentsModal from "./CommentsModal";
+import { addCommentToDish, getCommentsForDish } from "../app/lib/firebaseHelpers";
 
 export default function SwipeDeck({
   dishes,
@@ -37,6 +39,7 @@ export default function SwipeDeck({
   onAuthRequired,
   preserveContinuity = true,
   disabled = false,
+  currentUser = null,
 }) {
   const SWIPE_EJECT_THRESHOLD = 70;
 
@@ -48,6 +51,11 @@ export default function SwipeDeck({
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [tagsHeight, setTagsHeight] = useState(0);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [previewComment, setPreviewComment] = useState(null);
+  const [newComment, setNewComment] = useState("");
   const dragControls = useDragControls();
   const tagsRef = useRef(null);
   const dragX = useMotionValue(0);
@@ -92,6 +100,17 @@ export default function SwipeDeck({
   }, [currentCard?._key]);
 
   useEffect(() => {
+    if (!currentCard?.id) return;
+    setComments([]);
+    setPreviewComment(null);
+    setNewComment("");
+    (async () => {
+      const top = await getCommentsForDish(currentCard.id, 1);
+      setPreviewComment(top?.[0] || null);
+    })();
+  }, [currentCard?.id]);
+
+  useEffect(() => {
     if (!tagsRef.current) return;
     const el = tagsRef.current;
     const updateHeight = () => {
@@ -104,6 +123,43 @@ export default function SwipeDeck({
   }, [currentCard?._key]);
 
   const actionBottom = Math.max(58, tagsHeight + 24);
+
+  const loadComments = async () => {
+    if (!currentCard?.id) return;
+    setCommentsLoading(true);
+    try {
+      const items = await getCommentsForDish(currentCard.id, 30);
+      setComments(items);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const openComments = async () => {
+    setCommentsOpen(true);
+    await loadComments();
+  };
+
+  const submitComment = async () => {
+    if (!currentCard?.id) return;
+    if (!currentUser?.uid) {
+      if (typeof onAuthRequired === "function") onAuthRequired();
+      return;
+    }
+    const text = newComment.trim();
+    if (!text) return;
+    const ok = await addCommentToDish(currentCard.id, {
+      userId: currentUser.uid,
+      userName: currentUser.displayName || "User",
+      userPhotoURL: currentUser.photoURL || "",
+      text,
+    });
+    if (!ok) return;
+    setNewComment("");
+    await loadComments();
+    const top = await getCommentsForDish(currentCard.id, 1);
+    setPreviewComment(top?.[0] || null);
+  };
 
   const advanceCard = () => {
     setCurrentIndex((prev) => {
@@ -595,8 +651,49 @@ export default function SwipeDeck({
               </span>
             ))}
           </div>
+
+          <div className="absolute left-5 right-5 bottom-16 z-30">
+            {previewComment ? (
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openComments();
+                }}
+                className="text-xs text-white/90 underline-offset-2 hover:underline"
+              >
+                {previewComment.userName || "User"}: {previewComment.text}
+              </button>
+            ) : (
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openComments();
+                }}
+                className="text-xs text-white/70"
+              >
+                Be the first to comment
+              </button>
+            )}
+          </div>
         </motion.div>
       </div>
+
+      <CommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        comments={comments}
+        loading={commentsLoading}
+        newComment={newComment}
+        setNewComment={setNewComment}
+        disabled={false}
+        onSubmit={submitComment}
+      />
 
       <AnimatePresence>
         {toast && (

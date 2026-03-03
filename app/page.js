@@ -175,6 +175,7 @@ export default function Feed() {
           onAction={handleAdd}
           onRightSwipe={handleRightSwipeToTry}
           onSavesPress={handleOpenSavers}
+          currentUser={user}
           actionOnRightSwipe={false}
           dismissOnAction
           actionLabel="+"

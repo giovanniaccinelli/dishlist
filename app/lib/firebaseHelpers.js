@@ -4,10 +4,10 @@ import {
   collectionGroup,
   addDoc,
   getDocs,
+  getDoc,
   query,
   where,
   doc,
-  getDoc,
   setDoc,
   orderBy,
   limit as limitResults,
@@ -18,6 +18,7 @@ import {
   deleteDoc,
   deleteField,
   writeBatch,
+  serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
@@ -428,6 +429,39 @@ export async function getUsersWhoSavedDish(dishId) {
   } catch (err) {
     console.error("Failed to fetch users who saved dish:", err);
     return [];
+  }
+}
+
+export async function getCommentsForDish(dishId, max = 20) {
+  if (!dishId) return [];
+  try {
+    const q = query(
+      collection(db, "dishes", dishId, "comments"),
+      orderBy("createdAt", "desc"),
+      limitResults(max)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (err) {
+    console.error("Failed to load comments:", err);
+    return [];
+  }
+}
+
+export async function addCommentToDish(dishId, payload) {
+  if (!dishId || !payload?.userId || !payload?.text) return false;
+  try {
+    await addDoc(collection(db, "dishes", dishId, "comments"), {
+      userId: payload.userId,
+      userName: payload.userName || "User",
+      userPhotoURL: payload.userPhotoURL || "",
+      text: payload.text,
+      createdAt: serverTimestamp(),
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to add comment:", err);
+    return false;
   }
 }
 

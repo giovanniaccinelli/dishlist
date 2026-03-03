@@ -396,6 +396,7 @@ export default function DishDetail() {
           dishes={orderedList}
           preserveContinuity
           disabled={editOpen}
+          currentUser={user}
           onAction={
             canEditUploaded
               ? openEditModal
@@ -410,6 +411,7 @@ export default function DishDetail() {
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
           dismissOnAction={!canEditUploaded}
+          onAuthRequired={() => alert("Please sign in to comment.")}
           actionLabel={
             canEditUploaded
               ? "Edit"

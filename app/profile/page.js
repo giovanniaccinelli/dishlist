@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   uploadImage,
   uploadProfileImage,
+  deleteImageByUrl,
   saveDishToFirestore,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
@@ -20,7 +21,7 @@ import {
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, deleteField } from "firebase/firestore";
 import { Plus, Settings, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
@@ -204,20 +205,36 @@ export default function Profile() {
 
   const handleEditProfile = async () => {
     try {
-      let nextPhotoURL = user?.photoURL || profileMeta.photoURL || "";
+      const currentPhotoURL = profileMeta.photoURL || user?.photoURL || "";
+      let nextPhotoURL = currentPhotoURL;
       if (removePhoto) {
         nextPhotoURL = "";
       }
       if (newPhotoFile) {
         nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
+        if (currentPhotoURL) {
+          await deleteImageByUrl(currentPhotoURL);
+        }
+      } else if (removePhoto && currentPhotoURL) {
+        await deleteImageByUrl(currentPhotoURL);
       }
-      await updateProfile(auth.currentUser, { displayName: newName, photoURL: nextPhotoURL || "" });
+      await updateProfile(auth.currentUser, {
+        displayName: newName,
+        photoURL: nextPhotoURL ? nextPhotoURL : null,
+      });
       await auth.currentUser?.reload();
-      await setDoc(
-        doc(db, "users", user.uid),
-        { displayName: newName, photoURL: nextPhotoURL || "" },
-        { merge: true }
-      );
+      if (removePhoto && !nextPhotoURL) {
+        await updateDoc(doc(db, "users", user.uid), {
+          displayName: newName,
+          photoURL: deleteField(),
+        });
+      } else {
+        await setDoc(
+          doc(db, "users", user.uid),
+          { displayName: newName, photoURL: nextPhotoURL || "" },
+          { merge: true }
+        );
+      }
       await updateOwnerNameForDishes(user.uid, newName, nextPhotoURL || "");
       setProfileMeta((prev) => ({ ...prev, photoURL: nextPhotoURL || "" }));
       setNewPhotoPreview(nextPhotoURL || "");

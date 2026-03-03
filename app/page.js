@@ -14,7 +14,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { CircleUserRound } from "lucide-react";
+import { CircleUserRound, Send } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 
 export default function Feed() {
@@ -172,13 +172,22 @@ export default function Feed() {
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
           <h1 className="text-3xl font-bold">DishList</h1>
         </div>
-        <Link
-          href={userId ? "/profile" : "/?auth=1"}
-          className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
-          aria-label="Open profile"
-        >
-          <CircleUserRound size={18} />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={userId ? "/directs" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open directs"
+          >
+            <Send size={18} />
+          </Link>
+          <Link
+            href={userId ? "/profile" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open profile"
+          >
+            <CircleUserRound size={18} />
+          </Link>
+        </div>
       </div>
       <div className="px-5 h-[calc(100vh-132px)] overflow-hidden">
         <SwipeDeck

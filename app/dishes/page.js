@@ -12,7 +12,7 @@ import {
 import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, Share2 } from "lucide-react";
+import { Plus, Share } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
 import ShareModal from "../../components/ShareModal";
@@ -448,10 +448,10 @@ export default function Dishes() {
                     e.preventDefault();
                     handleShare(dish);
                   }}
-                  className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                  className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
                   aria-label="Share dish"
                 >
-                  <Share2 size={14} />
+                  <Share size={14} />
                 </button>
                 <button
                   onClick={(e) => {

@@ -10,7 +10,7 @@ import {
   animate,
 } from "framer-motion";
 import Link from "next/link";
-import { DollarSign, Hourglass, Plus, Share2 } from "lucide-react";
+import { DollarSign, Hourglass, Plus, Share } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 
@@ -465,10 +465,11 @@ export default function SwipeDeck({
                 e.preventDefault();
                 onSharePress(currentCard);
               }}
-              className="absolute top-4 left-4 z-30 w-9 h-9 rounded-full bg-black/65 text-white flex items-center justify-center"
+              className="absolute z-30 w-9 h-9 rounded-full bg-black/65 text-white flex items-center justify-center"
+              style={{ bottom: actionBottom, right: 72 }}
               aria-label="Share dish"
             >
-              <Share2 size={16} />
+              <Share size={16} />
             </button>
           )}
           <button
@@ -682,7 +683,7 @@ export default function SwipeDeck({
             ))}
           </div>
 
-          <div className="absolute left-5 right-5 bottom-16 z-30">
+          <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsHeight + 28 }}>
             {previewComment ? (
               <button
                 type="button"

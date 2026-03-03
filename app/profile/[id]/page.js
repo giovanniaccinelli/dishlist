@@ -16,7 +16,7 @@ import {
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { Plus, Share2 } from "lucide-react";
+import { Plus, Share, Send } from "lucide-react";
 import ShareModal from "../../../components/ShareModal";
 import SaversModal from "../../../components/SaversModal";
 
@@ -158,7 +158,8 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
           {profileUser.photoURL ? (
             <img src={profileUser.photoURL} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
@@ -180,6 +181,21 @@ export default function PublicProfile() {
             </button>
           )}
         </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (!user) {
+              setShowAuthPrompt(true);
+              return;
+            }
+            window.location.href = "/directs";
+          }}
+          className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center"
+          aria-label="Directs"
+        >
+          <Send size={18} />
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-center mb-6">
@@ -294,10 +310,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleShare(dish);
                     }}
-                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
                     aria-label="Share dish"
                   >
-                    <Share2 size={14} />
+                    <Share size={14} />
                   </button>
                   <button
                     onClick={(e) => {
@@ -379,10 +395,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleShare(dish);
                     }}
-                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
                     aria-label="Share dish"
                   >
-                    <Share2 size={14} />
+                    <Share size={14} />
                   </button>
                   <button
                     onClick={(e) => {
@@ -487,10 +503,10 @@ export default function PublicProfile() {
                       e.preventDefault();
                       handleShare(dish);
                     }}
-                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
                     aria-label="Share dish"
                   >
-                    <Share2 size={14} />
+                    <Share size={14} />
                   </button>
                   <button
                     onClick={(e) => {

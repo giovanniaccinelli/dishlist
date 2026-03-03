@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { addDoc, collection, doc, getDoc, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -16,6 +17,7 @@ export default function DirectChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [otherUser, setOtherUser] = useState(null);
+  const [dishMap, setDishMap] = useState({});
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +46,20 @@ export default function DirectChat() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const dishIds = Array.from(
+      new Set(messages.filter((m) => m.type === "dish" && m.dishId).map((m) => m.dishId))
+    );
+    dishIds.forEach(async (dishId) => {
+      if (dishMap[dishId]) return;
+      const snap = await getDoc(doc(db, "dishes", dishId));
+      if (snap.exists()) {
+        setDishMap((prev) => ({ ...prev, [dishId]: { id: snap.id, ...snap.data() } }));
+      }
+    });
+  }, [messages, dishMap]);
 
   const sendText = async () => {
     if (!input.trim() || !user?.uid) return;
@@ -86,20 +102,40 @@ export default function DirectChat() {
       </div>
 
       <div className="px-5 pb-28 space-y-3">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[75%] rounded-2xl px-3 py-2 ${
-              m.senderId === user.uid ? "bg-black text-white ml-auto" : "bg-white border border-black/10"
-            }`}
-          >
-            {m.type === "dish" ? (
-              <div className="text-sm font-semibold">Shared a dish</div>
-            ) : (
+        {messages.map((m) => {
+          if (m.type === "dish") {
+            const dish = dishMap[m.dishId];
+            const imageSrc =
+              dish?.imageURL || dish?.imageUrl || dish?.image_url || dish?.image || "";
+            return (
+              <Link
+                key={m.id}
+                href={`/dish/${m.dishId}?source=public&mode=single`}
+                className={`max-w-[75%] rounded-2xl p-3 ${
+                  m.senderId === user.uid ? "bg-black text-white ml-auto" : "bg-white border border-black/10"
+                }`}
+              >
+                <div className="text-xs font-semibold mb-2">Shared a dish</div>
+                {imageSrc ? (
+                  <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-32 object-cover rounded-xl mb-2" />
+                ) : (
+                  <div className="w-full h-32 rounded-xl bg-neutral-200 mb-2" />
+                )}
+                <div className="text-sm font-semibold">{dish?.name || "Dish"}</div>
+              </Link>
+            );
+          }
+          return (
+            <div
+              key={m.id}
+              className={`max-w-[75%] rounded-2xl px-3 py-2 ${
+                m.senderId === user.uid ? "bg-black text-white ml-auto" : "bg-white border border-black/10"
+              }`}
+            >
               <div className="text-sm">{m.text}</div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
         <div ref={endRef} />
       </div>
 

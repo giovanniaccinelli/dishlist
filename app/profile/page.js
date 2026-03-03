@@ -21,7 +21,7 @@ import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Plus, Settings, Share2 } from "lucide-react";
+import { Plus, Settings, Share, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
 import ShareModal from "../../components/ShareModal";
@@ -383,10 +383,10 @@ export default function Profile() {
                     e.preventDefault();
                     handleShare(dish);
                   }}
-                  className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                  className="absolute top-2 right-12 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
                   aria-label="Share dish"
                 >
-                  <Share2 size={14} />
+                  <Share size={14} />
                 </button>
                 {allowDelete && (
                   <button
@@ -450,7 +450,18 @@ export default function Profile() {
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
         </div>
         </div>
-        <div className="relative">
+        <div className="relative flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!user) return;
+              window.location.href = "/directs";
+            }}
+            className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center"
+            aria-label="Directs"
+          >
+            <Send size={18} />
+          </button>
           <button
             type="button"
             onClick={() => setProfileOptionsOpen((prev) => !prev)}

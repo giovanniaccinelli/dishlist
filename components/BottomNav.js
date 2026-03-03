@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Utensils, User, MessageCircle } from "lucide-react";
+import { Home, LayoutGrid, Utensils, User } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
 import { useState } from "react";
 import AuthPromptModal from "./AuthPromptModal";
@@ -16,7 +16,6 @@ export default function BottomNav() {
     { href: "/", icon: Home, label: "feed" },
     { href: "/dishlists", icon: LayoutGrid, label: "people" },
     { href: "/dishes", icon: Utensils, label: "explore" },
-    { href: "/directs", icon: MessageCircle, label: "directs", requiresAuth: true },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];
 
@@ -37,7 +36,7 @@ export default function BottomNav() {
             <button
               key={item.label}
               onClick={() => setShowAuthPrompt(true)}
-              className="w-1/5 flex flex-col items-center text-xs font-semibold"
+              className="w-1/4 flex flex-col items-center text-xs font-semibold"
               type="button"
             >
               <div className="w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45">
@@ -51,7 +50,7 @@ export default function BottomNav() {
         <Link
           key={item.href}
           href={item.href}
-          className="w-1/5 flex flex-col items-center text-xs font-semibold"
+          className="w-1/4 flex flex-col items-center text-xs font-semibold"
         >
           <div
             className={`w-14 h-9 rounded-2xl flex items-center justify-center transition-colors ${

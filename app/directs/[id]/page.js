@@ -103,42 +103,45 @@ export default function DirectChat() {
 
       <div className="px-5 pb-28 space-y-3">
         {messages.map((m) => {
+          const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
             const imageSrc =
               dish?.imageURL || dish?.imageUrl || dish?.image_url || dish?.image || "";
             return (
-              <Link
-                key={m.id}
-                href={`/dish/${m.dishId}?source=public&mode=single`}
-                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative w-full max-w-[75%] ${
-                  m.senderId === user.uid ? "ml-auto" : "mr-auto"
-                }`}
-              >
-                {imageSrc ? (
-                  <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-28 object-cover" />
-                ) : (
-                  <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                    No image
+              <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                <Link
+                  href={`/dish/${m.dishId}?source=public&mode=single`}
+                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative w-full max-w-[75%]"
+                >
+                  {imageSrc ? (
+                    <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-28 object-cover" />
+                  ) : (
+                    <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
+                      No image
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                    <div className="text-[11px] font-semibold leading-tight truncate">
+                      {dish?.name || "Dish"}
+                    </div>
+                    <div className="text-[10px] text-white/80">
+                      saves: {Number(dish?.saves || 0)}
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                  <div className="text-[11px] font-semibold leading-tight truncate">
-                    {dish?.name || "Dish"}
-                  </div>
-                  <div className="text-[10px] text-white/80">tap to open</div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           }
           return (
-            <div
-              key={m.id}
-              className={`max-w-[75%] rounded-2xl px-3 py-2 ${
-                m.senderId === user.uid ? "bg-black text-white ml-auto" : "bg-white border border-black/10"
-              }`}
-            >
-              <div className="text-sm">{m.text}</div>
+            <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`w-fit max-w-[75%] rounded-2xl px-3 py-2 ${
+                  isMine ? "bg-black text-white" : "bg-white border border-black/10"
+                }`}
+              >
+                <div className="text-sm whitespace-pre-wrap break-words">{m.text}</div>
+              </div>
             </div>
           );
         })}

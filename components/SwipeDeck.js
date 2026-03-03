@@ -465,11 +465,11 @@ export default function SwipeDeck({
                 e.preventDefault();
                 onSharePress(currentCard);
               }}
-              className="absolute z-30 w-9 h-9 rounded-full border-2 border-white bg-black/20 text-white flex items-center justify-center backdrop-blur-sm shadow-lg"
-              style={{ bottom: actionBottom, right: 72 }}
+              className="add-action-btn absolute z-30 w-14 h-14"
+              style={{ bottom: actionBottom, right: 96 }}
               aria-label="Share dish"
             >
-              <CornerUpRight size={16} />
+              <CornerUpRight size={24} strokeWidth={2.1} />
             </button>
           )}
           <button

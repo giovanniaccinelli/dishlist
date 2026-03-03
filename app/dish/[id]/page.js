@@ -27,6 +27,7 @@ import {
 } from "../../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
+import ShareModal from "../../../components/ShareModal";
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -59,6 +60,8 @@ export default function DishDetail() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDish, setShareDish] = useState(null);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -359,6 +362,15 @@ export default function DishDetail() {
     }
   };
 
+  const handleShare = (dishCard) => {
+    if (!userId) {
+      alert("Please sign in to share.");
+      return;
+    }
+    setShareDish(dishCard);
+    setShareOpen(true);
+  };
+
   if (loading || loadingDish) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -408,6 +420,7 @@ export default function DishDetail() {
           }
           onSecondaryAction={isToTrySource ? handleRemove : undefined}
           onSavesPress={handleOpenSavers}
+          onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
           dismissOnAction={!canEditUploaded}
@@ -601,6 +614,12 @@ export default function DishDetail() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        dish={shareDish}
+        currentUser={user}
       />
 
       <BottomNav />

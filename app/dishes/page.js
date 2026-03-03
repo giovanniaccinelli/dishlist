@@ -189,12 +189,20 @@ export default function Dishes() {
   }, [allDishesLoading, allDishesPool, usingGlobalFilter]);
 
   useEffect(() => {
+    if (!search.trim()) return;
+    ensureAllDishesLoaded();
+  }, [search]);
+
+  useEffect(() => {
     setFilteredLimit(DISHES_PAGE_SIZE);
   }, [search, selectedTagsApplied]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const source = usingGlobalFilter ? allDishesPool || dishes : dishes;
+    const source =
+      usingGlobalFilter && Array.isArray(allDishesPool) && allDishesPool.length > 0
+        ? allDishesPool
+        : dishes;
     const normalizedSelectedTags = selectedTagsApplied
       .map((tag) => normalizeTag(tag))
       .filter(Boolean);

@@ -125,7 +125,10 @@ export default function SwipeDeck({
     return () => observer.disconnect();
   }, [currentCard?._key]);
 
-  const actionBottom = Math.max(58, tagsHeight + 24);
+  const actionBottom = 24;
+  const tagsBottom = actionBottom + 64;
+  const commentBottom = tagsBottom + tagsHeight + 8;
+  const textBottom = Math.max(120, commentBottom + 40);
 
   const loadComments = async () => {
     if (!currentCard?.id) return;
@@ -516,7 +519,7 @@ export default function SwipeDeck({
               />
               {renderImage(currentCard)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-28 left-5 right-5 text-white z-20">
+              <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
                     {currentCard.ownerPhotoURL ? (
@@ -670,7 +673,11 @@ export default function SwipeDeck({
             </div>
           )}
 
-          <div ref={tagsRef} className="absolute left-5 right-5 bottom-4 z-30 flex flex-wrap gap-2">
+          <div
+            ref={tagsRef}
+            className="absolute left-5 right-5 z-30 flex flex-wrap gap-2"
+            style={{ bottom: tagsBottom }}
+          >
             {getTags(currentCard).map((tag, idx) => (
               <span
                 key={`${tag}-${idx}`}
@@ -683,7 +690,7 @@ export default function SwipeDeck({
             ))}
           </div>
 
-          <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsHeight + 40 }}>
+          <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>
             {previewComment ? (
               <button
                 type="button"

@@ -15,6 +15,7 @@ import {
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
 import { CircleUserRound } from "lucide-react";
+import ShareModal from "../components/ShareModal";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -27,6 +28,8 @@ export default function Feed() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDish, setShareDish] = useState(null);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -145,6 +148,15 @@ export default function Feed() {
     }
   };
 
+  const handleShare = (dish) => {
+    if (!userId) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    setShareDish(dish);
+    setShareOpen(true);
+  };
+
   if (loading || loadingDishes) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -175,6 +187,7 @@ export default function Feed() {
           onAction={handleAdd}
           onRightSwipe={handleRightSwipeToTry}
           onSavesPress={handleOpenSavers}
+          onSharePress={handleShare}
           currentUser={user}
           actionOnRightSwipe={false}
           dismissOnAction
@@ -193,6 +206,12 @@ export default function Feed() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        dish={shareDish}
+        currentUser={user}
       />
       <BottomNav />
     </div>

@@ -483,6 +483,68 @@ export async function deleteCommentThread(dishId, commentId) {
   }
 }
 
+export function getConversationId(a, b) {
+  if (!a || !b) return null;
+  return [a, b].sort().join("_");
+}
+
+export async function getOrCreateConversation(currentUser, otherUser) {
+  const convoId = getConversationId(currentUser?.uid, otherUser?.id || otherUser?.uid);
+  if (!convoId) return null;
+  const convoRef = doc(db, "conversations", convoId);
+  const convoSnap = await getDoc(convoRef);
+  if (!convoSnap.exists()) {
+    await setDoc(convoRef, {
+      participants: [currentUser.uid, otherUser.id || otherUser.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: null,
+    });
+  }
+  return convoId;
+}
+
+export async function getUserConversations(userId) {
+  if (!userId) return [];
+  const q = query(
+    collection(db, "conversations"),
+    where("participants", "array-contains", userId),
+    orderBy("updatedAt", "desc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function sendMessage(conversationId, message) {
+  if (!conversationId || !message?.senderId || !message?.type) return false;
+  const msgRef = collection(db, "conversations", conversationId, "messages");
+  const payload = {
+    senderId: message.senderId,
+    type: message.type,
+    text: message.text || "",
+    dishId: message.dishId || "",
+    createdAt: serverTimestamp(),
+  };
+  try {
+    await addDoc(msgRef, payload);
+    await setDoc(
+      doc(db, "conversations", conversationId),
+      {
+        lastMessage: {
+          ...payload,
+          createdAt: new Date(),
+        },
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to send message:", err);
+    return false;
+  }
+}
+
 // Get dishes saved by user
 export async function getSavedDishesFromFirestore(userId) {
   const userRef = doc(db, "users", userId);

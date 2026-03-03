@@ -12,9 +12,10 @@ import {
 import { useAuth } from "../lib/auth";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
+import ShareModal from "../../components/ShareModal";
 
 const DISHES_PAGE_SIZE = 24;
 
@@ -43,6 +44,8 @@ export default function Dishes() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDish, setShareDish] = useState(null);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -269,6 +272,15 @@ export default function Dishes() {
     }
   };
 
+  const handleShare = (dish) => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    setShareDish(dish);
+    setShareOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
@@ -417,18 +429,30 @@ export default function Dishes() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleOpenSavers(dish);
-                    }}
-                    className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
-                  >
-                    saves: {Number(dish.saves || 0)}
-                  </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleOpenSavers(dish);
+                  }}
+                  className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
+                >
+                  saves: {Number(dish.saves || 0)}
+                </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleShare(dish);
+                  }}
+                  className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                  aria-label="Share dish"
+                >
+                  <Share2 size={14} />
+                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -488,6 +512,12 @@ export default function Dishes() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        dish={shareDish}
+        currentUser={user}
       />
       <AnimatePresence>
         {toast && (

@@ -16,7 +16,8 @@ import {
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
+import ShareModal from "../../../components/ShareModal";
 import SaversModal from "../../../components/SaversModal";
 
 export default function PublicProfile() {
@@ -37,6 +38,8 @@ export default function PublicProfile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDish, setShareDish] = useState(null);
 
   // Fetch profile data
   const fetchProfileData = async () => {
@@ -133,6 +136,15 @@ export default function PublicProfile() {
     } finally {
       setSaversLoading(false);
     }
+  };
+
+  const handleShare = (dish) => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    setShareDish(dish);
+    setShareOpen(true);
   };
 
   if (!profileUser) {
@@ -276,6 +288,18 @@ export default function PublicProfile() {
                     </button>
                   </div>
                   <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleShare(dish);
+                    }}
+                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    aria-label="Share dish"
+                  >
+                    <Share2 size={14} />
+                  </button>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -348,6 +372,18 @@ export default function PublicProfile() {
                       saves: {Number(dish.saves || 0)}
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleShare(dish);
+                    }}
+                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    aria-label="Share dish"
+                  >
+                    <Share2 size={14} />
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -445,6 +481,18 @@ export default function PublicProfile() {
                     )}
                   </div>
                   <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleShare(dish);
+                    }}
+                    className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                    aria-label="Share dish"
+                  >
+                    <Share2 size={14} />
+                  </button>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -470,6 +518,12 @@ export default function PublicProfile() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        dish={shareDish}
+        currentUser={user}
       />
       <AnimatePresence>
         {connectionsOpen && (

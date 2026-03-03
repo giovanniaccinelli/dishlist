@@ -21,9 +21,10 @@ import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, Share2 } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import SaversModal from "../../components/SaversModal";
+import ShareModal from "../../components/ShareModal";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -60,6 +61,8 @@ export default function Profile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareDish, setShareDish] = useState(null);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
 
@@ -278,6 +281,12 @@ export default function Profile() {
     }
   };
 
+  const handleShare = (dish) => {
+    if (!user) return;
+    setShareDish(dish);
+    setShareOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-black">
@@ -355,18 +364,30 @@ export default function Profile() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleOpenSavers(dish);
-                    }}
-                    className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
-                  >
-                    saves: {Number(dish.saves || 0)}
-                  </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleOpenSavers(dish);
+                  }}
+                  className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
+                >
+                  saves: {Number(dish.saves || 0)}
+                </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleShare(dish);
+                  }}
+                  className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"
+                  aria-label="Share dish"
+                >
+                  <Share2 size={14} />
+                </button>
                 {allowDelete && (
                   <button
                     onClick={() => handleDeleteDish(dish)}
@@ -900,6 +921,12 @@ export default function Profile() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        dish={shareDish}
+        currentUser={user}
       />
 
       <BottomNav />

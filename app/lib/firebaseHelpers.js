@@ -129,6 +129,11 @@ export async function saveDishToFirestore(dish) {
   await addDoc(collection(db, "dishes"), dish);
 }
 
+export async function createDishForUser(dish) {
+  const docRef = await addDoc(collection(db, "dishes"), dish);
+  return docRef.id;
+}
+
 // Get all dishes (for feed)
 export async function getAllDishesFromFirestore() {
   const snapshot = await getDocs(collection(db, "dishes"));

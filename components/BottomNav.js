@@ -32,19 +32,15 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
-          const wrapperClass = item.prominent
-            ? "w-1/5 flex flex-col items-center text-xs font-semibold -mt-7"
-            : "w-1/5 flex flex-col items-center text-xs font-semibold";
+          const wrapperClass = "w-1/5 flex flex-col items-center text-xs font-semibold";
           const iconClass = item.prominent
-            ? `w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform ${
+            ? `w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-transform ${
                 active ? "bg-black text-white scale-105" : "bg-black text-white"
               }`
             : `w-14 h-9 rounded-2xl flex items-center justify-center transition-colors ${
                 active ? "bg-black text-white" : "bg-transparent text-black/45"
               }`;
-          const labelClass = item.prominent
-            ? "mt-1 text-[10px] text-black/60"
-            : `mt-1 ${active ? "text-black" : "text-black/45"}`;
+          const labelClass = `mt-1 ${active ? "text-black" : "text-black/45"}`;
 
           if (item.requiresAuth && !user) {
             return (
@@ -54,10 +50,10 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div className={item.prominent ? "w-14 h-14 rounded-2xl flex items-center justify-center bg-black text-white shadow-lg" : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"}>
+                <div className={item.prominent ? "w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md" : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"}>
                   <Icon size={item.prominent ? 28 : 22} />
                 </div>
-                {!item.prominent ? <span className="mt-1 text-black/45">{item.label}</span> : <span className={labelClass}>upload</span>}
+                {!item.prominent ? <span className="mt-1 text-black/45">{item.label}</span> : null}
               </button>
             );
           }
@@ -71,7 +67,7 @@ export default function BottomNav() {
               <div className={iconClass}>
                 <Icon size={item.prominent ? 28 : 22} />
               </div>
-              {!item.prominent ? <span className={labelClass}>{item.label}</span> : <span className={labelClass}>upload</span>}
+              {!item.prominent ? <span className={labelClass}>{item.label}</span> : null}
             </Link>
           );
         })}

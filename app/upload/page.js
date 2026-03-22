@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -11,6 +11,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
 export default function UploadPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
@@ -23,6 +24,8 @@ export default function UploadPage() {
   const [preview, setPreview] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
+  const mode = searchParams.get("mode");
+  const showUploadForm = mode === "new";
 
   useEffect(() => {
     if (loading) return;
@@ -103,126 +106,141 @@ export default function UploadPage() {
         <button onClick={() => router.back()} className="text-sm text-black/60">
           Cancel
         </button>
-        <h1 className="text-lg font-semibold">Upload Dish</h1>
+        <h1 className="text-lg font-semibold">{showUploadForm ? "Upload Dish" : "Add to DishList"}</h1>
         <div className="w-12" />
       </div>
 
       <div className="px-4">
-        <motion.div
-          className="bg-white p-6 rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-black/10 my-4"
-          initial={{ scale: 0.96, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        >
-          <h2 className="text-2xl font-semibold mb-4 text-black">Add New Dish</h2>
-          <input
-            type="text"
-            placeholder="Dish name"
-            value={dishName}
-            onChange={(e) => setDishName(e.target.value)}
-            className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-            disabled={loadingUpload}
-          />
-          <textarea
-            placeholder="Description"
-            value={dishDescription}
-            onChange={(e) => setDishDescription(e.target.value)}
-            className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-            rows={3}
-            disabled={loadingUpload}
-          />
-          <textarea
-            placeholder="Recipe ingredients"
-            value={dishRecipeIngredients}
-            onChange={(e) => setDishRecipeIngredients(e.target.value)}
-            className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-            rows={3}
-            disabled={loadingUpload}
-          />
-          <textarea
-            placeholder="Recipe method"
-            value={dishRecipeMethod}
-            onChange={(e) => setDishRecipeMethod(e.target.value)}
-            className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-            rows={4}
-            disabled={loadingUpload}
-          />
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-black">Tags</p>
-              <p className="text-xs text-black/60">{dishTags.length}/6</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {TAG_OPTIONS.map((tag) => {
-                const active = dishTags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
-                  >
-                    {tag}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
-            <input
-              type="checkbox"
-              checked={dishIsPublic}
-              onChange={(e) => setDishIsPublic(e.target.checked)}
-              disabled={loadingUpload}
-            />
-            Public dish (visible in feed)
-          </label>
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragActive(true);
-            }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-            className={`w-full h-40 rounded-2xl border-2 border-dashed ${
-              dragActive ? "border-black bg-[#F6F6F2]" : "border-black/20"
-            } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative`}
+        {showUploadForm ? (
+          <motion.div
+            className="bg-white p-6 rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-black/10 my-4"
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
           >
+            <h2 className="text-2xl font-semibold mb-4 text-black">Add New Dish</h2>
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleImageChange(e.target.files?.[0])}
-              className="absolute opacity-0 w-full h-full cursor-pointer"
+              type="text"
+              placeholder="Dish name"
+              value={dishName}
+              onChange={(e) => setDishName(e.target.value)}
+              className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
               disabled={loadingUpload}
             />
-            {preview ? (
-              <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
-            ) : loadingUpload ? (
-              "Uploading..."
-            ) : (
-              "Drag & Drop or Click to Upload"
-            )}
-          </div>
-          <div className="mb-4 rounded-2xl border border-black/10 bg-[#F6F6F2] p-3">
-            <p className="text-sm text-black/70 mb-2">
-              If you don&apos;t have an image, search if the dish is already posted.
-            </p>
-            <button
-              onClick={() => router.push("/dishes")}
-              className="w-full bg-white border border-black/20 py-2 rounded-full text-sm font-semibold hover:bg-black/5 transition"
+            <textarea
+              placeholder="Description"
+              value={dishDescription}
+              onChange={(e) => setDishDescription(e.target.value)}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+              rows={3}
+              disabled={loadingUpload}
+            />
+            <textarea
+              placeholder="Recipe ingredients"
+              value={dishRecipeIngredients}
+              onChange={(e) => setDishRecipeIngredients(e.target.value)}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+              rows={3}
+              disabled={loadingUpload}
+            />
+            <textarea
+              placeholder="Recipe method"
+              value={dishRecipeMethod}
+              onChange={(e) => setDishRecipeMethod(e.target.value)}
+              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+              rows={4}
+              disabled={loadingUpload}
+            />
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-black">Tags</p>
+                <p className="text-xs text-black/60">{dishTags.length}/6</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {TAG_OPTIONS.map((tag) => {
+                  const active = dishTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
+              <input
+                type="checkbox"
+                checked={dishIsPublic}
+                onChange={(e) => setDishIsPublic(e.target.checked)}
+                disabled={loadingUpload}
+              />
+              Public dish (visible in feed)
+            </label>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              className={`w-full h-40 rounded-2xl border-2 border-dashed ${
+                dragActive ? "border-black bg-[#F6F6F2]" : "border-black/20"
+              } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e.target.files?.[0])}
+                className="absolute opacity-0 w-full h-full cursor-pointer"
+                disabled={loadingUpload}
+              />
+              {preview ? (
+                <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
+              ) : loadingUpload ? (
+                "Uploading..."
+              ) : (
+                "Drag & Drop or Click to Upload"
+              )}
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePost}
+              className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
               disabled={loadingUpload}
             >
-              Search Existing Dishes
-            </button>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handlePost}
-            className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
-            disabled={loadingUpload}
+              {loadingUpload ? "Uploading..." : "Post Dish"}
+            </motion.button>
+          </motion.div>
+        ) : (
+          <motion.div
+            className="bg-white p-6 rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-black/10 my-10"
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
           >
-            {loadingUpload ? "Uploading..." : "Post Dish"}
-          </motion.button>
-        </motion.div>
+            <h2 className="text-2xl font-semibold mb-2 text-black">Add a dish</h2>
+            <p className="text-sm text-black/60 mb-6">
+              Choose whether you want to post a new dish or first check if it already exists.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/upload?mode=new")}
+                className="w-full bg-black text-white py-3 rounded-full font-semibold"
+              >
+                Upload dish
+              </button>
+              <button
+                onClick={() => router.push("/dishes")}
+                className="w-full bg-white border border-black/20 py-3 rounded-full font-semibold hover:bg-black/5 transition"
+              >
+                Search dish
+              </button>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <AnimatePresence>

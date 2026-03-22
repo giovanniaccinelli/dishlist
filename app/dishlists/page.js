@@ -379,8 +379,8 @@ export default function Dishlists() {
                         }}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                           alreadyFollowing
-                            ? "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-                            : "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                            ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                            : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
                         }`}
                       >
                         {alreadyFollowing ? "Unfollow" : "Follow"}

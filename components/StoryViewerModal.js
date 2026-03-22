@@ -45,8 +45,6 @@ export default function StoryViewerModal({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
-  const [groupTransition, setGroupTransition] = useState(0);
-
   useEffect(() => {
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
@@ -69,7 +67,6 @@ export default function StoryViewerModal({
       return;
     }
     if (groupIndex < groups.length - 1) {
-      setGroupTransition((prev) => prev + 1);
       setGroupIndex((prev) => prev + 1);
       setStoryIndex(0);
       return;
@@ -85,7 +82,6 @@ export default function StoryViewerModal({
     }
     if (groupIndex > 0) {
       const previousGroup = groups[groupIndex - 1];
-      if (previousGroup) setGroupTransition((prev) => prev + 1);
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(Math.max((previousGroup?.stories?.length || 1) - 1, 0));
     }
@@ -147,21 +143,16 @@ export default function StoryViewerModal({
           style={{ transformStyle: "preserve-3d" }}
         >
           <motion.div
-            key={`${currentGroup?.ownerId || "group"}-${groupTransition}-${currentStory?.id || "story"}`}
+            key={`${currentGroup?.ownerId || "group"}-${currentStory?.id || "story"}`}
             className="absolute inset-0"
-            style={{ transformStyle: "preserve-3d" }}
-            initial={{ rotateY: 0, opacity: 1 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ opacity: 1 }}
-            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0.96 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
           >
-            <motion.img
+            <img
               src={getDishImageUrl(currentStory)}
               alt={currentStory.name || "Story"}
               className="w-full h-full object-cover"
-              initial={groupTransition ? { rotateY: 90, opacity: 0.55, scale: 0.98 } : { opacity: 1 }}
-              animate={{ rotateY: 0, opacity: 1, scale: 1 }}
-              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
               onError={(e) => {
                 e.currentTarget.src = DEFAULT_DISH_IMAGE;
               }}

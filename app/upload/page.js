@@ -168,7 +168,17 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${step <= uploadStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#2BD36B_48%,#FACC15_100%)]" : "w-7 bg-black/10"}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      step <= uploadStep
+                        ? step === 0
+                          ? "w-10 bg-[#F59E0B]"
+                          : step === 1
+                            ? "w-10 bg-[#2BD36B]"
+                            : step === 2
+                              ? "w-10 bg-[#111111]"
+                              : "w-10 bg-[#E85D75]"
+                        : "w-7 bg-black/10"
+                    }`}
                   />
                 ))}
               </div>
@@ -217,7 +227,7 @@ export default function UploadPage() {
                     <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2BD36B_55%,#FACC15_100%)] text-white flex items-center justify-center shadow-lg">
+                        <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#E85D75_0%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo</div>
@@ -343,7 +353,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePost}
-                  className="w-full bg-[linear-gradient(90deg,#111111_0%,#1E8A4C_48%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
+                  className="w-full bg-[linear-gradient(90deg,#111111_0%,#2B2B2B_55%,#111111_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
@@ -381,7 +391,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_52%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
+                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white flex items-center justify-center shadow-lg"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >

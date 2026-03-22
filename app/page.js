@@ -380,25 +380,31 @@ export default function Feed() {
           </div>
         </div>
       )}
-      <div className="px-5 pt-3">
-        <div className="inline-flex rounded-full bg-black/8 p-1">
+      <div className="px-5 pt-3 flex justify-center">
+        <div className="relative flex items-end gap-10 border-b border-black/12">
           <button
             type="button"
             onClick={() => setActiveFeed("for_you")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-              activeFeed === "for_you" ? "bg-black text-white" : "text-black/65"
+            className={`relative pb-2 text-sm font-semibold transition ${
+              activeFeed === "for_you" ? "text-black" : "text-black/45"
             }`}
           >
             For You
+            {activeFeed === "for_you" ? (
+              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
+            ) : null}
           </button>
           <button
             type="button"
             onClick={() => setActiveFeed("following")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-              activeFeed === "following" ? "bg-black text-white" : "text-black/65"
+            className={`relative pb-2 text-sm font-semibold transition ${
+              activeFeed === "following" ? "text-black" : "text-black/45"
             }`}
           >
             Following
+            {activeFeed === "following" ? (
+              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
+            ) : null}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -11,7 +11,6 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
 export default function UploadPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
@@ -24,8 +23,7 @@ export default function UploadPage() {
   const [preview, setPreview] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
-  const mode = searchParams.get("mode");
-  const showUploadForm = mode === "new";
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -33,6 +31,12 @@ export default function UploadPage() {
       setShowAuthPrompt(true);
     }
   }, [loading, user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setShowUploadForm(params.get("mode") === "new");
+  }, []);
 
   const toggleTag = (tag) => {
     setDishTags((prev) => {

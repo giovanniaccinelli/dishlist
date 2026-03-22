@@ -30,6 +30,55 @@ import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 
+function StoryActionIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+      <path
+        d="M7.1 4.9C5.55 5.85 4.33 7.22 3.59 8.85"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2.8 12.6C2.62 13.52 2.62 14.48 2.8 15.4"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.1 19.05C5.04 20.56 6.41 21.76 8.02 22.5"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20.2 5.4C22.48 7.19 23.95 9.98 24.1 13.05"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M23.55 17.2C22.75 19.51 21.12 21.45 18.96 22.63"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14 9.1V18.9"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M9.1 14H18.9"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function DishDetail() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -347,6 +396,10 @@ export default function DishDetail() {
     setShareOpen(true);
   };
 
+  const handleAddToStory = () => {
+    alert("Story upgrade is the next step. The story button is now in place.");
+  };
+
   if (loading || loadingDish) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -387,14 +440,15 @@ export default function DishDetail() {
           currentUser={user}
           onAction={
             canEditUploaded
-              ? openEditModal
+              ? undefined
               : isPublicSource
                 ? handleAdd
                 : isToTrySource
                   ? handleUpgrade
                   : handleRemove
           }
-          onSecondaryAction={isToTrySource ? handleRemove : undefined}
+          onSecondaryAction={canEditUploaded ? openEditModal : isToTrySource ? handleRemove : undefined}
+          onExtraAction={canEditUploaded ? handleAddToStory : undefined}
           onSavesPress={handleOpenSavers}
           onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
@@ -403,17 +457,18 @@ export default function DishDetail() {
           onAuthRequired={() => alert("Please sign in to comment.")}
           actionLabel={
             canEditUploaded
-              ? "Edit"
+              ? undefined
               : isPublicSource
                 ? "+"
                 : isToTrySource
                   ? "Upgrade to My DishList"
                   : "Remove"
           }
-          secondaryActionLabel={isToTrySource ? "Discard" : undefined}
+          secondaryActionLabel={canEditUploaded ? "Edit" : isToTrySource ? "Discard" : undefined}
+          extraActionLabel={canEditUploaded ? <StoryActionIcon /> : undefined}
           actionClassName={
             canEditUploaded
-              ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
+              ? undefined
               : isPublicSource
                 ? "add-action-btn w-14 h-14"
                 : isToTrySource
@@ -421,10 +476,13 @@ export default function DishDetail() {
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
-            isToTrySource
+            canEditUploaded
+              ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
+              : isToTrySource
               ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
               : undefined
           }
+          extraActionClassName={canEditUploaded ? "add-action-btn w-14 h-14 text-[#2BD36B]" : undefined}
           actionToast={
             canEditUploaded
               ? undefined

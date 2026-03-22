@@ -607,7 +607,7 @@ export default function Profile() {
 
       {/* Add Dish button */}
       <motion.button
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => router.push("/upload")}
         className="add-action-btn fixed bottom-20 right-6 w-16 h-16 text-[40px] z-50"
         disabled={loadingUpload}
         aria-label="Add dish"

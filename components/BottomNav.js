@@ -26,19 +26,28 @@ export default function BottomNav() {
     return pathname === href;
   };
 
+  const getAccent = (label) => {
+    if (label === "feed") return "from-[#FF7A59] to-[#FFB15E]";
+    if (label === "people") return "from-[#FFCC33] to-[#FFE784]";
+    if (label === "explore") return "from-[#7AD957] to-[#B8EF70]";
+    if (label === "profile") return "from-[#111111] to-[#444444]";
+    return "from-[#FF7A59] via-[#FFCC33] to-[#7AD957]";
+  };
+
   return (
     <>
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-black/10 flex items-center py-2 z-50">
+      <div className="fixed bottom-0 left-0 w-full border-t border-black/10 bg-white/94 backdrop-blur-xl shadow-[0_-10px_30px_rgba(0,0,0,0.06)] flex items-center py-2 z-50">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
           const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold min-h-[62px]";
+          const accentClass = getAccent(item.label);
           const iconClass = item.prominent
-            ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-md transition-transform ${
-                active ? "bg-black text-white scale-105" : "bg-black text-white"
+            ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.16)] transition-all bg-gradient-to-r ${accentClass} text-black ${
+                active ? "scale-105 ring-2 ring-white/90" : ""
               }`
-            : `w-14 h-9 rounded-2xl flex items-center justify-center transition-colors ${
-                active ? "bg-black text-white" : "bg-transparent text-black/45"
+            : `w-14 h-9 rounded-2xl flex items-center justify-center transition-all ${
+                active ? "bg-black/[0.06] text-black" : "bg-transparent text-black/45"
               }`;
           const labelClass = `mt-1 ${active ? "text-black" : "text-black/45"}`;
 
@@ -50,10 +59,23 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div className={item.prominent ? "w-14 h-9 rounded-2xl flex items-center justify-center bg-black text-white shadow-md" : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"}>
+                <div
+                  className={
+                    item.prominent
+                      ? `w-14 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-r ${accentClass} text-black shadow-[0_10px_24px_rgba(0,0,0,0.16)]`
+                      : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                  }
+                >
                   <Icon size={item.prominent ? 26 : 22} />
                 </div>
-                {item.prominent ? <span className="mt-1 invisible">upload</span> : <span className="mt-1 text-black/45">{item.label}</span>}
+                {item.prominent ? (
+                  <span className="mt-1 invisible">upload</span>
+                ) : (
+                  <div className="mt-1 flex flex-col items-center">
+                    <span className="text-black/45">{item.label}</span>
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-transparent" />
+                  </div>
+                )}
               </button>
             );
           }
@@ -67,7 +89,14 @@ export default function BottomNav() {
               <div className={iconClass}>
                 <Icon size={item.prominent ? 26 : 22} />
               </div>
-              {item.prominent ? <span className="mt-1 invisible">upload</span> : <span className={labelClass}>{item.label}</span>}
+              {item.prominent ? (
+                <span className="mt-1 invisible">upload</span>
+              ) : (
+                <div className="mt-1 flex flex-col items-center">
+                  <span className={labelClass}>{item.label}</span>
+                  <span className={`mt-1 h-1.5 rounded-full transition-all ${active ? `w-5 bg-gradient-to-r ${accentClass}` : "w-1.5 bg-black/12"}`} />
+                </div>
+              )}
             </Link>
           );
         })}

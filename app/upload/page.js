@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Plus, Search } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -25,6 +25,7 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadStep, setUploadStep] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -91,6 +92,23 @@ export default function UploadPage() {
     }
   };
 
+  const openUploadFlow = () => {
+    setShowUploadForm(true);
+    setUploadStep(0);
+  };
+
+  const goToNextStep = () => {
+    if (uploadStep === 0 && !dishName.trim()) {
+      alert("Please enter a dish name.");
+      return;
+    }
+    setUploadStep((prev) => Math.min(prev + 1, 3));
+  };
+
+  const goToPreviousStep = () => {
+    setUploadStep((prev) => Math.max(prev - 1, 0));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
@@ -116,103 +134,211 @@ export default function UploadPage() {
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <h2 className="text-2xl font-semibold mb-4 text-black">Add New Dish</h2>
-            <input
-              type="text"
-              placeholder="Dish name"
-              value={dishName}
-              onChange={(e) => setDishName(e.target.value)}
-              className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-              disabled={loadingUpload}
-            />
-            <textarea
-              placeholder="Description"
-              value={dishDescription}
-              onChange={(e) => setDishDescription(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-              rows={3}
-              disabled={loadingUpload}
-            />
-            <textarea
-              placeholder="Recipe ingredients"
-              value={dishRecipeIngredients}
-              onChange={(e) => setDishRecipeIngredients(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-              rows={3}
-              disabled={loadingUpload}
-            />
-            <textarea
-              placeholder="Recipe method"
-              value={dishRecipeMethod}
-              onChange={(e) => setDishRecipeMethod(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-              rows={4}
-              disabled={loadingUpload}
-            />
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-black">Tags</p>
-                <p className="text-xs text-black/60">{dishTags.length}/6</p>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex gap-2">
+                {[0, 1, 2, 3].map((step) => (
+                  <span
+                    key={step}
+                    className={`h-1.5 w-10 rounded-full ${step <= uploadStep ? "bg-black" : "bg-black/10"}`}
+                  />
+                ))}
               </div>
-              <div className="flex flex-wrap gap-2">
-                {TAG_OPTIONS.map((tag) => {
-                  const active = dishTags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
+              <div className="text-xs font-semibold text-black/45">
+                {uploadStep === 0 ? "Basics" : uploadStep === 1 ? "Details" : uploadStep === 2 ? "Recipe" : "Upload"}
               </div>
             </div>
-            <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
-              <input
-                type="checkbox"
-                checked={dishIsPublic}
-                onChange={(e) => setDishIsPublic(e.target.checked)}
-                disabled={loadingUpload}
-              />
-              Public dish (visible in feed)
-            </label>
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragActive(true);
-              }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-              className={`w-full h-40 rounded-2xl border-2 border-dashed ${
-                dragActive ? "border-black bg-[#F6F6F2]" : "border-black/20"
-              } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e.target.files?.[0])}
-                className="absolute opacity-0 w-full h-full cursor-pointer"
-                disabled={loadingUpload}
-              />
-              {preview ? (
-                <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
-              ) : loadingUpload ? (
-                "Uploading..."
+
+            {uploadStep === 0 ? (
+              <>
+                <h2 className="text-2xl font-semibold mb-4 text-black">Start with the essentials</h2>
+                <input
+                  type="text"
+                  placeholder="Dish name"
+                  value={dishName}
+                  onChange={(e) => setDishName(e.target.value)}
+                  className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  disabled={loadingUpload}
+                />
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragActive(true);
+                  }}
+                  onDragLeave={() => setDragActive(false)}
+                  onDrop={handleDrop}
+                  className={`w-full h-56 rounded-[2rem] border-2 border-dashed ${
+                    dragActive ? "border-black bg-[#F6F6F2]" : "border-black/20"
+                  } flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e.target.files?.[0])}
+                    className="absolute opacity-0 w-full h-full cursor-pointer"
+                    disabled={loadingUpload}
+                  />
+                  {preview ? (
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center">
+                        <Camera size={28} />
+                      </div>
+                      <div className="text-sm font-medium">Add a photo</div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
+
+            {uploadStep === 1 ? (
+              <>
+                <h2 className="text-2xl font-semibold mb-4 text-black">Add some context</h2>
+                <textarea
+                  placeholder="Description"
+                  value={dishDescription}
+                  onChange={(e) => setDishDescription(e.target.value)}
+                  className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-5 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  rows={4}
+                  disabled={loadingUpload}
+                />
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-medium text-black">Tags</p>
+                  <p className="text-xs text-black/60">{dishTags.length}/6</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {TAG_OPTIONS.map((tag) => {
+                    const active = dishTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : null}
+
+            {uploadStep === 2 ? (
+              <>
+                <div className="mb-4 text-center">
+                  <div className="text-3xl font-black tracking-tight text-black/15 uppercase">Optional</div>
+                </div>
+                <h2 className="text-2xl font-semibold mb-4 text-black">Recipe details</h2>
+                <textarea
+                  placeholder="Ingredients"
+                  value={dishRecipeIngredients}
+                  onChange={(e) => setDishRecipeIngredients(e.target.value)}
+                  className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  rows={4}
+                  disabled={loadingUpload}
+                />
+                <textarea
+                  placeholder="Method"
+                  value={dishRecipeMethod}
+                  onChange={(e) => setDishRecipeMethod(e.target.value)}
+                  className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  rows={5}
+                  disabled={loadingUpload}
+                />
+              </>
+            ) : null}
+
+            {uploadStep === 3 ? (
+              <>
+                <h2 className="text-2xl font-semibold mb-4 text-black">Ready to upload</h2>
+                <div className="rounded-[2rem] bg-[#F6F6F2] border border-black/10 p-4 mb-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
+                      {preview ? (
+                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-black/30">
+                          <Camera size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-lg font-semibold truncate">{dishName || "Untitled dish"}</div>
+                      {dishDescription ? (
+                        <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
+                      ) : null}
+                      {dishTags.length ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {dishTags.slice(0, 4).map((tag) => (
+                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 mb-5 text-sm font-medium text-black">
+                  <input
+                    type="checkbox"
+                    checked={dishIsPublic}
+                    onChange={(e) => setDishIsPublic(e.target.checked)}
+                    disabled={loadingUpload}
+                  />
+                  Public dish (visible in feed)
+                </label>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handlePost}
+                  className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
+                  disabled={loadingUpload}
+                >
+                  {loadingUpload ? "Uploading..." : "Upload dish"}
+                </motion.button>
+              </>
+            ) : null}
+
+            <div className="mt-6 flex items-center justify-between">
+              {uploadStep > 0 ? (
+                <button
+                  type="button"
+                  onClick={goToPreviousStep}
+                  className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white"
+                  disabled={loadingUpload}
+                  aria-label="Previous step"
+                >
+                  <ArrowLeft size={20} />
+                </button>
               ) : (
-                "Drag & Drop or Click to Upload"
+                <div />
               )}
+
+              {uploadStep < 3 ? (
+                <div className="flex items-center gap-3">
+                  {uploadStep === 2 ? (
+                    <button
+                      type="button"
+                      onClick={() => setUploadStep(3)}
+                      className="text-sm font-semibold text-black/55"
+                      disabled={loadingUpload}
+                    >
+                      Skip
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={goToNextStep}
+                    className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-xl"
+                    disabled={loadingUpload}
+                    aria-label="Continue"
+                  >
+                    <ArrowRight size={22} />
+                  </button>
+                </div>
+              ) : null}
             </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handlePost}
-              className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
-              disabled={loadingUpload}
-            >
-              {loadingUpload ? "Uploading..." : "Post Dish"}
-            </motion.button>
           </motion.div>
         ) : (
           <motion.div
@@ -222,7 +348,7 @@ export default function UploadPage() {
           >
             <div className="space-y-4">
               <button
-                onClick={() => setShowUploadForm(true)}
+                onClick={openUploadFlow}
                 className="w-full rounded-[2rem] bg-black text-white px-6 py-6 text-left shadow-xl transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">

@@ -163,11 +163,15 @@ export default function StoryViewerModal({
               {canDelete ? (
                 <button
                   type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     handleDelete();
                   }}
-                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+                  className="relative z-50 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                   aria-label="Delete story"
                 >
                   <Trash2 size={17} />
@@ -175,11 +179,15 @@ export default function StoryViewerModal({
               ) : null}
               <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
                   onClose?.();
                 }}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+                className="relative z-50 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                 aria-label="Close story"
               >
                 <X size={18} />
@@ -187,10 +195,10 @@ export default function StoryViewerModal({
             </div>
           </div>
 
-          <div className="absolute left-0 top-0 bottom-0 z-10 w-1/3">
+          <div className="absolute left-0 top-24 bottom-24 z-10 w-1/3">
             <button type="button" className="w-full h-full" onClick={goPrev} aria-label="Previous story" />
           </div>
-          <div className="absolute right-0 top-0 bottom-0 z-10 w-1/3">
+          <div className="absolute right-0 top-24 bottom-24 z-10 w-1/3">
             <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
           </div>
 

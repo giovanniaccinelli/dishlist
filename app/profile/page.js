@@ -27,7 +27,7 @@ import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, deleteField } from "firebase/firestore";
-import { Plus, Search, Settings, Send } from "lucide-react";
+import { Plus, Search, Settings, Send, Shuffle } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -364,9 +364,10 @@ export default function Profile() {
           <h2 className="text-xl font-semibold">{title}</h2>
           <button
             onClick={() => openShuffleDeck(source)}
-            className="bg-black text-white py-1 px-3 rounded-full text-sm font-semibold disabled:opacity-40"
+            className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
             disabled={dishes.length === 0}
           >
+            <Shuffle size={14} />
             Shuffle
           </button>
         </div>
@@ -616,9 +617,10 @@ export default function Profile() {
             <h2 className="text-xl font-semibold">To Try</h2>
             <button
               onClick={() => openShuffleDeck("to_try")}
-              className="bg-black text-white py-1 px-3 rounded-full text-sm font-semibold disabled:opacity-40"
+              className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
               disabled={toTryDishes.length === 0}
             >
+              <Shuffle size={14} />
               Shuffle
             </button>
           </div>

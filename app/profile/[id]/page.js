@@ -18,7 +18,7 @@ import {
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { Plus, Send } from "lucide-react";
+import { Plus, Send, Shuffle } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
@@ -279,7 +279,17 @@ export default function PublicProfile() {
 
       {profileTab === "my" ? (
         <>
-          <h2 className="text-xl font-semibold mb-4">Saved</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Saved</h2>
+            <button
+              onClick={() => openShuffleDeck("saved")}
+              className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
+              disabled={savedDishes.length === 0}
+            >
+              <Shuffle size={14} />
+              Shuffle
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {savedDishes.length === 0 && (
               <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
@@ -344,7 +354,17 @@ export default function PublicProfile() {
             </AnimatePresence>
           </div>
 
-          <h2 className="text-xl font-semibold my-4">Uploaded</h2>
+          <div className="flex items-center justify-between my-4">
+            <h2 className="text-xl font-semibold">Uploaded</h2>
+            <button
+              onClick={() => openShuffleDeck("uploaded")}
+              className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
+              disabled={dishes.length === 0}
+            >
+              <Shuffle size={14} />
+              Shuffle
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {dishes.length === 0 && (
               <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
@@ -415,9 +435,10 @@ export default function PublicProfile() {
             <h2 className="text-xl font-semibold">To Try</h2>
             <button
               onClick={() => openShuffleDeck("to_try")}
-              className="bg-black text-white py-1 px-3 rounded-full text-sm font-semibold disabled:opacity-40"
+              className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
               disabled={toTryDishes.length === 0}
             >
+              <Shuffle size={14} />
               Shuffle
             </button>
           </div>

@@ -263,6 +263,7 @@ export default function DishDetail() {
   };
 
   const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
+  const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
@@ -473,7 +474,7 @@ export default function DishDetail() {
                 ? handleAdd
                 : handleRemove
           }
-          onSecondaryAction={canManageOwnDish ? openEditModal : isToTrySource ? handleUpgrade : undefined}
+          onSecondaryAction={canEditFromThisView ? openEditModal : isToTrySource ? handleUpgrade : undefined}
           onSavesPress={handleOpenSavers}
           onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
@@ -487,7 +488,7 @@ export default function DishDetail() {
                 ? "+"
                 : "Remove"
           }
-          secondaryActionLabel={canManageOwnDish ? "Edit" : isToTrySource ? "Upgrade to My DishList" : undefined}
+          secondaryActionLabel={canEditFromThisView ? "Edit" : isToTrySource ? "Upgrade" : undefined}
           actionClassName={
             canManageOwnDish || isSavedSource || isToTrySource
               ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
@@ -496,10 +497,10 @@ export default function DishDetail() {
                 : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
-            canManageOwnDish
+            canEditFromThisView
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isToTrySource
-              ? "px-4 py-2 rounded-full bg-white/92 text-black border border-white/80 text-sm font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
+              ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
               : undefined
           }
           actionToast={
@@ -522,13 +523,13 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E8DCCA] my-6">
+          <div className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E3CFA7] my-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${step <= editStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#FFB15E_100%)]" : "w-7 bg-black/10"}`}
+                    className={`h-1.5 rounded-full transition-all ${step <= editStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#2BD36B_48%,#FACC15_100%)]" : "w-7 bg-black/10"}`}
                   />
                 ))}
               </div>
@@ -550,10 +551,10 @@ export default function DishDetail() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Dish name"
-                  className="w-full p-4 rounded-full bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/40 text-base"
+                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/40 text-base"
                   disabled={savingEdit}
                 />
-                <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF8E9_0%,#FFFDF8_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
+                <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
                   <input
                     type="file"
                     accept="image/*"
@@ -569,7 +570,7 @@ export default function DishDetail() {
                     <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_50%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2BD36B_55%,#FACC15_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Change photo</div>
@@ -592,7 +593,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditDescription(e.target.value)}
                   placeholder="Description"
                   rows={4}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-5 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
                   disabled={savingEdit}
                 />
                 <div className="mb-3">
@@ -622,7 +623,7 @@ export default function DishDetail() {
             {editStep === 2 ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-4xl font-black tracking-tight text-[#7AD957]/25 uppercase">Optional</div>
+                  <div className="text-4xl font-black tracking-tight text-[#2BD36B]/25 uppercase">Optional</div>
                 </div>
                 <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
@@ -630,7 +631,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditRecipeIngredients(e.target.value)}
                   placeholder="Ingredients"
                   rows={4}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
                   disabled={savingEdit}
                 />
                 <textarea
@@ -638,7 +639,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditRecipeMethod(e.target.value)}
                   placeholder="Method"
                   rows={5}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
                   disabled={savingEdit}
                 />
               </>
@@ -652,7 +653,7 @@ export default function DishDetail() {
                   </div>
                   <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review changes</h2>
                 </div>
-                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F8F7F3_0%,#FFF5E4_100%)] border border-[#DCCEB8] p-4 mb-5">
+                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)] border border-[#D8C090] p-4 mb-5">
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
                       <img
@@ -695,7 +696,7 @@ export default function DishDetail() {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#111111_0%,#2A2A2A_45%,#FFB15E_100%)] text-white font-semibold"
+                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#111111_0%,#1E8A4C_48%,#F59E0B_100%)] text-white font-semibold"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}
@@ -730,7 +731,7 @@ export default function DishDetail() {
                     <button
                       type="button"
                       onClick={goToNextEditStep}
-                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2A2A2A_55%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg"
+                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_52%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
                     >
                       <ArrowRight size={20} />
                     </button>

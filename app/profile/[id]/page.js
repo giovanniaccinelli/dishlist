@@ -307,7 +307,7 @@ export default function PublicProfile() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 >
-                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                  <Link href={`/dish/${dish.id}?source=saved&mode=single&profileId=${id}`} className="absolute inset-0 z-10">
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
@@ -382,7 +382,7 @@ export default function PublicProfile() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 >
-                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                  <Link href={`/dish/${dish.id}?source=uploaded&mode=single&profileId=${id}`} className="absolute inset-0 z-10">
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
@@ -459,7 +459,7 @@ export default function PublicProfile() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 >
-                  <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                  <Link href={`/dish/${dish.id}?source=to_try&mode=single&profileId=${id}`} className="absolute inset-0 z-10">
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {

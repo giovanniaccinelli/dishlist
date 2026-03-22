@@ -126,13 +126,14 @@ export default function PublicProfile() {
   };
 
   const openShuffleDeck = (source) => {
-    const pool = source === "to_try" ? toTryDishes : savedDishes;
+    const pool =
+      source === "uploaded" ? dishes : source === "to_try" ? toTryDishes : savedDishes;
     if (!pool.length) {
       alert("No dishes to shuffle.");
       return;
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
-    window.location.href = `/dish/${randomDish.id}?source=${source}&mode=shuffle`;
+    window.location.href = `/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}`;
   };
 
   const handleOpenSavers = async (dish) => {

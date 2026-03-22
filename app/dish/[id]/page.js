@@ -92,8 +92,10 @@ export default function DishDetail() {
 
   const source = searchParams.get("source") || "saved";
   const mode = searchParams.get("mode") || "single";
+  const profileId = searchParams.get("profileId");
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
+  const listOwnerId = profileId || userId;
   const [dish, setDish] = useState(null);
   const [deckList, setDeckList] = useState([]);
   const [removedDishIds, setRemovedDishIds] = useState(() => new Set());
@@ -128,7 +130,7 @@ export default function DishDetail() {
 
   useEffect(() => {
     if (!dishId) return;
-    if (!userId && source !== "public") {
+    if (!listOwnerId && source !== "public") {
       setLoadingDish(false);
       return;
     }
@@ -139,11 +141,11 @@ export default function DishDetail() {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
       } else if (source === "uploaded") {
-        items = await getDishesFromFirestore(userId);
+        items = await getDishesFromFirestore(listOwnerId);
       } else if (source === "to_try") {
-        items = await getToTryDishesFromFirestore(userId);
+        items = await getToTryDishesFromFirestore(listOwnerId);
       } else {
-        items = await getSavedDishesFromFirestore(userId);
+        items = await getSavedDishesFromFirestore(listOwnerId);
       }
       items = items
         .slice()
@@ -170,7 +172,7 @@ export default function DishDetail() {
       setDeckList(fallbackDish ? [fallbackDish] : []);
       setLoadingDish(false);
     })();
-  }, [dishId, userId, source, mode]);
+  }, [dishId, listOwnerId, source, mode]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
@@ -488,7 +490,7 @@ export default function DishDetail() {
                 ? "+"
                 : "Remove"
           }
-          secondaryActionLabel={canEditFromThisView ? "Edit" : isToTrySource ? "Upgrade" : undefined}
+          secondaryActionLabel={canEditFromThisView ? "Edit" : isToTrySource ? "Move to DishList" : undefined}
           actionClassName={
             canManageOwnDish || isSavedSource || isToTrySource
               ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"

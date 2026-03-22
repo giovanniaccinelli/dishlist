@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { collection, getDocs, limit, query } from "firebase/firestore";
 import { useAuth } from "../lib/auth";
+import { db } from "../lib/firebase";
+import { getDishImageUrl } from "../lib/dishImage";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -17,6 +20,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [names, setNames] = useState(["", "", ""]);
   const [error, setError] = useState("");
+  const [ideaDishes, setIdeaDishes] = useState([]);
 
   useEffect(() => {
     if (user) router.replace("/");
@@ -34,21 +38,56 @@ export default function Onboarding() {
     } catch {}
   }, []);
 
-  const trimmedNames = useMemo(() => names.map((n) => n.trim()).filter(Boolean), [names]);
-  const canContinueNames = trimmedNames.length === 3;
+  useEffect(() => {
+    let cancelled = false;
+    const loadIdeas = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, "dishes"), limit(18)));
+        const dishes = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((dish) => dish?.name);
+        const shuffled = [...dishes].sort(() => Math.random() - 0.5).slice(0, 6);
+        if (!cancelled) setIdeaDishes(shuffled);
+      } catch {
+        if (!cancelled) setIdeaDishes([]);
+      }
+    };
+    loadIdeas();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleNamesContinue = () => {
-    if (!canContinueNames) {
-      setError("Enter exactly 3 dishes.");
+  const currentInputStep = step - 1;
+  const currentName = names[currentInputStep] || "";
+  const trimmedNames = useMemo(() => names.map((n) => n.trim()).filter(Boolean), [names]);
+
+  const persistNamesAndEnter = () => {
+    const cleaned = names.map((name) => name.trim());
+    if (cleaned.some((name) => !name)) {
+      setError("Enter all 3 dishes.");
       return;
     }
     if (typeof window !== "undefined") {
       localStorage.setItem(DONE_KEY, "1");
       sessionStorage.setItem(MODE_KEY, "names");
-      sessionStorage.setItem(NAMES_KEY, JSON.stringify(trimmedNames));
+      sessionStorage.setItem(NAMES_KEY, JSON.stringify(cleaned));
       sessionStorage.setItem(SAVED_KEY, JSON.stringify([]));
     }
     router.replace("/?onboarding=1");
+  };
+
+  const handleContinueName = () => {
+    if (!currentName.trim()) {
+      setError("Enter a dish name.");
+      return;
+    }
+    setError("");
+    if (step < 3) {
+      setStep((prev) => prev + 1);
+      return;
+    }
+    persistNamesAndEnter();
   };
 
   const handleBrowseFeed = () => {
@@ -84,27 +123,11 @@ export default function Onboarding() {
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex gap-2">
-              {[0, 1].map((bar) => (
-                <span
-                  key={bar}
-                  className={`h-1.5 rounded-full transition-all ${
-                    bar <= step ? (bar === 0 ? "w-10 bg-[#F59E0B]" : "w-10 bg-[#2BD36B]") : "w-7 bg-black/10"
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
-              {step === 0 ? "Start" : "3 Dishes"}
-            </div>
-          </div>
-
           {step === 0 ? (
             <>
               <div className="mb-6">
                 <h2 className="text-[2.2rem] leading-[0.95] font-semibold text-black">
-                  Build your DishList
+                  Save your first 3 dishes
                 </h2>
               </div>
 
@@ -114,9 +137,9 @@ export default function Onboarding() {
                   onClick={() => setStep(1)}
                   className="w-full rounded-[1.8rem] bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.14)]"
                 >
-                  <p className="text-2xl font-semibold leading-none">Write 3 dishes</p>
+                  <p className="text-2xl font-semibold leading-none">Got any in mind?</p>
                   <p className="mt-3 text-sm text-white/70">
-                    Start with three dishes you like making at home.
+                    Start by adding three dishes you already know you want in your DishList.
                   </p>
                 </button>
 
@@ -125,52 +148,90 @@ export default function Onboarding() {
                   onClick={handleBrowseFeed}
                   className="w-full rounded-[1.8rem] border border-[#D8C9AF] bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)]"
                 >
-                  <p className="text-2xl font-semibold leading-none">Browse the feed</p>
+                  <p className="text-2xl font-semibold leading-none">Swipe on the feed</p>
                   <p className="mt-3 text-sm text-black/65">
-                    Swipe and add up to three dishes. Account creation happens after the third.
+                    Browse first. After your third save, we ask you to create the profile.
                   </p>
                 </button>
               </div>
 
               <button
                 onClick={handleSkip}
-                className="mt-6 w-full text-sm text-black/60 hover:text-black"
+                className="mt-6 w-full rounded-2xl border border-black/10 bg-white/80 px-5 py-4 text-base font-semibold text-black/75 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>
             </>
           ) : (
             <>
-              <div className="mb-5">
-                <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                  Step 1
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex gap-2">
+                  {[0, 1, 2].map((bar) => (
+                    <span
+                      key={bar}
+                      className={`h-1.5 rounded-full transition-all ${
+                        bar < step ? "w-10 bg-black" : "w-7 bg-black/10"
+                      }`}
+                    />
+                  ))}
                 </div>
-                <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
-                  Add 3 dishes
-                </h2>
-                <p className="mt-3 text-sm text-black/60">
-                  We’ll save these to your profile when you create an account.
-                </p>
+                <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
+                  Dish {step} of 3
+                </div>
               </div>
 
-              <div className="space-y-3">
-                {names.map((value, idx) => (
-                  <input
-                    key={`dish-${idx}`}
-                    type="text"
-                    value={value}
-                    onChange={(e) => {
-                      setError("");
-                      setNames((prev) => {
-                        const next = [...prev];
-                        next[idx] = e.target.value;
-                        return next;
-                      });
-                    }}
-                    placeholder={`Dish ${idx + 1}`}
-                    className="w-full p-4 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/35"
-                  />
-                ))}
+              <div className="mb-5">
+                <h2 className="text-[2rem] leading-none font-semibold mt-1 text-black">
+                  Add a dish name
+                </h2>
+                <p className="mt-3 text-sm text-black/60">You can add an image later.</p>
+              </div>
+
+              <input
+                type="text"
+                value={currentName}
+                onChange={(e) => {
+                  setError("");
+                  setNames((prev) => {
+                    const next = [...prev];
+                    next[currentInputStep] = e.target.value;
+                    return next;
+                  });
+                }}
+                placeholder={`Dish ${step}`}
+                className="w-full p-4 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-black/15"
+              />
+
+              <div className="mt-6">
+                <p className="text-sm font-semibold text-black/70 mb-3">Some ideas</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {ideaDishes.map((dish) => (
+                    <button
+                      key={dish.id}
+                      type="button"
+                      onClick={() => {
+                        setError("");
+                        setNames((prev) => {
+                          const next = [...prev];
+                          next[currentInputStep] = dish.name || "";
+                          return next;
+                        });
+                      }}
+                      className="overflow-hidden rounded-2xl bg-white/80 border border-black/8 shadow-sm text-left"
+                    >
+                      <div className="aspect-square overflow-hidden">
+                        <img
+                          src={getDishImageUrl(dish)}
+                          alt={dish.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="px-2 py-2 text-[11px] font-medium leading-tight text-black/75 line-clamp-2 min-h-[2.2rem]">
+                        {dish.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
@@ -178,22 +239,36 @@ export default function Onboarding() {
               <div className="mt-6 flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => setStep(0)}
+                  onClick={() => {
+                    setError("");
+                    setStep((prev) => (prev > 1 ? prev - 1 : 0));
+                  }}
                   className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-sm"
                   aria-label="Previous step"
                 >
                   <ArrowLeft size={20} />
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleNamesContinue}
-                  disabled={!canContinueNames}
-                  className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
-                  aria-label="Continue"
-                >
-                  <ArrowRight size={22} />
-                </button>
+                {step < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleContinueName}
+                    disabled={!currentName.trim()}
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
+                    aria-label="Continue"
+                  >
+                    <ArrowRight size={22} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={persistNamesAndEnter}
+                    disabled={trimmedNames.length !== 3}
+                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
+                  >
+                    Enter DishList
+                  </button>
+                )}
               </div>
             </>
           )}

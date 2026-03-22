@@ -119,12 +119,12 @@ export default function StoryViewerModal({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[120] bg-black/95 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[120] bg-black flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <div className="relative w-full max-w-sm h-[78vh] rounded-[2rem] overflow-hidden bg-black shadow-2xl">
+        <div className="relative w-screen h-screen overflow-hidden bg-black">
           <img
             src={getDishImageUrl(currentStory)}
             alt={currentStory.name || "Story"}

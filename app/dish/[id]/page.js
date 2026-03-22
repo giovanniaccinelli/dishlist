@@ -49,8 +49,6 @@ export default function DishDetail() {
   const [editDescription, setEditDescription] = useState("");
   const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
-  const [editCost, setEditCost] = useState(1);
-  const [editTime, setEditTime] = useState(1);
   const [editTags, setEditTags] = useState([]);
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
@@ -212,25 +210,6 @@ export default function DishDetail() {
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
 
-  const LevelSelector = ({ label, value, onChange, colorClass }) => (
-    <div>
-      <p className="text-sm font-medium text-black mb-2">{label}</p>
-      <div className="flex items-center gap-2">
-        {[1, 2, 3].map((level) => (
-          <button
-            key={level}
-            type="button"
-            onClick={() => onChange(level)}
-            className={`w-7 h-7 rounded-full border-2 transition ${colorClass} ${
-              value >= level ? "opacity-100" : "opacity-25"
-            }`}
-            aria-label={`${label} ${level} out of 3`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-
   const toggleEditTag = (tag) => {
     setEditTags((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -246,8 +225,6 @@ export default function DishDetail() {
     setEditDescription(dishToEdit?.description || "");
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
-    setEditCost(Math.max(1, Math.min(3, Number(dishToEdit?.cost) || 1)));
-    setEditTime(Math.max(1, Math.min(3, Number(dishToEdit?.time ?? dishToEdit?.difficulty) || 1)));
     const normalizedTags = Array.isArray(dishToEdit?.tags)
       ? Array.from(
           new Set(
@@ -297,8 +274,6 @@ export default function DishDetail() {
         recipeIngredients: editRecipeIngredients.trim(),
         recipeMethod: editRecipeMethod.trim(),
         tags: editTags,
-        cost: editCost,
-        time: editTime,
         isPublic: editIsPublic,
         imageURL: nextImageURL || "",
       };
@@ -505,20 +480,6 @@ export default function DishDetail() {
               className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
               disabled={savingEdit}
             />
-            <div className="grid grid-cols-2 gap-4 mb-3">
-              <LevelSelector
-                label="Cost ($)"
-                value={editCost}
-                onChange={setEditCost}
-                colorClass="border-[#2BD36B] bg-[#2BD36B]"
-              />
-              <LevelSelector
-                label="Time (hourglass)"
-                value={editTime}
-                onChange={setEditTime}
-                colorClass="border-[#FACC15] bg-[#FACC15]"
-              />
-            </div>
             <div className="mb-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-black">Tags</p>

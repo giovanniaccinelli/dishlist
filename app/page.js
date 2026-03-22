@@ -127,8 +127,6 @@ export default function Feed() {
             recipeIngredients: "",
             recipeMethod: "",
             tags: [],
-            cost: 1,
-            time: 1,
             isPublic: true,
             imageURL: "",
             owner: userId,

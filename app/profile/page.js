@@ -41,8 +41,6 @@ export default function Profile() {
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
-  const [dishCost, setDishCost] = useState(1);
-  const [dishTime, setDishTime] = useState(1);
   const [dishTags, setDishTags] = useState([]);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
@@ -162,8 +160,6 @@ export default function Profile() {
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
         tags: dishTags,
-        cost: dishCost,
-        time: dishTime,
         isPublic: dishIsPublic,
         imageURL,
         owner: user.uid,
@@ -177,8 +173,6 @@ export default function Profile() {
       setDishDescription("");
       setDishRecipeIngredients("");
       setDishRecipeMethod("");
-      setDishCost(1);
-      setDishTime(1);
       setDishTags([]);
       setDishIsPublic(true);
       setDishImage(null);
@@ -399,25 +393,6 @@ export default function Profile() {
         )}
       </div>
     </>
-  );
-
-  const LevelSelector = ({ label, value, onChange, colorClass }) => (
-    <div>
-      <p className="text-sm font-medium text-black mb-2">{label}</p>
-      <div className="flex items-center gap-2">
-        {[1, 2, 3].map((level) => (
-          <button
-            key={level}
-            type="button"
-            onClick={() => onChange(level)}
-            className={`w-7 h-7 rounded-full border-2 transition ${colorClass} ${
-              value >= level ? "opacity-100" : "opacity-25"
-            }`}
-            aria-label={`${label} ${level} out of 3`}
-          />
-        ))}
-      </div>
-    </div>
   );
 
   const toggleTag = (tag) => {
@@ -689,20 +664,6 @@ export default function Profile() {
                 rows={4}
                 disabled={loadingUpload}
               />
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <LevelSelector
-                  label="Cost ($)"
-                  value={dishCost}
-                  onChange={setDishCost}
-                  colorClass="border-[#2BD36B] bg-[#2BD36B]"
-                />
-                <LevelSelector
-                  label="Time (hourglass)"
-                  value={dishTime}
-                  onChange={setDishTime}
-                  colorClass="border-[#FACC15] bg-[#FACC15]"
-                />
-              </div>
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-black">Tags</p>

@@ -280,7 +280,7 @@ export default function Dishes() {
 
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
+    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishes</h1>
       <div className="relative mb-6">
         <div className="flex gap-2">

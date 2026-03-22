@@ -32,6 +32,15 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-[#F6F6F2]" />
+          <div className="absolute -top-20 -left-16 h-56 w-56 rounded-full bg-[#FFB15E]/35 blur-3xl" />
+          <div className="absolute right-[-4rem] top-20 h-64 w-64 rounded-full bg-[#7AD957]/20 blur-3xl" />
+          <div className="absolute bottom-24 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full bg-[#FF7A59]/15 blur-3xl" />
+        </div>
         <AuthProvider>
           <GoogleAnalytics />
           <ServiceWorkerRegister />

@@ -321,7 +321,7 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         Redirecting to login...
       </div>
     );
@@ -417,7 +417,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
+    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
         <button

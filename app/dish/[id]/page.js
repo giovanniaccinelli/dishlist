@@ -414,7 +414,7 @@ export default function DishDetail() {
 
   if (loading || loadingDish) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         Loading...
       </div>
     );
@@ -422,7 +422,7 @@ export default function DishDetail() {
 
   if (!user && !isPublicSource) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         Please sign in.
       </div>
     );
@@ -430,14 +430,14 @@ export default function DishDetail() {
 
   if (!dish) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         Dish not found.
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] text-black relative pb-24">
+    <div className="min-h-screen bg-transparent text-black relative pb-24">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-sm text-black/60">
           ← Back

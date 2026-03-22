@@ -80,7 +80,7 @@ export default function DirectChat() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         <button
           onClick={() => setShowAuthPrompt(true)}
           className="bg-black text-white px-6 py-3 rounded-full font-semibold"
@@ -93,7 +93,7 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] text-black relative pb-24">
+    <div className="min-h-screen bg-transparent text-black relative pb-24">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-sm text-black/60">
           ← Back

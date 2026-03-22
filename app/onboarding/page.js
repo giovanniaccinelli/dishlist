@@ -79,7 +79,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] text-black px-6 py-10">
+    <div className="min-h-screen bg-transparent text-black px-6 py-10">
       <div className="max-w-xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <img src="/logo-real.png" alt="DishList logo" className="w-10 h-10 rounded-full object-cover" />

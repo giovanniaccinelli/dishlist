@@ -343,14 +343,14 @@ export default function Feed() {
 
   if (loading || loadingDishes) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-[#F6F6F2] text-black relative pb-24 overflow-hidden">
+    <div className="h-screen bg-transparent text-black relative pb-24 overflow-hidden">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />

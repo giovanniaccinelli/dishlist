@@ -57,7 +57,7 @@ export default function Directs() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F6F6F2] flex items-center justify-center text-black">
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
         <button
           onClick={() => setShowAuthPrompt(true)}
           className="bg-black text-white px-6 py-3 rounded-full font-semibold"
@@ -70,7 +70,7 @@ export default function Directs() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
+    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Directs</h1>
       {displayConvos.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">

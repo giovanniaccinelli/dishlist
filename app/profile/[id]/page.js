@@ -168,7 +168,7 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
+    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">

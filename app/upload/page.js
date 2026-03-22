@@ -130,7 +130,7 @@ export default function UploadPage() {
       <div className="px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
         {showUploadForm ? (
           <motion.div
-            className="bg-white p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-black/8 my-4"
+            className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E8DCCA] my-4"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -139,7 +139,7 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${step <= uploadStep ? "w-10 bg-black" : "w-7 bg-black/10"}`}
+                    className={`h-1.5 rounded-full transition-all ${step <= uploadStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#FFB15E_100%)]" : "w-7 bg-black/10"}`}
                   />
                 ))}
               </div>
@@ -161,7 +161,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
-                  className="w-full p-4 rounded-full bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20 text-base"
+                  className="w-full p-4 rounded-full bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/40 text-base"
                   disabled={loadingUpload}
                 />
                 <div
@@ -172,7 +172,7 @@ export default function UploadPage() {
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
                   className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${
-                    dragActive ? "border-black bg-black/[0.03]" : "border-black/15 bg-[#FBFAF7]"
+                    dragActive ? "border-[#FFB15E] bg-[#FFF4DF]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF8E9_0%,#FFFDF8_100%)]"
                   } flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}
                 >
                   <input
@@ -186,7 +186,7 @@ export default function UploadPage() {
                     <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_50%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo</div>
@@ -209,7 +209,7 @@ export default function UploadPage() {
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-5 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-5 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -238,14 +238,14 @@ export default function UploadPage() {
             {uploadStep === 2 ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-4xl font-black tracking-tight text-black/10 uppercase">Optional</div>
+                  <div className="text-4xl font-black tracking-tight text-[#7AD957]/25 uppercase">Optional</div>
                 </div>
                 <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
                   onChange={(e) => setDishRecipeIngredients(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -253,7 +253,7 @@ export default function UploadPage() {
                   placeholder="Method"
                   value={dishRecipeMethod}
                   onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
                   rows={5}
                   disabled={loadingUpload}
                 />
@@ -268,7 +268,7 @@ export default function UploadPage() {
                   </div>
                   <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review and upload</h2>
                 </div>
-                <div className="rounded-[2rem] bg-[#F8F7F3] border border-black/10 p-4 mb-5">
+                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F8F7F3_0%,#FFF5E4_100%)] border border-[#DCCEB8] p-4 mb-5">
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
                       {preview ? (
@@ -308,7 +308,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePost}
-                  className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
+                  className="w-full bg-[linear-gradient(90deg,#111111_0%,#2A2A2A_45%,#FFB15E_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? "Uploading..." : "Upload dish"}
@@ -346,7 +346,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-lg"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2A2A2A_55%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >
@@ -368,14 +368,14 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full rounded-[2rem] bg-white text-black px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.01] border border-black/10"
+                className="w-full rounded-[2rem] bg-[linear-gradient(135deg,#111111_0%,#1C1C1C_55%,#2B2B2B_100%)] text-white px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.14)] transition-transform hover:scale-[1.01] border border-white/10"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-3xl font-semibold leading-none">Upload dish</p>
-                    <p className="mt-3 text-sm text-black/55 max-w-[15rem]">Post a new dish to your DishList.</p>
+                    <p className="mt-3 text-sm text-white/65 max-w-[15rem]">Post a new dish to your DishList.</p>
                   </div>
-                  <div className="w-16 h-16 rounded-[1.4rem] bg-black text-white flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#FFB15E_0%,#FFCC33_100%)] text-black flex items-center justify-center shadow-md">
                     <Plus size={32} />
                   </div>
                 </div>

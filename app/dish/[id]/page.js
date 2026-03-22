@@ -237,11 +237,11 @@ export default function DishDetail() {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
       } else if (source === "uploaded") {
-        items = await getDishesFromFirestore(userId);
+        items = await getDishesFromFirestore(listOwnerId);
       } else if (source === "to_try") {
-        items = await getToTryDishesFromFirestore(userId);
+        items = await getToTryDishesFromFirestore(listOwnerId);
       } else {
-        items = await getSavedDishesFromFirestore(userId);
+        items = await getSavedDishesFromFirestore(listOwnerId);
       }
       items = items
         .slice()
@@ -264,11 +264,11 @@ export default function DishDetail() {
     }
   };
 
-  const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
-  const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
+  const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
+  const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
 
   const toggleEditTag = (tag) => {
     setEditTags((prev) => {

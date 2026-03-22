@@ -343,7 +343,7 @@ export default function Dishlists() {
                               }}
                           />
                         ) : (
-                          <div className="w-full h-full bg-neutral-200" />
+                          <div className="w-full h-full bg-white" />
                         )}
                       </div>
                     ))}

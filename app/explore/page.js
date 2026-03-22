@@ -70,6 +70,7 @@ export default function Explore() {
   const [trendingDishes, setTrendingDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState({});
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -85,26 +86,52 @@ export default function Explore() {
   }, []);
 
   const categoryRows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const basePool = term
+      ? allDishes.filter((dish) => {
+          const name = String(dish.name || "").toLowerCase();
+          const tags = Array.isArray(dish.tags) ? dish.tags.map((tag) => String(tag).toLowerCase()) : [];
+          return name.includes(term) || tags.some((tag) => tag.includes(term));
+        })
+      : allDishes;
     const rows = [];
-    const sortedBySaves = [...allDishes]
+    const sortedBySaves = [...basePool]
       .sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0))
       .slice(0, EXPANDED_LIMIT);
     rows.push({ key: "most-saved", title: "Most Saved", dishes: sortedBySaves });
-    rows.push({ key: "trending", title: "Trending Now", dishes: trendingDishes.slice(0, EXPANDED_LIMIT) });
+    const trendingPool = term
+      ? trendingDishes.filter((dish) => {
+          const name = String(dish.name || "").toLowerCase();
+          const tags = Array.isArray(dish.tags) ? dish.tags.map((tag) => String(tag).toLowerCase()) : [];
+          return name.includes(term) || tags.some((tag) => tag.includes(term));
+        })
+      : trendingDishes;
+    rows.push({ key: "trending", title: "Trending Now", dishes: trendingPool.slice(0, EXPANDED_LIMIT) });
 
     TAG_OPTIONS.forEach((tag) => {
-      const tagged = allDishes.filter((dish) =>
+      const tagged = basePool.filter((dish) =>
         Array.isArray(dish.tags) && dish.tags.some((dishTag) => String(dishTag).toLowerCase() === String(tag).toLowerCase())
       );
-      rows.push({ key: `tag-${tag}`, title: tag, dishes: tagged.slice(0, EXPANDED_LIMIT) });
+      rows.push({
+        key: `tag-${tag}`,
+        title: String(tag).replace(/\b\w/g, (char) => char.toUpperCase()),
+        dishes: tagged.slice(0, EXPANDED_LIMIT),
+      });
     });
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, trendingDishes]);
+  }, [allDishes, search, trendingDishes]);
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-5">Explore</h1>
+      <input
+        type="text"
+        placeholder="Search dishes or tags..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
+      />
       {loading ? (
         <div className="text-black/60">Loading categories...</div>
       ) : (

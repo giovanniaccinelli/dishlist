@@ -100,6 +100,22 @@ export default function StoryViewerModal({
 
   if (!open || !currentStory) return null;
 
+  const publishedAtLabel = (() => {
+    const raw = currentStory.createdAt;
+    let date = null;
+    if (raw?.toDate) date = raw.toDate();
+    else if (raw instanceof Date) date = raw;
+    else if (typeof raw?.seconds === "number") date = new Date(raw.seconds * 1000);
+    else if (typeof raw === "string" || typeof raw === "number") date = new Date(raw);
+    if (!date || Number.isNaN(date.getTime())) return "";
+    const diffMs = Date.now() - date.getTime();
+    const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+    if (diffHours < 1) return "Just now";
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  })();
+
   return (
     <AnimatePresence>
       <motion.div
@@ -136,18 +152,21 @@ export default function StoryViewerModal({
                   (currentGroup?.ownerName?.[0] || "U").toUpperCase()
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold truncate">{currentGroup?.ownerName || "User"}</div>
-                <div className="text-xs text-white/70 truncate">
-                  {groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story"}
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{currentGroup?.ownerName || "User"}</div>
+                  <div className="text-xs text-white/70 truncate">
+                    {publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
               {canDelete ? (
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
                   className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                   aria-label="Delete story"
                 >
@@ -156,7 +175,10 @@ export default function StoryViewerModal({
               ) : null}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose?.();
+                }}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                 aria-label="Close story"
               >
@@ -176,7 +198,10 @@ export default function StoryViewerModal({
             <div className="flex items-center justify-between mb-3">
               <button
                 type="button"
-                onClick={goPrev}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                 aria-label="Previous"
               >
@@ -184,7 +209,10 @@ export default function StoryViewerModal({
               </button>
               <button
                 type="button"
-                onClick={goNext}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
                 aria-label="Next"
               >

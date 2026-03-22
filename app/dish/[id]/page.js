@@ -541,7 +541,17 @@ export default function DishDetail() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${step <= editStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#2BD36B_48%,#FACC15_100%)]" : "w-7 bg-black/10"}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    step <= editStep
+                      ? step === 0
+                        ? "w-10 bg-[#FF7A59]"
+                        : step === 1
+                          ? "w-10 bg-[#4AB7D8]"
+                          : step === 2
+                            ? "w-10 bg-[#67C587]"
+                            : "w-10 bg-[#FFC15A]"
+                      : "w-7 bg-black/10"
+                  }`}
                   />
                 ))}
               </div>
@@ -563,7 +573,7 @@ export default function DishDetail() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Dish name"
-                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/40 text-base"
+                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/25 text-base"
                   disabled={savingEdit}
                 />
                 <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
@@ -582,7 +592,7 @@ export default function DishDetail() {
                     <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2BD36B_55%,#FACC15_100%)] text-white flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Change photo</div>
@@ -605,7 +615,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditDescription(e.target.value)}
                   placeholder="Description"
                   rows={4}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
                   disabled={savingEdit}
                 />
                 <div className="mb-3">
@@ -643,7 +653,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditRecipeIngredients(e.target.value)}
                   placeholder="Ingredients"
                   rows={4}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
                   disabled={savingEdit}
                 />
                 <textarea
@@ -651,7 +661,7 @@ export default function DishDetail() {
                   onChange={(e) => setEditRecipeMethod(e.target.value)}
                   placeholder="Method"
                   rows={5}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
                   disabled={savingEdit}
                 />
               </>
@@ -708,7 +718,7 @@ export default function DishDetail() {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#111111_0%,#1E8A4C_48%,#F59E0B_100%)] text-white font-semibold"
+                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#FF7A59_0%,#FF9F68_45%,#FFC15A_100%)] text-white font-semibold"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}
@@ -743,7 +753,7 @@ export default function DishDetail() {
                     <button
                       type="button"
                       onClick={goToNextEditStep}
-                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_52%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
+                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg"
                     >
                       <ArrowRight size={20} />
                     </button>
@@ -752,7 +762,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={goToNextEditStep}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2A2A2A_55%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg"
                   >
                     <ArrowRight size={20} />
                   </button>

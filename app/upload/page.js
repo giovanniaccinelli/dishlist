@@ -118,14 +118,8 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F6F2] text-black pb-24 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-20 -left-16 w-56 h-56 rounded-full bg-[#FFB15E]/35 blur-3xl" />
-        <div className="absolute top-20 right-[-4rem] w-64 h-64 rounded-full bg-[#7AD957]/20 blur-3xl" />
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-72 h-48 rounded-full bg-[#FF7A59]/15 blur-3xl" />
-      </div>
-
-      <div className="relative px-5 pt-6 pb-3 flex items-center justify-between">
+    <div className="min-h-screen bg-[#F6F6F2] text-black pb-24">
+      <div className="px-5 pt-6 pb-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-sm text-black/60">
           Cancel
         </button>
@@ -133,10 +127,10 @@ export default function UploadPage() {
         <div className="w-12" />
       </div>
 
-      <div className="relative px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
+      <div className="px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
         {showUploadForm ? (
           <motion.div
-            className="bg-[linear-gradient(180deg,#fff_0%,#fffdf8_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_24px_80px_rgba(0,0,0,0.12)] border border-white/70 my-4"
+            className="bg-white p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-black/8 my-4"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -145,11 +139,11 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 w-10 rounded-full ${step <= uploadStep ? "bg-gradient-to-r from-[#FF7A59] via-[#FFCC33] to-[#7AD957]" : "bg-black/10"}`}
+                    className={`h-1.5 rounded-full transition-all ${step <= uploadStep ? "w-10 bg-black" : "w-7 bg-black/10"}`}
                   />
                 ))}
               </div>
-              <div className="text-xs font-semibold tracking-[0.18em] uppercase text-black/35">
+              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
                 {uploadStep === 0 ? "Basics" : uploadStep === 1 ? "Details" : uploadStep === 2 ? "Recipe" : "Upload"}
               </div>
             </div>
@@ -157,10 +151,10 @@ export default function UploadPage() {
             {uploadStep === 0 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-[#FFF1DE] px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C96D28]">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 1
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name it. Show it.</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and cover</h2>
                 </div>
                 <input
                   type="text"
@@ -178,8 +172,8 @@ export default function UploadPage() {
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
                   className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${
-                    dragActive ? "border-black bg-[#FFF7EA]" : "border-black/15 bg-[linear-gradient(180deg,#FFF7EA_0%,#FFFDF8_100%)]"
-                  } flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden shadow-inner`}
+                    dragActive ? "border-black bg-black/[0.03]" : "border-black/15 bg-[#FBFAF7]"
+                  } flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}
                 >
                   <input
                     type="file"
@@ -192,10 +186,11 @@ export default function UploadPage() {
                     <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF7A59] to-[#FFCC33] text-black flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo</div>
+                      <div className="text-xs text-black/40">Optional</div>
                     </div>
                   )}
                 </div>
@@ -205,16 +200,16 @@ export default function UploadPage() {
             {uploadStep === 1 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-[#FFF1DE] px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C96D28]">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 2
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Give it a vibe.</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Description and tags</h2>
                 </div>
                 <textarea
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-5 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-5 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -243,14 +238,14 @@ export default function UploadPage() {
             {uploadStep === 2 ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-4xl font-black tracking-tight text-[#7AD957]/25 uppercase">Optional</div>
+                  <div className="text-4xl font-black tracking-tight text-black/10 uppercase">Optional</div>
                 </div>
-                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black">Recipe details</h2>
+                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
                   onChange={(e) => setDishRecipeIngredients(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -258,7 +253,7 @@ export default function UploadPage() {
                   placeholder="Method"
                   value={dishRecipeMethod}
                   onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  className="w-full p-4 rounded-[1.5rem] bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/15"
                   rows={5}
                   disabled={loadingUpload}
                 />
@@ -268,12 +263,12 @@ export default function UploadPage() {
             {uploadStep === 3 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-[#EAF8E2] px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#348B2C]">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Final Step
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Ready to upload</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review and upload</h2>
                 </div>
-                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F7F5EF_0%,#FFFDF8_100%)] border border-black/10 p-4 mb-5 shadow-inner">
+                <div className="rounded-[2rem] bg-[#F8F7F3] border border-black/10 p-4 mb-5">
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
                       {preview ? (
@@ -313,7 +308,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePost}
-                  className="w-full bg-gradient-to-r from-[#111111] via-[#272727] to-[#111111] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-xl"
+                  className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? "Uploading..." : "Upload dish"}
@@ -326,7 +321,7 @@ export default function UploadPage() {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-md"
+                  className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-sm"
                   disabled={loadingUpload}
                   aria-label="Previous step"
                 >
@@ -351,7 +346,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FF7A59] via-[#FFCC33] to-[#7AD957] text-black flex items-center justify-center shadow-[0_14px_30px_rgba(0,0,0,0.18)]"
+                    className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-lg"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >
@@ -367,35 +362,32 @@ export default function UploadPage() {
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="mb-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 backdrop-blur px-4 py-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-black/50 shadow-sm">
-                DishList Studio
-              </div>
-              <h2 className="mt-4 text-[2.8rem] leading-[0.9] font-semibold text-black">Add something worth saving.</h2>
+            <div className="mb-6 text-center">
+              <h2 className="text-[2.4rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
             </div>
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full rounded-[2.25rem] bg-[linear-gradient(135deg,#111111_0%,#1D1D1D_40%,#FF7A59_100%)] text-white px-6 py-7 text-left shadow-[0_30px_60px_rgba(0,0,0,0.18)] transition-transform hover:scale-[1.01] border border-white/10"
+                className="w-full rounded-[2rem] bg-white text-black px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.01] border border-black/10"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-3xl font-semibold leading-none">Upload dish</p>
-                    <p className="mt-3 text-sm text-white/70 max-w-[15rem]">Turn a home favorite into a post.</p>
+                    <p className="mt-3 text-sm text-black/55 max-w-[15rem]">Post a new dish to your DishList.</p>
                   </div>
-                  <div className="w-16 h-16 rounded-[1.4rem] bg-white/10 flex items-center justify-center border border-white/10">
+                  <div className="w-16 h-16 rounded-[1.4rem] bg-black text-white flex items-center justify-center">
                     <Plus size={32} />
                   </div>
                 </div>
               </button>
               <button
                 onClick={() => router.push("/dishes")}
-                className="w-full rounded-[2.25rem] border border-black/10 bg-[linear-gradient(135deg,#FFF8E9_0%,#F2F6E9_100%)] px-6 py-7 text-left shadow-[0_24px_50px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.01]"
+                className="w-full rounded-[2rem] border border-black/10 bg-[#ECE7DC] px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)] transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-3xl font-semibold leading-none text-black">Search dish</p>
-                    <p className="mt-3 text-sm text-black/60 max-w-[15rem]">Find it first if it already exists.</p>
+                    <p className="mt-3 text-sm text-black/60 max-w-[15rem]">See if it already exists.</p>
                   </div>
                   <div className="w-16 h-16 rounded-[1.4rem] bg-white/70 flex items-center justify-center border border-black/5">
                     <Search size={30} />

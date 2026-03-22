@@ -39,18 +39,21 @@ function StoryActionIcon() {
         stroke="currentColor"
         strokeWidth="2.8"
         strokeLinecap="round"
+        strokeOpacity="0.55"
       />
       <path
         d="M2.8 12.6C2.62 13.52 2.62 14.48 2.8 15.4"
         stroke="currentColor"
         strokeWidth="2.8"
         strokeLinecap="round"
+        strokeOpacity="0.72"
       />
       <path
         d="M4.1 19.05C5.04 20.56 6.41 21.76 8.02 22.5"
         stroke="currentColor"
         strokeWidth="2.8"
         strokeLinecap="round"
+        strokeOpacity="0.88"
       />
       <path
         d="M20.2 5.4C22.48 7.19 23.95 9.98 24.1 13.05"
@@ -257,7 +260,7 @@ export default function DishDetail() {
     }
   };
 
-  const canEditUploaded = source === "uploaded";
+  const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
 
@@ -448,7 +451,7 @@ export default function DishDetail() {
           disabled={editOpen}
           currentUser={user}
           onAction={
-            canEditUploaded
+            canManageOwnDish
               ? undefined
               : isPublicSource
                 ? handleAdd
@@ -456,16 +459,16 @@ export default function DishDetail() {
                   ? handleUpgrade
                   : handleRemove
           }
-          onSecondaryAction={canEditUploaded ? openEditModal : isToTrySource ? handleRemove : undefined}
-          onExtraAction={canEditUploaded ? handleAddToStory : undefined}
+          onSecondaryAction={canManageOwnDish ? openEditModal : isToTrySource ? handleRemove : undefined}
+          onExtraAction={canManageOwnDish ? handleAddToStory : undefined}
           onSavesPress={handleOpenSavers}
           onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
-          dismissOnAction={!canEditUploaded}
+          dismissOnAction={!canManageOwnDish}
           onAuthRequired={() => alert("Please sign in to comment.")}
           actionLabel={
-            canEditUploaded
+            canManageOwnDish
               ? undefined
               : isPublicSource
                 ? "+"
@@ -473,10 +476,10 @@ export default function DishDetail() {
                   ? "Upgrade to My DishList"
                   : "Remove"
           }
-          secondaryActionLabel={canEditUploaded ? "Edit" : isToTrySource ? "Discard" : undefined}
-          extraActionLabel={canEditUploaded ? <StoryActionIcon /> : undefined}
+          secondaryActionLabel={canManageOwnDish ? "Edit" : isToTrySource ? "Discard" : undefined}
+          extraActionLabel={canManageOwnDish ? <StoryActionIcon /> : undefined}
           actionClassName={
-            canEditUploaded
+            canManageOwnDish
               ? undefined
               : isPublicSource
                 ? "add-action-btn w-14 h-14"
@@ -485,19 +488,19 @@ export default function DishDetail() {
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
-            canEditUploaded
+            canManageOwnDish
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isToTrySource
               ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
               : undefined
           }
           extraActionClassName={
-            canEditUploaded
-              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border-2 border-[#2BD36B]/70 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
+            canManageOwnDish
+              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
               : undefined
           }
           actionToast={
-            canEditUploaded
+            canManageOwnDish
               ? undefined
               : isPublicSource
                 ? "ADDING TO YOUR DISHLIST"

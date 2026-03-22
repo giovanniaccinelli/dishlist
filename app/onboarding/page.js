@@ -135,10 +135,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full rounded-[1.8rem] bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.14)]"
+                  className="w-full rounded-[1.8rem] bg-[linear-gradient(135deg,#F7E6C7_0%,#FFF6E6_100%)] text-black px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.08)] border border-[#E8D2A4]"
                 >
-                  <p className="text-2xl font-semibold leading-none">Got any in mind?</p>
-                  <p className="mt-3 text-sm text-white/70">
+                  <p className="text-2xl font-semibold leading-none">Already know a few?</p>
+                  <p className="mt-3 text-sm text-black/60">
                     Start by adding three dishes you already know you want in your DishList.
                   </p>
                 </button>
@@ -150,14 +150,14 @@ export default function Onboarding() {
                 >
                   <p className="text-2xl font-semibold leading-none">Swipe on the feed</p>
                   <p className="mt-3 text-sm text-black/65">
-                    Browse first. After your third save, we ask you to create the profile.
+                    Start swiping right away. After your third save, we ask you to create the profile.
                   </p>
                 </button>
               </div>
 
               <button
                 onClick={handleSkip}
-                className="mt-6 w-full rounded-2xl border border-black/10 bg-white/80 px-5 py-4 text-base font-semibold text-black/75 hover:text-black shadow-sm"
+                className="mt-6 w-full rounded-2xl border border-[#E8D2A4] bg-[linear-gradient(135deg,#FFF7E8_0%,#FFF0D4_100%)] px-5 py-4 text-base font-semibold text-black/75 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>
@@ -170,7 +170,7 @@ export default function Onboarding() {
                     <span
                       key={bar}
                       className={`h-1.5 rounded-full transition-all ${
-                        bar < step ? "w-10 bg-black" : "w-7 bg-black/10"
+                        bar < step ? (bar == 0 ? "w-10 bg-[#E85D75]" : bar == 1 ? "w-10 bg-[#F59E0B]" : "w-10 bg-[#2BD36B]") : "w-7 bg-black/10"
                       }`}
                     />
                   ))}
@@ -182,7 +182,7 @@ export default function Onboarding() {
 
               <div className="mb-5">
                 <h2 className="text-[2rem] leading-none font-semibold mt-1 text-black">
-                  Add a dish name
+                  Name a dish
                 </h2>
                 <p className="mt-3 text-sm text-black/60">You can add an image later.</p>
               </div>
@@ -199,7 +199,7 @@ export default function Onboarding() {
                   });
                 }}
                 placeholder={`Dish ${step}`}
-                className="w-full p-4 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-black/15"
+                className="w-full p-4 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20"
               />
 
               <div className="mt-6">
@@ -217,9 +217,9 @@ export default function Onboarding() {
                           return next;
                         });
                       }}
-                      className="overflow-hidden rounded-2xl bg-white/80 border border-black/8 shadow-sm text-left"
+                      className="overflow-hidden rounded-[1.4rem] bg-white/85 border border-black/8 shadow-sm text-left"
                     >
-                      <div className="aspect-square overflow-hidden">
+                      <div className="aspect-[0.85] overflow-hidden">
                         <img
                           src={getDishImageUrl(dish)}
                           alt={dish.name}
@@ -254,7 +254,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={handleContinueName}
                     disabled={!currentName.trim()}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#E85D75_0%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
                     aria-label="Continue"
                   >
                     <ArrowRight size={22} />
@@ -264,7 +264,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={persistNamesAndEnter}
                     disabled={trimmedNames.length !== 3}
-                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
+                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#E85D75_0%,#F59E0B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
                   >
                     Enter DishList
                   </button>

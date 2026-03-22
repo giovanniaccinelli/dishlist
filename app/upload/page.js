@@ -175,7 +175,7 @@ export default function UploadPage() {
                           : step === 1
                             ? "w-10 bg-[#2BD36B]"
                             : step === 2
-                              ? "w-10 bg-[#111111]"
+                              ? "w-10 bg-[#7C5CFA]"
                               : "w-10 bg-[#E85D75]"
                         : "w-7 bg-black/10"
                     }`}
@@ -202,7 +202,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
-                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/40 text-base"
+                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/25 text-base"
                   disabled={loadingUpload}
                 />
                 <div
@@ -227,7 +227,7 @@ export default function UploadPage() {
                     <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#E85D75_0%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg">
+                        <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#44C97A_0%,#2BD36B_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo</div>
@@ -252,7 +252,7 @@ export default function UploadPage() {
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]/20"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -288,7 +288,7 @@ export default function UploadPage() {
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
                   onChange={(e) => setDishRecipeIngredients(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]/20"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -296,7 +296,7 @@ export default function UploadPage() {
                   placeholder="Method"
                   value={dishRecipeMethod}
                   onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FACC15]/35"
+                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]/20"
                   rows={5}
                   disabled={loadingUpload}
                 />
@@ -353,7 +353,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePost}
-                  className="w-full bg-[linear-gradient(90deg,#111111_0%,#2B2B2B_55%,#111111_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
+                  className="w-full bg-[linear-gradient(90deg,#E85D75_0%,#F59E0B_55%,#FACC15_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}

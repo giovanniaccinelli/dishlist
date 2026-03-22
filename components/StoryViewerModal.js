@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Trash2, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
 export default function StoryViewerModal({
@@ -17,6 +18,7 @@ export default function StoryViewerModal({
   onDelete,
   initialGroupIndex = 0,
 }) {
+  const router = useRouter();
   const groups = useMemo(() => {
     if (Array.isArray(storyGroups) && storyGroups.length > 0) {
       return storyGroups
@@ -43,6 +45,7 @@ export default function StoryViewerModal({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [groupFlash, setGroupFlash] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -66,6 +69,7 @@ export default function StoryViewerModal({
       return;
     }
     if (groupIndex < groups.length - 1) {
+      setGroupFlash(groups[groupIndex + 1]?.ownerName || "Next");
       setGroupIndex((prev) => prev + 1);
       setStoryIndex(0);
       return;
@@ -81,10 +85,17 @@ export default function StoryViewerModal({
     }
     if (groupIndex > 0) {
       const previousGroup = groups[groupIndex - 1];
+      setGroupFlash(previousGroup?.ownerName || "Previous");
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(Math.max((previousGroup?.stories?.length || 1) - 1, 0));
     }
   };
+
+  useEffect(() => {
+    if (!groupFlash) return;
+    const timeout = setTimeout(() => setGroupFlash(""), 700);
+    return () => clearTimeout(timeout);
+  }, [groupFlash]);
 
   const handleDelete = async () => {
     if (!currentStory?.id || !onDelete) return;
@@ -99,6 +110,13 @@ export default function StoryViewerModal({
   };
 
   if (!open || !currentStory) return null;
+
+  const openDish = () => {
+    const storyDishId = currentStory.dishId || currentStory.id;
+    if (!storyDishId) return;
+    onClose?.();
+    router.push(`/dish/${storyDishId}?source=public&mode=single`);
+  };
 
   const publishedAtLabel = (() => {
     const raw = currentStory.createdAt;
@@ -143,7 +161,20 @@ export default function StoryViewerModal({
             ))}
           </div>
 
-          <div className="absolute top-8 left-4 right-4 z-40 flex items-center justify-between text-white">
+          {groups.length > 1 ? (
+            <div className="absolute top-16 left-4 right-4 z-40 flex items-center justify-center gap-2">
+              {groups.map((group, idx) => (
+                <div
+                  key={`${group.ownerId}-${idx}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    idx === groupIndex ? "w-12 bg-white" : "w-5 bg-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          <div className="absolute top-10 left-4 right-4 z-40 flex items-center justify-between text-white">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center font-semibold">
                 {currentGroup?.ownerPhotoURL ? (
@@ -202,31 +233,19 @@ export default function StoryViewerModal({
             <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 z-40 p-5 text-white">
-            <div className="flex items-center justify-between mb-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goPrev();
-                }}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-                aria-label="Previous"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goNext();
-                }}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-                aria-label="Next"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+          {groupFlash ? (
+            <motion.div
+              key={groupFlash}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-white/18 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md"
+            >
+              {groupFlash}
+            </motion.div>
+          ) : null}
+
+          <div className="absolute bottom-16 left-0 right-0 z-40 p-5 text-white">
             <h2 className="text-2xl font-bold leading-tight">
               {currentStory.name || "Untitled dish"}
             </h2>
@@ -235,6 +254,22 @@ export default function StoryViewerModal({
                 {currentStory.description}
               </p>
             ) : null}
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openDish();
+                }}
+                className="rounded-full bg-white/14 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md border border-white/15"
+              >
+                More
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -208,29 +208,33 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <div className="mb-5 flex justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => setProfileTab("my")}
-          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
-            profileTab === "my"
-              ? "bg-[#2BD36B] border-[#2BD36B] text-black"
-              : "bg-white border-black/15 text-black/60"
-          }`}
-        >
-          DishList
-        </button>
-        <button
-          type="button"
-          onClick={() => setProfileTab("totry")}
-          className={`px-5 py-2 rounded-full text-sm font-semibold border ${
-            profileTab === "totry"
-              ? "bg-[#FACC15] border-[#FACC15] text-black"
-              : "bg-white border-black/15 text-black/60"
-          }`}
-        >
-          To Try
-        </button>
+      <div className="mb-5 flex justify-center">
+        <div className="relative flex items-end gap-10 border-b border-black/12">
+          <button
+            type="button"
+            onClick={() => setProfileTab("my")}
+            className={`relative pb-2 text-sm font-semibold transition ${
+              profileTab === "my" ? "text-black" : "text-black/45"
+            }`}
+          >
+            DishList
+            {profileTab === "my" ? (
+              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#2BD36B]" />
+            ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={() => setProfileTab("totry")}
+            className={`relative pb-2 text-sm font-semibold transition ${
+              profileTab === "totry" ? "text-black" : "text-black/45"
+            }`}
+          >
+            To Try
+            {profileTab === "totry" ? (
+              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#FACC15]" />
+            ) : null}
+          </button>
+        </div>
       </div>
 
       {profileTab === "my" ? (

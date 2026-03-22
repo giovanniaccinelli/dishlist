@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CircleUserRound, Send } from "lucide-react";
+import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS } from "../lib/tags";
@@ -66,6 +67,7 @@ function DishStrip({ title, dishes, expanded, onToggle }) {
 }
 
 export default function Explore() {
+  const { user } = useAuth();
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +126,25 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <h1 className="text-3xl font-bold mb-5">Explore</h1>
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Explore</h1>
+        <div className="flex items-center gap-2">
+          <Link
+            href={user ? "/directs" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open directs"
+          >
+            <Send size={18} />
+          </Link>
+          <Link
+            href={user ? "/profile" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open profile"
+          >
+            <CircleUserRound size={18} />
+          </Link>
+        </div>
+      </div>
       <input
         type="text"
         placeholder="Search dishes or tags..."

@@ -45,7 +45,7 @@ export default function StoryViewerModal({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
-  const [groupFlash, setGroupFlash] = useState("");
+  const [groupTransition, setGroupTransition] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +69,7 @@ export default function StoryViewerModal({
       return;
     }
     if (groupIndex < groups.length - 1) {
-      setGroupFlash(groups[groupIndex + 1]?.ownerName || "Next");
+      setGroupTransition((prev) => prev + 1);
       setGroupIndex((prev) => prev + 1);
       setStoryIndex(0);
       return;
@@ -85,17 +85,11 @@ export default function StoryViewerModal({
     }
     if (groupIndex > 0) {
       const previousGroup = groups[groupIndex - 1];
-      setGroupFlash(previousGroup?.ownerName || "Previous");
+      if (previousGroup) setGroupTransition((prev) => prev + 1);
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(Math.max((previousGroup?.stories?.length || 1) - 1, 0));
     }
   };
-
-  useEffect(() => {
-    if (!groupFlash) return;
-    const timeout = setTimeout(() => setGroupFlash(""), 700);
-    return () => clearTimeout(timeout);
-  }, [groupFlash]);
 
   const handleDelete = async () => {
     if (!currentStory?.id || !onDelete) return;
@@ -142,16 +136,38 @@ export default function StoryViewerModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <div className="relative w-screen h-screen overflow-hidden bg-black">
-          <img
-            src={getDishImageUrl(currentStory)}
-            alt={currentStory.name || "Story"}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = DEFAULT_DISH_IMAGE;
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
+        <motion.div
+          className="relative w-screen h-screen overflow-hidden bg-black"
+          drag="y"
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={0.15}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 120 || info.velocity.y > 700) onClose?.();
+          }}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          <motion.div
+            key={`${currentGroup?.ownerId || "group"}-${groupTransition}-${currentStory?.id || "story"}`}
+            className="absolute inset-0"
+            style={{ transformStyle: "preserve-3d" }}
+            initial={{ rotateY: 0, opacity: 1 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            exit={{ opacity: 1 }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.img
+              src={getDishImageUrl(currentStory)}
+              alt={currentStory.name || "Story"}
+              className="w-full h-full object-cover"
+              initial={groupTransition ? { rotateY: 90, opacity: 0.55, scale: 0.98 } : { opacity: 1 }}
+              animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_DISH_IMAGE;
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
+          </motion.div>
 
           <div className="absolute top-4 left-4 right-4 z-40 flex gap-1">
             {currentStories.map((story, idx) => (
@@ -220,19 +236,6 @@ export default function StoryViewerModal({
             <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
           </div>
 
-          {groupFlash ? (
-            <motion.div
-              key={groupFlash}
-              initial={{ opacity: 0, rotateX: -90, scale: 0.92 }}
-              animate={{ opacity: 1, rotateX: 0, scale: 1 }}
-              exit={{ opacity: 0, rotateX: 90, scale: 0.96 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              className="absolute top-20 left-1/2 z-40 -translate-x-1/2 rounded-[1.1rem] bg-white/18 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md [transform-style:preserve-3d]"
-            >
-              {groupFlash}
-            </motion.div>
-          ) : null}
-
           <div className="absolute bottom-24 left-0 right-0 z-40 p-5 text-white">
             <h2 className="text-2xl font-bold leading-tight">
               {currentStory.name || "Untitled dish"}
@@ -259,7 +262,7 @@ export default function StoryViewerModal({
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

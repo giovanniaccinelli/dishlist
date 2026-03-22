@@ -474,7 +474,7 @@ export default function Dishes() {
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => setFilteredLimit((prev) => prev + DISHES_PAGE_SIZE)}
-            className="bg-black text-white px-6 py-3 rounded-full font-semibold"
+            className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm"
           >
             Load More
           </button>
@@ -486,7 +486,7 @@ export default function Dishes() {
           <button
             onClick={fetchMoreDishes}
             disabled={loadingMore}
-            className="bg-black text-white px-6 py-3 rounded-full font-semibold disabled:opacity-60"
+            className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm disabled:opacity-60"
           >
             {loadingMore ? "Loading..." : "Load More"}
           </button>

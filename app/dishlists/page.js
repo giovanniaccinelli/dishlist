@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
 import StoryViewerModal from "../../components/StoryViewerModal";
@@ -19,6 +20,7 @@ import {
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { CircleUserRound, Send } from "lucide-react";
 
 const INITIAL_USERS_LIMIT = 10;
 
@@ -228,7 +230,25 @@ export default function Dishlists() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <h1 className="text-3xl font-bold mb-4">Dishlists</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Dishlists</h1>
+        <div className="flex items-center gap-2">
+          <Link
+            href={user ? "/directs" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open directs"
+          >
+            <Send size={18} />
+          </Link>
+          <Link
+            href={user ? "/profile" : "/?auth=1"}
+            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            aria-label="Open profile"
+          >
+            <CircleUserRound size={18} />
+          </Link>
+        </div>
+      </div>
       <input
         type="text"
         placeholder="Search users..."
@@ -359,8 +379,8 @@ export default function Dishlists() {
                         }}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                           alreadyFollowing
-                            ? "bg-white/80 text-black border-black/10"
-                            : "bg-[#F3F0E8] text-black border-[#D9D0C0]"
+                            ? "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                            : "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                         }`}
                       >
                         {alreadyFollowing ? "Unfollow" : "Follow"}
@@ -377,7 +397,7 @@ export default function Dishlists() {
               <button
                 onClick={loadMoreUsers}
                 disabled={loadingMoreUsers}
-                className="bg-white/75 text-black px-6 py-3 rounded-full font-semibold border border-black/10 shadow-sm disabled:opacity-60"
+                className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm disabled:opacity-60"
               >
                 {loadingMoreUsers ? "Loading..." : "Load More"}
               </button>

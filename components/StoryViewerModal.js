@@ -135,7 +135,7 @@ export default function StoryViewerModal({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
 
-          <div className="absolute top-4 left-4 right-4 flex gap-1">
+          <div className="absolute top-4 left-4 right-4 z-40 flex gap-1">
             {currentStories.map((story, idx) => (
               <div key={story.id || idx} className="h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
                 <div className={`h-full rounded-full ${idx <= storyIndex ? "bg-white" : "bg-transparent"}`} />
@@ -143,7 +143,7 @@ export default function StoryViewerModal({
             ))}
           </div>
 
-          <div className="absolute top-8 left-4 right-4 flex items-center justify-between text-white">
+          <div className="absolute top-8 left-4 right-4 z-40 flex items-center justify-between text-white">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center font-semibold">
                 {currentGroup?.ownerPhotoURL ? (
@@ -187,14 +187,14 @@ export default function StoryViewerModal({
             </div>
           </div>
 
-          <div className="absolute left-0 top-0 bottom-0 w-1/3">
+          <div className="absolute left-0 top-0 bottom-0 z-10 w-1/3">
             <button type="button" className="w-full h-full" onClick={goPrev} aria-label="Previous story" />
           </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/3">
+          <div className="absolute right-0 top-0 bottom-0 z-10 w-1/3">
             <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+          <div className="absolute bottom-0 left-0 right-0 z-40 p-5 text-white">
             <div className="flex items-center justify-between mb-3">
               <button
                 type="button"

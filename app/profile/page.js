@@ -20,6 +20,8 @@ import {
   getActiveStoriesForUser,
   markStoryViewed,
   deleteStory,
+  removeDishFromToTry,
+  removeSavedDishFromUser,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
@@ -230,6 +232,22 @@ export default function Profile() {
     setSavedDishes(refreshedSaved);
   };
 
+  const handleRemoveSavedDish = async (dish) => {
+    if (!confirm("Remove this dish from your DishList?")) return;
+    const ok = await removeSavedDishFromUser(user.uid, dish.id);
+    if (!ok) return;
+    const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
+    setSavedDishes(refreshedSaved);
+  };
+
+  const handleRemoveToTryDish = async (dish) => {
+    if (!confirm("Remove this dish from To Try?")) return;
+    const ok = await removeDishFromToTry(user.uid, dish.id);
+    if (!ok) return;
+    const refreshed = await getToTryDishesFromFirestore(user.uid);
+    setToTryDishes(refreshed);
+  };
+
   const handleEditProfile = async () => {
     try {
       const currentPhotoURL = profileMeta.photoURL || user?.photoURL || "";
@@ -339,7 +357,7 @@ export default function Profile() {
     );
   }
 
-  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true }) => (
+  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true, onRemovePreview }) => (
     <>
       {showHeader && title ? (
         <div className="flex items-center justify-between mt-8 mb-4">
@@ -404,9 +422,17 @@ export default function Profile() {
                   saves: {Number(dish.saves || 0)}
                 </button>
                 </div>
-                {allowDelete && (
+                {(allowDelete || onRemovePreview) && (
                   <button
-                    onClick={() => handleDeleteDish(dish)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (onRemovePreview) {
+                        onRemovePreview(dish);
+                      } else {
+                        handleDeleteDish(dish);
+                      }
+                    }}
                     className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
                   >
                     Remove
@@ -576,7 +602,13 @@ export default function Profile() {
       {profileTab === "my" ? (
         <>
           <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
-          <DishGrid title="Saved" dishes={savedDishes} allowDelete={false} source="saved" />
+          <DishGrid
+            title="Saved"
+            dishes={savedDishes}
+            allowDelete={false}
+            source="saved"
+            onRemovePreview={handleRemoveSavedDish}
+          />
         </>
       ) : (
         <>
@@ -598,9 +630,9 @@ export default function Profile() {
             ) : (
               <AnimatePresence>
                 {toTryDishes.map((dish, index) => (
-                  <motion.div
-                    key={`${dish.id}-${index}`}
-                    className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative"
+                <motion.div
+                  key={`${dish.id}-${index}`}
+                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -639,6 +671,16 @@ export default function Profile() {
                         </div>
                       )}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemoveToTryDish(dish);
+                      }}
+                      className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
+                    >
+                      Remove
+                    </button>
                   </motion.div>
                 ))}
               </AnimatePresence>

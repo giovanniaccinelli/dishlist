@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Camera } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
@@ -107,6 +108,7 @@ export default function DishDetail() {
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
+  const [editStep, setEditStep] = useState(0);
   const [savingEdit, setSavingEdit] = useState(false);
   const [pageToast, setPageToast] = useState("");
   const [saversOpen, setSaversOpen] = useState(false);
@@ -263,6 +265,7 @@ export default function DishDetail() {
   const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
+  const isSavedSource = source === "saved";
 
   const toggleEditTag = (tag) => {
     setEditTags((prev) => {
@@ -273,7 +276,7 @@ export default function DishDetail() {
   };
 
   const openEditModal = (dishToEdit) => {
-    if (!canEditUploaded || dishToEdit?.owner !== userId) return;
+    if (!dishToEdit || dishToEdit?.owner !== userId) return;
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
@@ -294,6 +297,7 @@ export default function DishDetail() {
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
     );
+    setEditStep(0);
     setEditOpen(true);
   };
 
@@ -412,6 +416,18 @@ export default function DishDetail() {
     return ok;
   };
 
+  const goToNextEditStep = () => {
+    if (editStep === 0 && !editName.trim()) {
+      alert("Dish name is required.");
+      return;
+    }
+    setEditStep((prev) => Math.min(prev + 1, 3));
+  };
+
+  const goToPreviousEditStep = () => {
+    setEditStep((prev) => Math.max(prev - 1, 0));
+  };
+
   if (loading || loadingDish) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
@@ -451,57 +467,49 @@ export default function DishDetail() {
           disabled={editOpen}
           currentUser={user}
           onAction={
-            canManageOwnDish
+            canManageOwnDish || isSavedSource || isToTrySource
               ? handleAddToStory
               : isPublicSource
                 ? handleAdd
-                : isToTrySource
-                  ? handleUpgrade
-                  : handleRemove
+                : handleRemove
           }
-          onSecondaryAction={canManageOwnDish ? openEditModal : isToTrySource ? handleRemove : undefined}
+          onSecondaryAction={canManageOwnDish ? openEditModal : isToTrySource ? handleUpgrade : undefined}
           onSavesPress={handleOpenSavers}
           onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
           actionOnRightSwipe={!isPublicSource}
-          dismissOnAction={!canManageOwnDish}
+          dismissOnAction={isPublicSource}
           onAuthRequired={() => alert("Please sign in to comment.")}
           actionLabel={
-            canManageOwnDish
+            canManageOwnDish || isSavedSource || isToTrySource
               ? <StoryActionIcon />
               : isPublicSource
                 ? "+"
-                : isToTrySource
-                  ? "Upgrade to My DishList"
-                  : "Remove"
+                : "Remove"
           }
-          secondaryActionLabel={canManageOwnDish ? "Edit" : isToTrySource ? "Discard" : undefined}
+          secondaryActionLabel={canManageOwnDish ? "Edit" : isToTrySource ? "Upgrade to My DishList" : undefined}
           actionClassName={
-            canManageOwnDish
+            canManageOwnDish || isSavedSource || isToTrySource
               ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
               : isPublicSource
                 ? "add-action-btn w-14 h-14"
-                : isToTrySource
-                  ? "px-4 py-2 rounded-full bg-[#8BCF9D] text-black text-sm font-semibold shadow-lg"
-                  : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
+                : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
           }
           secondaryActionClassName={
             canManageOwnDish
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isToTrySource
-              ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
+              ? "px-4 py-2 rounded-full bg-white/92 text-black border border-white/80 text-sm font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
               : undefined
           }
           actionToast={
-            canManageOwnDish
+            canManageOwnDish || isSavedSource || isToTrySource
               ? undefined
               : isPublicSource
                 ? "ADDING TO YOUR DISHLIST"
-                : isToTrySource
-                  ? "ADDED TO MY DISHLIST"
-                  : "Removed"
+                : "Removed"
           }
-          secondaryActionToast={isToTrySource ? "REMOVED FROM TO TRY" : undefined}
+          secondaryActionToast={isToTrySource ? "ADDED TO MY DISHLIST" : undefined}
           trackSwipes={false}
           onResetFeed={handleResetDeck}
         />
@@ -514,114 +522,230 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6">
-            <h2 className="text-xl font-semibold mb-4">Edit Dish</h2>
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Dish name"
-              className="w-full p-3 rounded-full bg-[#F6F6F2] border border-black/10 mb-3"
-              disabled={savingEdit}
-            />
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Description"
-              rows={3}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
-              disabled={savingEdit}
-            />
-            <textarea
-              value={editRecipeIngredients}
-              onChange={(e) => setEditRecipeIngredients(e.target.value)}
-              placeholder="Recipe ingredients"
-              rows={3}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
-              disabled={savingEdit}
-            />
-            <textarea
-              value={editRecipeMethod}
-              onChange={(e) => setEditRecipeMethod(e.target.value)}
-              placeholder="Recipe method"
-              rows={4}
-              className="w-full p-3 rounded-2xl bg-[#F6F6F2] border border-black/10 mb-3"
-              disabled={savingEdit}
-            />
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-black">Tags</p>
-                <p className="text-xs text-black/60">{editTags.length}/6</p>
+          <div className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E8DCCA] my-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex gap-2">
+                {[0, 1, 2, 3].map((step) => (
+                  <span
+                    key={step}
+                    className={`h-1.5 rounded-full transition-all ${step <= editStep ? "w-10 bg-[linear-gradient(90deg,#111111_0%,#FFB15E_100%)]" : "w-7 bg-black/10"}`}
+                  />
+                ))}
               </div>
-              <div className="flex flex-wrap gap-2">
-                {TAG_OPTIONS.map((tag) => {
-                  const active = editTags.includes(tag);
-                  return (
+              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
+                {editStep === 0 ? "Basics" : editStep === 1 ? "Details" : editStep === 2 ? "Recipe" : "Review"}
+              </div>
+            </div>
+
+            {editStep === 0 ? (
+              <>
+                <div className="mb-4">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
+                    Step 1
+                  </div>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and cover</h2>
+                </div>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Dish name"
+                  className="w-full p-4 rounded-full bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/40 text-base"
+                  disabled={savingEdit}
+                />
+                <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF8E9_0%,#FFFDF8_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setEditImageFile(file);
+                      if (file) setEditPreview(URL.createObjectURL(file));
+                    }}
+                    className="absolute opacity-0 w-full h-full cursor-pointer"
+                    disabled={savingEdit}
+                  />
+                  {editPreview ? (
+                    <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2B2B2B_50%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg">
+                        <Camera size={28} />
+                      </div>
+                      <div className="text-sm font-medium">Change photo</div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
+
+            {editStep === 1 ? (
+              <>
+                <div className="mb-4">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
+                    Step 2
+                  </div>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Description and tags</h2>
+                </div>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Description"
+                  rows={4}
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-5 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  disabled={savingEdit}
+                />
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-black">Tags</p>
+                    <p className="text-xs text-black/60">{editTags.length}/6</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {TAG_OPTIONS.map((tag) => {
+                      const active = editTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleEditTag(tag)}
+                          className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : null}
+
+            {editStep === 2 ? (
+              <>
+                <div className="mb-4 text-center">
+                  <div className="text-4xl font-black tracking-tight text-[#7AD957]/25 uppercase">Optional</div>
+                </div>
+                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
+                <textarea
+                  value={editRecipeIngredients}
+                  onChange={(e) => setEditRecipeIngredients(e.target.value)}
+                  placeholder="Ingredients"
+                  rows={4}
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  disabled={savingEdit}
+                />
+                <textarea
+                  value={editRecipeMethod}
+                  onChange={(e) => setEditRecipeMethod(e.target.value)}
+                  placeholder="Method"
+                  rows={5}
+                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-4 border border-[#DCCEB8] focus:outline-none focus:ring-2 focus:ring-[#FFB15E]/35"
+                  disabled={savingEdit}
+                />
+              </>
+            ) : null}
+
+            {editStep === 3 ? (
+              <>
+                <div className="mb-4">
+                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
+                    Final Step
+                  </div>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review changes</h2>
+                </div>
+                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F8F7F3_0%,#FFF5E4_100%)] border border-[#DCCEB8] p-4 mb-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
+                      <img
+                        src={editPreview || getDishImageUrl(editingDish)}
+                        alt={editName || "Dish preview"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold leading-tight">{editName || "Untitled dish"}</h3>
+                      <p className="text-sm text-black/65 mt-1 line-clamp-3">
+                        {editDescription || "No description"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 mb-5 text-sm font-medium text-black">
+                  <input
+                    type="checkbox"
+                    checked={editIsPublic}
+                    onChange={(e) => setEditIsPublic(e.target.checked)}
+                    disabled={savingEdit}
+                  />
+                  Public dish (visible in feed)
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDeleteEditedDish}
+                    className="py-3 px-4 rounded-full bg-red-500 text-white font-semibold"
+                    disabled={savingEdit}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setEditOpen(false)}
+                    className="flex-1 py-3 rounded-full border border-black/20"
+                    disabled={savingEdit}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#111111_0%,#2A2A2A_45%,#FFB15E_100%)] text-white font-semibold"
+                    disabled={savingEdit}
+                  >
+                    {savingEdit ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {editStep < 3 ? (
+              <div className="mt-2 flex items-center justify-between">
+                {editStep > 0 ? (
+                  <button
+                    type="button"
+                    onClick={goToPreviousEditStep}
+                    className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-sm"
+                    disabled={savingEdit}
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
+                ) : (
+                  <div />
+                )}
+                {editStep === 2 ? (
+                  <div className="flex items-center gap-2">
                     <button
-                      key={tag}
                       type="button"
-                      onClick={() => toggleEditTag(tag)}
-                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
+                      onClick={() => setEditStep(3)}
+                      className="px-4 py-2 rounded-full border border-black/20 text-sm font-medium"
                     >
-                      {tag}
+                      Skip
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      onClick={goToNextEditStep}
+                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2A2A2A_55%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg"
+                    >
+                      <ArrowRight size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={goToNextEditStep}
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#2A2A2A_55%,#FFB15E_100%)] text-white flex items-center justify-center shadow-lg"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                )}
               </div>
-            </div>
-            <label className="flex items-center gap-2 mb-3 text-sm font-medium text-black">
-              <input
-                type="checkbox"
-                checked={editIsPublic}
-                onChange={(e) => setEditIsPublic(e.target.checked)}
-                disabled={savingEdit}
-              />
-              Public dish (visible in feed)
-            </label>
-            <label className="block text-sm font-medium mb-2">Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setEditImageFile(file);
-                if (file) setEditPreview(URL.createObjectURL(file));
-              }}
-              className="w-full mb-3"
-              disabled={savingEdit}
-            />
-            {editPreview ? (
-              <img src={editPreview} alt="Edit preview" className="w-full h-40 object-cover rounded-xl mb-4" />
-            ) : (
-              <img
-                src={getDishImageUrl(editingDish)}
-                alt="Edit preview"
-                className="w-full h-40 object-cover rounded-xl mb-4"
-              />
-            )}
-            <div className="flex gap-3">
-              <button
-                onClick={handleDeleteEditedDish}
-                className="py-3 px-4 rounded-full bg-red-500 text-white font-semibold"
-                disabled={savingEdit}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => setEditOpen(false)}
-                className="flex-1 py-3 rounded-full border border-black/20"
-                disabled={savingEdit}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="flex-1 py-3 rounded-full bg-black text-white font-semibold"
-                disabled={savingEdit}
-              >
-                {savingEdit ? "Saving..." : "Save"}
-              </button>
-            </div>
+            ) : null}
           </div>
         </div>
       )}

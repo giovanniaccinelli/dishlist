@@ -14,6 +14,7 @@ import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 
 const DISHES_PAGE_SIZE = 24;
@@ -397,8 +398,7 @@ export default function Dishes() {
       ) : (
         <div className="grid grid-cols-3 gap-3">
           {visibleDishes.map((dish, index) => {
-            const imageSrc =
-              dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
+            const imageSrc = getDishImageUrl(dish);
             return (
               <div
                 key={`${dish.id}-${index}`}
@@ -407,21 +407,15 @@ export default function Dishes() {
                 <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
                   <span className="sr-only">Open dish card</span>
                 </Link>
-                {imageSrc ? (
-                  <img
-                    src={imageSrc}
-                    alt={dish.name}
-                    className="w-full h-28 object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = "/file.svg";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                    No image
-                  </div>
-                )}
+                <img
+                  src={imageSrc}
+                  alt={dish.name}
+                  className="w-full h-28 object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
                 <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}

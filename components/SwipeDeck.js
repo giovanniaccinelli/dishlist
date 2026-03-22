@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
 export default function SwipeDeck({
   dishes,
@@ -299,21 +300,14 @@ export default function SwipeDeck({
   };
 
   const renderImage = (dish) => {
-    const imageSrc = dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-    if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-gray-500">
-          No image available
-        </div>
-      );
-    }
+    const imageSrc = getDishImageUrl(dish);
     return (
       <img
         src={imageSrc}
         alt={dish.name}
         className="w-full h-full object-cover"
         onError={(e) => {
-          e.currentTarget.src = "/file.svg";
+          e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
     );

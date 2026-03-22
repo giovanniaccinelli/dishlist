@@ -8,6 +8,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
+import { getDishImageUrl } from "../../lib/dishImage";
 import {
   addDishToToTryList,
   deleteDishAndImage,
@@ -525,9 +526,11 @@ export default function DishDetail() {
             {editPreview ? (
               <img src={editPreview} alt="Edit preview" className="w-full h-40 object-cover rounded-xl mb-4" />
             ) : (
-              <div className="w-full h-40 rounded-xl mb-4 bg-neutral-200 flex items-center justify-center text-gray-500">
-                No image
-              </div>
+              <img
+                src={getDishImageUrl(editingDish)}
+                alt="Edit preview"
+                className="w-full h-40 object-cover rounded-xl mb-4"
+              />
             )}
             <div className="flex gap-3">
               <button

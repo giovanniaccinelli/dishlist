@@ -24,6 +24,7 @@ import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, deleteField } from "firebase/firestore";
 import { Plus, Settings, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 
 export default function Profile() {
@@ -343,22 +344,14 @@ export default function Profile() {
                   <span className="sr-only">Open dish</span>
                 </Link>
                 {(() => {
-                  const imageSrc =
-                    dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                  if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
-                    return (
-                      <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                        No image
-                      </div>
-                    );
-                  }
+                  const imageSrc = getDishImageUrl(dish);
                   return (
                     <img
                       src={imageSrc}
                       alt={dish.name}
                       className="w-full h-28 object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = "/file.svg";
+                        e.currentTarget.src = DEFAULT_DISH_IMAGE;
                       }}
                     />
                   );
@@ -564,22 +557,14 @@ export default function Profile() {
                       <span className="sr-only">Open To Try dish</span>
                     </Link>
                     {(() => {
-                      const imageSrc =
-                        dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                      if (!imageSrc || imageSrc === "undefined" || imageSrc === "null") {
-                        return (
-                          <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                            No image
-                          </div>
-                        );
-                      }
+                      const imageSrc = getDishImageUrl(dish);
                       return (
                         <img
                           src={imageSrc}
                           alt={dish.name}
                           className="w-full h-28 object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = "/file.svg";
+                            e.currentTarget.src = DEFAULT_DISH_IMAGE;
                           }}
                         />
                       );

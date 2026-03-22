@@ -18,6 +18,7 @@ import {
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { Plus, Send } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -260,22 +261,14 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc =
-                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                    if (!imageSrc) {
-                      return (
-                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                          No image
-                        </div>
-                      );
-                    }
+                    const imageSrc = getDishImageUrl(dish);
                     return (
                       <img
                         src={imageSrc}
                         alt={dish.name}
                         className="w-full h-28 object-cover"
                         onError={(e) => {
-                          e.currentTarget.src = "/file.svg";
+                          e.currentTarget.src = DEFAULT_DISH_IMAGE;
                         }}
                       />
                     );
@@ -333,22 +326,14 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc =
-                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                    if (!imageSrc) {
-                      return (
-                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                          No image
-                        </div>
-                      );
-                    }
+                    const imageSrc = getDishImageUrl(dish);
                     return (
                       <img
                         src={imageSrc}
                         alt={dish.name}
                         className="w-full h-28 object-cover"
                         onError={(e) => {
-                          e.currentTarget.src = "/file.svg";
+                          e.currentTarget.src = DEFAULT_DISH_IMAGE;
                         }}
                       />
                     );
@@ -417,22 +402,14 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc =
-                      dish.imageURL || dish.imageUrl || dish.image_url || dish.image;
-                    if (!imageSrc) {
-                      return (
-                        <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                          No image
-                        </div>
-                      );
-                    }
+                    const imageSrc = getDishImageUrl(dish);
                     return (
                       <img
                         src={imageSrc}
                         alt={dish.name}
                         className="w-full h-28 object-cover"
                         onError={(e) => {
-                          e.currentTarget.src = "/file.svg";
+                          e.currentTarget.src = DEFAULT_DISH_IMAGE;
                         }}
                       />
                     );

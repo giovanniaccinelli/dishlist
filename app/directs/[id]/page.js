@@ -8,6 +8,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 
 export default function DirectChat() {
   const { id } = useParams();
@@ -106,21 +107,21 @@ export default function DirectChat() {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
-            const imageSrc =
-              dish?.imageURL || dish?.imageUrl || dish?.image_url || dish?.image || "";
+            const imageSrc = getDishImageUrl(dish);
             return (
               <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                 <Link
                   href={`/dish/${m.dishId}?source=public&mode=single`}
                   className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative w-full max-w-[75%]"
                 >
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={dish?.name || "Dish"} className="w-full h-28 object-cover" />
-                  ) : (
-                    <div className="w-full h-28 flex items-center justify-center bg-neutral-200 text-gray-500">
-                      No image
-                    </div>
-                  )}
+                  <img
+                    src={imageSrc}
+                    alt={dish?.name || "Dish"}
+                    className="w-full h-28 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
                   <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                     <div className="text-[11px] font-semibold leading-tight truncate">
                       {dish?.name || "Dish"}

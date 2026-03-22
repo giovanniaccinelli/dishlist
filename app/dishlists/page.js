@@ -16,6 +16,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const INITIAL_USERS_LIMIT = 10;
 
@@ -36,9 +37,7 @@ export default function Dishlists() {
         const previewImages = [];
         const pushImage = (dishData) => {
           if (!dishData || previewImages.length >= 9) return;
-          const imageSrc =
-            dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "";
-          if (imageSrc) previewImages.push(imageSrc);
+          previewImages.push(getDishImageUrl(dishData));
         };
 
         const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(9)));
@@ -230,9 +229,9 @@ export default function Dishlists() {
                             src={imageSrc}
                             alt="Dish preview"
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "/file.svg";
-                            }}
+                              onError={(e) => {
+                                e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
                           />
                         ) : (
                           <div className="w-full h-full bg-neutral-200" />

@@ -19,6 +19,7 @@ import {
   getUsersWhoSavedDish,
   getActiveStoriesForUser,
   markStoryViewed,
+  deleteStory,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
@@ -149,6 +150,16 @@ export default function Profile() {
   const handleStoryViewed = async (story) => {
     if (!user?.uid || !story?.id) return;
     await markStoryViewed(user.uid, story.id, user.uid);
+  };
+
+  const handleDeleteStory = async (story) => {
+    if (!user?.uid || !story?.id) return false;
+    const ok = await deleteStory(user.uid, story.id);
+    if (!ok) return false;
+    const nextStories = activeStories.filter((item) => item.id !== story.id);
+    setActiveStories(nextStories);
+    if (nextStories.length === 0) setStoriesOpen(false);
+    return nextStories.length === 0;
   };
 
   const handleImageChange = (file) => {
@@ -918,6 +929,8 @@ export default function Profile() {
         ownerName={user?.displayName || "You"}
         ownerPhotoURL={effectiveProfilePhotoURL}
         onViewed={handleStoryViewed}
+        canDelete
+        onDelete={handleDeleteStory}
       />
 
       <BottomNav />

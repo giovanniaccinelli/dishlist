@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
+import StoryViewerModal from "../../components/StoryViewerModal";
 import {
   collection,
   getDocs,
@@ -17,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { getActiveStoriesForUser, markStoryViewed } from "../lib/firebaseHelpers";
 
 const INITIAL_USERS_LIMIT = 10;
 
@@ -30,6 +32,9 @@ export default function Dishlists() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [storyGroups, setStoryGroups] = useState([]);
+  const [storiesOpen, setStoriesOpen] = useState(false);
+  const [storyGroupIndex, setStoryGroupIndex] = useState(0);
 
   const attachPreviewData = async (usersList) => {
     return Promise.all(
@@ -50,9 +55,12 @@ export default function Dishlists() {
           uploadedSnap.docs.forEach((d) => pushImage(d.data()));
         }
 
+        const activeStories = await getActiveStoriesForUser(u.id);
+
         return {
           ...u,
           previewImages,
+          activeStories,
           followersCount: Array.isArray(u.followers) ? u.followers.length : 0,
         };
       })
@@ -131,10 +139,35 @@ export default function Dishlists() {
 
   const filteredUsers = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return users;
-    const source = allUsersPool || [];
-    return source.filter((u) => u.displayName?.toLowerCase().includes(term));
+    const source = term ? allUsersPool || [] : users;
+    const filtered = term
+      ? source.filter((u) => u.displayName?.toLowerCase().includes(term))
+      : source;
+    return filtered.slice().sort((a, b) => {
+      const aStories = (a.activeStories || []).length;
+      const bStories = (b.activeStories || []).length;
+      if (aStories !== bStories) return bStories - aStories;
+      return (a.displayName || "").localeCompare(b.displayName || "");
+    });
   }, [users, allUsersPool, search]);
+
+  const visibleStoryGroups = useMemo(() => {
+    const source = search.trim() ? filteredUsers : (allUsersPool || users);
+    return (source || [])
+      .filter((u) => (u.activeStories || []).length > 0)
+      .sort((a, b) => {
+        const aViewed = user?.uid ? (a.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid)) : false;
+        const bViewed = user?.uid ? (b.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid)) : false;
+        if (aViewed !== bViewed) return aViewed ? 1 : -1;
+        return (a.displayName || "").localeCompare(b.displayName || "");
+      })
+      .map((u) => ({
+        ownerId: u.id,
+        ownerName: u.displayName || "User",
+        ownerPhotoURL: u.photoURL || "",
+        stories: u.activeStories || [],
+      }));
+  }, [allUsersPool, filteredUsers, search, user?.uid, users]);
 
   const handleFollow = async (userId, alreadyFollowing) => {
     if (!user) return alert("Log in first");
@@ -163,6 +196,28 @@ export default function Dishlists() {
     setAllUsersPool((prev) => (Array.isArray(prev) ? updateList(prev) : prev));
   };
 
+  const handleStoryViewed = async (story, group) => {
+    if (!user?.uid || !group?.ownerId || !story?.id) return;
+    await markStoryViewed(group.ownerId, story.id, user.uid);
+    const patchList = (list) =>
+      list.map((item) => {
+        if (item.id !== group.ownerId) return item;
+        return {
+          ...item,
+          activeStories: (item.activeStories || []).map((activeStory) =>
+            activeStory.id === story.id
+              ? {
+                  ...activeStory,
+                  viewedBy: Array.from(new Set([...(activeStory.viewedBy || []), user.uid])),
+                }
+              : activeStory
+          ),
+        };
+      });
+    setUsers((prev) => patchList(prev));
+    setAllUsersPool((prev) => (Array.isArray(prev) ? patchList(prev) : prev));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-black">
@@ -174,6 +229,44 @@ export default function Dishlists() {
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishlists</h1>
+      {visibleStoryGroups.length > 0 ? (
+        <div className="mb-5">
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {visibleStoryGroups.map((group, idx) => {
+              const viewedAll = user?.uid
+                ? group.stories.every((story) => (story.viewedBy || []).includes(user.uid))
+                : false;
+              return (
+                <button
+                  key={`story-${group.ownerId}`}
+                  type="button"
+                  onClick={() => {
+                    setStoryGroups(visibleStoryGroups);
+                    setStoryGroupIndex(idx);
+                    setStoriesOpen(true);
+                  }}
+                  className="shrink-0 flex flex-col items-center gap-2"
+                >
+                  <div className={`w-16 h-16 rounded-full p-[3px] ${viewedAll ? "bg-[#C6C6BF]" : "bg-[#2BD36B]"}`}>
+                    <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                      <div className="w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold">
+                        {group.ownerPhotoURL ? (
+                          <img src={group.ownerPhotoURL} alt={group.ownerName} className="w-full h-full object-cover" />
+                        ) : (
+                          (group.ownerName?.[0] || "U").toUpperCase()
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-medium text-black/75 max-w-16 truncate">
+                    {group.ownerName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       <input
         type="text"
         placeholder="Search users..."
@@ -204,13 +297,29 @@ export default function Dishlists() {
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold">
-                      {u.photoURL ? (
-                        <img src={u.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
-                      ) : (
-                        u.displayName?.[0] || "U"
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!(u.activeStories || []).length) return;
+                        const groups = visibleStoryGroups;
+                        const nextIndex = groups.findIndex((group) => group.ownerId === u.id);
+                        setStoryGroups(groups);
+                        setStoryGroupIndex(Math.max(nextIndex, 0));
+                        setStoriesOpen(true);
+                      }}
+                      className={`w-10 h-10 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
+                    >
+                      <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                        <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
+                          {u.photoURL ? (
+                            <img src={u.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            u.displayName?.[0] || "U"
+                          )}
+                        </div>
+                      </div>
+                    </button>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold leading-tight max-h-9 overflow-hidden">
                         {u.displayName || "User"}
@@ -274,6 +383,13 @@ export default function Dishlists() {
       )}
 
       <BottomNav />
+      <StoryViewerModal
+        open={storiesOpen}
+        onClose={() => setStoriesOpen(false)}
+        storyGroups={storyGroups}
+        initialGroupIndex={storyGroupIndex}
+        onViewed={handleStoryViewed}
+      />
     </div>
   );
 }

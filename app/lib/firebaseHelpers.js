@@ -548,6 +548,26 @@ export async function markStoryViewed(ownerId, storyId, viewerId) {
   }
 }
 
+export async function deleteStory(userId, storyId) {
+  if (!userId || !storyId) return false;
+  try {
+    await deleteDoc(doc(db, "users", userId, "stories", storyId));
+    const remaining = await getActiveStoriesForUser(userId);
+    await setDoc(
+      doc(db, "users", userId),
+      {
+        hasActiveStory: remaining.length > 0,
+        storyUpdatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to delete story:", err);
+    return false;
+  }
+}
+
 export function getConversationId(a, b) {
   if (!a || !b) return null;
   return [a, b].sort().join("_");

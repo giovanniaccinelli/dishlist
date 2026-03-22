@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Camera, Plus, Search } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
-import { saveDishToFirestore, uploadImage } from "../lib/firebaseHelpers";
+import { publishCustomStory, saveDishToFirestore, uploadImage } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
 export default function UploadPage() {
@@ -26,6 +26,15 @@ export default function UploadPage() {
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
+  const [storyMode, setStoryMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const nextStoryMode = params.get("story") === "1";
+    setStoryMode(nextStoryMode);
+    setShowUploadForm(nextStoryMode);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -70,23 +79,41 @@ export default function UploadPage() {
       if (dishImage) {
         imageURL = await uploadImage(dishImage, user.uid);
       }
-      await saveDishToFirestore({
-        name: dishName.trim(),
-        description: dishDescription.trim(),
-        recipeIngredients: dishRecipeIngredients.trim(),
-        recipeMethod: dishRecipeMethod.trim(),
-        tags: dishTags,
-        isPublic: dishIsPublic,
-        imageURL,
-        owner: user.uid,
-        ownerName: user.displayName || "Anonymous",
-        ownerPhotoURL: user.photoURL || "",
-        createdAt: new Date(),
-      });
-      router.replace("/profile");
+      if (storyMode) {
+        const storyId = `story-${Date.now()}`;
+        const ok = await publishCustomStory(user.uid, {
+          id: storyId,
+          dishId: storyId,
+          name: dishName.trim(),
+          description: dishDescription.trim(),
+          recipeIngredients: dishRecipeIngredients.trim(),
+          recipeMethod: dishRecipeMethod.trim(),
+          tags: dishTags,
+          imageURL,
+          ownerName: user.displayName || "Anonymous",
+          ownerPhotoURL: user.photoURL || "",
+        });
+        if (!ok) throw new Error("Failed to publish story.");
+        router.replace("/profile");
+      } else {
+        await saveDishToFirestore({
+          name: dishName.trim(),
+          description: dishDescription.trim(),
+          recipeIngredients: dishRecipeIngredients.trim(),
+          recipeMethod: dishRecipeMethod.trim(),
+          tags: dishTags,
+          isPublic: dishIsPublic,
+          imageURL,
+          owner: user.uid,
+          ownerName: user.displayName || "Anonymous",
+          ownerPhotoURL: user.photoURL || "",
+          createdAt: new Date(),
+        });
+        router.replace("/profile");
+      }
     } catch (err) {
       console.error("Failed to upload dish:", err);
-      alert("Failed to upload dish. Please try again.");
+      alert(`Failed to ${storyMode ? "publish story" : "upload dish"}. Please try again.`);
     } finally {
       setLoadingUpload(false);
     }
@@ -123,7 +150,9 @@ export default function UploadPage() {
         <button onClick={() => router.back()} className="text-sm text-black/60">
           Cancel
         </button>
-        <h1 className="text-lg font-semibold">{showUploadForm ? "Upload Dish" : "Add to DishList"}</h1>
+        <h1 className="text-lg font-semibold">
+          {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
+        </h1>
         <div className="w-12" />
       </div>
 
@@ -154,7 +183,9 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 1
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and cover</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                    {storyMode ? "Story title and cover" : "Name and cover"}
+                  </h2>
                 </div>
                 <input
                   type="text"
@@ -203,7 +234,9 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 2
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Description and tags</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                    {storyMode ? "Story details and tags" : "Description and tags"}
+                  </h2>
                 </div>
                 <textarea
                   placeholder="Description"
@@ -266,7 +299,9 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Final Step
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review and upload</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                    {storyMode ? "Review and publish" : "Review and upload"}
+                  </h2>
                 </div>
                 <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F8F7F3_0%,#FFF5E4_100%)] border border-[#DCCEB8] p-4 mb-5">
                   <div className="flex items-start gap-4">
@@ -311,7 +346,7 @@ export default function UploadPage() {
                   className="w-full bg-[linear-gradient(90deg,#111111_0%,#2A2A2A_45%,#FFB15E_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
-                  {loadingUpload ? "Uploading..." : "Upload dish"}
+                  {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
                 </motion.button>
               </>
             ) : null}
@@ -381,7 +416,7 @@ export default function UploadPage() {
                 </div>
               </button>
               <button
-                onClick={() => router.push("/dishes")}
+                onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
                 className="w-full rounded-[2rem] border border-black/10 bg-[#ECE7DC] px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)] transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">

@@ -16,7 +16,7 @@ export default function BottomNav() {
     { href: "/", icon: Home, label: "feed" },
     { href: "/dishlists", icon: LayoutGrid, label: "people" },
     { href: "/upload", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
-    { href: "/dishes", icon: Utensils, label: "explore" },
+    { href: "/explore", icon: Utensils, label: "explore" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];
 

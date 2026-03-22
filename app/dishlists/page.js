@@ -229,8 +229,15 @@ export default function Dishlists() {
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <h1 className="text-3xl font-bold mb-4">Dishlists</h1>
+      <input
+        type="text"
+        placeholder="Search users..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
+      />
       {visibleStoryGroups.length > 0 ? (
-        <div className="mb-5">
+        <div className="mb-6">
           <div className="flex gap-3 overflow-x-auto pb-1">
             {visibleStoryGroups.map((group, idx) => {
               const viewedAll = user?.uid
@@ -267,13 +274,6 @@ export default function Dishlists() {
           </div>
         </div>
       ) : null}
-      <input
-        type="text"
-        placeholder="Search users..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
-      />
 
       {loadingUsers ? (
         <div className="text-black/60">Loading users...</div>

@@ -25,7 +25,7 @@ import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, deleteField } from "firebase/firestore";
-import { Plus, Settings, Send } from "lucide-react";
+import { Plus, Search, Settings, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -66,6 +66,7 @@ export default function Profile() {
   const [saversUsers, setSaversUsers] = useState([]);
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
+  const [storyActionOpen, setStoryActionOpen] = useState(false);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
@@ -431,28 +432,38 @@ export default function Profile() {
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => {
-            if (hasStories) setStoriesOpen(true);
-          }}
-          className={`w-16 h-16 rounded-full p-[3px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
-          aria-label="Open your stories"
-        >
-          <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-            <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
-              {effectiveProfilePhotoURL ? (
-                <img
-                  src={effectiveProfilePhotoURL}
-                  alt="Profile"
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-              ) : (
-                user.displayName?.[0] || "U"
-              )}
-            </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                if (hasStories) setStoriesOpen(true);
+              }}
+              className={`w-16 h-16 rounded-full p-[3px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
+              aria-label="Open your stories"
+            >
+              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+                  {effectiveProfilePhotoURL ? (
+                    <img
+                      src={effectiveProfilePhotoURL}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    user.displayName?.[0] || "U"
+                  )}
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStoryActionOpen(true)}
+              className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-black text-white border-2 border-[#F6F6F2] flex items-center justify-center shadow-md"
+              aria-label="Add story"
+            >
+              <Plus size={16} />
+            </button>
           </div>
-        </button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
         </div>
@@ -932,6 +943,71 @@ export default function Profile() {
         canDelete
         onDelete={handleDeleteStory}
       />
+      <AnimatePresence>
+        {storyActionOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-2xl border border-black/10"
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+            >
+              <div className="flex items-center justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() => setStoryActionOpen(false)}
+                  className="text-sm text-black/55"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    router.push("/upload?story=1");
+                  }}
+                  className="w-full rounded-[2rem] bg-[linear-gradient(135deg,#111111_0%,#1C1C1C_55%,#2B2B2B_100%)] text-white px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.14)] border border-white/10"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-3xl font-semibold leading-none">Upload dish</p>
+                      <p className="mt-3 text-sm text-white/65">Post directly to your story.</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#FFB15E_0%,#FFCC33_100%)] text-black flex items-center justify-center shadow-md">
+                      <Plus size={32} />
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    router.push("/dishes?storyPicker=1");
+                  }}
+                  className="w-full rounded-[2rem] border border-black/10 bg-[#ECE7DC] px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)]"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-3xl font-semibold leading-none text-black">Search dish</p>
+                      <p className="mt-3 text-sm text-black/60">Pick an existing dish for your story.</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-white/70 flex items-center justify-center border border-black/5">
+                      <Search size={30} />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
     </div>

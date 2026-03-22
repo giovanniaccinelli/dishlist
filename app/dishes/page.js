@@ -6,6 +6,7 @@ import BottomNav from "../../components/BottomNav";
 import {
   getAllDishesFromFirestore,
   getDishesPage,
+  publishDishAsStory,
   getUsersWhoSavedDish,
   saveDishToUserList,
 } from "../lib/firebaseHelpers";
@@ -23,6 +24,7 @@ const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 
 export default function Dishes() {
   const { user } = useAuth();
+  const [storyPicker, setStoryPicker] = useState(false);
   const [dishes, setDishes] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -148,6 +150,12 @@ export default function Dishes() {
     fetchDishes();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setStoryPicker(params.get("storyPicker") === "1");
+  }, []);
+
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
 
   const ensureAllDishesLoaded = async () => {
@@ -232,13 +240,15 @@ export default function Dishes() {
       setShowAuthPrompt(true);
       return;
     }
-    const saved = await saveDishToUserList(user.uid, dish.id, dish);
+    const saved = storyPicker
+      ? await publishDishAsStory(user.uid, dish)
+      : await saveDishToUserList(user.uid, dish.id, dish);
     if (!saved) {
-      setToast("SAVE FAILED");
+      setToast(storyPicker ? "STORY FAILED" : "SAVE FAILED");
       setTimeout(() => setToast(""), 1200);
       return;
     }
-    setToast("ADDING TO YOUR DISHLIST");
+    setToast(storyPicker ? "ADDED TO STORY" : "ADDING TO YOUR DISHLIST");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -281,7 +291,7 @@ export default function Dishes() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <h1 className="text-3xl font-bold mb-4">Dishes</h1>
+      <h1 className="text-3xl font-bold mb-4">{storyPicker ? "Search Dish for Story" : "Dishes"}</h1>
       <div className="relative mb-6">
         <div className="flex gap-2">
           <input

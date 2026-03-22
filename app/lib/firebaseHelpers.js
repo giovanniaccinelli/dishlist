@@ -479,27 +479,50 @@ export async function deleteCommentThread(dishId, commentId) {
 
 const STORY_DURATION_MS = 24 * 60 * 60 * 1000;
 
+function buildStoryPayload(userId, story) {
+  return {
+    dishId: story.dishId || story.id || "",
+    owner: userId,
+    ownerName: story.ownerName || "",
+    ownerPhotoURL: story.ownerPhotoURL || "",
+    name: story.name || "",
+    description: story.description || "",
+    recipeIngredients: story.recipeIngredients || "",
+    recipeMethod: story.recipeMethod || "",
+    tags: normalizeTags(story.tags),
+    imageURL: story.imageURL || story.imageUrl || story.image_url || story.image || "",
+    createdAt: serverTimestamp(),
+    expiresAtMs: Date.now() + STORY_DURATION_MS,
+    viewedBy: [],
+  };
+}
+
 export async function publishDishAsStory(userId, dish) {
   if (!userId || !dish?.id) return false;
   try {
     const storyRef = doc(db, "users", userId, "stories", dish.id);
+    await setDoc(storyRef, buildStoryPayload(userId, { ...dish, dishId: dish.id }), { merge: true });
     await setDoc(
-      storyRef,
+      doc(db, "users", userId),
       {
-        dishId: dish.id,
-        owner: userId,
-        ownerName: dish.ownerName || "",
-        ownerPhotoURL: dish.ownerPhotoURL || "",
-        name: dish.name || "",
-        description: dish.description || "",
-        recipeIngredients: dish.recipeIngredients || "",
-        recipeMethod: dish.recipeMethod || "",
-        tags: normalizeTags(dish.tags),
-        imageURL: dish.imageURL || dish.imageUrl || dish.image_url || dish.image || "",
-        createdAt: serverTimestamp(),
-        expiresAtMs: Date.now() + STORY_DURATION_MS,
-        viewedBy: [],
+        hasActiveStory: true,
+        storyUpdatedAt: serverTimestamp(),
       },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to publish story:", err);
+    return false;
+  }
+}
+
+export async function publishCustomStory(userId, story) {
+  if (!userId || !story?.id) return false;
+  try {
+    await setDoc(
+      doc(db, "users", userId, "stories", story.id),
+      buildStoryPayload(userId, story),
       { merge: true }
     );
     await setDoc(
@@ -512,7 +535,7 @@ export async function publishDishAsStory(userId, dish) {
     );
     return true;
   } catch (err) {
-    console.error("Failed to publish story:", err);
+    console.error("Failed to publish custom story:", err);
     return false;
   }
 }
@@ -565,6 +588,34 @@ export async function deleteStory(userId, storyId) {
   } catch (err) {
     console.error("Failed to delete story:", err);
     return false;
+  }
+}
+
+export async function getTrendingStoryDishes(limitCount = 20) {
+  try {
+    const snapshot = await getDocs(collectionGroup(db, "stories"));
+    const now = Date.now();
+    const counts = new Map();
+    const sample = new Map();
+    snapshot.docs.forEach((docSnap) => {
+      const story = { id: docSnap.id, ...docSnap.data() };
+      if ((story.expiresAtMs || 0) <= now) return;
+      const key = story.dishId || story.id;
+      if (!key) return;
+      counts.set(key, (counts.get(key) || 0) + 1);
+      if (!sample.has(key)) sample.set(key, story);
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limitCount)
+      .map(([key, count]) => ({
+        ...sample.get(key),
+        id: sample.get(key)?.dishId || key,
+        storyCount: count,
+      }));
+  } catch (err) {
+    console.error("Failed to load trending story dishes:", err);
+    return [];
   }
 }
 

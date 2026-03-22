@@ -18,6 +18,7 @@ import {
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getUsersWhoSavedDish,
+  publishDishAsStory,
   removeDishFromAllUsers,
   removeDishFromToTry,
   removeSavedDishFromUser,
@@ -396,8 +397,16 @@ export default function DishDetail() {
     setShareOpen(true);
   };
 
-  const handleAddToStory = () => {
-    alert("Story upgrade is the next step. The story button is now in place.");
+  const handleAddToStory = async (dishCard) => {
+    if (!userId) {
+      setPageToast("Please sign in");
+      setTimeout(() => setPageToast(""), 1200);
+      return false;
+    }
+    const ok = await publishDishAsStory(userId, dishCard);
+    setPageToast(ok ? "Story published" : "Story failed");
+    setTimeout(() => setPageToast(""), 1200);
+    return ok;
   };
 
   if (loading || loadingDish) {
@@ -482,7 +491,11 @@ export default function DishDetail() {
               ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
               : undefined
           }
-          extraActionClassName={canEditUploaded ? "add-action-btn w-14 h-14 text-[#2BD36B]" : undefined}
+          extraActionClassName={
+            canEditUploaded
+              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border-2 border-[#2BD36B]/70 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
+              : undefined
+          }
           actionToast={
             canEditUploaded
               ? undefined

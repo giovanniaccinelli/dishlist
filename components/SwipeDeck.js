@@ -474,7 +474,33 @@ export default function SwipeDeck({
             <button
               type="button"
               data-no-drag="true"
-              onClick={handleExtraActionPress}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {}
+              }}
+              onPointerMove={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {}
+                handleExtraActionPress(e);
+              }}
               className={extraActionClassName || "add-action-btn absolute z-30 w-14 h-14"}
               style={{ bottom: actionBottom, right: actionLabel ? 168 : 96 }}
               aria-label="Extra action"

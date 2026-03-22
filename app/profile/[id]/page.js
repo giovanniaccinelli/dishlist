@@ -13,12 +13,15 @@ import {
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getUsersWhoSavedDish,
+  getActiveStoriesForUser,
+  markStoryViewed,
   saveDishToUserList,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { Plus, Send } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
+import StoryViewerModal from "../../../components/StoryViewerModal";
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -38,6 +41,11 @@ export default function PublicProfile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [activeStories, setActiveStories] = useState([]);
+  const [storiesOpen, setStoriesOpen] = useState(false);
+  const viewedAllStories =
+    activeStories.length > 0 &&
+    activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
 
   // Fetch profile data
   const fetchProfileData = async () => {
@@ -54,6 +62,8 @@ export default function PublicProfile() {
     setSavedDishes(fetchedSavedDishes);
     const fetchedToTryDishes = await getToTryDishesFromFirestore(id);
     setToTryDishes(fetchedToTryDishes);
+    const fetchedStories = await getActiveStoriesForUser(id);
+    setActiveStories(fetchedStories);
   };
 
   useEffect(() => {
@@ -136,6 +146,18 @@ export default function PublicProfile() {
     }
   };
 
+  const handleStoryViewed = async (story) => {
+    if (!user?.uid || !story?.id) return;
+    await markStoryViewed(id, story.id, user.uid);
+    setActiveStories((prev) =>
+      prev.map((item) =>
+        item.id === story.id
+          ? { ...item, viewedBy: Array.from(new Set([...(item.viewedBy || []), user.uid])) }
+          : item
+      )
+    );
+  };
+
 
   if (!profileUser) {
     return (
@@ -150,13 +172,30 @@ export default function PublicProfile() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
-          {profileUser.photoURL ? (
-            <img src={profileUser.photoURL} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
-          ) : (
-            profileUser.displayName?.[0] || "U"
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (activeStories.length > 0) setStoriesOpen(true);
+          }}
+          className={`w-16 h-16 rounded-full p-[3px] ${
+            activeStories.length > 0
+              ? viewedAllStories
+                ? "bg-[#C6C6BF]"
+                : "bg-[#2BD36B]"
+              : "bg-transparent"
+          }`}
+          aria-label="Open stories"
+        >
+          <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+            <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+              {profileUser.photoURL ? (
+                <img src={profileUser.photoURL} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                profileUser.displayName?.[0] || "U"
+              )}
+            </div>
+          </div>
+        </button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
           <p className="text-black/60 text-sm">
@@ -537,6 +576,14 @@ export default function PublicProfile() {
           </motion.div>
         )}
       </AnimatePresence>
+      <StoryViewerModal
+        open={storiesOpen}
+        onClose={() => setStoriesOpen(false)}
+        stories={activeStories}
+        ownerName={profileUser.displayName || "User"}
+        ownerPhotoURL={profileUser.photoURL || ""}
+        onViewed={handleStoryViewed}
+      />
     </div>
   );
 }

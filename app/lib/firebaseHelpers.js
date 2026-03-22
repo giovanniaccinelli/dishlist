@@ -477,6 +477,77 @@ export async function deleteCommentThread(dishId, commentId) {
   }
 }
 
+const STORY_DURATION_MS = 24 * 60 * 60 * 1000;
+
+export async function publishDishAsStory(userId, dish) {
+  if (!userId || !dish?.id) return false;
+  try {
+    const storyRef = doc(db, "users", userId, "stories", dish.id);
+    await setDoc(
+      storyRef,
+      {
+        dishId: dish.id,
+        owner: userId,
+        ownerName: dish.ownerName || "",
+        ownerPhotoURL: dish.ownerPhotoURL || "",
+        name: dish.name || "",
+        description: dish.description || "",
+        recipeIngredients: dish.recipeIngredients || "",
+        recipeMethod: dish.recipeMethod || "",
+        tags: normalizeTags(dish.tags),
+        imageURL: dish.imageURL || dish.imageUrl || dish.image_url || dish.image || "",
+        createdAt: serverTimestamp(),
+        expiresAtMs: Date.now() + STORY_DURATION_MS,
+        viewedBy: [],
+      },
+      { merge: true }
+    );
+    await setDoc(
+      doc(db, "users", userId),
+      {
+        hasActiveStory: true,
+        storyUpdatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to publish story:", err);
+    return false;
+  }
+}
+
+export async function getActiveStoriesForUser(userId) {
+  if (!userId) return [];
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"))
+    );
+    const now = Date.now();
+    return snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((story) => (story.expiresAtMs || 0) > now);
+  } catch (err) {
+    console.error("Failed to load active stories:", err);
+    return [];
+  }
+}
+
+export async function markStoryViewed(ownerId, storyId, viewerId) {
+  if (!ownerId || !storyId || !viewerId) return false;
+  try {
+    await setDoc(
+      doc(db, "users", ownerId, "stories", storyId),
+      { viewedBy: arrayUnion(viewerId) },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to mark story viewed:", err);
+    return false;
+  }
+}
+
 export function getConversationId(a, b) {
   if (!a || !b) return null;
   return [a, b].sort().join("_");

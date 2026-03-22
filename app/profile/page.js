@@ -17,6 +17,8 @@ import {
   deleteDishAndImage,
   updateOwnerNameForDishes,
   getUsersWhoSavedDish,
+  getActiveStoriesForUser,
+  markStoryViewed,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
@@ -26,6 +28,7 @@ import { Plus, Settings, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
+import StoryViewerModal from "../../components/StoryViewerModal";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -60,8 +63,11 @@ export default function Profile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [activeStories, setActiveStories] = useState([]);
+  const [storiesOpen, setStoriesOpen] = useState(false);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
+  const hasStories = activeStories.length > 0;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -75,8 +81,10 @@ export default function Profile() {
         const uploaded = await getDishesFromFirestore(user.uid);
         const toTry = await getToTryDishesFromFirestore(user.uid);
         const userSnap = await getDoc(doc(db, "users", user.uid));
+        const stories = await getActiveStoriesForUser(user.uid);
         setUploadedDishes(uploaded);
         setToTryDishes(toTry);
+        setActiveStories(stories);
         if (userSnap.exists()) {
           const data = userSnap.data();
           setProfileMeta({
@@ -124,12 +132,24 @@ export default function Profile() {
       setToTryDishes(items);
     });
 
+    const storiesRef = collection(db, "users", user.uid, "stories");
+    const unsubscribeStories = onSnapshot(storiesRef, async () => {
+      const stories = await getActiveStoriesForUser(user.uid);
+      setActiveStories(stories);
+    });
+
     return () => {
       unsubscribeUser();
       unsubscribeSaved();
       unsubscribeToTry();
+      unsubscribeStories();
     };
   }, [user]);
+
+  const handleStoryViewed = async (story) => {
+    if (!user?.uid || !story?.id) return;
+    await markStoryViewed(user.uid, story.id, user.uid);
+  };
 
   const handleImageChange = (file) => {
     setDishImage(file);
@@ -400,17 +420,28 @@ export default function Profile() {
     <div className="min-h-screen bg-[#F6F6F2] p-6 text-black relative pb-24">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold">
-          {effectiveProfilePhotoURL ? (
-            <img
-              src={effectiveProfilePhotoURL}
-              alt="Profile"
-              className="w-16 h-16 rounded-full object-cover"
-            />
-          ) : (
-            user.displayName?.[0] || "U"
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (hasStories) setStoriesOpen(true);
+          }}
+          className={`w-16 h-16 rounded-full p-[3px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
+          aria-label="Open your stories"
+        >
+          <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+            <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+              {effectiveProfilePhotoURL ? (
+                <img
+                  src={effectiveProfilePhotoURL}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                user.displayName?.[0] || "U"
+              )}
+            </div>
+          </div>
+        </button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
         </div>
@@ -879,6 +910,14 @@ export default function Profile() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <StoryViewerModal
+        open={storiesOpen}
+        onClose={() => setStoriesOpen(false)}
+        stories={activeStories}
+        ownerName={user?.displayName || "You"}
+        ownerPhotoURL={effectiveProfilePhotoURL}
+        onViewed={handleStoryViewed}
       />
 
       <BottomNav />

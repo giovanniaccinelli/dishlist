@@ -452,7 +452,7 @@ export default function DishDetail() {
           currentUser={user}
           onAction={
             canManageOwnDish
-              ? undefined
+              ? handleAddToStory
               : isPublicSource
                 ? handleAdd
                 : isToTrySource
@@ -460,7 +460,6 @@ export default function DishDetail() {
                   : handleRemove
           }
           onSecondaryAction={canManageOwnDish ? openEditModal : isToTrySource ? handleRemove : undefined}
-          onExtraAction={canManageOwnDish ? handleAddToStory : undefined}
           onSavesPress={handleOpenSavers}
           onSharePress={handleShare}
           onRightSwipe={isPublicSource ? handleRightSwipeToTry : undefined}
@@ -469,7 +468,7 @@ export default function DishDetail() {
           onAuthRequired={() => alert("Please sign in to comment.")}
           actionLabel={
             canManageOwnDish
-              ? undefined
+              ? <StoryActionIcon />
               : isPublicSource
                 ? "+"
                 : isToTrySource
@@ -477,10 +476,9 @@ export default function DishDetail() {
                   : "Remove"
           }
           secondaryActionLabel={canManageOwnDish ? "Edit" : isToTrySource ? "Discard" : undefined}
-          extraActionLabel={canManageOwnDish ? <StoryActionIcon /> : undefined}
           actionClassName={
             canManageOwnDish
-              ? undefined
+              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
               : isPublicSource
                 ? "add-action-btn w-14 h-14"
                 : isToTrySource
@@ -492,11 +490,6 @@ export default function DishDetail() {
               ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
               : isToTrySource
               ? "px-4 py-2 rounded-full bg-[#D89A9A] text-black text-sm font-semibold shadow-lg"
-              : undefined
-          }
-          extraActionClassName={
-            canManageOwnDish
-              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
               : undefined
           }
           actionToast={

@@ -30,14 +30,11 @@ export default function SwipeDeck({
   actionOnRightSwipe = true,
   dismissOnAction = true,
   onSecondaryAction,
-  onExtraAction,
   dismissOnSecondaryAction = true,
   actionLabel = "+",
   secondaryActionLabel,
-  extraActionLabel,
   actionClassName,
   secondaryActionClassName,
-  extraActionClassName,
   actionToast,
   secondaryActionToast,
   trackSwipes = true,
@@ -253,20 +250,6 @@ export default function SwipeDeck({
       });
   };
 
-  const handleExtraActionPress = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (disabled || isEjecting) return;
-    if (typeof onExtraAction !== "function") return;
-    const card = currentCard;
-    dragX.set(0);
-    Promise.resolve(onExtraAction(card)).catch((err) => {
-      console.error("Deck extra action failed:", err);
-      setToast("ACTION FAILED");
-      setTimeout(() => setToast(""), 1200);
-    });
-  };
-
   const handleStartOver = () => {
     if (typeof onResetFeed === "function") {
       onResetFeed();
@@ -461,53 +444,12 @@ export default function SwipeDeck({
                 onSharePress(currentCard);
               }}
               className="add-action-btn absolute z-30 w-14 h-14"
-              style={{
-                bottom: actionBottom,
-                right: extraActionLabel ? (actionLabel ? 96 : 24) : actionLabel ? 96 : 24,
-              }}
+              style={{ bottom: actionBottom, right: actionLabel ? 96 : 24 }}
               aria-label="Share dish"
             >
               <CornerUpRight size={24} strokeWidth={2.1} />
             </button>
           )}
-          {extraActionLabel ? (
-            <button
-              type="button"
-              data-no-drag="true"
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                try {
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                } catch {}
-              }}
-              onPointerMove={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-              onPointerUp={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                try {
-                  e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch {}
-                handleExtraActionPress(e);
-              }}
-              className={extraActionClassName || "add-action-btn absolute z-30 w-14 h-14"}
-              style={{ bottom: actionBottom, right: actionLabel ? 168 : 96 }}
-              aria-label="Extra action"
-            >
-              {extraActionLabel}
-            </button>
-          ) : null}
           <button
             type="button"
             data-no-drag="true"

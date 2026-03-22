@@ -357,7 +357,11 @@ export default function Dishlists() {
                           e.stopPropagation();
                           handleFollow(u.id, alreadyFollowing);
                         }}
-                        className="bg-black text-white px-3 py-1.5 rounded-full text-xs font-semibold"
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                          alreadyFollowing
+                            ? "bg-white/80 text-black border-black/10"
+                            : "bg-[#F3F0E8] text-black border-[#D9D0C0]"
+                        }`}
                       >
                         {alreadyFollowing ? "Unfollow" : "Follow"}
                       </button>
@@ -373,7 +377,7 @@ export default function Dishlists() {
               <button
                 onClick={loadMoreUsers}
                 disabled={loadingMoreUsers}
-                className="bg-black text-white px-6 py-3 rounded-full font-semibold disabled:opacity-60"
+                className="bg-white/75 text-black px-6 py-3 rounded-full font-semibold border border-black/10 shadow-sm disabled:opacity-60"
               >
                 {loadingMoreUsers ? "Loading..." : "Load More"}
               </button>

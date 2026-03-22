@@ -161,19 +161,6 @@ export default function StoryViewerModal({
             ))}
           </div>
 
-          {groups.length > 1 ? (
-            <div className="absolute top-16 left-4 right-4 z-40 flex items-center justify-center gap-2">
-              {groups.map((group, idx) => (
-                <div
-                  key={`${group.ownerId}-${idx}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    idx === groupIndex ? "w-12 bg-white" : "w-5 bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
-          ) : null}
-
           <div className="absolute top-10 left-4 right-4 z-40 flex items-center justify-between text-white">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center font-semibold">
@@ -236,16 +223,17 @@ export default function StoryViewerModal({
           {groupFlash ? (
             <motion.div
               key={groupFlash}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-white/18 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md"
+              initial={{ opacity: 0, rotateX: -90, scale: 0.92 }}
+              animate={{ opacity: 1, rotateX: 0, scale: 1 }}
+              exit={{ opacity: 0, rotateX: 90, scale: 0.96 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="absolute top-20 left-1/2 z-40 -translate-x-1/2 rounded-[1.1rem] bg-white/18 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md [transform-style:preserve-3d]"
             >
               {groupFlash}
             </motion.div>
           ) : null}
 
-          <div className="absolute bottom-16 left-0 right-0 z-40 p-5 text-white">
+          <div className="absolute bottom-24 left-0 right-0 z-40 p-5 text-white">
             <h2 className="text-2xl font-bold leading-tight">
               {currentStory.name || "Untitled dish"}
             </h2>

@@ -32,9 +32,9 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
-          const wrapperClass = "w-1/5 flex flex-col items-center text-xs font-semibold";
+          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold min-h-[62px]";
           const iconClass = item.prominent
-            ? `w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-transform ${
+            ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-md transition-transform ${
                 active ? "bg-black text-white scale-105" : "bg-black text-white"
               }`
             : `w-14 h-9 rounded-2xl flex items-center justify-center transition-colors ${
@@ -50,10 +50,10 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div className={item.prominent ? "w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md" : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"}>
-                  <Icon size={item.prominent ? 28 : 22} />
+                <div className={item.prominent ? "w-14 h-9 rounded-2xl flex items-center justify-center bg-black text-white shadow-md" : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"}>
+                  <Icon size={item.prominent ? 26 : 22} />
                 </div>
-                {!item.prominent ? <span className="mt-1 text-black/45">{item.label}</span> : null}
+                {item.prominent ? <span className="mt-1 invisible">upload</span> : <span className="mt-1 text-black/45">{item.label}</span>}
               </button>
             );
           }
@@ -65,9 +65,9 @@ export default function BottomNav() {
               className={wrapperClass}
             >
               <div className={iconClass}>
-                <Icon size={item.prominent ? 28 : 22} />
+                <Icon size={item.prominent ? 26 : 22} />
               </div>
-              {!item.prominent ? <span className={labelClass}>{item.label}</span> : null}
+              {item.prominent ? <span className="mt-1 invisible">upload</span> : <span className={labelClass}>{item.label}</span>}
             </Link>
           );
         })}

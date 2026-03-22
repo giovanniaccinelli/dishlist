@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { Plus, Search } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -31,12 +32,6 @@ export default function UploadPage() {
       setShowAuthPrompt(true);
     }
   }, [loading, user]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setShowUploadForm(params.get("mode") === "new");
-  }, []);
 
   const toggleTag = (tag) => {
     setDishTags((prev) => {
@@ -114,7 +109,7 @@ export default function UploadPage() {
         <div className="w-12" />
       </div>
 
-      <div className="px-4">
+      <div className="px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
         {showUploadForm ? (
           <motion.div
             className="bg-white p-6 rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-black/10 my-4"
@@ -221,26 +216,38 @@ export default function UploadPage() {
           </motion.div>
         ) : (
           <motion.div
-            className="bg-white p-6 rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-black/10 my-10"
+            className="bg-white p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-2xl border border-black/10"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <h2 className="text-2xl font-semibold mb-2 text-black">Add a dish</h2>
-            <p className="text-sm text-black/60 mb-6">
-              Choose whether you want to post a new dish or first check if it already exists.
-            </p>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <button
-                onClick={() => router.push("/upload?mode=new")}
-                className="w-full bg-black text-white py-3 rounded-full font-semibold"
+                onClick={() => setShowUploadForm(true)}
+                className="w-full rounded-[2rem] bg-black text-white px-6 py-6 text-left shadow-xl transition-transform hover:scale-[1.01]"
               >
-                Upload dish
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-2xl font-semibold leading-none">Upload dish</p>
+                    <p className="mt-2 text-sm text-white/70">Post a new dish to your DishList.</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                    <Plus size={28} />
+                  </div>
+                </div>
               </button>
               <button
                 onClick={() => router.push("/dishes")}
-                className="w-full bg-white border border-black/20 py-3 rounded-full font-semibold hover:bg-black/5 transition"
+                className="w-full rounded-[2rem] border border-black/10 bg-[#ECE7DC] px-6 py-6 text-left shadow-lg transition-transform hover:scale-[1.01]"
               >
-                Search dish
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-2xl font-semibold leading-none text-black">Search dish</p>
+                    <p className="mt-2 text-sm text-black/60">See if the dish is already on DishList.</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-white/60 flex items-center justify-center">
+                    <Search size={26} />
+                  </div>
+                </div>
               </button>
             </div>
           </motion.div>

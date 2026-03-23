@@ -1035,7 +1035,7 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full min-h-[11.75rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F3F3F1_0%,#E5E5DF_100%)] px-8 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
+                  className="w-full min-h-[11.75rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F6C15A_0%,#E99A45_100%)] px-8 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>

@@ -137,7 +137,7 @@ export default function Onboarding() {
                   onClick={() => setStep(1)}
                   className="w-full min-h-[11.25rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-7 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] border border-black/12"
                 >
-                  <p className="text-[2.1rem] font-semibold leading-[0.95]">Add 3 dishes</p>
+                  <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
                   <p className="mt-4 text-base text-black/78 max-w-[18rem]">
                     Start by adding three dishes you already know you want in your DishList.
                   </p>
@@ -146,7 +146,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[11.25rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F3F3F1_0%,#E5E5DF_100%)] px-7 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
+                  className="w-full min-h-[11.25rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F6C15A_0%,#E99A45_100%)] px-7 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
                 >
                   <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
                   <p className="mt-4 text-base text-black/62 max-w-[17rem]">

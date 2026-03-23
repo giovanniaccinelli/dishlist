@@ -135,9 +135,9 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFC93C_0%,#FF8A3D_45%,#FF5C5C_100%)] text-black px-7 py-8 text-left shadow-[0_26px_60px_rgba(255,107,61,0.28)] border border-black/15"
+                  className="w-full min-h-[11.25rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-7 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] border border-black/12"
                 >
-                  <p className="text-[2.2rem] font-semibold leading-[0.95]">Start with 3 dishes</p>
+                  <p className="text-[2.1rem] font-semibold leading-[0.95]">Add 3 dishes</p>
                   <p className="mt-4 text-base text-black/78 max-w-[18rem]">
                     Start by adding three dishes you already know you want in your DishList.
                   </p>
@@ -146,10 +146,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-black/15 bg-white px-6 py-6 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
+                  className="w-full min-h-[11.25rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F3F3F1_0%,#E5E5DF_100%)] px-7 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
                 >
-                  <p className="text-[1.9rem] font-semibold leading-none">Swipe on the feed</p>
-                  <p className="mt-3 text-sm text-black/62 max-w-[17rem]">
+                  <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
+                  <p className="mt-4 text-base text-black/62 max-w-[17rem]">
                     Start swiping right away. After your third save, we ask you to create the profile.
                   </p>
                 </button>

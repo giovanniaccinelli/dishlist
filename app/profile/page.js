@@ -1017,14 +1017,14 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/upload?story=1");
                   }}
-                  className="w-full rounded-[2rem] bg-[linear-gradient(135deg,#111111_0%,#1C1C1C_55%,#2B2B2B_100%)] text-white px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.14)] border border-white/10"
+                  className="w-full min-h-[11.75rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] border border-black/12"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-3xl font-semibold leading-none">Upload dish</p>
-                      <p className="mt-3 text-sm text-white/65">Post directly to your story.</p>
+                      <p className="text-[2.15rem] font-semibold leading-none">Upload dish</p>
+                      <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#FFB15E_0%,#FFCC33_100%)] text-black flex items-center justify-center shadow-md">
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-black text-white flex items-center justify-center shadow-md">
                       <Plus size={32} />
                     </div>
                   </div>
@@ -1035,14 +1035,14 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full rounded-[2rem] border border-black/10 bg-[#ECE7DC] px-6 py-7 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)]"
+                  className="w-full min-h-[11.75rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F3F3F1_0%,#E5E5DF_100%)] px-8 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-3xl font-semibold leading-none text-black">Search dish</p>
-                      <p className="mt-3 text-sm text-black/60">Pick an existing dish for your story.</p>
+                      <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
+                      <p className="mt-4 text-base text-black/60">Pick an existing dish for your story.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-white/70 flex items-center justify-center border border-black/5">
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[#F4F1E8] flex items-center justify-center border border-black/8">
                       <Search size={30} />
                     </div>
                   </div>

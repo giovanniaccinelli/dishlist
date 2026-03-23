@@ -413,11 +413,11 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[13rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFC93C_0%,#FF8A3D_45%,#FF5C5C_100%)] text-black px-8 py-9 text-left shadow-[0_26px_60px_rgba(255,107,61,0.28)] transition-transform hover:scale-[1.01] border border-black/15"
+                className="w-full min-h-[11.75rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] transition-transform hover:scale-[1.01] border border-black/12"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[2.3rem] font-semibold leading-[0.95]">Upload dish</p>
+                    <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
                     <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                   </div>
                   <div className="w-16 h-16 rounded-[1.4rem] bg-black text-white flex items-center justify-center shadow-md">
@@ -427,12 +427,12 @@ export default function UploadPage() {
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[10.5rem] rounded-[2rem] border border-black/15 bg-white px-7 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.01]"
+                className="w-full min-h-[11.75rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F3F3F1_0%,#E5E5DF_100%)] px-8 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)] transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[2rem] font-semibold leading-none text-black">Search dish</p>
-                    <p className="mt-3 text-sm text-black/60 max-w-[15rem]">See if it already exists.</p>
+                    <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
+                    <p className="mt-4 text-base text-black/60 max-w-[15rem]">See if it already exists.</p>
                   </div>
                   <div className="w-16 h-16 rounded-[1.4rem] bg-[#F4F1E8] flex items-center justify-center border border-black/8">
                     <Search size={30} />

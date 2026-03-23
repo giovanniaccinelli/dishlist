@@ -413,21 +413,21 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[13rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFF0D6_0%,#FFD79A_55%,#FFC76D_100%)] text-black px-8 py-9 text-left shadow-[0_24px_55px_rgba(0,0,0,0.12)] transition-transform hover:scale-[1.01] border border-[#E0B45A]"
+                className="w-full min-h-[13rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFD46A_0%,#FFB15E_48%,#FF8667_100%)] text-black px-8 py-9 text-left shadow-[0_24px_60px_rgba(255,145,84,0.28)] transition-transform hover:scale-[1.01] border border-[#D97B39]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-[2.3rem] font-semibold leading-[0.95]">Upload dish</p>
-                    <p className="mt-4 text-base text-black/65 max-w-[17rem]">Post a new dish to your DishList.</p>
+                    <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                   </div>
-                  <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-md">
+                  <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#161616_0%,#343434_100%)] text-white flex items-center justify-center shadow-md">
                     <Plus size={32} />
                   </div>
                 </div>
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[10.5rem] rounded-[2rem] border border-[#D9DCCF] bg-[linear-gradient(135deg,#F5F5EE_0%,#ECECDD_100%)] px-7 py-8 text-left shadow-[0_14px_36px_rgba(0,0,0,0.06)] transition-transform hover:scale-[1.01]"
+                className="w-full min-h-[10.5rem] rounded-[2rem] border border-[#DAD8CF] bg-[linear-gradient(135deg,#F7F6F0_0%,#ECEADE_100%)] px-7 py-8 text-left shadow-[0_14px_36px_rgba(0,0,0,0.05)] transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>

@@ -119,7 +119,7 @@ export default function Onboarding() {
         </div>
 
         <motion.div
-          className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] rounded-[2rem] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] flex-1 flex flex-col"
+          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF7EA_100%)] rounded-[2rem] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.10)] border border-[#E8D9BC] flex-1 flex flex-col"
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
@@ -135,10 +135,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFF3D3_0%,#FFD88F_100%)] text-black px-7 py-8 text-left shadow-[0_22px_55px_rgba(0,0,0,0.12)] border border-[#DFA94C]"
+                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFD46A_0%,#FFB15E_48%,#FF8667_100%)] text-black px-7 py-8 text-left shadow-[0_24px_60px_rgba(255,145,84,0.28)] border border-[#D97B39]"
                 >
                   <p className="text-[2.2rem] font-semibold leading-[0.95]">Start with 3 dishes</p>
-                  <p className="mt-4 text-base text-black/68 max-w-[18rem]">
+                  <p className="mt-4 text-base text-black/78 max-w-[18rem]">
                     Start by adding three dishes you already know you want in your DishList.
                   </p>
                 </button>
@@ -146,7 +146,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-[#D9DCCF] bg-[linear-gradient(135deg,#F5F5EE_0%,#ECECDD_100%)] px-6 py-6 text-left shadow-[0_14px_36px_rgba(0,0,0,0.06)]"
+                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-[#DAD8CF] bg-[linear-gradient(135deg,#F7F6F0_0%,#ECEADE_100%)] px-6 py-6 text-left shadow-[0_14px_36px_rgba(0,0,0,0.05)]"
                 >
                   <p className="text-[1.9rem] font-semibold leading-none">Swipe on the feed</p>
                   <p className="mt-3 text-sm text-black/60 max-w-[17rem]">
@@ -157,7 +157,7 @@ export default function Onboarding() {
 
               <button
                 onClick={handleSkip}
-                className="mt-6 w-full rounded-2xl border border-[#E8D2A4] bg-[linear-gradient(135deg,#FFF7E8_0%,#FFF0D4_100%)] px-5 py-4 text-base font-semibold text-black/75 hover:text-black shadow-sm"
+                className="mt-6 w-full rounded-2xl border border-[#E5D6BB] bg-white/80 px-5 py-4 text-base font-semibold text-black/70 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>

@@ -119,7 +119,7 @@ export default function Onboarding() {
         </div>
 
         <motion.div
-          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF7EA_100%)] rounded-[2rem] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.10)] border border-[#E8D9BC] flex-1 flex flex-col"
+          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[2rem] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.08)] border border-black/10 flex-1 flex flex-col"
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
@@ -135,7 +135,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFD46A_0%,#FFB15E_48%,#FF8667_100%)] text-black px-7 py-8 text-left shadow-[0_24px_60px_rgba(255,145,84,0.28)] border border-[#D97B39]"
+                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFC93C_0%,#FF8A3D_45%,#FF5C5C_100%)] text-black px-7 py-8 text-left shadow-[0_26px_60px_rgba(255,107,61,0.28)] border border-black/15"
                 >
                   <p className="text-[2.2rem] font-semibold leading-[0.95]">Start with 3 dishes</p>
                   <p className="mt-4 text-base text-black/78 max-w-[18rem]">
@@ -146,10 +146,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-[#DAD8CF] bg-[linear-gradient(135deg,#F7F6F0_0%,#ECEADE_100%)] px-6 py-6 text-left shadow-[0_14px_36px_rgba(0,0,0,0.05)]"
+                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-black/15 bg-white px-6 py-6 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
                 >
                   <p className="text-[1.9rem] font-semibold leading-none">Swipe on the feed</p>
-                  <p className="mt-3 text-sm text-black/60 max-w-[17rem]">
+                  <p className="mt-3 text-sm text-black/62 max-w-[17rem]">
                     Start swiping right away. After your third save, we ask you to create the profile.
                   </p>
                 </button>
@@ -157,7 +157,7 @@ export default function Onboarding() {
 
               <button
                 onClick={handleSkip}
-                className="mt-6 w-full rounded-2xl border border-[#E5D6BB] bg-white/80 px-5 py-4 text-base font-semibold text-black/70 hover:text-black shadow-sm"
+                className="mt-6 w-full rounded-2xl border border-black/12 bg-white px-5 py-4 text-base font-semibold text-black/72 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>

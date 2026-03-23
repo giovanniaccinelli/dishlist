@@ -718,7 +718,7 @@ export default function DishDetail() {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-3 rounded-full bg-[linear-gradient(90deg,#FF7A59_0%,#FF9F68_45%,#FFC15A_100%)] text-white font-semibold"
+                    className="flex-1 py-3 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white font-semibold"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}
@@ -753,7 +753,7 @@ export default function DishDetail() {
                     <button
                       type="button"
                       onClick={goToNextEditStep}
-                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg"
+                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
                     >
                       <ArrowRight size={20} />
                     </button>
@@ -762,7 +762,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={goToNextEditStep}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
                   >
                     <ArrowRight size={20} />
                   </button>

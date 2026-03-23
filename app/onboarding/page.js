@@ -135,10 +135,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full rounded-[1.8rem] bg-[linear-gradient(135deg,#FFF3D3_0%,#FFE5B4_100%)] text-black px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.08)] border border-[#E8C27C]"
+                  className="w-full min-h-[12.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFF3D3_0%,#FFD88F_100%)] text-black px-7 py-8 text-left shadow-[0_22px_55px_rgba(0,0,0,0.12)] border border-[#DFA94C]"
                 >
-                  <p className="text-[2rem] font-semibold leading-none">Start with 3 dishes</p>
-                  <p className="mt-3 text-sm text-black/65">
+                  <p className="text-[2.2rem] font-semibold leading-[0.95]">Start with 3 dishes</p>
+                  <p className="mt-4 text-base text-black/68 max-w-[18rem]">
                     Start by adding three dishes you already know you want in your DishList.
                   </p>
                 </button>
@@ -146,10 +146,10 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full rounded-[1.8rem] border border-[#C9DAB9] bg-[linear-gradient(135deg,#F0FAEC_0%,#DAF5DE_100%)] px-6 py-6 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)]"
+                  className="w-full min-h-[9.75rem] rounded-[1.8rem] border border-[#D9DCCF] bg-[linear-gradient(135deg,#F5F5EE_0%,#ECECDD_100%)] px-6 py-6 text-left shadow-[0_14px_36px_rgba(0,0,0,0.06)]"
                 >
-                  <p className="text-[2rem] font-semibold leading-none">Swipe on the feed</p>
-                  <p className="mt-3 text-sm text-black/65">
+                  <p className="text-[1.9rem] font-semibold leading-none">Swipe on the feed</p>
+                  <p className="mt-3 text-sm text-black/60 max-w-[17rem]">
                     Start swiping right away. After your third save, we ask you to create the profile.
                   </p>
                 </button>
@@ -256,7 +256,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={handleContinueName}
                     disabled={!currentName.trim()}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
                     aria-label="Continue"
                   >
                     <ArrowRight size={22} />
@@ -266,7 +266,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={persistNamesAndEnter}
                     disabled={trimmedNames.length !== 3}
-                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
+                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
                   >
                     Enter DishList
                   </button>

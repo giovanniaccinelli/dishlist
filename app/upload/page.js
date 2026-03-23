@@ -353,7 +353,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePost}
-                  className="w-full bg-[linear-gradient(90deg,#FF7A59_0%,#FF9F68_45%,#FFC15A_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
+                  className="w-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
@@ -391,7 +391,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-lg"
+                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >
@@ -413,12 +413,12 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[11.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFF0D6_0%,#FFD79A_100%)] text-black px-7 py-8 text-left shadow-[0_18px_45px_rgba(0,0,0,0.10)] transition-transform hover:scale-[1.01] border border-[#E4BF78]"
+                className="w-full min-h-[13rem] rounded-[2rem] bg-[linear-gradient(135deg,#FFF0D6_0%,#FFD79A_55%,#FFC76D_100%)] text-black px-8 py-9 text-left shadow-[0_24px_55px_rgba(0,0,0,0.12)] transition-transform hover:scale-[1.01] border border-[#E0B45A]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-3xl font-semibold leading-none">Upload dish</p>
-                    <p className="mt-3 text-sm text-black/60 max-w-[15rem]">Post a new dish to your DishList.</p>
+                    <p className="text-[2.3rem] font-semibold leading-[0.95]">Upload dish</p>
+                    <p className="mt-4 text-base text-black/65 max-w-[17rem]">Post a new dish to your DishList.</p>
                   </div>
                   <div className="w-16 h-16 rounded-[1.4rem] bg-[linear-gradient(135deg,#FF7A59_0%,#FFB347_100%)] text-white flex items-center justify-center shadow-md">
                     <Plus size={32} />
@@ -427,11 +427,11 @@ export default function UploadPage() {
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[11.5rem] rounded-[2rem] border border-[#C9DAB9] bg-[linear-gradient(135deg,#F0FAEC_0%,#DAF5DE_100%)] px-7 py-8 text-left shadow-[0_18px_45px_rgba(0,0,0,0.06)] transition-transform hover:scale-[1.01]"
+                className="w-full min-h-[10.5rem] rounded-[2rem] border border-[#D9DCCF] bg-[linear-gradient(135deg,#F5F5EE_0%,#ECECDD_100%)] px-7 py-8 text-left shadow-[0_14px_36px_rgba(0,0,0,0.06)] transition-transform hover:scale-[1.01]"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-3xl font-semibold leading-none text-black">Search dish</p>
+                    <p className="text-[2rem] font-semibold leading-none text-black">Search dish</p>
                     <p className="mt-3 text-sm text-black/60 max-w-[15rem]">See if it already exists.</p>
                   </div>
                   <div className="w-16 h-16 rounded-[1.4rem] bg-white/75 flex items-center justify-center border border-black/5">

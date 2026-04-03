@@ -440,7 +440,7 @@ export default function UploadPage() {
                 <div className="flex h-full flex-col justify-between gap-8">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
+                      <p className="text-[2.15rem] font-semibold leading-[0.95]">Create a dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
@@ -472,7 +472,7 @@ export default function UploadPage() {
                 <div className="flex h-full flex-col justify-between gap-8">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
+                      <p className="text-[2.15rem] font-semibold leading-none text-black">Find a dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0 aspect-square">

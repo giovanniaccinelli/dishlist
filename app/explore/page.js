@@ -40,7 +40,7 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title }) {
   return (
-    <div className="pressable-card relative w-[31.5%] min-w-[31.5%] bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer">
+    <div className="pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer">
       <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
         <span className="sr-only">Open dish card</span>
       </Link>
@@ -83,7 +83,7 @@ function ExploreRow({ title, dishes, onExpand }) {
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish) => (
-          <div key={`${title}-${dish.id}`} className="snap-start">
+          <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
             <DishPreview dish={dish} title={title} />
           </div>
         ))}
@@ -96,7 +96,7 @@ function ExpandedCategoryModal({ row, onClose }) {
   if (!row) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md">
+    <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
       <div className="min-h-screen px-5 pt-6 pb-24 text-black">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{row.title}</h1>

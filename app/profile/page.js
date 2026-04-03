@@ -885,14 +885,14 @@ export default function Profile() {
       <AnimatePresence>
         {editProfileModal && (
           <motion.div
-            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto p-4"
+            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-hidden p-3"
             onClick={() => {
               setEditProfileModal(false);
               setRemovePhoto(false);
             }}
           >
             <motion.div
-              className="w-full max-w-lg max-h-[88vh] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6 flex flex-col"
+              className="w-full max-w-lg h-auto max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.16)] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex items-start justify-between gap-4">
@@ -916,7 +916,7 @@ export default function Profile() {
                 </button>
               </div>
 
-              <div className="space-y-5 overflow-y-auto pr-1 min-h-0">
+              <div className="space-y-5 overflow-y-auto pr-1 min-h-0 flex-1">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black/72">Display name</label>
                   <input

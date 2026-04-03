@@ -59,6 +59,7 @@ export default function Feed() {
   const [excludedTags, setExcludedTags] = useState([]);
   const [draftExcludedTags, setDraftExcludedTags] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterVersion, setFilterVersion] = useState(0);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -510,6 +511,7 @@ export default function Feed() {
       <div className="px-5 h-[calc(100vh-184px)] overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
+            key={`for-you-${filterVersion}-${excludedTags.join("|")}`}
             dishes={orderedForYou}
             preserveContinuity
             onAction={handleAdd}
@@ -559,6 +561,7 @@ export default function Feed() {
             </div>
           ) : (
             <SwipeDeck
+              key={`following-${filterVersion}-${excludedTags.join("|")}`}
               dishes={orderedFollowing}
               preserveContinuity
               onAction={handleAdd}
@@ -646,6 +649,7 @@ export default function Feed() {
                     if (typeof window !== "undefined") {
                       localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify([]));
                     }
+                    setFilterVersion((prev) => prev + 1);
                     setFilterOpen(false);
                   }}
                   className="px-4 py-2 rounded-full border border-black/15 bg-white/85 text-sm font-medium text-black/70"
@@ -659,9 +663,10 @@ export default function Feed() {
                     if (typeof window !== "undefined") {
                       localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify(draftExcludedTags));
                     }
+                    setFilterVersion((prev) => prev + 1);
                     setFilterOpen(false);
                   }}
-                  className="px-4 py-2 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white text-sm font-semibold"
+                  className="px-4 py-2 rounded-full bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white text-sm font-semibold"
                 >
                   Save
                 </button>

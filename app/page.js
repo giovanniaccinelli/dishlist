@@ -30,6 +30,7 @@ const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const LAST_APP_OPEN_KEY = "feed:lastAppOpenAt";
+const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -51,6 +52,7 @@ export default function Feed() {
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
+  const [viewedDishIds, setViewedDishIds] = useState([]);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -76,6 +78,19 @@ export default function Feed() {
       if (Array.isArray(saved)) setGuestSavedIds(saved);
     } catch {}
   }, [router, userId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) {
+      setViewedDishIds([]);
+      return;
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewedStorageKey(userId)) || "[]");
+      setViewedDishIds(Array.isArray(stored) ? stored : []);
+    } catch {
+      setViewedDishIds([]);
+    }
+  }, [userId]);
 
   useEffect(() => {
     const sortNewest = (items) =>
@@ -256,18 +271,32 @@ export default function Feed() {
     if (typeof window === "undefined") return;
     const previousOpen = Number(localStorage.getItem(LAST_APP_OPEN_KEY) || 0);
     localStorage.setItem(LAST_APP_OPEN_KEY, String(Date.now()));
-    if (!userId || !followingDeck.length || !previousOpen) {
+    if (!userId || !orderedFollowing.length) {
       if (!userId) setFollowingHasUpdate(false);
       return;
     }
-    setFollowingHasUpdate(
-      followingDeck.some((dish) => ((dish?.createdAt?.seconds || 0) * 1000) > previousOpen)
-    );
-  }, [userId, followingDeck]);
+    const viewed = new Set(viewedDishIds);
+    const hasUnviewed = orderedFollowing.some((dish) => !viewed.has(dish.id));
+    const hasRecent = previousOpen
+      ? orderedFollowing.some((dish) => ((dish?.createdAt?.seconds || 0) * 1000) > previousOpen)
+      : hasUnviewed;
+    setFollowingHasUpdate(hasUnviewed || hasRecent);
+  }, [userId, orderedFollowing, viewedDishIds]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
-    if (tab === "following") setFollowingHasUpdate(false);
+  };
+
+  const handleDishViewed = (dish) => {
+    if (!userId || !dish?.id) return;
+    setViewedDishIds((prev) => {
+      if (prev.includes(dish.id)) return prev;
+      const next = [...prev, dish.id];
+      if (typeof window !== "undefined") {
+        localStorage.setItem(viewedStorageKey(userId), JSON.stringify(next));
+      }
+      return next;
+    });
   };
 
   const handleAdd = async (dishToAdd) => {
@@ -449,6 +478,7 @@ export default function Feed() {
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
             onResetFeed={() => handleResetFeed("for_you")}
+            onCardViewed={handleDishViewed}
           />
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
@@ -497,6 +527,7 @@ export default function Feed() {
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}
               onResetFeed={() => handleResetFeed("following")}
+              onCardViewed={handleDishViewed}
             />
           )}
         </div>

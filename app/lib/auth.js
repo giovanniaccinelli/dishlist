@@ -74,10 +74,14 @@ export function AuthProvider({ children }) {
     await saveUserDoc(result.user);
   };
 
-  const signUpWithEmail = async (email, password) => {
+  const signUpWithEmail = async (email, password, displayName = "") => {
     if (!email || !password) throw new Error("Email and password are required");
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    await saveUserDoc(result.user);
+    const cleanedName = displayName.trim();
+    if (cleanedName) {
+      await firebaseUpdateProfile(result.user, { displayName: cleanedName });
+    }
+    await saveUserDoc({ ...result.user, displayName: cleanedName || result.user.displayName });
   };
 
   const updateProfile = async (newName) => {

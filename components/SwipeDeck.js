@@ -42,6 +42,7 @@ export default function SwipeDeck({
   preserveContinuity = true,
   disabled = false,
   currentUser = null,
+  onCardViewed,
 }) {
   const SWIPE_EJECT_THRESHOLD = 70;
 
@@ -104,6 +105,7 @@ export default function SwipeDeck({
 
   useEffect(() => {
     if (!currentCard?.id) return;
+    onCardViewed?.(currentCard);
     setComments([]);
     setPreviewComment(null);
     setNewComment("");
@@ -112,7 +114,7 @@ export default function SwipeDeck({
       const top = await getCommentsForDish(currentCard.id, 1);
       setPreviewComment(top?.[0] || null);
     })();
-  }, [currentCard?.id]);
+  }, [currentCard?.id, onCardViewed]);
 
   useEffect(() => {
     if (!tagsRef.current) return;

@@ -885,7 +885,7 @@ export default function Profile() {
       <AnimatePresence>
         {editProfileModal && (
           <motion.div
-            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-hidden p-2"
+            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-[80] overflow-hidden p-2"
             onClick={() => {
               setEditProfileModal(false);
               setRemovePhoto(false);

@@ -24,7 +24,14 @@ export function useUnreadDirects(userId) {
 
   return useMemo(() => {
     const unreadConversationIds = conversations
-      .filter((conversation) => Array.isArray(conversation.unreadBy) && conversation.unreadBy.includes(userId))
+      .filter((conversation) => {
+        const lastSenderId = conversation?.lastMessage?.senderId;
+        if (!lastSenderId || lastSenderId === userId) return false;
+        const unreadBy = Array.isArray(conversation.unreadBy) ? conversation.unreadBy : [];
+        const readBy = Array.isArray(conversation.readBy) ? conversation.readBy : [];
+        if (unreadBy.includes(userId)) return true;
+        return !readBy.includes(userId);
+      })
       .map((conversation) => conversation.id);
     return {
       hasUnread: unreadConversationIds.length > 0,

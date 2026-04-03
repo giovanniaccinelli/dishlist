@@ -387,7 +387,7 @@ export default function SwipeDeck({
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: "pan-x" }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "auto" : "pan-x" }}
           onPointerDown={(e) => {
             if (disabled) return;
             const rawTarget = e.target;

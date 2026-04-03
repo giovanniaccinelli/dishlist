@@ -9,7 +9,7 @@ import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
-import { getSavedDishesFromFirestore, getDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
+import { getSavedDishesFromFirestore, getDishesFromFirestore, getToTryDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { Plus, SendHorizonal, X } from "lucide-react";
 
 export default function DirectChat() {
@@ -24,6 +24,8 @@ export default function DirectChat() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDish, setConfirmDish] = useState(null);
   const [ownDishlist, setOwnDishlist] = useState([]);
+  const [ownToTry, setOwnToTry] = useState([]);
+  const [pickerTab, setPickerTab] = useState("dishlist");
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -71,9 +73,10 @@ export default function DirectChat() {
   useEffect(() => {
     if (!user?.uid) return;
     (async () => {
-      const [uploaded, saved] = await Promise.all([
+      const [uploaded, saved, toTry] = await Promise.all([
         getDishesFromFirestore(user.uid),
         getSavedDishesFromFirestore(user.uid),
+        getToTryDishesFromFirestore(user.uid),
       ]);
       const merged = [...uploaded, ...saved];
       const unique = [];
@@ -84,6 +87,7 @@ export default function DirectChat() {
         unique.push(dish);
       });
       setOwnDishlist(unique);
+      setOwnToTry(toTry);
     })();
   }, [user?.uid]);
 
@@ -189,7 +193,7 @@ export default function DirectChat() {
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEF3FB] text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF3FB] text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
             aria-label="Share a dish"
           >
             <Plus size={22} />
@@ -237,8 +241,32 @@ export default function DirectChat() {
                 <X size={18} />
               </button>
             </div>
+            <div className="mb-4 flex justify-center">
+              <div className="flex items-end gap-10 border-b border-black/12">
+                <button
+                  type="button"
+                  onClick={() => setPickerTab("dishlist")}
+                  className={`relative pb-2 text-sm font-semibold transition ${pickerTab === "dishlist" ? "text-black" : "text-black/45"}`}
+                >
+                  My DishList
+                  {pickerTab === "dishlist" ? (
+                    <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#23C268]" />
+                  ) : null}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPickerTab("to_try")}
+                  className={`relative pb-2 text-sm font-semibold transition ${pickerTab === "to_try" ? "text-black" : "text-black/45"}`}
+                >
+                  To Try
+                  {pickerTab === "to_try" ? (
+                    <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#D9BC48]" />
+                  ) : null}
+                </button>
+              </div>
+            </div>
             <div className="grid flex-1 grid-cols-3 gap-3 overflow-y-auto pb-2">
-              {ownDishlist.map((dish) => {
+              {(pickerTab === "dishlist" ? ownDishlist : ownToTry).map((dish) => {
                 const imageSrc = getDishImageUrl(dish);
                 return (
                   <button
@@ -282,7 +310,7 @@ export default function DirectChat() {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="px-4 py-3">
+              <div className="relative -mt-14 px-4 pb-4 pt-14 text-white bg-gradient-to-t from-black/80 to-transparent">
                 <div className="font-semibold">{confirmDish.name || "Dish"}</div>
               </div>
             </div>
@@ -297,7 +325,7 @@ export default function DirectChat() {
               <button
                 type="button"
                 onClick={sendDish}
-                className="rounded-full bg-gradient-to-r from-[#111111] to-[#2E2E2E] px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-full bg-gradient-to-r from-[#0F3D63] to-[#2B74B8] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(43,116,184,0.28)]"
               >
                 Send dish
               </button>

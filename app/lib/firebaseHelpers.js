@@ -636,6 +636,7 @@ export async function getOrCreateConversation(currentUser, otherUser) {
       updatedAt: serverTimestamp(),
       lastMessage: null,
       unreadBy: [],
+      readBy: [],
     });
   }
   return convoId;
@@ -677,6 +678,7 @@ export async function sendMessage(conversationId, message) {
         },
         updatedAt: serverTimestamp(),
         unreadBy,
+        readBy: [message.senderId],
       },
       { merge: true }
     );
@@ -694,6 +696,7 @@ export async function markConversationAsRead(conversationId, userId) {
       doc(db, "conversations", conversationId),
       {
         unreadBy: arrayRemove(userId),
+        readBy: arrayUnion(userId),
       },
       { merge: true }
     );

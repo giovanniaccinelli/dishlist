@@ -410,7 +410,7 @@ export default function UploadPage() {
             <div className="space-y-5">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[15.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#8BC5F5_0%,#5FA8F2_55%,#428FDF_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(66,143,223,0.28)] transition-transform hover:scale-[1.01] border border-[#2E6FAF]/18"
+                className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
               >
                 <div className="flex h-full flex-col justify-between gap-8">
                   <div className="flex items-center justify-between gap-4">
@@ -418,7 +418,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.88)] text-[#215D95] flex items-center justify-center shadow-md border border-[#2E6FAF]/12">
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.84)] text-[#3A8FDF] flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55">
                       <Plus size={32} />
                     </div>
                   </div>
@@ -442,7 +442,7 @@ export default function UploadPage() {
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[15.5rem] rounded-[2rem] border border-[#167E43]/16 bg-[linear-gradient(135deg,#23C268_0%,#1EA956_55%,#178243_100%)] px-8 py-8 text-left shadow-[0_22px_42px_rgba(23,130,67,0.22)] transition-transform hover:scale-[1.01]"
+                className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
               >
                 <div className="flex h-full flex-col justify-between gap-8">
                   <div className="flex items-center justify-between gap-4">
@@ -450,7 +450,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.9)] text-[#14532D] flex items-center justify-center border border-[#167E43]/12 shadow-md">
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.84)] text-[#17914A] flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md">
                       <Search size={30} />
                     </div>
                   </div>

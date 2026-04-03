@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
+const STORY_DURATION_MS = 4500;
+
 export default function StoryViewerModal({
   open,
   onClose,
@@ -60,6 +62,14 @@ export default function StoryViewerModal({
     onViewed?.(currentStory, currentGroup);
   }, [open, currentStory?.id, groupIndex, onViewed, currentGroup]);
 
+  useEffect(() => {
+    if (!open || !currentStory?.id) return;
+    const timer = window.setTimeout(() => {
+      goNext();
+    }, STORY_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, currentStory?.id, groupIndex, storyIndex]);
+
   const goNext = () => {
     if (!currentGroup) return onClose?.();
     if (storyIndex < currentStories.length - 1) {
@@ -84,6 +94,23 @@ export default function StoryViewerModal({
       const previousGroup = groups[groupIndex - 1];
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(Math.max((previousGroup?.stories?.length || 1) - 1, 0));
+    }
+  };
+
+  const goNextGroup = () => {
+    if (groupIndex < groups.length - 1) {
+      setGroupIndex((prev) => prev + 1);
+      setStoryIndex(0);
+      return;
+    }
+    onClose?.();
+  };
+
+  const goPrevGroup = () => {
+    if (groupIndex > 0) {
+      setGroupIndex((prev) => prev - 1);
+      setStoryIndex(0);
+      return;
     }
   };
 
@@ -134,13 +161,18 @@ export default function StoryViewerModal({
       >
         <motion.div
           className="relative w-screen h-screen overflow-hidden bg-black"
-          drag="y"
-          dragConstraints={{ top: 0, bottom: 0 }}
-          dragElastic={0.15}
+          drag
+          dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+          dragElastic={0.12}
           onDragEnd={(_, info) => {
+            if (Math.abs(info.offset.x) > Math.abs(info.offset.y) && Math.abs(info.offset.x) > 70) {
+              if (info.offset.x < 0) goNextGroup();
+              else goPrevGroup();
+              return;
+            }
             if (info.offset.y > 120 || info.velocity.y > 700) onClose?.();
           }}
-          style={{ transformStyle: "preserve-3d" }}
+          style={{ transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >
           <motion.div
             key={`${currentGroup?.ownerId || "group"}-${currentStory?.id || "story"}`}
@@ -163,7 +195,19 @@ export default function StoryViewerModal({
           <div className="absolute top-4 left-4 right-4 z-40 flex gap-1">
             {currentStories.map((story, idx) => (
               <div key={story.id || idx} className="h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
-                <div className={`h-full rounded-full ${idx <= storyIndex ? "bg-white" : "bg-transparent"}`} />
+                {idx < storyIndex ? (
+                  <div className="h-full w-full rounded-full bg-white" />
+                ) : idx === storyIndex ? (
+                  <motion.div
+                    key={story.id || idx}
+                    className="h-full rounded-full bg-white"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: STORY_DURATION_MS / 1000, ease: "linear" }}
+                  />
+                ) : (
+                  <div className="h-full w-0 rounded-full bg-transparent" />
+                )}
               </div>
             ))}
           </div>

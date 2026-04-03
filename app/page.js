@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AuthPromptModal from "../components/AuthPromptModal";
@@ -19,11 +20,12 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { CircleUserRound, Send } from "lucide-react";
+import { CircleUserRound, Funnel, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
+import { TAG_OPTIONS, getTagChipClass } from "./lib/tags";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -31,6 +33,7 @@ const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const LAST_APP_OPEN_KEY = "feed:lastAppOpenAt";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
+const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -53,6 +56,8 @@ export default function Feed() {
   const [followingIds, setFollowingIds] = useState([]);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
+  const [excludedTags, setExcludedTags] = useState([]);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -78,6 +83,16 @@ export default function Feed() {
       if (Array.isArray(saved)) setGuestSavedIds(saved);
     } catch {}
   }, [router, userId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(FEED_EXCLUDED_TAGS_KEY) || "[]");
+      setExcludedTags(Array.isArray(stored) ? stored : []);
+    } catch {
+      setExcludedTags([]);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || !userId) {
@@ -257,14 +272,27 @@ export default function Feed() {
       .catch((err) => console.error("Failed to recount saves:", err));
   }, []);
 
+  const excludedTagSet = useMemo(
+    () => new Set(excludedTags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)),
+    [excludedTags]
+  );
+
+  const isDishAllowedByFilters = (dish) => {
+    if (!excludedTagSet.size) return true;
+    const dishTags = Array.isArray(dish?.tags)
+      ? dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)
+      : [];
+    return !dishTags.some((tag) => excludedTagSet.has(tag));
+  };
+
   const orderedForYou = useMemo(
-    () => forYouDeck.filter((d) => !addedDishIds.has(d.id)),
-    [forYouDeck, addedDishIds]
+    () => forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d)),
+    [forYouDeck, addedDishIds, excludedTagSet]
   );
 
   const orderedFollowing = useMemo(
-    () => followingDeck.filter((d) => !addedDishIds.has(d.id)),
-    [followingDeck, addedDishIds]
+    () => followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d)),
+    [followingDeck, addedDishIds, excludedTagSet]
   );
 
   useEffect(() => {
@@ -406,6 +434,18 @@ export default function Feed() {
           <h1 className="text-3xl font-bold">DishList</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            className={`w-11 h-11 rounded-[1.1rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02] ${
+              excludedTags.length > 0
+                ? "border-[#D9BC48] bg-[linear-gradient(180deg,rgba(255,236,180,0.96)_0%,rgba(247,221,133,0.96)_100%)] text-black"
+                : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] text-black"
+            }`}
+            aria-label="Filter feed tags"
+          >
+            <Funnel size={18} />
+          </button>
           <Link
             href={userId ? "/directs" : "/?auth=1"}
             className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
@@ -532,6 +572,71 @@ export default function Feed() {
           )}
         </div>
       </div>
+      <AnimatePresence>
+        {filterOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[70] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setFilterOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.16)]"
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/45">
+                    Feed filter
+                  </div>
+                  <h2 className="mt-2 text-[1.8rem] leading-none font-semibold text-black">Hide tags</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen(false)}
+                  className="w-10 h-10 rounded-[1rem] border border-black/10 bg-white/90 flex items-center justify-center"
+                  aria-label="Close filters"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="mb-4 text-sm text-black/58">
+                Deselect any tag to exclude those dishes from the feed. This stays saved until you change it.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {TAG_OPTIONS.map((tag) => {
+                  const normalized = String(tag).toLowerCase();
+                  const enabled = !excludedTagSet.has(normalized);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        setExcludedTags((prev) => {
+                          const next = prev.some((item) => String(item).toLowerCase() === normalized)
+                            ? prev.filter((item) => String(item).toLowerCase() !== normalized)
+                            : [...prev, tag];
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify(next));
+                          }
+                          return next;
+                        })
+                      }
+                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, enabled)}`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
       <SaversModal
         open={saversOpen}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, CircleUserRound, Search as SearchIcon, Send, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
@@ -138,6 +139,7 @@ function ExpandedCategoryModal({ row, onClose }) {
 }
 
 export default function Explore() {
+  const router = useRouter();
   const { user } = useAuth();
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
@@ -233,6 +235,27 @@ export default function Explore() {
 
     return rows.filter((row) => row.dishes.length > 0);
   }, [allDishes, search, selectedTagsApplied, trendingDishes]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const selectedCategory = (new URLSearchParams(window.location.search).get("category") || "").toLowerCase();
+    if (!selectedCategory) {
+      setExpandedRow(null);
+      return;
+    }
+    const matched = categoryRows.find((row) => row.key.toLowerCase() === selectedCategory);
+    if (matched) setExpandedRow(matched);
+  }, [categoryRows]);
+
+  const openExpandedRow = (row) => {
+    setExpandedRow(row);
+    router.replace(`/explore?category=${encodeURIComponent(row.key)}`, { scroll: false });
+  };
+
+  const closeExpandedRow = () => {
+    setExpandedRow(null);
+    router.replace("/explore", { scroll: false });
+  };
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
@@ -336,12 +359,12 @@ export default function Explore() {
       ) : (
         <div>
           {categoryRows.map((row) => (
-            <ExploreRow key={row.key} title={row.title} dishes={row.dishes} onExpand={() => setExpandedRow(row)} />
+            <ExploreRow key={row.key} title={row.title} dishes={row.dishes} onExpand={() => openExpandedRow(row)} />
           ))}
         </div>
       )}
 
-      <ExpandedCategoryModal row={expandedRow} onClose={() => setExpandedRow(null)} />
+      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} />
       <BottomNav />
     </div>
   );

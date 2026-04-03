@@ -36,34 +36,61 @@ function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
       <path
-        d="M7.1 4.9C5.55 5.85 4.33 7.22 3.59 8.85"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-        strokeOpacity="0.55"
-      />
-      <path
-        d="M2.8 12.6C2.62 13.52 2.62 14.48 2.8 15.4"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-        strokeOpacity="0.72"
-      />
-      <path
-        d="M4.1 19.05C5.04 20.56 6.41 21.76 8.02 22.5"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-        strokeOpacity="0.88"
-      />
-      <path
-        d="M20.2 5.4C22.48 7.19 23.95 9.98 24.1 13.05"
+        d="M14 2.8C13.04 2.86 12.11 3.03 11.23 3.3"
         stroke="currentColor"
         strokeWidth="2.8"
         strokeLinecap="round"
       />
       <path
-        d="M23.55 17.2C22.75 19.51 21.12 21.45 18.96 22.63"
+        d="M9.4 3.97C8.69 4.31 8.02 4.73 7.4 5.22"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6.03 6.52C5.52 7.12 5.08 7.77 4.72 8.47"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.02 10.02C3.75 10.86 3.56 11.74 3.47 12.66"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3.55 14.65C3.64 15.73 3.86 16.76 4.2 17.73"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.93 19.52C5.49 20.5 6.21 21.37 7.07 22.09"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.83 23.36C9.96 24.03 11.22 24.49 12.56 24.69"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.58 24.73C17.44 24.59 20.12 23.37 22.1 21.35"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M23.45 19.45C24.49 17.71 25.06 15.68 25.1 13.57"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M24.73 11.57C24.29 7.74 21.75 4.45 18.15 3.12"
         stroke="currentColor"
         strokeWidth="2.8"
         strokeLinecap="round"
@@ -519,7 +546,7 @@ export default function DishDetail() {
           onPointerUp={(e) => e.stopPropagation()}
         >
           <div className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E3CFA7] my-6">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
                   <span
@@ -541,6 +568,14 @@ export default function DishDetail() {
               <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
                 {editStep === 0 ? "Basics" : editStep === 1 ? "Details" : editStep === 2 ? "Recipe" : "Review"}
               </div>
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="w-10 h-10 shrink-0 rounded-[1rem] border border-black/10 bg-white/90 text-black/60 hover:text-black"
+                aria-label="Close edit modal"
+              >
+                ×
+              </button>
             </div>
 
             {editStep === 0 ? (
@@ -628,7 +663,7 @@ export default function DishDetail() {
             {editStep === 2 ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-4xl font-black tracking-tight text-[#2BD36B]/25 uppercase">Optional</div>
+                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
@@ -724,32 +759,13 @@ export default function DishDetail() {
                 ) : (
                   <div />
                 )}
-                {editStep === 2 ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditStep(3)}
-                      className="px-4 py-2 rounded-full border border-black/20 text-sm font-medium"
-                    >
-                      Skip
-                    </button>
-                    <button
-                      type="button"
-                      onClick={goToNextEditStep}
-                      className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
-                    >
-                      <ArrowRight size={20} />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={goToNextEditStep}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
-                  >
-                    <ArrowRight size={20} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={goToNextEditStep}
+                  className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
+                >
+                  <ArrowRight size={20} />
+                </button>
               </div>
             ) : null}
           </div>

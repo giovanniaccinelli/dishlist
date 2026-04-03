@@ -10,6 +10,7 @@ import {
   animate,
 } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
@@ -44,6 +45,7 @@ export default function SwipeDeck({
   currentUser = null,
   onCardViewed,
 }) {
+  const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
 
   const [deck, setDeck] = useState([]);
@@ -322,6 +324,12 @@ export default function SwipeDeck({
       .map((tag) => (typeof tag === "string" ? tag.trim() : ""))
       .filter(Boolean)
       .slice(0, 6);
+  };
+
+  const handleTagPress = (tag, event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    router.push(`/explore?category=${encodeURIComponent(`tag-${tag}`)}`);
   };
 
   const TAG_COLORS = [
@@ -671,14 +679,17 @@ export default function SwipeDeck({
             style={{ bottom: tagsBottom }}
           >
             {getTags(currentCard).map((tag, idx) => (
-              <span
+              <button
+                type="button"
+                data-no-drag="true"
                 key={`${tag}-${idx}`}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                   TAG_COLORS[idx % TAG_COLORS.length]
                 }`}
+                onClick={(e) => handleTagPress(tag, e)}
               >
                 {tag}
-              </span>
+              </button>
             ))}
           </div>
 

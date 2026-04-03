@@ -370,14 +370,14 @@ export default function SwipeDeck({
       <div className="relative w-full max-w-md h-[74vh]">
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || showRecipe ? false : "x"}
+          drag={disabled || isEjecting ? false : "x"}
           dragListener={false}
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "auto" : "pan-x" }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: "pan-x" }}
           onPointerDown={(e) => {
-            if (disabled || showRecipe) return;
+            if (disabled) return;
             const target = e.target;
             if (target instanceof Element && target.closest("[data-no-drag='true']")) return;
             dragControls.start(e);

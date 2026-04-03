@@ -281,7 +281,7 @@ export default function UploadPage() {
             {uploadStep === 2 ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-4xl font-black tracking-tight text-[#2BD36B]/25 uppercase">Optional</div>
+                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
@@ -378,16 +378,6 @@ export default function UploadPage() {
 
               {uploadStep < 3 ? (
                 <div className="flex items-center gap-3">
-                  {uploadStep === 2 ? (
-                    <button
-                      type="button"
-                      onClick={() => setUploadStep(3)}
-                      className="text-sm font-semibold text-black/55"
-                      disabled={loadingUpload}
-                    >
-                      Skip
-                    </button>
-                  ) : null}
                   <button
                     type="button"
                     onClick={goToNextStep}

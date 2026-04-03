@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -21,6 +21,7 @@ export default function Onboarding() {
   const [names, setNames] = useState(["", "", ""]);
   const [error, setError] = useState("");
   const [ideaDishes, setIdeaDishes] = useState([]);
+  const [ideasLoading, setIdeasLoading] = useState(false);
 
   useEffect(() => {
     if (user) router.replace("/");
@@ -38,25 +39,26 @@ export default function Onboarding() {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadIdeas = async () => {
-      try {
-        const snapshot = await getDocs(query(collection(db, "dishes"), limit(18)));
-        const dishes = snapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((dish) => dish?.name);
-        const shuffled = [...dishes].sort(() => Math.random() - 0.5).slice(0, 6);
-        if (!cancelled) setIdeaDishes(shuffled);
-      } catch {
-        if (!cancelled) setIdeaDishes([]);
-      }
-    };
-    loadIdeas();
-    return () => {
-      cancelled = true;
-    };
+  const loadIdeas = useCallback(async () => {
+    setIdeasLoading(true);
+    try {
+      const snapshot = await getDocs(query(collection(db, "dishes"), limit(60)));
+      const dishes = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((dish) => dish?.name);
+      const shuffled = [...dishes].sort(() => Math.random() - 0.5).slice(0, 6);
+      setIdeaDishes(shuffled);
+    } catch {
+      setIdeaDishes([]);
+    } finally {
+      setIdeasLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (step === 0) return;
+    loadIdeas();
+  }, [step, loadIdeas]);
 
   const currentInputStep = step - 1;
   const currentName = names[currentInputStep] || "";
@@ -234,6 +236,9 @@ export default function Onboarding() {
                     </button>
                   ))}
                 </div>
+                {!ideasLoading && !ideaDishes.length ? (
+                  <p className="mt-3 text-sm text-black/45">No ideas yet.</p>
+                ) : null}
               </div>
 
               {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}

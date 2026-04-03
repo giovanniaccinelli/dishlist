@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { useRouter } from "next/navigation";
@@ -69,6 +69,7 @@ export default function Profile() {
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+  const profileOptionsRef = useRef(null);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
@@ -101,6 +102,19 @@ export default function Profile() {
       })();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!profileOptionsOpen) return;
+
+    const handleOutsideClick = (event) => {
+      if (!profileOptionsRef.current?.contains(event.target)) {
+        setProfileOptionsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [profileOptionsOpen]);
 
   useEffect(() => {
     if (!editProfileModal) return;
@@ -495,7 +509,7 @@ export default function Profile() {
           <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
         </div>
         </div>
-        <div className="relative flex items-center gap-2">
+        <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
             onClick={() => {

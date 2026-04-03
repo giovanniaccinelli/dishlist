@@ -170,53 +170,7 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => {
-            if (activeStories.length > 0) setStoriesOpen(true);
-          }}
-          className={`w-16 h-16 rounded-full p-[3px] ${
-            activeStories.length > 0
-              ? viewedAllStories
-                ? "bg-[#C6C6BF]"
-                : "bg-[#2BD36B]"
-              : "bg-transparent"
-          }`}
-          aria-label="Open stories"
-        >
-          <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-            <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
-              {profileUser.photoURL ? (
-                <img src={profileUser.photoURL} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
-              ) : (
-                profileUser.displayName?.[0] || "U"
-              )}
-            </div>
-          </div>
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
-          <p className="text-black/60 text-sm">
-            {savedDishes.length} saved · {toTryDishes.length} to try · {dishes.length} uploaded
-          </p>
-          {profileUser.bio ? (
-            <p className="mt-2 max-w-md text-sm leading-6 text-black/68 whitespace-pre-wrap">
-              {profileUser.bio}
-            </p>
-          ) : null}
-          {user && user.uid !== id && (
-            <button
-              onClick={handleFollow}
-              className="mt-2 bg-black text-white py-1 px-3 rounded-full text-sm"
-            >
-              {isFollowing ? "Unfollow" : "Follow"}
-            </button>
-          )}
-        </div>
-        </div>
+      <div className="mb-4 flex justify-end">
         <button
           type="button"
           onClick={() => {
@@ -226,32 +180,93 @@ export default function PublicProfile() {
             }
             window.location.href = "/directs";
           }}
-          className="w-10 h-10 rounded-full border border-black/15 bg-white flex items-center justify-center"
+          className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
           aria-label="Directs"
         >
           <Send size={18} />
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-center mb-6">
-        <div>
-          <div className="text-2xl font-bold">{profileUser.followers?.length || 0}</div>
-          <button
-            onClick={() => openConnections("followers")}
-            className="text-xs text-black/60 hover:text-black underline"
-          >
-            followers
-          </button>
+      <div className="mb-5">
+        <div className="flex items-stretch gap-4">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (activeStories.length > 0) setStoriesOpen(true);
+              }}
+              className={`w-24 h-24 rounded-full p-[4px] ${
+                activeStories.length > 0
+                  ? viewedAllStories
+                    ? "bg-[#C6C6BF]"
+                    : "bg-[#2BD36B]"
+                  : "bg-transparent"
+              }`}
+              aria-label="Open stories"
+            >
+              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
+                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                  {profileUser.photoURL ? (
+                    <img src={profileUser.photoURL} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    profileUser.displayName?.[0] || "U"
+                  )}
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
+            <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
+            <div className="grid grid-cols-4 gap-1.5">
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{savedDishes.length}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">saved</div>
+              </div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{profileUser.followers?.length || 0}</div>
+                <button
+                  onClick={() => openConnections("followers")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  followers
+                </button>
+              </div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{profileUser.following?.length || 0}</div>
+                <button
+                  onClick={() => openConnections("following")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  following
+                </button>
+              </div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">posted</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="text-2xl font-bold">{profileUser.following?.length || 0}</div>
-          <button
-            onClick={() => openConnections("following")}
-            className="text-xs text-black/60 hover:text-black underline"
-          >
-            following
-          </button>
-        </div>
+
+        {profileUser.bio ? (
+          <p className="mt-4 max-w-xl text-sm leading-6 text-black/68 whitespace-pre-wrap">{profileUser.bio}</p>
+        ) : null}
+
+        {user && user.uid !== id ? (
+          <div className="mt-4 flex justify-start">
+            <button
+              onClick={handleFollow}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                isFollowing
+                  ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                  : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+              }`}
+            >
+              {isFollowing ? "Unfollow" : "Follow"}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-5 flex justify-center">

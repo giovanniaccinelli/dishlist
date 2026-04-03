@@ -57,6 +57,7 @@ export default function Feed() {
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [excludedTags, setExcludedTags] = useState([]);
+  const [draftExcludedTags, setDraftExcludedTags] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const shuffleArray = (arr) => {
@@ -88,9 +89,12 @@ export default function Feed() {
     if (typeof window === "undefined") return;
     try {
       const stored = JSON.parse(localStorage.getItem(FEED_EXCLUDED_TAGS_KEY) || "[]");
-      setExcludedTags(Array.isArray(stored) ? stored : []);
+      const parsed = Array.isArray(stored) ? stored : [];
+      setExcludedTags(parsed);
+      setDraftExcludedTags(parsed);
     } catch {
       setExcludedTags([]);
+      setDraftExcludedTags([]);
     }
   }, []);
 
@@ -436,7 +440,10 @@ export default function Feed() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setFilterOpen(true)}
+            onClick={() => {
+              setDraftExcludedTags(excludedTags);
+              setFilterOpen(true);
+            }}
             className={`w-11 h-11 rounded-[1.1rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02] ${
               excludedTags.length > 0
                 ? "border-[#D9BC48] bg-[linear-gradient(180deg,rgba(255,236,180,0.96)_0%,rgba(247,221,133,0.96)_100%)] text-black"
@@ -610,19 +617,16 @@ export default function Feed() {
               <div className="flex flex-wrap gap-2">
                 {TAG_OPTIONS.map((tag) => {
                   const normalized = String(tag).toLowerCase();
-                  const enabled = !excludedTagSet.has(normalized);
+                  const enabled = !draftExcludedTags.some((item) => String(item).toLowerCase() === normalized);
                   return (
                     <button
                       key={tag}
                       type="button"
                       onClick={() =>
-                        setExcludedTags((prev) => {
+                        setDraftExcludedTags((prev) => {
                           const next = prev.some((item) => String(item).toLowerCase() === normalized)
                             ? prev.filter((item) => String(item).toLowerCase() !== normalized)
                             : [...prev, tag];
-                          if (typeof window !== "undefined") {
-                            localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify(next));
-                          }
                           return next;
                         })
                       }
@@ -632,6 +636,35 @@ export default function Feed() {
                     </button>
                   );
                 })}
+              </div>
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraftExcludedTags([]);
+                    setExcludedTags([]);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify([]));
+                    }
+                    setFilterOpen(false);
+                  }}
+                  className="px-4 py-2 rounded-full border border-black/15 bg-white/85 text-sm font-medium text-black/70"
+                >
+                  Revert filter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExcludedTags(draftExcludedTags);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem(FEED_EXCLUDED_TAGS_KEY, JSON.stringify(draftExcludedTags));
+                    }
+                    setFilterOpen(false);
+                  }}
+                  className="px-4 py-2 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white text-sm font-semibold"
+                >
+                  Save
+                </button>
               </div>
             </motion.div>
           </motion.div>

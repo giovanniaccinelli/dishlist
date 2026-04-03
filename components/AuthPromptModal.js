@@ -111,7 +111,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                     setAuthError(err?.message || "Login failed.");
                   }
                 }}
-                className="w-full rounded-full border border-black/10 bg-black py-3 font-semibold text-white shadow-[0_14px_30px_rgba(0,0,0,0.18)]"
+                className="w-full rounded-full border border-black/12 bg-white/92 py-3 font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
               >
                 Log in
               </button>
@@ -120,7 +120,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setMode("signup");
                   setAuthError("");
                 }}
-                className="w-full rounded-full border border-black/10 bg-[#D7B443] py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
+                className="w-full rounded-full border border-[#B8860B]/25 bg-[linear-gradient(135deg,#E0B323_0%,#C89411_100%)] py-3 font-semibold text-black shadow-[0_16px_32px_rgba(200,148,17,0.22)]"
               >
                 Create account
               </button>
@@ -140,7 +140,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setAuthError(err?.message || "Create account failed.");
                 }
               }}
-              className="w-full rounded-full bg-[#D7B443] py-3 font-semibold text-black shadow-[0_16px_36px_rgba(0,0,0,0.12)]"
+              className="w-full rounded-full border border-[#B8860B]/25 bg-[linear-gradient(135deg,#E0B323_0%,#C89411_100%)] py-3 font-semibold text-black shadow-[0_16px_32px_rgba(200,148,17,0.22)]"
             >
               Create account
             </button>

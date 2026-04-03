@@ -65,6 +65,7 @@ export default function SwipeDeck({
   const [replyTo, setReplyTo] = useState(null);
   const dragControls = useDragControls();
   const tagsRef = useRef(null);
+  const scrollPanelActiveRef = useRef(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -105,6 +106,7 @@ export default function SwipeDeck({
   useEffect(() => {
     setShowRecipe(false);
     setScrollPanelActive(false);
+    scrollPanelActiveRef.current = false;
   }, [currentCard?._key]);
 
   useEffect(() => {
@@ -140,11 +142,15 @@ export default function SwipeDeck({
 
   const stopRecipePanelInteraction = (e) => {
     e.stopPropagation();
+    e.nativeEvent?.stopImmediatePropagation?.();
+    scrollPanelActiveRef.current = true;
     setScrollPanelActive(true);
   };
 
   const releaseRecipePanelInteraction = (e) => {
     e.stopPropagation();
+    e.nativeEvent?.stopImmediatePropagation?.();
+    scrollPanelActiveRef.current = false;
     setScrollPanelActive(false);
   };
 
@@ -390,6 +396,7 @@ export default function SwipeDeck({
           style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "auto" : "pan-x" }}
           onPointerDown={(e) => {
             if (disabled) return;
+            if (scrollPanelActiveRef.current) return;
             const rawTarget = e.target;
             const target =
               rawTarget instanceof Element
@@ -585,15 +592,18 @@ export default function SwipeDeck({
                     onTouchStart={stopRecipePanelInteraction}
                     onPointerMove={stopRecipePanelInteraction}
                     onTouchMove={stopRecipePanelInteraction}
+                    onScroll={stopRecipePanelInteraction}
                     onPointerUp={releaseRecipePanelInteraction}
                     onTouchEnd={releaseRecipePanelInteraction}
                     onPointerCancel={releaseRecipePanelInteraction}
                     onPointerLeave={releaseRecipePanelInteraction}
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerMoveCapture={stopRecipePanelInteraction}
+                    onScrollCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onTouchStartCapture={stopRecipePanelInteraction}
                     onTouchMoveCapture={stopRecipePanelInteraction}
+                    onTouchEndCapture={releaseRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
@@ -610,15 +620,18 @@ export default function SwipeDeck({
                     onTouchStart={stopRecipePanelInteraction}
                     onPointerMove={stopRecipePanelInteraction}
                     onTouchMove={stopRecipePanelInteraction}
+                    onScroll={stopRecipePanelInteraction}
                     onPointerUp={releaseRecipePanelInteraction}
                     onTouchEnd={releaseRecipePanelInteraction}
                     onPointerCancel={releaseRecipePanelInteraction}
                     onPointerLeave={releaseRecipePanelInteraction}
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerMoveCapture={stopRecipePanelInteraction}
+                    onScrollCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onTouchStartCapture={stopRecipePanelInteraction}
                     onTouchMoveCapture={stopRecipePanelInteraction}
+                    onTouchEndCapture={releaseRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">

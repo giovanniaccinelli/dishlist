@@ -119,6 +119,15 @@ export default function Profile() {
   }, [profileOptionsOpen]);
 
   useEffect(() => {
+    if (!editProfileModal) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [editProfileModal]);
+
+  useEffect(() => {
     if (!editProfileModal) return;
     setNewName(user?.displayName || "");
     setNewBio(profileMeta.bio || "");
@@ -560,32 +569,32 @@ export default function Profile() {
 
           <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="text-center">
-                <div className="text-[1.45rem] font-bold leading-none">{savedDishes.length}</div>
-                <div className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48">saved</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{savedDishes.length}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">saved</div>
               </div>
-              <div className="text-center">
-                <div className="text-[1.45rem] font-bold leading-none">{profileMeta.followers.length}</div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{profileMeta.followers.length}</div>
                 <button
                   onClick={() => openConnections("followers")}
-                  className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48 hover:text-black"
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   followers
                 </button>
               </div>
-              <div className="text-center">
-                <div className="text-[1.45rem] font-bold leading-none">{profileMeta.following.length}</div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{profileMeta.following.length}</div>
                 <button
                   onClick={() => openConnections("following")}
-                  className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48 hover:text-black"
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   following
                 </button>
               </div>
-              <div className="text-center">
-                <div className="text-[1.45rem] font-bold leading-none">{uploadedDishes.length}</div>
-                <div className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48">posted</div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{uploadedDishes.length}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">posted</div>
               </div>
             </div>
           </div>
@@ -883,7 +892,7 @@ export default function Profile() {
             }}
           >
             <motion.div
-              className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6"
+              className="w-full max-w-lg max-h-[88vh] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6 flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex items-start justify-between gap-4">
@@ -907,7 +916,7 @@ export default function Profile() {
                 </button>
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-5 overflow-y-auto pr-1 min-h-0">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-black/72">Display name</label>
                   <input

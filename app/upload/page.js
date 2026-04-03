@@ -10,6 +10,13 @@ import { useAuth } from "../lib/auth";
 import { publishCustomStory, saveDishToFirestore, uploadImage } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 
+const UPLOAD_STEP_PREVIEW = [
+  { label: "Name", color: "#5FA8F2" },
+  { label: "Details", color: "#23C268" },
+  { label: "Recipe", color: "#D7B443" },
+  { label: "Upload", color: "#111111" },
+];
+
 export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -400,32 +407,67 @@ export default function UploadPage() {
             <div className="mb-6 text-center">
               <h2 className="text-[2.4rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[11.75rem] rounded-[2rem] bg-[linear-gradient(135deg,#8BC5F5_0%,#5FA8F2_55%,#428FDF_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(66,143,223,0.28)] transition-transform hover:scale-[1.01] border border-[#2E6FAF]/18"
+                className="w-full min-h-[15.5rem] rounded-[2rem] bg-[linear-gradient(135deg,#8BC5F5_0%,#5FA8F2_55%,#428FDF_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(66,143,223,0.28)] transition-transform hover:scale-[1.01] border border-[#2E6FAF]/18"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
-                    <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
+                <div className="flex h-full flex-col justify-between gap-8">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
+                      <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.88)] text-[#215D95] flex items-center justify-center shadow-md border border-[#2E6FAF]/12">
+                      <Plus size={32} />
+                    </div>
                   </div>
-                  <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.88)] text-[#215D95] flex items-center justify-center shadow-md border border-[#2E6FAF]/12">
-                    <Plus size={32} />
+                  <div>
+                    <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      Steps
+                    </div>
+                    <div className="grid grid-cols-4 gap-3">
+                      {UPLOAD_STEP_PREVIEW.map((step) => (
+                        <div key={step.label}>
+                          <div
+                            className="mb-2 h-1.5 rounded-full"
+                            style={{ backgroundColor: step.color }}
+                          />
+                          <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[11.75rem] rounded-[2rem] border border-[#167E43]/16 bg-[linear-gradient(135deg,#23C268_0%,#1EA956_55%,#178243_100%)] px-8 py-8 text-left shadow-[0_22px_42px_rgba(23,130,67,0.22)] transition-transform hover:scale-[1.01]"
+                className="w-full min-h-[15.5rem] rounded-[2rem] border border-[#167E43]/16 bg-[linear-gradient(135deg,#23C268_0%,#1EA956_55%,#178243_100%)] px-8 py-8 text-left shadow-[0_22px_42px_rgba(23,130,67,0.22)] transition-transform hover:scale-[1.01]"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
-                    <p className="mt-4 text-base text-black/60 max-w-[15rem]">See if it already exists.</p>
+                <div className="flex h-full flex-col justify-between gap-8">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
+                      <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.9)] text-[#14532D] flex items-center justify-center border border-[#167E43]/12 shadow-md">
+                      <Search size={30} />
+                    </div>
                   </div>
-                  <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.9)] text-[#14532D] flex items-center justify-center border border-[#167E43]/12 shadow-md">
-                    <Search size={30} />
+                  <div>
+                    <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      Tags you can explore
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {TAG_OPTIONS.slice(0, 10).map((tag) => (
+                        <span
+                          key={tag}
+                          className={`px-3 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </button>

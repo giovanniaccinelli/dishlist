@@ -480,39 +480,41 @@ export default function SwipeDeck({
               />
               {renderImage(currentCard)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
-                    {currentCard.ownerPhotoURL ? (
-                      <img
-                        src={currentCard.ownerPhotoURL}
-                        alt={currentCard.ownerName || "User"}
-                        className="w-full h-full object-cover"
-                      />
+              {!showRecipe ? (
+                <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
+                      {currentCard.ownerPhotoURL ? (
+                        <img
+                          src={currentCard.ownerPhotoURL}
+                          alt={currentCard.ownerName || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (currentCard.ownerName?.[0] || "U").toUpperCase()
+                      )}
+                    </div>
+                    {currentCard.owner ? (
+                      <Link
+                        data-no-drag="true"
+                        href={`/profile/${currentCard.owner}`}
+                        className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {currentCard.ownerName || "Unknown"}
+                      </Link>
                     ) : (
-                      (currentCard.ownerName?.[0] || "U").toUpperCase()
+                      <p className="text-lg font-semibold leading-none">
+                        {currentCard.ownerName || "Unknown"}
+                      </p>
                     )}
                   </div>
-                  {currentCard.owner ? (
-                    <Link
-                      data-no-drag="true"
-                      href={`/profile/${currentCard.owner}`}
-                      className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {currentCard.ownerName || "Unknown"}
-                    </Link>
-                  ) : (
-                    <p className="text-lg font-semibold leading-none">
-                      {currentCard.ownerName || "Unknown"}
-                    </p>
-                  )}
+                  <h2 className="text-2xl font-bold">{currentCard.name}</h2>
+                  <p className="text-sm text-white/80 line-clamp-2">
+                    {currentCard.description || "No description yet."}
+                  </p>
                 </div>
-                <h2 className="text-2xl font-bold">{currentCard.name}</h2>
-                <p className="text-sm text-white/80 line-clamp-2">
-                  {currentCard.description || "No description yet."}
-                </p>
-              </div>
+              ) : null}
             </div>
 
             <div

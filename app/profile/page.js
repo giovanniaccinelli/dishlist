@@ -885,14 +885,14 @@ export default function Profile() {
       <AnimatePresence>
         {editProfileModal && (
           <motion.div
-            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-hidden p-3"
+            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-hidden p-2"
             onClick={() => {
               setEditProfileModal(false);
               setRemovePhoto(false);
             }}
           >
             <motion.div
-              className="w-full max-w-lg h-auto max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.16)] flex flex-col"
+              className="w-full max-w-lg h-auto max-h-[calc(100dvh-0.75rem)] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.16)] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex items-start justify-between gap-4">

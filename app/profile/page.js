@@ -1094,14 +1094,14 @@ export default function Profile() {
       <AnimatePresence>
         {storyActionOpen && (
           <motion.div
-            className="fixed inset-0 z-[90] bg-black/45 backdrop-blur-sm flex items-center justify-center p-2"
+            className="fixed inset-0 z-[90] overflow-y-auto bg-black/45 backdrop-blur-sm flex items-center justify-center p-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setStoryActionOpen(false)}
           >
             <motion.div
-              className="w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
+              className="my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}

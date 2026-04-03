@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Camera, Plus, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Plus, Search, Send, User } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -154,13 +154,27 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen bg-transparent text-black pb-24">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-sm text-black/60">
-          Cancel
-        </button>
-        <h1 className="text-lg font-semibold">
+        <h1 className={`text-lg font-semibold ${showUploadForm ? "text-left" : ""}`}>
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
         </h1>
-        <div className="w-12" />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.push("/directs")}
+            className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+            aria-label="Directs"
+          >
+            <Send size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/profile")}
+            className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+            aria-label="Profile"
+          >
+            <User size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
@@ -171,6 +185,17 @@ export default function UploadPage() {
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="flex items-center justify-between mb-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUploadForm(false);
+                  setUploadStep(0);
+                }}
+                className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+                aria-label="Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
                   <span

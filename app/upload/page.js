@@ -177,10 +177,10 @@ export default function UploadPage() {
         </div>
       </div>
 
-      <div className="px-4 min-h-[calc(100vh-140px)] flex items-start justify-center pt-2">
+      <div className="px-4 min-h-[calc(100vh-132px)] flex items-start justify-center pt-0">
         {showUploadForm ? (
           <motion.div
-            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-2"
+            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-1"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -425,11 +425,11 @@ export default function UploadPage() {
           </motion.div>
         ) : (
           <motion.div
-            className="w-full max-w-md mx-auto pt-1"
+            className="w-full max-w-md mx-auto pt-0"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="mb-5 text-center">
+            <div className="mb-4 text-center">
               <h2 className="text-[2.4rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
             </div>
             <div className="space-y-5">

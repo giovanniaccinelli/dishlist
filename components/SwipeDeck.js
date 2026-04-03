@@ -538,13 +538,13 @@ export default function SwipeDeck({
                 </div>
                 <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
               </div>
-              <div className="mb-4 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+              <div className="mb-4 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] max-h-[21vh] overflow-y-auto">
                 <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
                 <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                   {currentCard.recipeIngredients || "No ingredients provided."}
                 </p>
               </div>
-              <div className="rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+              <div className="rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] max-h-[21vh] overflow-y-auto">
                 <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
                 <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                   {currentCard.recipeMethod || "No method provided."}

@@ -120,7 +120,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setMode("signup");
                   setAuthError("");
                 }}
-                className="w-full rounded-full border border-black/12 bg-[#E85D75] py-3 font-semibold text-white shadow-[0_14px_30px_rgba(232,93,117,0.22)]"
+                className="w-full rounded-full border border-black/10 bg-[#D7B443] py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
               >
                 Create account
               </button>
@@ -140,7 +140,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setAuthError(err?.message || "Create account failed.");
                 }
               }}
-              className="w-full rounded-full bg-[#E85D75] py-3 font-semibold text-white shadow-[0_16px_36px_rgba(232,93,117,0.24)]"
+              className="w-full rounded-full bg-[#D7B443] py-3 font-semibold text-black shadow-[0_16px_36px_rgba(0,0,0,0.12)]"
             >
               Create account
             </button>

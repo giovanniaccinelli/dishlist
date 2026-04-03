@@ -418,7 +418,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.84)] text-[#3A8FDF] flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55">
+                    <div className="h-16 w-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0">
                       <Plus size={32} />
                     </div>
                   </div>
@@ -450,7 +450,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[rgba(255,255,255,0.84)] text-[#17914A] flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md">
+                    <div className="h-16 w-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0">
                       <Search size={30} />
                     </div>
                   </div>

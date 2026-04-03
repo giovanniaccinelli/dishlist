@@ -475,7 +475,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-2 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
@@ -523,7 +523,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="flex items-stretch gap-4">
           <div className="relative shrink-0">
             <button
@@ -558,34 +558,34 @@ export default function Profile() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-24 flex flex-col justify-between py-1">
-            <h1 className="text-[2rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="text-left">
-                <div className="text-2xl font-bold leading-none">{savedDishes.length}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48">saved</div>
+          <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
+            <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="text-center">
+                <div className="text-[1.45rem] font-bold leading-none">{savedDishes.length}</div>
+                <div className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48">saved</div>
               </div>
-              <div className="text-left">
-                <div className="text-2xl font-bold leading-none">{profileMeta.followers.length}</div>
+              <div className="text-center">
+                <div className="text-[1.45rem] font-bold leading-none">{profileMeta.followers.length}</div>
                 <button
                   onClick={() => openConnections("followers")}
-                  className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48 hover:text-black"
+                  className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48 hover:text-black"
                 >
                   followers
                 </button>
               </div>
-              <div className="text-left">
-                <div className="text-2xl font-bold leading-none">{profileMeta.following.length}</div>
+              <div className="text-center">
+                <div className="text-[1.45rem] font-bold leading-none">{profileMeta.following.length}</div>
                 <button
                   onClick={() => openConnections("following")}
-                  className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48 hover:text-black"
+                  className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48 hover:text-black"
                 >
                   following
                 </button>
               </div>
-              <div className="text-left">
-                <div className="text-2xl font-bold leading-none">{uploadedDishes.length}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48">posted</div>
+              <div className="text-center">
+                <div className="text-[1.45rem] font-bold leading-none">{uploadedDishes.length}</div>
+                <div className="mt-1 text-[9px] uppercase tracking-[0.11em] text-black/48">posted</div>
               </div>
             </div>
           </div>
@@ -875,14 +875,36 @@ export default function Profile() {
       {/* Edit Profile Modal */}
       <AnimatePresence>
         {editProfileModal && (
-          <motion.div className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto p-4">
-            <motion.div className="w-full max-w-lg rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6">
-              <div className="mb-6">
+          <motion.div
+            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto p-4"
+            onClick={() => {
+              setEditProfileModal(false);
+              setRemovePhoto(false);
+            }}
+          >
+            <motion.div
+              className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
                 <div className="inline-flex items-center rounded-full bg-black/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
                   Profile
                 </div>
                 <h2 className="mt-3 text-[2rem] leading-none font-semibold text-black">Edit profile</h2>
                 <p className="mt-3 text-sm text-black/58">Update your name, photo and bio.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditProfileModal(false);
+                    setRemovePhoto(false);
+                  }}
+                  className="w-10 h-10 shrink-0 rounded-[1rem] border border-black/10 bg-white/85 text-black/60 hover:text-black"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
               </div>
 
               <div className="space-y-5">
@@ -893,17 +915,6 @@ export default function Profile() {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="w-full rounded-full border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-black/72">Bio</label>
-                  <textarea
-                    value={newBio}
-                    onChange={(e) => setNewBio(e.target.value)}
-                    rows={3}
-                    placeholder="Add a short bio"
-                    className="w-full rounded-[1.5rem] border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
                   />
                 </div>
 
@@ -936,7 +947,7 @@ export default function Profile() {
                         newName?.[0] || user?.displayName?.[0] || "U"
                       )}
                     </div>
-                    <label className="inline-flex items-center rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] cursor-pointer">
+                    <label className="inline-flex items-center rounded-full border border-black/10 bg-[#EFE7D8] px-4 py-2 text-sm font-semibold text-black/78 shadow-[0_10px_22px_rgba(0,0,0,0.08)] cursor-pointer hover:text-black">
                       Change photo
                       <input
                         type="file"
@@ -954,6 +965,17 @@ export default function Profile() {
                     </label>
                   </div>
                 </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black/72">Bio</label>
+                  <textarea
+                    value={newBio}
+                    onChange={(e) => setNewBio(e.target.value)}
+                    rows={4}
+                    placeholder="Add a short bio"
+                    className="w-full rounded-[1.5rem] border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
+                  />
+                </div>
               </div>
 
               <div className="mt-6 flex items-center justify-between gap-3">
@@ -969,7 +991,7 @@ export default function Profile() {
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleEditProfile}
-                  className="rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] px-6 py-3 font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.2)]"
+                  className="rounded-full border border-black/10 bg-[#D7B443] px-6 py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
                 >
                   Save profile
                 </motion.button>

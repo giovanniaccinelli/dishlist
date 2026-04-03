@@ -20,12 +20,14 @@ import {
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Send } from "lucide-react";
 
 const INITIAL_USERS_LIMIT = 10;
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [allUsersPool, setAllUsersPool] = useState(null);
@@ -235,10 +237,11 @@ export default function Dishlists() {
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}
-            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open directs"
           >
             <Send size={18} />
+            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
           <Link
             href={user ? "/profile" : "/?auth=1"}

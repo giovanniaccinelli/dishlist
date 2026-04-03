@@ -635,6 +635,7 @@ export async function getOrCreateConversation(currentUser, otherUser) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastMessage: null,
+      unreadBy: [],
     });
   }
   return convoId;
@@ -662,21 +663,43 @@ export async function sendMessage(conversationId, message) {
     createdAt: serverTimestamp(),
   };
   try {
+    const convoRef = doc(db, "conversations", conversationId);
+    const convoSnap = await getDoc(convoRef);
+    const participants = convoSnap.exists() ? convoSnap.data()?.participants || [] : [];
+    const unreadBy = participants.filter((participantId) => participantId && participantId !== message.senderId);
     await addDoc(msgRef, payload);
     await setDoc(
-      doc(db, "conversations", conversationId),
+      convoRef,
       {
         lastMessage: {
           ...payload,
           createdAt: new Date(),
         },
         updatedAt: serverTimestamp(),
+        unreadBy,
       },
       { merge: true }
     );
     return true;
   } catch (err) {
     console.error("Failed to send message:", err);
+    return false;
+  }
+}
+
+export async function markConversationAsRead(conversationId, userId) {
+  if (!conversationId || !userId) return false;
+  try {
+    await setDoc(
+      doc(db, "conversations", conversationId),
+      {
+        unreadBy: arrayRemove(userId),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to mark conversation as read:", err);
     return false;
   }
 }

@@ -9,6 +9,7 @@ import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
 import { publishCustomStory, saveDishToFirestore, uploadImage } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { useUnreadDirects } from "../lib/useUnreadDirects";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#5FA8F2" },
@@ -20,6 +21,7 @@ const UPLOAD_STEP_PREVIEW = [
 export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -161,10 +163,11 @@ export default function UploadPage() {
           <button
             type="button"
             onClick={() => router.push("/directs")}
-            className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+            className="relative h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
             aria-label="Directs"
           >
             <Send size={18} />
+            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </button>
           <button
             type="button"

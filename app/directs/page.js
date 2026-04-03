@@ -5,6 +5,7 @@ import Link from "next/link";
 import { collection, doc, getDoc, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../lib/auth";
+import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 
@@ -13,6 +14,7 @@ export default function Directs() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [usersMap, setUsersMap] = useState({});
+  const { unreadConversationIds } = useUnreadDirects(user?.uid);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -101,6 +103,9 @@ export default function Directs() {
                   {c.lastMessage?.type === "dish" ? "Shared a dish" : c.lastMessage?.text || ""}
                 </div>
               </div>
+              {unreadConversationIds.includes(c.id) ? (
+                <span className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-[#E64646]" />
+              ) : null}
             </Link>
           ))}
         </div>

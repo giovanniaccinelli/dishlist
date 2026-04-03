@@ -26,6 +26,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getTagChipClass } from "./lib/tags";
+import { useUnreadDirects } from "./lib/useUnreadDirects";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -60,6 +61,7 @@ export default function Feed() {
   const [draftExcludedTags, setDraftExcludedTags] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterVersion, setFilterVersion] = useState(0);
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -456,10 +458,11 @@ export default function Feed() {
           </button>
           <Link
             href={userId ? "/directs" : "/?auth=1"}
-            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open directs"
           >
             <Send size={18} />
+            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
           <Link
             href={userId ? "/profile" : "/?auth=1"}

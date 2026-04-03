@@ -55,6 +55,7 @@ export default function SwipeDeck({
   const [toast, setToast] = useState("");
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
+  const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [tagsHeight, setTagsHeight] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -103,6 +104,7 @@ export default function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
+    setScrollPanelActive(false);
   }, [currentCard?._key]);
 
   useEffect(() => {
@@ -135,6 +137,16 @@ export default function SwipeDeck({
   const commentBottom = tagsBottom + tagsHeight + 8;
   const textBottom = Math.max(120, commentBottom + 40);
   const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
+
+  const stopRecipePanelInteraction = (e) => {
+    e.stopPropagation();
+    setScrollPanelActive(true);
+  };
+
+  const releaseRecipePanelInteraction = (e) => {
+    e.stopPropagation();
+    setScrollPanelActive(false);
+  };
 
   const loadComments = async () => {
     if (!currentCard?.id) return;
@@ -370,7 +382,7 @@ export default function SwipeDeck({
       <div className="relative w-full max-w-md h-[74vh]">
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting ? false : "x"}
+          drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragListener={false}
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
@@ -568,16 +580,20 @@ export default function SwipeDeck({
                     data-scroll-panel="true"
                     className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onPointerMove={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
-                    onPointerDownCapture={(e) => e.stopPropagation()}
-                    onPointerMoveCapture={(e) => e.stopPropagation()}
-                    onPointerUpCapture={(e) => e.stopPropagation()}
-                    onTouchStartCapture={(e) => e.stopPropagation()}
-                    onTouchMoveCapture={(e) => e.stopPropagation()}
+                    onPointerDown={stopRecipePanelInteraction}
+                    onMouseDown={stopRecipePanelInteraction}
+                    onTouchStart={stopRecipePanelInteraction}
+                    onPointerMove={stopRecipePanelInteraction}
+                    onTouchMove={stopRecipePanelInteraction}
+                    onPointerUp={releaseRecipePanelInteraction}
+                    onTouchEnd={releaseRecipePanelInteraction}
+                    onPointerCancel={releaseRecipePanelInteraction}
+                    onPointerLeave={releaseRecipePanelInteraction}
+                    onPointerDownCapture={stopRecipePanelInteraction}
+                    onPointerMoveCapture={stopRecipePanelInteraction}
+                    onPointerUpCapture={releaseRecipePanelInteraction}
+                    onTouchStartCapture={stopRecipePanelInteraction}
+                    onTouchMoveCapture={stopRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
@@ -589,16 +605,20 @@ export default function SwipeDeck({
                     data-scroll-panel="true"
                     className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onPointerMove={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
-                    onPointerDownCapture={(e) => e.stopPropagation()}
-                    onPointerMoveCapture={(e) => e.stopPropagation()}
-                    onPointerUpCapture={(e) => e.stopPropagation()}
-                    onTouchStartCapture={(e) => e.stopPropagation()}
-                    onTouchMoveCapture={(e) => e.stopPropagation()}
+                    onPointerDown={stopRecipePanelInteraction}
+                    onMouseDown={stopRecipePanelInteraction}
+                    onTouchStart={stopRecipePanelInteraction}
+                    onPointerMove={stopRecipePanelInteraction}
+                    onTouchMove={stopRecipePanelInteraction}
+                    onPointerUp={releaseRecipePanelInteraction}
+                    onTouchEnd={releaseRecipePanelInteraction}
+                    onPointerCancel={releaseRecipePanelInteraction}
+                    onPointerLeave={releaseRecipePanelInteraction}
+                    onPointerDownCapture={stopRecipePanelInteraction}
+                    onPointerMoveCapture={stopRecipePanelInteraction}
+                    onPointerUpCapture={releaseRecipePanelInteraction}
+                    onTouchStartCapture={stopRecipePanelInteraction}
+                    onTouchMoveCapture={stopRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">

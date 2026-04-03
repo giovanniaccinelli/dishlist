@@ -6,6 +6,7 @@ import Link from "next/link";
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
+import { useUnreadDirects } from "../../lib/useUnreadDirects";
 import BottomNav from "../../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +28,7 @@ import StoryViewerModal from "../../../components/StoryViewerModal";
 export default function PublicProfile() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [profileUser, setProfileUser] = useState(null);
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
@@ -184,10 +186,11 @@ export default function PublicProfile() {
               window.location.href = `/directs/${conversationId}`;
             }
           }}
-          className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+          className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
           aria-label="Directs"
         >
           <Send size={18} />
+          {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
         </button>
       </div>
 

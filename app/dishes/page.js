@@ -299,7 +299,7 @@ export default function Dishes() {
             placeholder="Search dishes or tags..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 p-3 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
+            className="flex-1 pl-4 pr-4 py-3.5 rounded-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] border border-black/10 text-black shadow-[0_12px_30px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-black/15 placeholder:text-black/38"
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2 items-center">

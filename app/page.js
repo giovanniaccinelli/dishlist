@@ -359,14 +359,14 @@ export default function Feed() {
         <div className="flex items-center gap-2">
           <Link
             href={userId ? "/directs" : "/?auth=1"}
-            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open directs"
           >
             <Send size={18} />
           </Link>
           <Link
             href={userId ? "/profile" : "/?auth=1"}
-            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open profile"
           >
             <CircleUserRound size={18} />

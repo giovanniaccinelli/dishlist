@@ -235,27 +235,29 @@ export default function Dishlists() {
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}
-            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open directs"
           >
             <Send size={18} />
           </Link>
           <Link
             href={user ? "/profile" : "/?auth=1"}
-            className="w-10 h-10 rounded-full border border-black/20 bg-white flex items-center justify-center"
+            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
             aria-label="Open profile"
           >
             <CircleUserRound size={18} />
           </Link>
         </div>
       </div>
-      <input
-        type="text"
-        placeholder="Search users..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full p-3 mb-6 rounded-xl bg-white border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/30"
-      />
+      <div className="relative mb-6">
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-4 pr-4 py-3.5 rounded-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] border border-black/10 text-black shadow-[0_12px_30px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-black/15 placeholder:text-black/38"
+        />
+      </div>
       {visibleStoryGroups.length > 0 ? (
         <div className="mb-6">
           <div className="flex gap-3 overflow-x-auto pb-1">

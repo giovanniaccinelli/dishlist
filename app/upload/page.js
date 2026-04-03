@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Camera, Plus, Search, Send, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
@@ -153,8 +153,8 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-black pb-24">
-      <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <h1 className={`text-lg font-semibold ${showUploadForm ? "text-left" : ""}`}>
+      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-left">
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
         </h1>
         <div className="flex items-center gap-2">
@@ -172,15 +172,15 @@ export default function UploadPage() {
             className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
             aria-label="Profile"
           >
-            <User size={18} />
+            <CircleUserRound size={18} />
           </button>
         </div>
       </div>
 
-      <div className="px-4 min-h-[calc(100vh-152px)] flex items-center justify-center">
+      <div className="px-4 min-h-[calc(100vh-140px)] flex items-start justify-center pt-2">
         {showUploadForm ? (
           <motion.div
-            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-4"
+            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-2"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -425,11 +425,11 @@ export default function UploadPage() {
           </motion.div>
         ) : (
           <motion.div
-            className="w-full max-w-md mx-auto"
+            className="w-full max-w-md mx-auto pt-1"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="mb-6 text-center">
+            <div className="mb-5 text-center">
               <h2 className="text-[2.4rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
             </div>
             <div className="space-y-5">
@@ -443,7 +443,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-[0.95]">Upload dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
-                    <div className="h-16 w-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0">
+                    <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
                       <Plus size={32} />
                     </div>
                   </div>
@@ -475,7 +475,7 @@ export default function UploadPage() {
                       <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
-                    <div className="h-16 w-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0">
+                    <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0 aspect-square">
                       <Search size={30} />
                     </div>
                   </div>

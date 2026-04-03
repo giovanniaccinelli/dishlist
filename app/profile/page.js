@@ -1131,7 +1131,7 @@ export default function Profile() {
                         <p className="text-[2.15rem] font-semibold leading-none">Upload dish</p>
                         <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
                       </div>
-                      <div className="w-16 h-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55">
+                      <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
                         <Plus size={32} />
                       </div>
                     </div>
@@ -1164,7 +1164,7 @@ export default function Profile() {
                         <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
                         <p className="mt-4 text-base text-black/60">Pick an existing dish for your story.</p>
                       </div>
-                      <div className="w-16 h-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md">
+                      <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0 aspect-square">
                         <Search size={30} />
                       </div>
                     </div>

@@ -146,11 +146,11 @@ export default function Onboarding() {
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
                         <div className="h-11 w-11 rounded-[1rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(95,168,242,0.24)] shrink-0">
                           <PenLine size={20} />
                         </div>
-                        <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
                       </div>
                       <p className="mt-4 text-base text-black/78 max-w-[18rem]">
                         Start by adding three dishes you already know you want in your DishList.
@@ -179,11 +179,11 @@ export default function Onboarding() {
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
                         <div className="h-11 w-11 rounded-[1rem] bg-[#1EA956] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(30,169,86,0.24)] shrink-0">
                           <Hand size={20} />
                         </div>
-                        <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
                       </div>
                       <p className="mt-4 text-base text-black/62 max-w-[17rem]">
                         Start swiping right away. After your third save, we ask you to create the profile.

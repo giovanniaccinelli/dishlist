@@ -47,7 +47,7 @@ function DishPreview({ dish, title }) {
       <img
         src={getDishImageUrl(dish)}
         alt={dish.name}
-        className="w-full h-32 object-cover"
+        className="w-full h-28 object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
@@ -67,9 +67,9 @@ function ExploreRow({ title, dishes, onExpand }) {
   if (!visible.length) return null;
 
   return (
-    <section className="mb-8">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{title}</h2>
+    <section className="mb-6">
+      <div className="mb-2.5 flex items-center justify-between">
+        <h2 className="text-[1.05rem] font-semibold tracking-tight text-black/88">{title}</h2>
         {dishes.length > 3 ? (
           <button
             type="button"
@@ -118,7 +118,7 @@ function ExpandedCategoryModal({ row, onClose }) {
               <img
                 src={getDishImageUrl(dish)}
                 alt={dish.name}
-                className="w-full h-32 object-cover"
+                className="w-full h-28 object-cover"
                 onError={(e) => {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}

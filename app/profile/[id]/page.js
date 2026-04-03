@@ -202,6 +202,11 @@ export default function PublicProfile() {
           <p className="text-black/60 text-sm">
             {savedDishes.length} saved · {toTryDishes.length} to try · {dishes.length} uploaded
           </p>
+          {profileUser.bio ? (
+            <p className="mt-2 max-w-md text-sm leading-6 text-black/68 whitespace-pre-wrap">
+              {profileUser.bio}
+            </p>
+          ) : null}
           {user && user.uid !== id && (
             <button
               onClick={handleFollow}

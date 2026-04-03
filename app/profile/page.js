@@ -42,7 +42,7 @@ export default function Profile() {
   const [uploadedDishes, setUploadedDishes] = useState([]);
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
-  const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [] });
+  const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [profileTab, setProfileTab] = useState("my");
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -55,6 +55,7 @@ export default function Profile() {
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [newName, setNewName] = useState(user?.displayName || "");
+  const [newBio, setNewBio] = useState("");
   const [newPhotoFile, setNewPhotoFile] = useState(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState(user?.photoURL || "");
   const [connectionsOpen, setConnectionsOpen] = useState(false);
@@ -97,6 +98,7 @@ export default function Profile() {
             following: data.following || [],
             savedDishes: data.savedDishes || [],
             photoURL: data.photoURL || "",
+            bio: data.bio || "",
           });
         }
       })();
@@ -119,10 +121,11 @@ export default function Profile() {
   useEffect(() => {
     if (!editProfileModal) return;
     setNewName(user?.displayName || "");
+    setNewBio(profileMeta.bio || "");
     setNewPhotoFile(null);
     setRemovePhoto(false);
     setNewPhotoPreview(effectiveProfilePhotoURL);
-  }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL]);
+  }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL, profileMeta.bio]);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -135,6 +138,7 @@ export default function Profile() {
         following: data.following || [],
         savedDishes: data.savedDishes || [],
         photoURL: data.photoURL || "",
+        bio: data.bio || "",
       });
     });
 
@@ -286,18 +290,18 @@ export default function Profile() {
         await updateDoc(doc(db, "users", user.uid), {
           displayName: newName,
           photoURL: deleteField(),
+          bio: newBio.trim(),
         });
       } else {
         await setDoc(
           doc(db, "users", user.uid),
-          { displayName: newName, photoURL: nextPhotoURL || "" },
+          { displayName: newName, photoURL: nextPhotoURL || "", bio: newBio.trim() },
           { merge: true }
         );
       }
       await updateOwnerNameForDishes(user.uid, newName, nextPhotoURL || "");
-      setProfileMeta((prev) => ({ ...prev, photoURL: nextPhotoURL || "" }));
+      setProfileMeta((prev) => ({ ...prev, photoURL: nextPhotoURL || "", bio: newBio.trim() }));
       setNewPhotoPreview(nextPhotoURL || "");
-      alert("Profile updated!");
       setEditProfileModal(false);
       setNewPhotoFile(null);
       setRemovePhoto(false);
@@ -471,44 +475,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                if (hasStories) setStoriesOpen(true);
-              }}
-              className={`w-16 h-16 rounded-full p-[3px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
-              aria-label="Open your stories"
-            >
-              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
-                  {effectiveProfilePhotoURL ? (
-                    <img
-                      src={effectiveProfilePhotoURL}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  ) : (
-                    user.displayName?.[0] || "U"
-                  )}
-                </div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStoryActionOpen(true)}
-              className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-black text-white border-2 border-[#F6F6F2] flex items-center justify-center shadow-md"
-              aria-label="Add story"
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-        </div>
-        </div>
+      <div className="mb-4 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
@@ -556,33 +523,77 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 text-center mb-6">
-        <div>
-          <div className="text-2xl font-bold">{savedDishes.length}</div>
-          <div className="text-xs text-black/60">saved</div>
+      <div className="mb-6">
+        <div className="flex items-stretch gap-4">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (hasStories) setStoriesOpen(true);
+              }}
+              className={`w-24 h-24 rounded-full p-[4px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
+              aria-label="Open your stories"
+            >
+              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
+                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                  {effectiveProfilePhotoURL ? (
+                    <img
+                      src={effectiveProfilePhotoURL}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    user.displayName?.[0] || "U"
+                  )}
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStoryActionOpen(true)}
+              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-black text-white border-2 border-[#F6F6F2] flex items-center justify-center shadow-md"
+              aria-label="Add story"
+            >
+              <Plus size={17} />
+            </button>
+          </div>
+
+          <div className="flex-1 min-h-24 flex flex-col justify-between py-1">
+            <h1 className="text-[2rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="text-left">
+                <div className="text-2xl font-bold leading-none">{savedDishes.length}</div>
+                <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48">saved</div>
+              </div>
+              <div className="text-left">
+                <div className="text-2xl font-bold leading-none">{profileMeta.followers.length}</div>
+                <button
+                  onClick={() => openConnections("followers")}
+                  className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48 hover:text-black"
+                >
+                  followers
+                </button>
+              </div>
+              <div className="text-left">
+                <div className="text-2xl font-bold leading-none">{profileMeta.following.length}</div>
+                <button
+                  onClick={() => openConnections("following")}
+                  className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48 hover:text-black"
+                >
+                  following
+                </button>
+              </div>
+              <div className="text-left">
+                <div className="text-2xl font-bold leading-none">{uploadedDishes.length}</div>
+                <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-black/48">posted</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="text-2xl font-bold">{profileMeta.followers.length}</div>
-          <button
-            onClick={() => openConnections("followers")}
-            className="text-xs text-black/60 hover:text-black underline"
-          >
-            followers
-          </button>
-        </div>
-        <div>
-          <div className="text-2xl font-bold">{profileMeta.following.length}</div>
-          <button
-            onClick={() => openConnections("following")}
-            className="text-xs text-black/60 hover:text-black underline"
-          >
-            following
-          </button>
-        </div>
-        <div>
-          <div className="text-2xl font-bold">{uploadedDishes.length}</div>
-          <div className="text-xs text-black/60">posted</div>
-        </div>
+
+        {profileMeta.bio ? (
+          <p className="mt-4 max-w-xl text-sm leading-6 text-black/68 whitespace-pre-wrap">{profileMeta.bio}</p>
+        ) : null}
       </div>
 
       <div className="mb-5 flex justify-center">
@@ -864,64 +875,105 @@ export default function Profile() {
       {/* Edit Profile Modal */}
       <AnimatePresence>
         {editProfileModal && (
-          <motion.div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto">
-            <motion.div className="bg-white p-6 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-black/10 my-6">
-              <h2 className="text-2xl font-semibold mb-2 text-black">Edit Profile</h2>
-              <p className="text-sm text-black/60 mb-4">Update your display name.</p>
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full p-3 rounded-full bg-[#F6F6F2] text-black mb-4 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
-              />
-              <label className="block text-sm font-medium mb-2 text-black">Profile picture</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setNewPhotoFile(file);
-                  if (file) {
-                    setNewPhotoPreview(URL.createObjectURL(file));
+          <motion.div className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-50 overflow-y-auto p-4">
+            <motion.div className="w-full max-w-lg rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.16)] my-6">
+              <div className="mb-6">
+                <div className="inline-flex items-center rounded-full bg-black/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+                  Profile
+                </div>
+                <h2 className="mt-3 text-[2rem] leading-none font-semibold text-black">Edit profile</h2>
+                <p className="mt-3 text-sm text-black/58">Update your name, photo and bio.</p>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black/72">Display name</label>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="w-full rounded-full border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black/72">Bio</label>
+                  <textarea
+                    value={newBio}
+                    onChange={(e) => setNewBio(e.target.value)}
+                    rows={3}
+                    placeholder="Add a short bio"
+                    className="w-full rounded-[1.5rem] border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
+                  />
+                </div>
+
+                <div className="rounded-[1.6rem] border border-black/10 bg-white/70 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-sm font-medium text-black/72">Profile picture</label>
+                    {newPhotoPreview ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewPhotoFile(null);
+                          setNewPhotoPreview("");
+                          setRemovePhoto(true);
+                        }}
+                        className="text-sm font-medium text-black/55 hover:text-black"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-full overflow-hidden border border-black/10 bg-black/5 flex items-center justify-center text-2xl font-bold">
+                      {newPhotoPreview ? (
+                        <img
+                          src={newPhotoPreview}
+                          alt="Profile preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        newName?.[0] || user?.displayName?.[0] || "U"
+                      )}
+                    </div>
+                    <label className="inline-flex items-center rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] cursor-pointer">
+                      Change photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setNewPhotoFile(file);
+                          if (file) {
+                            setNewPhotoPreview(URL.createObjectURL(file));
+                            setRemovePhoto(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <button
+                  onClick={() => {
+                    setEditProfileModal(false);
                     setRemovePhoto(false);
-                  }
-                }}
-                className="w-full mb-3"
-              />
-              {newPhotoPreview ? (
-                <img
-                  src={newPhotoPreview}
-                  alt="Profile preview"
-                  className="w-24 h-24 rounded-full object-cover mb-4 border border-black/10"
-                />
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setNewPhotoFile(null);
-                  setNewPhotoPreview("");
-                  setRemovePhoto(true);
-                }}
-                className="w-full mb-4 bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black text-sm"
-              >
-                Remove profile picture
-              </button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleEditProfile}
-                className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
-              >
-                Save
-              </motion.button>
-              <button
-                onClick={() => {
-                  setEditProfileModal(false);
-                  setRemovePhoto(false);
-                }}
-                className="mt-3 w-full bg-white border border-black/20 py-2 rounded-full hover:bg-black/5 transition text-black"
-              >
-                Cancel
-              </button>
+                  }}
+                  className="rounded-full border border-black/12 bg-white/82 px-5 py-3 font-medium text-black/72 hover:text-black"
+                >
+                  Cancel
+                </button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleEditProfile}
+                  className="rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] px-6 py-3 font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.2)]"
+                >
+                  Save profile
+                </motion.button>
+              </div>
             </motion.div>
           </motion.div>
         )}

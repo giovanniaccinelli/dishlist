@@ -29,6 +29,7 @@ const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
+const LAST_APP_OPEN_KEY = "feed:lastAppOpenAt";
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function Feed() {
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
+  const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -250,6 +252,24 @@ export default function Feed() {
     [followingDeck, addedDishIds]
   );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const previousOpen = Number(localStorage.getItem(LAST_APP_OPEN_KEY) || 0);
+    localStorage.setItem(LAST_APP_OPEN_KEY, String(Date.now()));
+    if (!userId || !followingDeck.length || !previousOpen) {
+      if (!userId) setFollowingHasUpdate(false);
+      return;
+    }
+    setFollowingHasUpdate(
+      followingDeck.some((dish) => ((dish?.createdAt?.seconds || 0) * 1000) > previousOpen)
+    );
+  }, [userId, followingDeck]);
+
+  const handleFeedTabChange = (tab) => {
+    setActiveFeed(tab);
+    if (tab === "following") setFollowingHasUpdate(false);
+  };
+
   const handleAdd = async (dishToAdd) => {
     if (!userId) {
       if (guestMode === "feed") {
@@ -384,25 +404,28 @@ export default function Feed() {
         <div className="relative flex items-end gap-10 border-b border-black/12">
           <button
             type="button"
-            onClick={() => setActiveFeed("for_you")}
+            onClick={() => handleFeedTabChange("following")}
+            className={`relative pb-2 text-sm font-semibold transition ${
+              activeFeed === "following" ? "text-black" : "text-black/45"
+            }`}
+          >
+            Following
+            {followingHasUpdate ? (
+              <span className="absolute -top-0.5 -right-3 w-2.5 h-2.5 rounded-full bg-[#E64646]" />
+            ) : null}
+            {activeFeed === "following" ? (
+              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
+            ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFeedTabChange("for_you")}
             className={`relative pb-2 text-sm font-semibold transition ${
               activeFeed === "for_you" ? "text-black" : "text-black/45"
             }`}
           >
             For You
             {activeFeed === "for_you" ? (
-              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
-            ) : null}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFeed("following")}
-            className={`relative pb-2 text-sm font-semibold transition ${
-              activeFeed === "following" ? "text-black" : "text-black/45"
-            }`}
-          >
-            Following
-            {activeFeed === "following" ? (
               <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
             ) : null}
           </button>

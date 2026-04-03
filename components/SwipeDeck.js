@@ -528,22 +528,29 @@ export default function SwipeDeck({
                 }}
                 aria-label="Toggle dish and recipe view"
               />
-              <p className="text-sm font-semibold text-black/60 mb-1">
-                {currentCard.ownerName || "Unknown"}
-              </p>
-              <h2 className="text-2xl font-bold mb-3">{currentCard.name}</h2>
+              <div className="mb-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                  Recipe
+                </div>
+                <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
+              </div>
               {currentCard.description ? (
-                <p className="text-sm text-black/70 mb-4">{currentCard.description}</p>
+                <div className="mb-5 rounded-[1.4rem] border border-black/8 bg-[#F7F3EA] px-4 py-3">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40 mb-2">
+                    Description
+                  </div>
+                  <p className="text-sm leading-6 text-black/70">{currentCard.description}</p>
+                </div>
               ) : null}
-              <div className="mb-4">
-                <h3 className="text-base font-semibold mb-1">Ingredients</h3>
-                <p className="text-sm text-black/80 whitespace-pre-wrap">
+              <div className="mb-4 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+                <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
+                <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                   {currentCard.recipeIngredients || "No ingredients provided."}
                 </p>
               </div>
-              <div>
-                <h3 className="text-base font-semibold mb-1">Method</h3>
-                <p className="text-sm text-black/80 whitespace-pre-wrap">
+              <div className="rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+                <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
+                <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                   {currentCard.recipeMethod || "No method provided."}
                 </p>
               </div>
@@ -653,35 +660,37 @@ export default function SwipeDeck({
             ))}
           </div>
 
-          <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>
-            {previewComment ? (
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  openComments();
-                }}
-                className="text-xs text-white/90 underline-offset-2 hover:underline"
-              >
-                {previewComment.userName || "User"}: {previewComment.text}
-              </button>
-            ) : (
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  openComments();
-                }}
-                className="text-xs text-white/70"
-              >
-                Be the first to comment
-              </button>
-            )}
-          </div>
+          {!showRecipe ? (
+            <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>
+              {previewComment ? (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openComments();
+                  }}
+                  className="text-xs text-white/90 underline-offset-2 hover:underline"
+                >
+                  {previewComment.userName || "User"}: {previewComment.text}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openComments();
+                  }}
+                  className="text-xs text-white/70"
+                >
+                  Be the first to comment
+                </button>
+              )}
+            </div>
+          ) : null}
         </motion.div>
       </div>
 

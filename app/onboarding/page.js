@@ -13,6 +13,11 @@ const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
+const ONBOARDING_STEP_PREVIEW = [
+  { label: "Dish 1", color: "#5FA8F2" },
+  { label: "Dish 2", color: "#23C268" },
+  { label: "Dish 3", color: "#D7B443" },
+];
 
 export default function Onboarding() {
   const router = useRouter();
@@ -137,23 +142,59 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[11.25rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-7 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] border border-black/12"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
                 >
-                  <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
-                  <p className="mt-4 text-base text-black/78 max-w-[18rem]">
-                    Start by adding three dishes you already know you want in your DishList.
-                  </p>
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div>
+                      <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
+                      <p className="mt-4 text-base text-black/78 max-w-[18rem]">
+                        Start by adding three dishes you already know you want in your DishList.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                        Steps
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {ONBOARDING_STEP_PREVIEW.map((step) => (
+                          <div key={step.label}>
+                            <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[11.25rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F6C15A_0%,#E99A45_100%)] px-7 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
                 >
-                  <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
-                  <p className="mt-4 text-base text-black/62 max-w-[17rem]">
-                    Start swiping right away. After your third save, we ask you to create the profile.
-                  </p>
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div>
+                      <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
+                      <p className="mt-4 text-base text-black/62 max-w-[17rem]">
+                        Start swiping right away. After your third save, we ask you to create the profile.
+                      </p>
+                    </div>
+                    <div>
+                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                        Tags you can explore
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {["fit", "high protein", "veg", "easy", "comfort", "spicy", "quick", "budget"].map((tag) => (
+                          <span
+                            key={tag}
+                            className={`px-3 py-1 rounded-full text-[11px] border ${tag === "high protein" ? "bg-[#E6F7EA] text-[#14532D] border-[#7BD49B]" : tag === "spicy" ? "bg-[#FFE6E1] text-[#9A3412] border-[#F4A090]" : tag === "comfort" ? "bg-[#FFF1D6] text-[#8A5A00] border-[#EAC46A]" : "bg-white/80 text-black/70 border-black/10"}`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </button>
               </div>
 

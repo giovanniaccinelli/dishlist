@@ -33,6 +33,13 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 
+const STORY_CHOOSER_STEPS = [
+  { label: "Name", color: "#5FA8F2" },
+  { label: "Details", color: "#23C268" },
+  { label: "Recipe", color: "#D7B443" },
+  { label: "Story", color: "#111111" },
+];
+
 export default function Profile() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -1114,15 +1121,30 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/upload?story=1");
                   }}
-                  className="w-full min-h-[11.75rem] rounded-[2rem] bg-[linear-gradient(135deg,#1FBF75_0%,#6EDB5A_100%)] text-black px-8 py-8 text-left shadow-[0_24px_50px_rgba(53,176,99,0.28)] border border-black/12"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[2.15rem] font-semibold leading-none">Upload dish</p>
-                      <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[2.15rem] font-semibold leading-none">Upload dish</p>
+                        <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
+                      </div>
+                      <div className="w-16 h-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55">
+                        <Plus size={32} />
+                      </div>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-black text-white flex items-center justify-center shadow-md">
-                      <Plus size={32} />
+                    <div>
+                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                        Steps
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        {STORY_CHOOSER_STEPS.map((step) => (
+                          <div key={step.label}>
+                            <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -1132,15 +1154,32 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full min-h-[11.75rem] rounded-[2rem] border border-black/15 bg-[linear-gradient(135deg,#F6C15A_0%,#E99A45_100%)] px-8 py-8 text-left shadow-[0_16px_34px_rgba(0,0,0,0.08)]"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
-                      <p className="mt-4 text-base text-black/60">Pick an existing dish for your story.</p>
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[2.15rem] font-semibold leading-none text-black">Search dish</p>
+                        <p className="mt-4 text-base text-black/60">Pick an existing dish for your story.</p>
+                      </div>
+                      <div className="w-16 h-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md">
+                        <Search size={30} />
+                      </div>
                     </div>
-                    <div className="w-16 h-16 rounded-[1.4rem] bg-[#F4F1E8] flex items-center justify-center border border-black/8">
-                      <Search size={30} />
+                    <div>
+                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                        Tags you can explore
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {TAG_OPTIONS.slice(0, 10).map((tag) => (
+                          <span
+                            key={tag}
+                            className={`px-3 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </button>

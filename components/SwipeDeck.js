@@ -378,8 +378,19 @@ export default function SwipeDeck({
           style={{ x: dragX, rotate: cardRotate, touchAction: "pan-x" }}
           onPointerDown={(e) => {
             if (disabled) return;
-            const target = e.target;
-            if (target instanceof Element && target.closest("[data-no-drag='true']")) return;
+            const rawTarget = e.target;
+            const target =
+              rawTarget instanceof Element
+                ? rawTarget
+                : rawTarget && rawTarget.parentElement instanceof Element
+                  ? rawTarget.parentElement
+                  : null;
+            if (
+              target &&
+              (target.closest("[data-no-drag='true']") || target.closest("[data-scroll-panel='true']"))
+            ) {
+              return;
+            }
             dragControls.start(e);
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
@@ -554,8 +565,14 @@ export default function SwipeDeck({
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   <div
                     data-no-drag="true"
+                    data-scroll-panel="true"
                     className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
-                    style={{ touchAction: "pan-y" }}
+                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onPointerMove={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
                     onPointerDownCapture={(e) => e.stopPropagation()}
                     onPointerMoveCapture={(e) => e.stopPropagation()}
                     onPointerUpCapture={(e) => e.stopPropagation()}
@@ -569,8 +586,14 @@ export default function SwipeDeck({
                   </div>
                   <div
                     data-no-drag="true"
+                    data-scroll-panel="true"
                     className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
-                    style={{ touchAction: "pan-y" }}
+                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onPointerMove={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
                     onPointerDownCapture={(e) => e.stopPropagation()}
                     onPointerMoveCapture={(e) => e.stopPropagation()}
                     onPointerUpCapture={(e) => e.stopPropagation()}

@@ -65,27 +65,6 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
             </button>
           ) : null}
 
-          <button
-            onClick={async () => {
-              setAuthError("");
-              try {
-                await signInWithGoogle();
-                onClose?.();
-              } catch (err) {
-                setAuthError(err?.message || "Google sign-in failed.");
-              }
-            }}
-            className="w-full rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] py-3 text-white font-semibold shadow-[0_16px_36px_rgba(0,0,0,0.16)] mb-4"
-          >
-            Continue with Google
-          </button>
-
-          <div className="flex items-center gap-3 my-4">
-            <div className="h-px flex-1 bg-black/10" />
-            <span className="text-xs text-black/50">or</span>
-            <div className="h-px flex-1 bg-black/10" />
-          </div>
-
           <div className="space-y-3">
             {mode === "signup" ? (
               <input
@@ -141,7 +120,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setMode("signup");
                   setAuthError("");
                 }}
-                className="w-full rounded-full border border-black/12 bg-white/82 py-3 font-semibold text-black/75"
+                className="w-full rounded-full border border-black/12 bg-[#E85D75] py-3 font-semibold text-white shadow-[0_14px_30px_rgba(232,93,117,0.22)]"
               >
                 Create account
               </button>
@@ -161,11 +140,32 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setAuthError(err?.message || "Create account failed.");
                 }
               }}
-              className="w-full rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] py-3 font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.16)]"
+              className="w-full rounded-full bg-[#E85D75] py-3 font-semibold text-white shadow-[0_16px_36px_rgba(232,93,117,0.24)]"
             >
               Create account
             </button>
           )}
+
+          <div className="flex items-center gap-3 my-3">
+            <div className="h-px flex-1 bg-black/10" />
+            <span className="text-xs text-black/50">or</span>
+            <div className="h-px flex-1 bg-black/10" />
+          </div>
+
+          <button
+            onClick={async () => {
+              setAuthError("");
+              try {
+                await signInWithGoogle();
+                onClose?.();
+              } catch (err) {
+                setAuthError(err?.message || "Google sign-in failed.");
+              }
+            }}
+            className="w-full rounded-full border border-black/12 bg-white/88 py-3 text-black font-semibold shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+          >
+            Continue with Google
+          </button>
         </div>
       </div>
     </div>

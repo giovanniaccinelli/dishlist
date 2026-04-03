@@ -224,7 +224,7 @@ export default function DirectChat() {
           }}
         >
           <div
-            className="mx-auto flex h-full w-full max-w-md flex-col rounded-[28px] bg-[#F7F6F1] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.25)]"
+            className="mx-auto flex h-full w-full max-w-md min-h-0 flex-col rounded-[28px] bg-[#F7F6F1] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.25)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -265,15 +265,16 @@ export default function DirectChat() {
                 </button>
               </div>
             </div>
-            <div className="grid flex-1 grid-cols-3 gap-3 overflow-y-auto pb-2">
-              {(pickerTab === "dishlist" ? ownDishlist : ownToTry).map((dish) => {
+            <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+              <div className="grid grid-cols-3 gap-3 content-start">
+                {(pickerTab === "dishlist" ? ownDishlist : ownToTry).map((dish) => {
                 const imageSrc = getDishImageUrl(dish);
                 return (
                   <button
                     key={dish.id}
                     type="button"
                     onClick={() => setConfirmDish(dish)}
-                    className="relative aspect-[0.82] overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
+                    className="relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
                   >
                     <img
                       src={imageSrc}
@@ -288,7 +289,8 @@ export default function DirectChat() {
                     </div>
                   </button>
                 );
-              })}
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -310,7 +312,7 @@ export default function DirectChat() {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="relative -mt-14 px-4 pb-4 pt-14 text-white bg-gradient-to-t from-black/80 to-transparent">
+              <div className="relative -mt-14 px-4 pb-4 pt-14 text-white">
                 <div className="font-semibold">{confirmDish.name || "Dish"}</div>
               </div>
             </div>

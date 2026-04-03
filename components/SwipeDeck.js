@@ -132,6 +132,7 @@ export default function SwipeDeck({
   const tagsBottom = actionBottom + 64;
   const commentBottom = tagsBottom + tagsHeight + 8;
   const textBottom = Math.max(120, commentBottom + 40);
+  const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
 
   const loadComments = async () => {
     if (!currentCard?.id) return;
@@ -473,7 +474,7 @@ export default function SwipeDeck({
             <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
               <button
                 type="button"
-                className="absolute inset-x-0 top-0 bottom-44 z-10"
+                className="absolute inset-x-0 top-0 h-32 z-10"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowRecipe((prev) => !prev);
@@ -520,35 +521,60 @@ export default function SwipeDeck({
             </div>
 
             <div
-              className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-y-auto"
+              className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-hidden"
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
               <button
                 type="button"
-                className="absolute inset-x-0 top-0 bottom-44 z-10"
+                className="absolute inset-x-0 top-0 h-32 z-10"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowRecipe((prev) => !prev);
                 }}
                 aria-label="Toggle dish and recipe view"
               />
-              <div className="mb-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
-                  Recipe
+              <div
+                className="absolute left-6 right-6 top-16 min-h-0 flex flex-col"
+                style={{ bottom: `${recipeContentBottom}px` }}
+              >
+                <div className="mb-5 shrink-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                    Recipe
+                  </div>
+                  <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
                 </div>
-                <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
-              </div>
-              <div className="mb-4 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] max-h-[21vh] overflow-y-auto">
-                <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
-                <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
-                  {currentCard.recipeIngredients || "No ingredients provided."}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] max-h-[21vh] overflow-y-auto">
-                <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
-                <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
-                  {currentCard.recipeMethod || "No method provided."}
-                </p>
+                <div className="flex min-h-0 flex-1 flex-col gap-4">
+                  <div
+                    data-no-drag="true"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    style={{ touchAction: "pan-y" }}
+                    onPointerDownCapture={(e) => e.stopPropagation()}
+                    onPointerMoveCapture={(e) => e.stopPropagation()}
+                    onPointerUpCapture={(e) => e.stopPropagation()}
+                    onTouchStartCapture={(e) => e.stopPropagation()}
+                    onTouchMoveCapture={(e) => e.stopPropagation()}
+                  >
+                    <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
+                    <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
+                      {currentCard.recipeIngredients || "No ingredients provided."}
+                    </p>
+                  </div>
+                  <div
+                    data-no-drag="true"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    style={{ touchAction: "pan-y" }}
+                    onPointerDownCapture={(e) => e.stopPropagation()}
+                    onPointerMoveCapture={(e) => e.stopPropagation()}
+                    onPointerUpCapture={(e) => e.stopPropagation()}
+                    onTouchStartCapture={(e) => e.stopPropagation()}
+                    onTouchMoveCapture={(e) => e.stopPropagation()}
+                  >
+                    <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
+                    <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
+                      {currentCard.recipeMethod || "No method provided."}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -111,7 +111,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                     setAuthError(err?.message || "Login failed.");
                   }
                 }}
-                className="w-full rounded-full border border-black/10 bg-[#D7B443] py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
+                className="w-full rounded-full border border-black/10 bg-black py-3 font-semibold text-white shadow-[0_14px_30px_rgba(0,0,0,0.18)]"
               >
                 Log in
               </button>

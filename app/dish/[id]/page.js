@@ -271,6 +271,7 @@ export default function DishDetail() {
   const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
   const isForeignProfileContext = Boolean(profileId && profileId !== userId);
   const shouldUsePublicActions = isPublicSource || isForeignProfileContext;
+  const shouldUseStoryActions = !shouldUsePublicActions && (canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext));
 
   const toggleEditTag = (tag) => {
     setEditTags((prev) => {
@@ -471,13 +472,7 @@ export default function DishDetail() {
           preserveContinuity
           disabled={editOpen}
           currentUser={user}
-          onAction={
-            canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext)
-              ? handleAddToStory
-              : shouldUsePublicActions
-                ? handleAdd
-                : handleRemove
-          }
+          onAction={shouldUseStoryActions ? handleAddToStory : shouldUsePublicActions ? handleAdd : handleRemove}
           onSecondaryAction={
             canEditFromThisView
               ? openEditModal
@@ -491,18 +486,12 @@ export default function DishDetail() {
           actionOnRightSwipe={!shouldUsePublicActions}
           dismissOnAction={isPublicSource}
           onAuthRequired={() => alert("Please sign in to comment.")}
-          actionLabel={
-            canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext)
-              ? <StoryActionIcon />
-              : shouldUsePublicActions
-                ? "+"
-                : "Remove"
-          }
+          actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
           secondaryActionLabel={
             canEditFromThisView ? "Edit" : isToTrySource && !isForeignProfileContext ? "Move to DishList" : undefined
           }
           actionClassName={
-            canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext)
+            shouldUseStoryActions
               ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
               : shouldUsePublicActions
                 ? "add-action-btn w-14 h-14"
@@ -515,13 +504,7 @@ export default function DishDetail() {
               ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
               : undefined
           }
-          actionToast={
-            canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext)
-              ? undefined
-              : shouldUsePublicActions
-                ? "ADDING TO YOUR DISHLIST"
-                : "Removed"
-          }
+          actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "ADDING TO YOUR DISHLIST" : "Removed"}
           secondaryActionToast={isToTrySource && !isForeignProfileContext ? "ADDED TO MY DISHLIST" : undefined}
           trackSwipes={false}
           onResetFeed={handleResetDeck}

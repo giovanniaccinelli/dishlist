@@ -6,7 +6,7 @@ import { ChevronRight, CircleUserRound, Search as SearchIcon, Send, X } from "lu
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
-import { TAG_OPTIONS } from "../lib/tags";
+import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const BASE_LIMIT = 20;
@@ -143,6 +143,9 @@ export default function Explore() {
   const [trendingDishes, setTrendingDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showTagsPicker, setShowTagsPicker] = useState(false);
+  const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
+  const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
 
   useEffect(() => {
@@ -158,15 +161,42 @@ export default function Explore() {
     })();
   }, []);
 
+  const toggleTagFilter = (tag) => {
+    setSelectedTagsDraft((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      return [...prev, tag];
+    });
+  };
+
+  const removeAppliedTag = (tag) => {
+    const next = selectedTagsApplied.filter((t) => t !== tag);
+    setSelectedTagsApplied(next);
+    setSelectedTagsDraft(next);
+  };
+
+  const applyTagFilters = () => {
+    setSelectedTagsApplied(selectedTagsDraft);
+    setShowTagsPicker(false);
+  };
+
   const categoryRows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const basePool = term
+    const normalizedSelectedTags = selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
+    const textFiltered = term
       ? allDishes.filter((dish) => {
           const name = String(dish.name || "").toLowerCase();
           const tags = Array.isArray(dish.tags) ? dish.tags.map((tag) => String(tag).toLowerCase()) : [];
           return name.includes(term) || tags.some((tag) => tag.includes(term));
         })
       : allDishes;
+    const basePool =
+      normalizedSelectedTags.length === 0
+        ? textFiltered
+        : textFiltered.filter((dish) => {
+            if (!Array.isArray(dish.tags)) return false;
+            const dishTags = dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
+            return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
+          });
 
     const rows = [];
     rows.push({
@@ -202,7 +232,7 @@ export default function Explore() {
     });
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, search, trendingDishes]);
+  }, [allDishes, search, selectedTagsApplied, trendingDishes]);
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
@@ -219,6 +249,87 @@ export default function Explore() {
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search dishes or tags..."
       />
+      <div className="relative mb-6">
+        <div className="flex flex-wrap gap-2 items-center">
+          {selectedTagsApplied.map((tag) => (
+            <span
+              key={tag}
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, true)}`}
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeAppliedTag(tag)}
+                className="text-black/70 hover:text-black leading-none"
+                aria-label={`Remove ${tag} filter`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {selectedTagsApplied.length === 0 && (
+            <span className="text-xs text-black/50">No tag filters selected</span>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTagsDraft(selectedTagsApplied);
+              setShowTagsPicker(true);
+            }}
+            className="px-3 py-1 rounded-full border border-black bg-black text-white text-xs font-medium"
+          >
+            Add filters
+          </button>
+        </div>
+        {showTagsPicker && (
+          <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-black">Select tags</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTagsDraft(selectedTagsApplied);
+                  setShowTagsPicker(false);
+                }}
+                className="px-3 py-1 rounded-full border border-black/20 text-xs font-medium"
+              >
+                Close
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {TAG_OPTIONS.map((tag) => {
+                const active = selectedTagsDraft.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTagFilter(tag)}
+                    className={`px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, active)}`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedTagsDraft([])}
+                className="px-3 py-2 rounded-full border border-black/20 text-xs font-medium"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={applyTagFilters}
+                className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="text-black/60">Loading categories...</div>

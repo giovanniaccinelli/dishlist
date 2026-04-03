@@ -474,7 +474,7 @@ export default function SwipeDeck({
             <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
               <button
                 type="button"
-                className="absolute inset-x-0 top-0 h-32 z-10"
+                className="absolute inset-0 z-10"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowRecipe((prev) => !prev);

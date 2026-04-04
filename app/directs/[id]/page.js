@@ -187,30 +187,30 @@ export default function DirectChat() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-[84px] left-0 right-0 px-5 z-40">
-        <div className="rounded-[26px] border border-black/10 bg-white/92 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.08)] backdrop-blur">
+      <div className="fixed bottom-[84px] left-0 right-0 z-40 px-5">
+        <div className="rounded-[28px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.08)] backdrop-blur">
           <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPickerOpen(true)}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF3FB] text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
-            aria-label="Share a dish"
-          >
-            <Plus size={22} />
-          </button>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Message..."
-            className="flex-1 h-12 px-4 rounded-2xl bg-[#F7F7F3] border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/15"
-          />
-          <button
-            onClick={sendText}
-            className="flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#121212] to-[#2C2C2C] px-4 text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-          >
-            <SendHorizonal size={18} />
-          </button>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+              aria-label="Share a dish"
+            >
+              <Plus size={22} />
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message..."
+              className="h-12 min-w-0 flex-1 rounded-2xl border border-black/10 bg-white px-4 text-black focus:outline-none focus:ring-2 focus:ring-[#2B74B8]/20"
+            />
+            <button
+              onClick={sendText}
+              className="flex h-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-[#0F3D63] to-[#2B74B8] px-4 text-white shadow-[0_10px_24px_rgba(43,116,184,0.28)]"
+            >
+              <SendHorizonal size={18} />
+            </button>
           </div>
         </div>
       </div>
@@ -303,7 +303,7 @@ export default function DirectChat() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 text-lg font-bold">Send this dish?</div>
-            <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
+            <div className="relative overflow-hidden rounded-[22px] bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
               <img
                 src={getDishImageUrl(confirmDish)}
                 alt={confirmDish.name || "Dish"}
@@ -312,8 +312,10 @@ export default function DirectChat() {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="relative -mt-14 px-4 pb-4 pt-14 text-white">
-                <div className="font-semibold">{confirmDish.name || "Dish"}</div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-3 text-white">
+                <div className="font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+                  {confirmDish.name || "Dish"}
+                </div>
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">

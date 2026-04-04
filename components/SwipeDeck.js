@@ -388,12 +388,12 @@ export default function SwipeDeck({
       <div className="relative w-full max-w-md h-[74vh]">
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
+          drag={disabled || isEjecting || scrollPanelActive || showRecipe ? false : "x"}
           dragListener={false}
           dragControls={dragControls}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "auto" : "pan-x" }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "pan-y" : "pan-x" }}
           onPointerDown={(e) => {
             if (disabled) return;
             if (scrollPanelActiveRef.current) return;
@@ -585,7 +585,7 @@ export default function SwipeDeck({
                   <div
                     data-no-drag="true"
                     data-scroll-panel="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
                     onPointerDown={stopRecipePanelInteraction}
                     onMouseDown={stopRecipePanelInteraction}
@@ -613,7 +613,7 @@ export default function SwipeDeck({
                   <div
                     data-no-drag="true"
                     data-scroll-panel="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
                     onPointerDown={stopRecipePanelInteraction}
                     onMouseDown={stopRecipePanelInteraction}

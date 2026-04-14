@@ -8,6 +8,8 @@ workflows:
     environment:
       node: 22
       xcode: latest
+      groups:
+        - firebase-production
       vars:
         BUNDLE_ID: com.giovanniaccinelli.dishlist
         XCODE_PROJECT: ios/App/App.xcodeproj

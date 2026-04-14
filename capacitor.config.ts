@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'DishList',
   webDir: 'public',
   server: {
-    url: 'https://dishlist.vercel.app',
+    url: 'https://dishlist7.vercel.app',
     cleartext: false,
     androidScheme: 'https'
   },

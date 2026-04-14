@@ -53,7 +53,7 @@ export default function Dishlists() {
         const previewImages = [];
         const pushImage = (dishData) => {
           if (!dishData || previewImages.length >= 9) return;
-          previewImages.push(getDishImageUrl(dishData));
+          previewImages.push(getDishImageUrl(dishData, "thumb"));
         };
 
         const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(9)));

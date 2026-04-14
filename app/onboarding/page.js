@@ -274,7 +274,7 @@ export default function Onboarding() {
                     >
                       <div className="aspect-[0.9] overflow-hidden">
                         <img
-                          src={getDishImageUrl(dish)}
+                          src={getDishImageUrl(dish, "thumb")}
                           alt={dish.name}
                           className="w-full h-full object-cover"
                         />

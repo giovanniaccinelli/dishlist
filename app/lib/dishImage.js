@@ -1,7 +1,9 @@
 export const DEFAULT_DISH_IMAGE = "/Default.png";
 
-export function getDishImageUrl(dish) {
+export function getDishImageUrl(dish, variant = "card") {
   const imageSrc =
+    (variant === "thumb" ? dish?.thumbURL || dish?.thumbnailURL : "") ||
+    dish?.cardURL ||
     dish?.imageURL ||
     dish?.imageUrl ||
     dish?.image_url ||

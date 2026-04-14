@@ -109,6 +109,51 @@ export async function uploadImage(file, userId) {
   return url;
 }
 
+function blobToFile(blob, name) {
+  return new File([blob], name, { type: blob.type || "image/jpeg" });
+}
+
+async function resizeImageFile(file, maxSize, quality = 0.78) {
+  if (typeof window === "undefined" || !file?.type?.startsWith("image/")) return file;
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  if (scale >= 0.98 && file.size < maxSize * 1200) {
+    bitmap.close?.();
+    return file;
+  }
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close?.();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob) return file;
+  const baseName = file.name ? file.name.replace(/\.[^.]+$/, "") : "dish";
+  return blobToFile(blob, `${baseName}-${maxSize}.jpg`);
+}
+
+export async function uploadDishImageVariants(file, userId) {
+  if (!file || !userId) {
+    throw new Error("Missing file or userId for upload.");
+  }
+  const [cardFile, thumbFile] = await Promise.all([
+    resizeImageFile(file, 1400, 0.82),
+    resizeImageFile(file, 420, 0.72),
+  ]);
+  const [cardURL, thumbURL] = await Promise.all([
+    uploadImage(cardFile, userId),
+    uploadImage(thumbFile, userId),
+  ]);
+  return {
+    imageURL: cardURL,
+    cardURL,
+    thumbURL,
+  };
+}
+
 export async function uploadProfileImage(file, userId) {
   if (!file || !userId) {
     throw new Error("Missing file or userId for profile upload.");
@@ -260,6 +305,8 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
         recipeMethod: dishData.recipeMethod || "",
         tags: normalizeTags(dishData.tags),
         isPublic: dishData.isPublic !== false,
+        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
+        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
@@ -283,6 +330,8 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
           recipeMethod: data.recipeMethod || payload.recipeMethod || "",
           tags: normalizeTags(data.tags || payload.tags),
           isPublic: data.isPublic !== false,
+          cardURL: data.cardURL || data.imageURL || data.imageUrl || payload.cardURL || "",
+          thumbURL: data.thumbURL || data.thumbnailURL || data.cardURL || data.imageURL || payload.thumbURL || "",
           imageURL:
             data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
           owner: data.owner || payload.owner || "",
@@ -394,6 +443,8 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
         recipeMethod: dishData.recipeMethod || "",
         tags: normalizeTags(dishData.tags),
         isPublic: dishData.isPublic !== false,
+        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
+        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
@@ -432,6 +483,8 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
         recipeMethod: dishData.recipeMethod || "",
         tags: normalizeTags(dishData.tags),
         isPublic: dishData.isPublic !== false,
+        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
+        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
         imageURL:
           dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
         owner: dishData.owner || "",
@@ -565,6 +618,8 @@ function buildStoryPayload(userId, story) {
     recipeIngredients: story.recipeIngredients || "",
     recipeMethod: story.recipeMethod || "",
     tags: normalizeTags(story.tags),
+    cardURL: story.cardURL || story.imageURL || story.imageUrl || "",
+    thumbURL: story.thumbURL || story.thumbnailURL || story.cardURL || story.imageURL || "",
     imageURL: story.imageURL || story.imageUrl || story.image_url || story.image || "",
     createdAt: serverTimestamp(),
     expiresAtMs: Date.now() + STORY_DURATION_MS,
@@ -847,6 +902,22 @@ export async function getSavedDishesFromFirestore(userId) {
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       tags: normalizeTags(canonical.tags || dish.tags),
       isPublic: canonical.isPublic !== false,
+      cardURL:
+        canonical.cardURL ||
+        canonical.imageURL ||
+        canonical.imageUrl ||
+        dish.cardURL ||
+        dish.imageURL ||
+        "",
+      thumbURL:
+        canonical.thumbURL ||
+        canonical.thumbnailURL ||
+        canonical.cardURL ||
+        canonical.imageURL ||
+        dish.thumbURL ||
+        dish.cardURL ||
+        dish.imageURL ||
+        "",
       imageURL:
         canonical.imageURL ||
         canonical.imageUrl ||

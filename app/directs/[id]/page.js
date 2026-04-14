@@ -145,7 +145,7 @@ export default function DirectChat() {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
-            const imageSrc = getDishImageUrl(dish);
+            const imageSrc = getDishImageUrl(dish, "thumb");
             return (
               <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                 <Link
@@ -268,7 +268,7 @@ export default function DirectChat() {
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
               <div className="grid grid-cols-3 gap-3 content-start">
                 {(pickerTab === "dishlist" ? ownDishlist : ownToTry).map((dish) => {
-                const imageSrc = getDishImageUrl(dish);
+                const imageSrc = getDishImageUrl(dish, "thumb");
                 return (
                   <button
                     key={dish.id}
@@ -305,7 +305,7 @@ export default function DirectChat() {
             <div className="mb-4 text-lg font-bold">Send this dish?</div>
             <div className="relative overflow-hidden rounded-[22px] bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
               <img
-                src={getDishImageUrl(confirmDish)}
+                src={getDishImageUrl(confirmDish, "thumb")}
                 alt={confirmDish.name || "Dish"}
                 className="h-36 w-full object-cover"
                 onError={(e) => {

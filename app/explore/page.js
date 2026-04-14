@@ -49,7 +49,7 @@ function DishPreview({ dish, title }) {
         <span className="sr-only">Open dish card</span>
       </Link>
       <img
-        src={getDishImageUrl(dish)}
+        src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
         loading="lazy"
         decoding="async"
@@ -122,7 +122,7 @@ function ExpandedCategoryModal({ row, onClose }) {
                 <span className="sr-only">Open dish card</span>
               </Link>
               <img
-                src={getDishImageUrl(dish)}
+                src={getDishImageUrl(dish, "thumb")}
                 alt={dish.name}
                 loading="lazy"
                 decoding="async"

@@ -344,7 +344,7 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc = getDishImageUrl(dish);
+                    const imageSrc = getDishImageUrl(dish, "thumb");
                     return (
                       <img
                         src={imageSrc}
@@ -421,7 +421,7 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc = getDishImageUrl(dish);
+                    const imageSrc = getDishImageUrl(dish, "thumb");
                     return (
                       <img
                         src={imageSrc}
@@ -500,7 +500,7 @@ export default function PublicProfile() {
                     <span className="sr-only">Open dish card</span>
                   </Link>
                   {(() => {
-                    const imageSrc = getDishImageUrl(dish);
+                    const imageSrc = getDishImageUrl(dish, "thumb");
                     return (
                       <img
                         src={imageSrc}

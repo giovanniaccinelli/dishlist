@@ -408,7 +408,7 @@ export default function Dishes() {
       ) : (
         <div className="grid grid-cols-3 gap-3">
           {visibleDishes.map((dish, index) => {
-            const imageSrc = getDishImageUrl(dish);
+            const imageSrc = getDishImageUrl(dish, "thumb");
             return (
               <div
                 key={`${dish.id}-${index}`}

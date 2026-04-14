@@ -26,7 +26,7 @@ import {
   saveDishToUserList,
   upgradeToMyDishlist,
   updateDishAndSavedCopies,
-  uploadImage,
+  uploadDishImageVariants,
 } from "../../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
@@ -349,13 +349,17 @@ export default function DishDetail() {
     try {
       let nextImageURL =
         editingDish.imageURL || editingDish.imageUrl || editingDish.image_url || editingDish.image || "";
+      let nextCardURL = editingDish.cardURL || "";
+      let nextThumbURL = editingDish.thumbURL || editingDish.thumbnailURL || "";
       if (editImageFile) {
-        const uploadedUrl = await uploadImage(editImageFile, userId);
-        if (uploadedUrl) {
-          if (nextImageURL && nextImageURL !== uploadedUrl) {
+        const uploaded = await uploadDishImageVariants(editImageFile, userId);
+        if (uploaded.imageURL) {
+          if (nextImageURL && nextImageURL !== uploaded.imageURL) {
             await deleteImageByUrl(nextImageURL);
           }
-          nextImageURL = uploadedUrl;
+          nextImageURL = uploaded.imageURL;
+          nextCardURL = uploaded.cardURL;
+          nextThumbURL = uploaded.thumbURL;
         }
       }
 
@@ -367,6 +371,8 @@ export default function DishDetail() {
         tags: editTags,
         isPublic: editIsPublic,
         imageURL: nextImageURL || "",
+        cardURL: nextCardURL || nextImageURL || "",
+        thumbURL: nextThumbURL || nextCardURL || nextImageURL || "",
       };
 
       await updateDishAndSavedCopies(editingDish.id, updates);

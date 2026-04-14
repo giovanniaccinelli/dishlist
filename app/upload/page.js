@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send } fr
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
-import { publishCustomStory, saveDishToFirestore, uploadImage } from "../lib/firebaseHelpers";
+import { publishCustomStory, saveDishToFirestore, uploadDishImageVariants } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 
@@ -84,9 +84,9 @@ export default function UploadPage() {
     }
     setLoadingUpload(true);
     try {
-      let imageURL = "";
+      let imageFields = { imageURL: "", cardURL: "", thumbURL: "" };
       if (dishImage) {
-        imageURL = await uploadImage(dishImage, user.uid);
+        imageFields = await uploadDishImageVariants(dishImage, user.uid);
       }
       if (storyMode) {
         const storyId = `story-${Date.now()}`;
@@ -98,7 +98,7 @@ export default function UploadPage() {
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
-          imageURL,
+          ...imageFields,
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
         });
@@ -112,7 +112,7 @@ export default function UploadPage() {
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
           isPublic: dishIsPublic,
-          imageURL,
+          ...imageFields,
           owner: user.uid,
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",

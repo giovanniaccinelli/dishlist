@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { uploadImage, saveDishToFirestore } from '../app/lib/firebaseHelpers';
+import { uploadDishImageVariants, saveDishToFirestore } from '../app/lib/firebaseHelpers';
 import { useAuth } from '../app/lib/auth';
 
 export default function UploadModal({ onClose, onDishAdded }) {
@@ -33,17 +33,17 @@ export default function UploadModal({ onClose, onDishAdded }) {
     setLoading(true);
     try {
       // Upload image
-      let imageURL = '';
+      let imageFields = { imageURL: '', cardURL: '', thumbURL: '' };
       if (dishImage) {
-        imageURL = await uploadImage(dishImage, user.uid);
-        if (!imageURL) throw new Error('Image upload failed');
+        imageFields = await uploadDishImageVariants(dishImage, user.uid);
+        if (!imageFields.imageURL) throw new Error('Image upload failed');
       }
 
       // Save dish in Firestore
       await saveDishToFirestore({
         name: dishName,
         description: dishDescription || '',
-        imageURL,
+        ...imageFields,
         owner: user.uid,
         ownerName: user.displayName || "Anonymous",
         createdAt: new Date(),

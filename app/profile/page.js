@@ -6,7 +6,7 @@ import { useAuth } from "../lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  uploadImage,
+  uploadDishImageVariants,
   uploadProfileImage,
   deleteImageByUrl,
   saveDishToFirestore,
@@ -220,10 +220,10 @@ export default function Profile() {
     }
     setLoadingUpload(true);
     try {
-      let imageURL = "";
+      let imageFields = { imageURL: "", cardURL: "", thumbURL: "" };
       if (dishImage) {
-        imageURL = await uploadImage(dishImage, user.uid);
-        if (!imageURL) throw new Error("Failed to upload image.");
+        imageFields = await uploadDishImageVariants(dishImage, user.uid);
+        if (!imageFields.imageURL) throw new Error("Failed to upload image.");
       }
       await saveDishToFirestore({
         name: dishName,
@@ -232,7 +232,7 @@ export default function Profile() {
         recipeMethod: dishRecipeMethod || "",
         tags: dishTags,
         isPublic: dishIsPublic,
-        imageURL,
+        ...imageFields,
         owner: user.uid,
         ownerName: user.displayName || "Anonymous",
         ownerPhotoURL: effectiveProfilePhotoURL || "",
@@ -431,7 +431,7 @@ export default function Profile() {
                   <span className="sr-only">Open dish</span>
                 </Link>
                 {(() => {
-                  const imageSrc = getDishImageUrl(dish);
+                  const imageSrc = getDishImageUrl(dish, "thumb");
                   return (
                     <img
                       src={imageSrc}
@@ -692,7 +692,7 @@ export default function Profile() {
                       <span className="sr-only">Open To Try dish</span>
                     </Link>
                     {(() => {
-                      const imageSrc = getDishImageUrl(dish);
+                      const imageSrc = getDishImageUrl(dish, "thumb");
                       return (
                         <img
                           src={imageSrc}

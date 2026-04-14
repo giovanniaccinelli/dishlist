@@ -143,49 +143,15 @@ export default function SwipeDeck({
   const stopRecipePanelInteraction = (e) => {
     e.stopPropagation();
     e.nativeEvent?.stopImmediatePropagation?.();
-    if (!scrollPanelActiveRef.current) {
-      scrollPanelActiveRef.current = true;
-      setScrollPanelActive(true);
-    }
+    scrollPanelActiveRef.current = true;
+    setScrollPanelActive(true);
   };
 
   const releaseRecipePanelInteraction = (e) => {
     e.stopPropagation();
     e.nativeEvent?.stopImmediatePropagation?.();
-    window.setTimeout(() => {
-      scrollPanelActiveRef.current = false;
-      setScrollPanelActive(false);
-    }, 80);
-  };
-
-  const recipeScrollPanelProps = {
-    "data-no-drag": "true",
-    "data-scroll-panel": "true",
-    style: {
-      touchAction: "pan-y",
-      WebkitOverflowScrolling: "touch",
-      overscrollBehaviorY: "contain",
-    },
-    onPointerDown: stopRecipePanelInteraction,
-    onMouseDown: stopRecipePanelInteraction,
-    onTouchStart: stopRecipePanelInteraction,
-    onPointerMove: stopRecipePanelInteraction,
-    onTouchMove: stopRecipePanelInteraction,
-    onWheel: stopRecipePanelInteraction,
-    onScroll: stopRecipePanelInteraction,
-    onClick: stopRecipePanelInteraction,
-    onPointerUp: releaseRecipePanelInteraction,
-    onTouchEnd: releaseRecipePanelInteraction,
-    onPointerCancel: releaseRecipePanelInteraction,
-    onPointerDownCapture: stopRecipePanelInteraction,
-    onPointerMoveCapture: stopRecipePanelInteraction,
-    onTouchStartCapture: stopRecipePanelInteraction,
-    onTouchMoveCapture: stopRecipePanelInteraction,
-    onWheelCapture: stopRecipePanelInteraction,
-    onScrollCapture: stopRecipePanelInteraction,
-    onClickCapture: stopRecipePanelInteraction,
-    onPointerUpCapture: releaseRecipePanelInteraction,
-    onTouchEndCapture: releaseRecipePanelInteraction,
+    scrollPanelActiveRef.current = false;
+    setScrollPanelActive(false);
   };
 
   const loadComments = async () => {
@@ -606,7 +572,7 @@ export default function SwipeDeck({
                 aria-label="Toggle dish and recipe view"
               />
               <div
-                className="absolute left-6 right-6 top-16 z-20 min-h-0 flex flex-col"
+                className="absolute left-6 right-6 top-16 min-h-0 flex flex-col"
                 style={{ bottom: `${recipeContentBottom}px` }}
               >
                 <div className="mb-5 shrink-0">
@@ -617,8 +583,27 @@ export default function SwipeDeck({
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   <div
-                    {...recipeScrollPanelProps}
-                    className="relative z-30 min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto overscroll-y-contain"
+                    data-no-drag="true"
+                    data-scroll-panel="true"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
+                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    onPointerDown={stopRecipePanelInteraction}
+                    onMouseDown={stopRecipePanelInteraction}
+                    onTouchStart={stopRecipePanelInteraction}
+                    onPointerMove={stopRecipePanelInteraction}
+                    onTouchMove={stopRecipePanelInteraction}
+                    onScroll={stopRecipePanelInteraction}
+                    onPointerUp={releaseRecipePanelInteraction}
+                    onTouchEnd={releaseRecipePanelInteraction}
+                    onPointerCancel={releaseRecipePanelInteraction}
+                    onPointerLeave={releaseRecipePanelInteraction}
+                    onPointerDownCapture={stopRecipePanelInteraction}
+                    onPointerMoveCapture={stopRecipePanelInteraction}
+                    onScrollCapture={stopRecipePanelInteraction}
+                    onPointerUpCapture={releaseRecipePanelInteraction}
+                    onTouchStartCapture={stopRecipePanelInteraction}
+                    onTouchMoveCapture={stopRecipePanelInteraction}
+                    onTouchEndCapture={releaseRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
@@ -626,8 +611,27 @@ export default function SwipeDeck({
                     </p>
                   </div>
                   <div
-                    {...recipeScrollPanelProps}
-                    className="relative z-30 min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto overscroll-y-contain"
+                    data-no-drag="true"
+                    data-scroll-panel="true"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
+                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    onPointerDown={stopRecipePanelInteraction}
+                    onMouseDown={stopRecipePanelInteraction}
+                    onTouchStart={stopRecipePanelInteraction}
+                    onPointerMove={stopRecipePanelInteraction}
+                    onTouchMove={stopRecipePanelInteraction}
+                    onScroll={stopRecipePanelInteraction}
+                    onPointerUp={releaseRecipePanelInteraction}
+                    onTouchEnd={releaseRecipePanelInteraction}
+                    onPointerCancel={releaseRecipePanelInteraction}
+                    onPointerLeave={releaseRecipePanelInteraction}
+                    onPointerDownCapture={stopRecipePanelInteraction}
+                    onPointerMoveCapture={stopRecipePanelInteraction}
+                    onScrollCapture={stopRecipePanelInteraction}
+                    onPointerUpCapture={releaseRecipePanelInteraction}
+                    onTouchStartCapture={stopRecipePanelInteraction}
+                    onTouchMoveCapture={stopRecipePanelInteraction}
+                    onTouchEndCapture={releaseRecipePanelInteraction}
                   >
                     <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">

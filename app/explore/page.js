@@ -73,7 +73,7 @@ function ExploreRow({ title, dishes, onExpand }) {
   if (!visible.length) return null;
 
   return (
-    <section className="mb-6">
+    <section className="mb-6" style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}>
       <div className="mb-2.5 flex items-center justify-between">
         <h2 className="text-[1.05rem] font-semibold tracking-tight text-black/88">{title}</h2>
         {dishes.length > 3 ? (

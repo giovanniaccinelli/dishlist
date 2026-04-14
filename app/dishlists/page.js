@@ -24,6 +24,8 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Send } from "lucide-react";
 
 const INITIAL_USERS_LIMIT = 10;
+const USER_PREVIEW_CACHE_TTL = 60 * 1000;
+const userPreviewCache = new Map();
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
@@ -43,6 +45,11 @@ export default function Dishlists() {
   const attachPreviewData = async (usersList) => {
     return Promise.all(
       usersList.map(async (u) => {
+        const cached = userPreviewCache.get(u.id);
+        if (cached && Date.now() - cached.cachedAt < USER_PREVIEW_CACHE_TTL) {
+          return { ...u, ...cached.value };
+        }
+
         const previewImages = [];
         const pushImage = (dishData) => {
           if (!dishData || previewImages.length >= 9) return;
@@ -61,11 +68,16 @@ export default function Dishlists() {
 
         const activeStories = await getActiveStoriesForUser(u.id);
 
-        return {
-          ...u,
+        const value = {
           previewImages,
           activeStories,
           followersCount: Array.isArray(u.followers) ? u.followers.length : 0,
+        };
+        userPreviewCache.set(u.id, { value, cachedAt: Date.now() });
+
+        return {
+          ...u,
+          ...value,
         };
       })
     );
@@ -325,6 +337,7 @@ export default function Dishlists() {
                 <div
                   key={u.id}
                   className="bg-white rounded-2xl p-3 shadow-md relative overflow-hidden cursor-pointer"
+                  style={{ contentVisibility: "auto", containIntrinsicSize: "240px" }}
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
                   <div className="flex items-start gap-3 mb-3">

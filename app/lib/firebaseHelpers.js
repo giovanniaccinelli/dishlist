@@ -17,6 +17,7 @@ import {
   arrayUnion,
   deleteDoc,
   deleteField,
+  increment,
   writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
@@ -24,6 +25,42 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
 const ownerPhotoCache = new Map();
+const DATA_CACHE_TTL = 45 * 1000;
+const dataCache = new Map();
+const pendingCache = new Map();
+
+function getCache(key) {
+  const cached = dataCache.get(key);
+  if (!cached || Date.now() - cached.cachedAt > DATA_CACHE_TTL) return null;
+  return cached.value;
+}
+
+async function cachedRead(key, loader) {
+  const cached = getCache(key);
+  if (cached) return cached;
+  if (pendingCache.has(key)) return pendingCache.get(key);
+
+  const pending = loader()
+    .then((value) => {
+      dataCache.set(key, { value, cachedAt: Date.now() });
+      pendingCache.delete(key);
+      return value;
+    })
+    .catch((err) => {
+      pendingCache.delete(key);
+      throw err;
+    });
+  pendingCache.set(key, pending);
+  return pending;
+}
+
+function clearReadCache(userId = null) {
+  dataCache.delete("dishes:all");
+  Array.from(dataCache.keys()).forEach((key) => {
+    if (key.startsWith("dishes:page:")) dataCache.delete(key);
+    if (userId && key.includes(`:${userId}:`)) dataCache.delete(key);
+  });
+}
 
 function normalizeTags(tags) {
   if (!Array.isArray(tags)) return [];
@@ -116,11 +153,13 @@ export async function deleteDishAndImage(dishId, imageURL) {
     }
   }
   await deleteDoc(doc(db, "dishes", dishId));
+  clearReadCache();
 }
 
 export async function updateDishAndSavedCopies(dishId, updates) {
   if (!dishId || !updates || Object.keys(updates).length === 0) return;
   await updateDoc(doc(db, "dishes", dishId), updates);
+  clearReadCache();
 
   const usersRef = collection(db, "users");
   const q = query(usersRef, where("savedDishes", "array-contains", dishId));
@@ -137,24 +176,34 @@ export async function updateDishAndSavedCopies(dishId, updates) {
 // Save dish to global dishes collection
 export async function saveDishToFirestore(dish) {
   await addDoc(collection(db, "dishes"), dish);
+  clearReadCache(dish?.owner || null);
 }
 
 export async function createDishForUser(dish) {
   const docRef = await addDoc(collection(db, "dishes"), dish);
+  clearReadCache(dish?.owner || null);
   return docRef.id;
 }
 
 // Get all dishes (for feed)
 export async function getAllDishesFromFirestore() {
-  const snapshot = await getDocs(collection(db, "dishes"));
-  const dishes = snapshot.docs
-    .map((doc) => ({ ...doc.data(), id: doc.id }))
-    .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
-  return enrichWithOwnerPhotos(dishes);
+  return cachedRead("dishes:all", async () => {
+    const snapshot = await getDocs(collection(db, "dishes"));
+    const dishes = snapshot.docs
+      .map((doc) => ({ ...doc.data(), id: doc.id }))
+      .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
+    return enrichWithOwnerPhotos(dishes);
+  });
 }
 
 // Get a paginated page of dishes, newest first
 export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
+  const cacheKey = cursor ? null : `dishes:page:first:${pageSize}`;
+  if (cacheKey) {
+    const cached = getCache(cacheKey);
+    if (cached) return cached;
+  }
+
   const baseQuery = query(
     collection(db, "dishes"),
     orderBy("createdAt", "desc"),
@@ -174,22 +223,28 @@ export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
   const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
-  return { items, lastDoc };
+  const result = { items, lastDoc };
+  if (cacheKey) dataCache.set(cacheKey, { value: result, cachedAt: Date.now() });
+  return result;
 }
 
 export async function getFollowingForUser(userId) {
-  const userRef = doc(db, "users", userId);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return [];
-  return userSnap.data().following || [];
+  return cachedRead(`user:${userId}:following`, async () => {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return [];
+    return userSnap.data().following || [];
+  });
 }
 
 // Get dishes uploaded by specific user
 export async function getDishesFromFirestore(userId) {
-  const q = query(collection(db, "dishes"), where("owner", "==", userId));
-  const snapshot = await getDocs(q);
-  const dishes = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-  return enrichWithOwnerPhotos(dishes);
+  return cachedRead(`user:${userId}:uploaded`, async () => {
+    const q = query(collection(db, "dishes"), where("owner", "==", userId));
+    const snapshot = await getDocs(q);
+    const dishes = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    return enrichWithOwnerPhotos(dishes);
+  });
 }
 
 // Save a dish reference (by ID) to a user's saved dishes
@@ -284,6 +339,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     };
   }
 
+  clearReadCache(userId);
   return true;
 }
 
@@ -294,7 +350,8 @@ export async function removeSavedDishFromUser(userId, dishId) {
   try {
     await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
     await deleteDoc(savedDocRef);
-    await syncDishSaveCount(dishId);
+    await setDoc(doc(db, "dishes", dishId), { saves: increment(-1) }, { merge: true });
+    clearReadCache(userId);
     return true;
   } catch (err) {
     console.error("Failed to remove saved dish:", err);
@@ -349,9 +406,13 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   const userRef = doc(db, "users", userId);
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
+    const existingSaved = await getDoc(savedDocRef);
     await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
     await setDoc(savedDocRef, payload, { merge: true });
-    await syncDishSaveCount(dishId);
+    if (!existingSaved.exists()) {
+      await setDoc(doc(db, "dishes", dishId), { saves: increment(1) }, { merge: true });
+    }
+    clearReadCache(userId);
     return true;
   } catch (err) {
     console.error("Failed to add saved dish:", err);
@@ -385,6 +446,7 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
   try {
     await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
     await setDoc(toTryDocRef, payload, { merge: true });
+    clearReadCache(userId);
     return true;
   } catch (err) {
     console.error("Failed to add to To Try list:", err);
@@ -403,6 +465,7 @@ export async function removeDishFromToTry(userId, dishId) {
   }
   try {
     await deleteDoc(toTryDocRef);
+    clearReadCache(userId);
     return true;
   } catch (err) {
     console.error("Failed to delete toTry dish doc:", err);
@@ -419,9 +482,11 @@ export async function upgradeToMyDishlist(userId, dish) {
 }
 
 export async function getToTryDishesFromFirestore(userId) {
-  const toTrySub = await getDocs(collection(db, "users", userId, "toTry"));
-  const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
-  return enrichWithOwnerPhotos(results);
+  return cachedRead(`user:${userId}:toTry`, async () => {
+    const toTrySub = await getDocs(collection(db, "users", userId, "toTry"));
+    const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return enrichWithOwnerPhotos(results);
+  });
 }
 
 export async function getUsersWhoSavedDish(dishId) {
@@ -719,6 +784,7 @@ export async function markConversationAsRead(conversationId, userId) {
 
 // Get dishes saved by user
 export async function getSavedDishesFromFirestore(userId) {
+  return cachedRead(`user:${userId}:saved`, async () => {
   const userRef = doc(db, "users", userId);
   const userSnap = await getDoc(userRef);
   if (!userSnap.exists()) return [];
@@ -799,6 +865,7 @@ export async function getSavedDishesFromFirestore(userId) {
   });
 
   return enrichWithOwnerPhotos(merged);
+  });
 }
 
 // Remove a dish reference from all users who saved it
@@ -820,6 +887,7 @@ export async function removeDishFromAllUsers(dishId) {
     batch.update(userDoc.ref, { swipedDishes: arrayRemove(dishId) });
   });
   await batch.commit();
+  clearReadCache();
 }
 
 export async function recountDishSavesFromUsers() {

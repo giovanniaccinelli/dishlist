@@ -283,7 +283,13 @@ export default function Dishlists() {
                     <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
                       <div className="w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold">
                         {group.ownerPhotoURL ? (
-                          <img src={group.ownerPhotoURL} alt={group.ownerName} className="w-full h-full object-cover" />
+                          <img
+                            src={group.ownerPhotoURL}
+                            alt={group.ownerName}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           (group.ownerName?.[0] || "U").toUpperCase()
                         )}
@@ -338,7 +344,13 @@ export default function Dishlists() {
                       <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
                         <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
                           {u.photoURL ? (
-                            <img src={u.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                            <img
+                              src={u.photoURL}
+                              alt="Profile"
+                              loading="lazy"
+                              decoding="async"
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
                           ) : (
                             u.displayName?.[0] || "U"
                           )}
@@ -362,6 +374,8 @@ export default function Dishlists() {
                           <img
                             src={imageSrc}
                             alt="Dish preview"
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.src = DEFAULT_DISH_IMAGE;

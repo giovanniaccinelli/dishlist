@@ -22,6 +22,9 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
+const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
+const ownerPhotoCache = new Map();
+
 function normalizeTags(tags) {
   if (!Array.isArray(tags)) return [];
   const cleaned = tags
@@ -35,17 +38,24 @@ async function enrichWithOwnerPhotos(items) {
   const ownerIds = Array.from(new Set(items.map((i) => i.owner).filter(Boolean)));
   if (ownerIds.length === 0) return items;
 
-  const userSnaps = await Promise.all(ownerIds.map((uid) => getDoc(doc(db, "users", uid))));
-  const photoMap = new Map();
-  userSnaps.forEach((snap) => {
-    if (snap.exists()) {
-      photoMap.set(snap.id, snap.data()?.photoURL || "");
-    }
+  const now = Date.now();
+  const missingOwnerIds = ownerIds.filter((uid) => {
+    const cached = ownerPhotoCache.get(uid);
+    return !cached || now - cached.cachedAt > OWNER_PHOTO_CACHE_TTL;
   });
+  if (missingOwnerIds.length > 0) {
+    const userSnaps = await Promise.all(missingOwnerIds.map((uid) => getDoc(doc(db, "users", uid))));
+    userSnaps.forEach((snap) => {
+      ownerPhotoCache.set(snap.id, {
+        photoURL: snap.exists() ? snap.data()?.photoURL || "" : "",
+        cachedAt: now,
+      });
+    });
+  }
 
   return items.map((item) => ({
     ...item,
-    ownerPhotoURL: item.ownerPhotoURL || photoMap.get(item.owner) || "",
+    ownerPhotoURL: item.ownerPhotoURL || ownerPhotoCache.get(item.owner)?.photoURL || "",
   }));
 }
 

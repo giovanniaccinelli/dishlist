@@ -17,6 +17,8 @@ export default function DishCard({ dish, onAdd }) {
       <img
         src={imageSrc}
         alt={dish.name}
+        loading="lazy"
+        decoding="async"
         className="w-full h-48 object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;

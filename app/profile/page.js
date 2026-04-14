@@ -436,6 +436,8 @@ export default function Profile() {
                     <img
                       src={imageSrc}
                       alt={dish.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-28 object-cover"
                       onError={(e) => {
                         e.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -559,6 +561,8 @@ export default function Profile() {
                     <img
                       src={effectiveProfilePhotoURL}
                       alt="Profile"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
@@ -693,6 +697,8 @@ export default function Profile() {
                         <img
                           src={imageSrc}
                           alt={dish.name}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-28 object-cover"
                           onError={(e) => {
                             e.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -846,6 +852,8 @@ export default function Profile() {
                   <img
                     src={preview}
                     alt="Preview"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover rounded-2xl"
                   />
                 ) : loadingUpload ? (
@@ -960,6 +968,8 @@ export default function Profile() {
                         <img
                           src={newPhotoPreview}
                           alt="Profile preview"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -1057,7 +1067,13 @@ export default function Profile() {
                     >
                       <div className="w-11 h-11 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold">
                         {u.photoURL ? (
-                          <img src={u.photoURL} alt="Profile" className="w-11 h-11 rounded-full object-cover" />
+                          <img
+                            src={u.photoURL}
+                            alt="Profile"
+                            loading="lazy"
+                            decoding="async"
+                            className="w-11 h-11 rounded-full object-cover"
+                          />
                         ) : (
                           u.displayName?.[0] || "U"
                         )}

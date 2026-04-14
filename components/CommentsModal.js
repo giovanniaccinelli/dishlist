@@ -114,6 +114,8 @@ export default function CommentsModal({
                             <img
                               src={c.userPhotoURL}
                               alt="Profile"
+                              loading="lazy"
+                              decoding="async"
                               className="w-7 h-7 rounded-full object-cover"
                             />
                           ) : (

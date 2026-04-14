@@ -12,6 +12,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const BASE_LIMIT = 20;
+const ROW_PREVIEW_LIMIT = 10;
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
   return (
@@ -50,6 +51,8 @@ function DishPreview({ dish, title }) {
       <img
         src={getDishImageUrl(dish)}
         alt={dish.name}
+        loading="lazy"
+        decoding="async"
         className="w-full h-28 object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -66,7 +69,7 @@ function DishPreview({ dish, title }) {
 }
 
 function ExploreRow({ title, dishes, onExpand }) {
-  const visible = dishes.slice(0, BASE_LIMIT);
+  const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
 
   return (
@@ -121,6 +124,8 @@ function ExpandedCategoryModal({ row, onClose }) {
               <img
                 src={getDishImageUrl(dish)}
                 alt={dish.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-28 object-cover"
                 onError={(e) => {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;

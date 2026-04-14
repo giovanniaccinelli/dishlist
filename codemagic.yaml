@@ -1,0 +1,40 @@
+workflows:
+  ios-testflight:
+    name: DishList iOS - TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: dishlist-app-store-connect
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.giovanniaccinelli.dishlist
+      vars:
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Build Next app
+        script: |
+          npm run build
+      - name: Sync Capacitor iOS project
+        script: |
+          npx cap sync ios
+      - name: Apply iOS code signing profiles
+        script: |
+          xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

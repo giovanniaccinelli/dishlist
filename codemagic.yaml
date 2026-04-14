@@ -8,10 +8,14 @@ workflows:
     environment:
       node: 22
       xcode: latest
-      groups:
-        - firebase-production
       vars:
         BUNDLE_ID: com.giovanniaccinelli.dishlist
+        NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBAos19VBROVcYRMu6I7Wg4tW2LnJbstnw
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: dishlist-7f0ae.firebaseapp.com
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: dishlist-7f0ae
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: dishlist-7f0ae.firebasestorage.app
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "938623496427"
+        NEXT_PUBLIC_FIREBASE_APP_ID: "1:938623496427:web:bdddc75b0a747ab4e50eae"
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
     scripts:

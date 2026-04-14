@@ -8,6 +8,9 @@ workflows:
     environment:
       node: 22
       xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.giovanniaccinelli.dishlist
       vars:
         BUNDLE_ID: com.giovanniaccinelli.dishlist
         NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBAos19VBROVcYRMu6I7Wg4tW2LnJbstnw

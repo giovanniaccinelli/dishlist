@@ -139,7 +139,7 @@ export default function Feed() {
 
     const buildForYouFeed = (items, tagCounts, followedOwners) => {
       if (!userId) return shuffleArray(sortNewest(items));
-      return items
+      const ranked = items
         .map((dish) => {
           const dishTags = Array.isArray(dish.tags)
             ? dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)
@@ -154,6 +154,8 @@ export default function Feed() {
         })
         .sort((a, b) => b._rank - a._rank)
         .map(({ _rank, ...dish }) => dish);
+
+      return shuffleArray(ranked);
     };
 
     setAddedDishIds(new Set());

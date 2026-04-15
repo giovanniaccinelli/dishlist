@@ -11,9 +11,10 @@ import {
   saveDishToUserList,
 } from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
+import { useUnreadDirects } from "../lib/useUnreadDirects";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { CircleUserRound, Plus, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -24,6 +25,7 @@ const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 
 export default function Dishes() {
   const { user } = useAuth();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [storyPicker, setStoryPicker] = useState(false);
   const [dishes, setDishes] = useState([]);
   const [search, setSearch] = useState("");
@@ -291,7 +293,26 @@ export default function Dishes() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <h1 className="text-3xl font-bold mb-4">{storyPicker ? "Search Dish for Story" : "Dishes"}</h1>
+      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
+        <div className="flex items-center gap-2">
+          <Link
+            href={user ? "/directs" : "/?auth=1"}
+            className="top-action-btn relative"
+            aria-label="Open directs"
+          >
+            <Send size={18} />
+            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          </Link>
+          <Link
+            href={user ? "/profile" : "/?auth=1"}
+            className="top-action-btn"
+            aria-label="Open profile"
+          >
+            <CircleUserRound size={18} />
+          </Link>
+        </div>
+      </div>
       <div className="relative mb-6">
         <div className="flex gap-2">
           <input

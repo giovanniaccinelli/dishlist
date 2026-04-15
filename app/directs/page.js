@@ -74,7 +74,7 @@ export default function Directs() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between gap-3">
         <AppBackButton fallback="/" />
         <h1 className="text-3xl font-bold">Directs</h1>
       </div>

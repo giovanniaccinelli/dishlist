@@ -155,7 +155,7 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-black pb-24">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+      <div className="app-top-nav px-5 pb-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-left">
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
         </h1>
@@ -163,7 +163,7 @@ export default function UploadPage() {
           <button
             type="button"
             onClick={() => router.push("/directs")}
-            className="relative h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+            className="top-action-btn relative"
             aria-label="Directs"
           >
             <Send size={18} />
@@ -172,7 +172,7 @@ export default function UploadPage() {
           <button
             type="button"
             onClick={() => router.push("/profile")}
-            className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
+            className="top-action-btn"
             aria-label="Profile"
           >
             <CircleUserRound size={18} />

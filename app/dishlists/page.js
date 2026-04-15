@@ -244,12 +244,12 @@ export default function Dishlists() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dishlists</h1>
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}
-            className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn relative"
             aria-label="Open directs"
           >
             <Send size={18} />
@@ -257,7 +257,7 @@ export default function Dishlists() {
           </Link>
           <Link
             href={user ? "/profile" : "/?auth=1"}
-            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn"
             aria-label="Open profile"
           >
             <CircleUserRound size={18} />

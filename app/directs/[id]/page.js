@@ -130,7 +130,7 @@ export default function DirectChat() {
 
   return (
     <div className="min-h-screen bg-transparent text-black relative pb-24">
-      <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+      <div className="app-top-nav px-5 pb-3 flex items-start justify-between">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
           <div className="text-xl font-bold leading-none">{otherUser?.displayName || "Chat"}</div>

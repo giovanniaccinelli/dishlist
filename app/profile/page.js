@@ -516,7 +516,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="mb-2 flex justify-end">
+      <div className="app-top-nav -mx-6 px-6 pb-3 mb-2 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
@@ -524,7 +524,7 @@ export default function Profile() {
               if (!user) return;
               window.location.href = "/directs";
             }}
-            className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn relative"
             aria-label="Directs"
           >
             <Send size={18} />
@@ -533,7 +533,7 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => setProfileOptionsOpen((prev) => !prev)}
-            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn"
             aria-label="Profile options"
           >
             <Settings size={18} />

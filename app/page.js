@@ -437,7 +437,7 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="px-5 pt-6 pb-3 flex items-center justify-between shrink-0">
+      <div className="app-top-nav px-5 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
           <h1 className="text-3xl font-bold">DishList</h1>
@@ -460,7 +460,7 @@ export default function Feed() {
           </button>
           <Link
             href={userId ? "/directs" : "/?auth=1"}
-            className="relative w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn relative"
             aria-label="Open directs"
           >
             <Send size={18} />
@@ -468,7 +468,7 @@ export default function Feed() {
           </Link>
           <Link
             href={userId ? "/profile" : "/?auth=1"}
-            className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02]"
+            className="top-action-btn"
             aria-label="Open profile"
           >
             <CircleUserRound size={18} />

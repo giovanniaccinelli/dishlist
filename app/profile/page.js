@@ -515,7 +515,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent px-4 pt-1 text-black relative pb-20">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-20">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button

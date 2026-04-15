@@ -129,7 +129,7 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-black relative pb-20">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent text-black relative pb-20">
       <div className="app-top-nav px-4 pb-2 flex items-start justify-between">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">

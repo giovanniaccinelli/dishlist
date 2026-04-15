@@ -154,7 +154,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-black pb-20">
+    <div className="h-[100dvh] overflow-hidden bg-transparent text-black pb-20 flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-left">
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
@@ -180,10 +180,10 @@ export default function UploadPage() {
         </div>
       </div>
 
-      <div className="px-4 min-h-[calc(100vh-108px)] flex items-start justify-center pt-0">
+      <div className="px-4 flex-1 min-h-0 overflow-hidden flex items-start justify-center pt-0">
         {showUploadForm ? (
           <motion.div
-            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-1"
+            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-0"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -232,7 +232,7 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 1
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
                     {storyMode ? "Story title and cover" : "Name and cover"}
                   </h2>
                 </div>
@@ -251,9 +251,9 @@ export default function UploadPage() {
                   }}
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
-                  className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${
+                  className={`w-full h-44 rounded-[1.65rem] border-2 border-dashed ${
                     dragActive ? "border-[#F59E0B] bg-[#FFF1CC]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
-                  } flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}
+                  } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative overflow-hidden`}
                 >
                   <input
                     type="file"
@@ -263,7 +263,7 @@ export default function UploadPage() {
                     disabled={loadingUpload}
                   />
                   {preview ? (
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[1.65rem]" />
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)] text-white flex items-center justify-center shadow-lg">
@@ -283,7 +283,7 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 2
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
                     {storyMode ? "Story details and tags" : "Description and tags"}
                   </h2>
                 </div>
@@ -322,7 +322,7 @@ export default function UploadPage() {
                 <div className="mb-4 text-center">
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
-                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
+                <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
                 <textarea
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
@@ -348,7 +348,7 @@ export default function UploadPage() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Final Step
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
                     {storyMode ? "Review and publish" : "Review and upload"}
                   </h2>
                 </div>
@@ -400,7 +400,7 @@ export default function UploadPage() {
               </>
             ) : null}
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between">
               {uploadStep > 0 ? (
                 <button
                   type="button"
@@ -437,17 +437,17 @@ export default function UploadPage() {
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="mb-4 text-center">
-              <h2 className="text-[2.4rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
+              <h2 className="text-[2.05rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                className="w-full min-h-[13rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-6 py-6 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
               >
-                <div className="flex h-full flex-col justify-between gap-8">
+                <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[2.15rem] font-semibold leading-[0.95]">Create dish</p>
+                      <p className="text-[1.9rem] font-semibold leading-[0.95]">Create dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
@@ -474,12 +474,12 @@ export default function UploadPage() {
               </button>
               <button
                 onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
-                className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                className="w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-6 py-6 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
               >
-                <div className="flex h-full flex-col justify-between gap-8">
+                <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[2.15rem] font-semibold leading-none text-black">Find dish</p>
+                      <p className="text-[1.9rem] font-semibold leading-none text-black">Find dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0 aspect-square">

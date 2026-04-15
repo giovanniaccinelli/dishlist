@@ -5,9 +5,11 @@
 /* --- Font & Base Style --- */
 @layer base {
   html, body {
+    height: 100%;
+    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;
     @apply bg-transparent text-black antialiased;
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
     background-attachment: fixed;
   }
 

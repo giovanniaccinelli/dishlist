@@ -26,7 +26,7 @@ import {
 import BottomNav from "../../components/BottomNav";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, deleteField } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { Plus, Search, Settings, Send, Shuffle } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -67,6 +67,7 @@ export default function Profile() {
   const [newBio, setNewBio] = useState("");
   const [newPhotoFile, setNewPhotoFile] = useState(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState(user?.photoURL || "");
+  const [savingProfile, setSavingProfile] = useState(false);
   const [connectionsOpen, setConnectionsOpen] = useState(false);
   const [connectionsTitle, setConnectionsTitle] = useState("");
   const [connectionsLoading, setConnectionsLoading] = useState(false);
@@ -285,46 +286,66 @@ export default function Profile() {
   };
 
   const handleEditProfile = async () => {
+    if (!user?.uid || savingProfile) return;
+    const cleanedName = newName.trim() || user.displayName || "Unnamed";
+    const cleanedBio = newBio.trim();
+    setSavingProfile(true);
     try {
       const currentPhotoURL = profileMeta.photoURL || user?.photoURL || "";
       let nextPhotoURL = currentPhotoURL;
+
       if (removePhoto) {
         nextPhotoURL = "";
       }
       if (newPhotoFile) {
         nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
-        if (currentPhotoURL) {
-          await deleteImageByUrl(currentPhotoURL);
-        }
-      } else if (removePhoto && currentPhotoURL) {
-        await deleteImageByUrl(currentPhotoURL);
       }
-      await updateProfile(auth.currentUser, {
-        displayName: newName,
+
+      const currentAuthUser = auth.currentUser;
+      if (!currentAuthUser) throw new Error("No authenticated user.");
+
+      await updateProfile(currentAuthUser, {
+        displayName: cleanedName,
         photoURL: nextPhotoURL ? nextPhotoURL : null,
       });
-      await auth.currentUser?.reload();
-      if (removePhoto && !nextPhotoURL) {
-        await updateDoc(doc(db, "users", user.uid), {
-          displayName: newName,
-          photoURL: deleteField(),
-          bio: newBio.trim(),
-        });
-      } else {
-        await setDoc(
-          doc(db, "users", user.uid),
-          { displayName: newName, photoURL: nextPhotoURL || "", bio: newBio.trim() },
-          { merge: true }
-        );
-      }
-      await updateOwnerNameForDishes(user.uid, newName, nextPhotoURL || "");
-      setProfileMeta((prev) => ({ ...prev, photoURL: nextPhotoURL || "", bio: newBio.trim() }));
+      await currentAuthUser.reload();
+
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          displayName: cleanedName,
+          photoURL: nextPhotoURL || "",
+          bio: cleanedBio,
+          email: currentAuthUser.email || user.email || "",
+        },
+        { merge: true }
+      );
+
+      setProfileMeta((prev) => ({
+        ...prev,
+        photoURL: nextPhotoURL || "",
+        bio: cleanedBio,
+      }));
+      setNewName(cleanedName);
       setNewPhotoPreview(nextPhotoURL || "");
       setEditProfileModal(false);
       setNewPhotoFile(null);
       setRemovePhoto(false);
-    } catch {
+
+      updateOwnerNameForDishes(user.uid, cleanedName, nextPhotoURL || "").catch((err) => {
+        console.warn("Failed to update owner metadata on dishes:", err);
+      });
+
+      if ((newPhotoFile || removePhoto) && currentPhotoURL && currentPhotoURL !== nextPhotoURL) {
+        deleteImageByUrl(currentPhotoURL).catch((err) => {
+          console.warn("Failed to delete old profile image:", err);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to update profile:", err);
       alert("Failed to update profile.");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -1009,6 +1030,7 @@ export default function Profile() {
 
               <div className="mt-6 flex items-center justify-between gap-3">
                 <button
+                  type="button"
                   onClick={() => {
                     setEditProfileModal(false);
                     setRemovePhoto(false);
@@ -1018,11 +1040,15 @@ export default function Profile() {
                   Cancel
                 </button>
                 <motion.button
+                  type="button"
                   whileTap={{ scale: 0.98 }}
                   onClick={handleEditProfile}
-                  className="rounded-full border border-black/10 bg-[#D7B443] px-6 py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
+                  disabled={savingProfile}
+                  className={`rounded-full border border-black/10 px-6 py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)] ${
+                    savingProfile ? "bg-black/10 text-black/40" : "bg-[#D7B443]"
+                  }`}
                 >
-                  Save profile
+                  {savingProfile ? "Saving..." : "Save profile"}
                 </motion.button>
               </div>
             </motion.div>

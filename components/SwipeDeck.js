@@ -11,7 +11,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
@@ -215,6 +215,31 @@ export default function SwipeDeck({
     });
   };
 
+  const goToPreviousCard = () => {
+    if (disabled || isEjecting || currentIndex <= 0) return;
+    setDeckEmpty(false);
+    setShowRecipe(false);
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    dragX.set(0);
+  };
+
+  const goToNextCardFromArrow = async () => {
+    if (disabled || isEjecting || !currentCard) return;
+    setIsEjecting(true);
+    if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
+    try {
+      await animate(dragX, -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700), {
+        type: "spring",
+        stiffness: 280,
+        damping: 28,
+        mass: 0.6,
+      }).finished;
+    } catch {}
+    advanceCard();
+    setIsEjecting(false);
+    dragX.set(0);
+  };
+
   const runAction = (card) => {
     if (typeof onAction !== "function") {
       if (typeof onAuthRequired === "function") onAuthRequired();
@@ -362,7 +387,17 @@ export default function SwipeDeck({
 
   if (deckEmpty || !currentCard) {
     return (
-      <div className={`flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
+      <div className={`relative flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
+        {currentIndex > 0 ? (
+          <button
+            type="button"
+            onClick={goToPreviousCard}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center"
+            aria-label="Previous dish"
+          >
+            <ChevronLeft size={26} />
+          </button>
+        ) : null}
         You&apos;re all caught up!
         {hasMore ? (
           <button
@@ -387,6 +422,24 @@ export default function SwipeDeck({
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
+        <button
+          type="button"
+          onClick={goToPreviousCard}
+          disabled={disabled || isEjecting || currentIndex <= 0}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-40 h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
+          aria-label="Previous dish"
+        >
+          <ChevronLeft size={26} />
+        </button>
+        <button
+          type="button"
+          onClick={goToNextCardFromArrow}
+          disabled={disabled || isEjecting}
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-40 h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
+          aria-label="Next dish"
+        >
+          <ChevronRight size={26} />
+        </button>
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}

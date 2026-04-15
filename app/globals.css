@@ -73,10 +73,8 @@
   top: 0;
   z-index: 45;
   padding-top: max(1rem, env(safe-area-inset-top));
-  background: rgba(246, 246, 242, 0.86);
+  background: #F6F6F2;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
 }
 
 .top-action-btn {

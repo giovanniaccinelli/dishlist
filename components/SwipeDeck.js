@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -11,12 +11,12 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Plus, CornerUpRight } from "lucide-react";
+import { Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
-export default function SwipeDeck({
+const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
   onSwiped,
   onDeckEmpty,
@@ -45,7 +45,7 @@ export default function SwipeDeck({
   currentUser = null,
   onCardViewed,
   fitHeight = false,
-}) {
+}, ref) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
 
@@ -226,19 +226,29 @@ export default function SwipeDeck({
   const goToNextCardFromArrow = async () => {
     if (disabled || isEjecting || !currentCard) return;
     setIsEjecting(true);
-    if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
+    const targetX = -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
     try {
-      await animate(dragX, -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700), {
+      await animate(dragX, targetX, {
         type: "spring",
         stiffness: 280,
         damping: 28,
         mass: 0.6,
       }).finished;
     } catch {}
+    if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
     advanceCard();
     setIsEjecting(false);
     dragX.set(0);
   };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      previous: goToPreviousCard,
+      next: goToNextCardFromArrow,
+    }),
+    [currentIndex, currentCard, disabled, isEjecting]
+  );
 
   const runAction = (card) => {
     if (typeof onAction !== "function") {
@@ -385,35 +395,9 @@ export default function SwipeDeck({
     "bg-[#E5F7F4] text-[#0F4D45]",
   ];
 
-  const renderDeckArrows = (className = "") => (
-    <div className={`z-40 flex items-center justify-between pointer-events-none ${className}`}>
-      <button
-        type="button"
-        onClick={goToPreviousCard}
-        disabled={disabled || isEjecting || currentIndex <= 0}
-        className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
-        aria-label="Previous dish"
-      >
-        <ChevronLeft size={26} />
-      </button>
-      <button
-        type="button"
-        onClick={goToNextCardFromArrow}
-        disabled={disabled || isEjecting || !currentCard}
-        className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
-        aria-label="Next dish"
-      >
-        <ChevronRight size={26} />
-      </button>
-    </div>
-  );
-
   if (deckEmpty || !currentCard) {
     return (
-      <div className={`relative flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
-        {fitHeight
-          ? renderDeckArrows("fixed left-0 right-0 px-5 top-[calc(env(safe-area-inset-top)+5.6rem)]")
-          : renderDeckArrows("absolute left-0 right-0 px-3 top-2")}
+      <div className={`flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
         You&apos;re all caught up!
         {hasMore ? (
           <button
@@ -437,10 +421,7 @@ export default function SwipeDeck({
 
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
-      {fitHeight
-        ? renderDeckArrows("fixed left-0 right-0 px-5 top-[calc(env(safe-area-inset-top)+5.6rem)]")
-        : renderDeckArrows("w-full max-w-md mb-3 px-3")}
-      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[68vh]"}`}>
+      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
@@ -829,4 +810,6 @@ export default function SwipeDeck({
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default SwipeDeck;

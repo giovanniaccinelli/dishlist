@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
@@ -20,7 +20,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { CircleUserRound, Funnel, Send, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleUserRound, Funnel, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
@@ -40,6 +40,8 @@ export default function Feed() {
   const { user, loading } = useAuth();
   const userId = user?.uid || null;
   const router = useRouter();
+  const forYouDeckRef = useRef(null);
+  const followingDeckRef = useRef(null);
 
   const [activeFeed, setActiveFeed] = useState("for_you");
   const [forYouDeck, setForYouDeck] = useState([]);
@@ -62,6 +64,7 @@ export default function Feed() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterVersion, setFilterVersion] = useState(0);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
+  const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -482,8 +485,16 @@ export default function Feed() {
           </div>
         </div>
       )}
-      <div className="px-5 pt-3 flex justify-center">
-        <div className="relative flex items-end gap-10 border-b border-black/12">
+      <div className="px-5 pt-3 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+        <button
+          type="button"
+          onClick={() => activeDeckRef.current?.previous?.()}
+          className="h-11 w-11 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center"
+          aria-label="Previous dish"
+        >
+          <ChevronLeft size={25} />
+        </button>
+        <div className="relative mx-auto flex items-end gap-10 border-b border-black/12">
           <button
             type="button"
             onClick={() => handleFeedTabChange("following")}
@@ -512,10 +523,19 @@ export default function Feed() {
             ) : null}
           </button>
         </div>
+        <button
+          type="button"
+          onClick={() => activeDeckRef.current?.next?.()}
+          className="h-11 w-11 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center justify-self-end"
+          aria-label="Next dish"
+        >
+          <ChevronRight size={25} />
+        </button>
       </div>
       <div className="px-5 pt-3 pb-[calc(86px+env(safe-area-inset-bottom))] flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
+            ref={forYouDeckRef}
             key={`for-you-${filterVersion}-${excludedTags.join("|")}`}
             dishes={orderedForYou}
             preserveContinuity
@@ -567,6 +587,7 @@ export default function Feed() {
             </div>
           ) : (
             <SwipeDeck
+              ref={followingDeckRef}
               key={`following-${filterVersion}-${excludedTags.join("|")}`}
               dishes={orderedFollowing}
               preserveContinuity

@@ -385,19 +385,35 @@ export default function SwipeDeck({
     "bg-[#E5F7F4] text-[#0F4D45]",
   ];
 
+  const renderDeckArrows = (className = "") => (
+    <div className={`z-40 flex items-center justify-between pointer-events-none ${className}`}>
+      <button
+        type="button"
+        onClick={goToPreviousCard}
+        disabled={disabled || isEjecting || currentIndex <= 0}
+        className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
+        aria-label="Previous dish"
+      >
+        <ChevronLeft size={26} />
+      </button>
+      <button
+        type="button"
+        onClick={goToNextCardFromArrow}
+        disabled={disabled || isEjecting || !currentCard}
+        className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
+        aria-label="Next dish"
+      >
+        <ChevronRight size={26} />
+      </button>
+    </div>
+  );
+
   if (deckEmpty || !currentCard) {
     return (
       <div className={`relative flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
-        {currentIndex > 0 ? (
-          <button
-            type="button"
-            onClick={goToPreviousCard}
-            className="absolute left-3 top-2 z-30 h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center"
-            aria-label="Previous dish"
-          >
-            <ChevronLeft size={26} />
-          </button>
-        ) : null}
+        {fitHeight
+          ? renderDeckArrows("fixed left-0 right-0 px-5 top-[calc(env(safe-area-inset-top)+5.6rem)]")
+          : renderDeckArrows("absolute left-0 right-0 px-3 top-2")}
         You&apos;re all caught up!
         {hasMore ? (
           <button
@@ -421,27 +437,10 @@ export default function SwipeDeck({
 
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
-      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
-        <div className="absolute -top-16 left-0 right-0 z-40 flex items-center justify-between px-3 pointer-events-none">
-          <button
-            type="button"
-            onClick={goToPreviousCard}
-            disabled={disabled || isEjecting || currentIndex <= 0}
-            className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
-            aria-label="Previous dish"
-          >
-            <ChevronLeft size={26} />
-          </button>
-          <button
-            type="button"
-            onClick={goToNextCardFromArrow}
-            disabled={disabled || isEjecting}
-            className="pointer-events-auto h-12 w-12 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center disabled:opacity-30 disabled:scale-100"
-            aria-label="Next dish"
-          >
-            <ChevronRight size={26} />
-          </button>
-        </div>
+      {fitHeight
+        ? renderDeckArrows("fixed left-0 right-0 px-5 top-[calc(env(safe-area-inset-top)+5.6rem)]")
+        : renderDeckArrows("w-full max-w-md mb-3 px-3")}
+      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[68vh]"}`}>
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}

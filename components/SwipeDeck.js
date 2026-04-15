@@ -44,6 +44,7 @@ export default function SwipeDeck({
   disabled = false,
   currentUser = null,
   onCardViewed,
+  fitHeight = false,
 }) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
@@ -361,7 +362,7 @@ export default function SwipeDeck({
 
   if (deckEmpty || !currentCard) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] text-gray-500 text-lg">
+      <div className={`flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
         You&apos;re all caught up!
         {hasMore ? (
           <button
@@ -384,8 +385,8 @@ export default function SwipeDeck({
   }
 
   return (
-    <div className="flex min-h-[72vh] flex-col items-center justify-center">
-      <div className="relative w-full max-w-md h-[74vh]">
+    <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
+      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
@@ -413,7 +414,7 @@ export default function SwipeDeck({
             dragControls.start(e);
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className="pressable-card relative bg-white rounded-[28px] overflow-hidden w-full h-[74vh] cursor-grab"
+          className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div

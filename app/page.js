@@ -434,7 +434,7 @@ export default function Feed() {
   }
 
   return (
-    <div className="h-screen bg-transparent text-black relative pb-24 overflow-hidden">
+    <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
@@ -511,7 +511,7 @@ export default function Feed() {
           </button>
         </div>
       </div>
-      <div className="px-5 h-[calc(100vh-184px)] overflow-hidden relative">
+      <div className="px-5 pt-3 pb-[calc(86px+env(safe-area-inset-bottom))] flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             key={`for-you-${filterVersion}-${excludedTags.join("|")}`}
@@ -522,6 +522,7 @@ export default function Feed() {
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
             currentUser={user}
+            fitHeight
             actionOnRightSwipe={false}
             dismissOnAction
             actionLabel="+"
@@ -572,6 +573,7 @@ export default function Feed() {
               onSavesPress={handleOpenSavers}
               onSharePress={handleShare}
               currentUser={user}
+              fitHeight
               actionOnRightSwipe={false}
               dismissOnAction
               actionLabel="+"

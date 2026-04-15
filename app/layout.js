@@ -6,6 +6,7 @@ import { AuthProvider } from "./lib/auth";
 import DebugBanner from "../components/DebugBanner";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import GoogleAnalytics from "../components/GoogleAnalytics";
+import EdgeBackGesture from "../components/EdgeBackGesture";
 
 export default function RootLayout({ children }) {
   return (
@@ -45,6 +46,7 @@ export default function RootLayout({ children }) {
           <GoogleAnalytics />
           <ServiceWorkerRegister />
           <DebugBanner />
+          <EdgeBackGesture />
           {children}
         </AuthProvider>
       </body>

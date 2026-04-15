@@ -8,6 +8,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import { useUnreadDirects } from "../../lib/useUnreadDirects";
 import BottomNav from "../../../components/BottomNav";
+import AppBackButton from "../../../components/AppBackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getDishesFromFirestore,
@@ -173,7 +174,8 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <AppBackButton fallback="/dishlists" />
         <button
           type="button"
           onClick={async () => {

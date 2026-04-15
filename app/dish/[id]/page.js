@@ -9,6 +9,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
+import AppBackButton from "../../../components/AppBackButton";
 import { getDishImageUrl } from "../../lib/dishImage";
 import {
   addDishToToTryList,
@@ -494,9 +495,7 @@ export default function DishDetail() {
   return (
     <div className="min-h-screen bg-transparent text-black relative pb-24">
       <div className="px-5 pt-6 pb-3 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-sm text-black/60">
-          ← Back
-        </button>
+        <AppBackButton fallback="/" />
       </div>
 
       <div className={`px-5 ${editOpen ? "pointer-events-none" : ""}`}>

@@ -2,19 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
+import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { getSavedDishesFromFirestore, getDishesFromFirestore, getToTryDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { Plus, SendHorizonal, X } from "lucide-react";
 
 export default function DirectChat() {
   const { id } = useParams();
-  const router = useRouter();
   const { user } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -131,13 +131,11 @@ export default function DirectChat() {
   return (
     <div className="min-h-screen bg-transparent text-black relative pb-24">
       <div className="px-5 pt-5 pb-3 flex items-start justify-between">
-        <button onClick={() => router.back()} className="text-sm text-black/60">
-          ← Back
-        </button>
+        <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
           <div className="text-xl font-bold leading-none">{otherUser?.displayName || "Chat"}</div>
         </div>
-        <div className="w-6" />
+        <div className="w-[74px]" />
       </div>
 
       <div className="px-5 pb-36 space-y-3">

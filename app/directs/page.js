@@ -8,6 +8,7 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import AuthPromptModal from "../../components/AuthPromptModal";
+import AppBackButton from "../../components/AppBackButton";
 
 export default function Directs() {
   const { user } = useAuth();
@@ -73,7 +74,10 @@ export default function Directs() {
 
   return (
     <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <h1 className="text-3xl font-bold mb-4">Directs</h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <AppBackButton fallback="/" />
+        <h1 className="text-3xl font-bold">Directs</h1>
+      </div>
       {displayConvos.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
           No conversations yet.

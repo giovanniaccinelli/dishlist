@@ -37,10 +37,9 @@ export default function BottomNav() {
   return (
     <>
       <div
-        className="fixed left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/90 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] flex items-start pt-0 pb-0 z-50"
+        className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/90 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] flex items-end pt-0 pb-0 z-50"
         style={{
-          bottom: "calc((env(safe-area-inset-bottom, 0px) + 14px) * -1)",
-          height: "calc(60px + env(safe-area-inset-bottom, 0px) + 14px)",
+          height: "calc(60px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {navItems.map((item) => {

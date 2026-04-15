@@ -37,15 +37,15 @@ export default function BottomNav() {
   return (
     <>
       <div
-        className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform flex items-end pt-0 pb-0 z-50"
+        className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/94 shadow-[0_-10px_24px_rgba(0,0,0,0.05)] flex items-end pt-0 pb-0 z-50"
         style={{
-          height: "calc(60px + env(safe-area-inset-bottom, 0px))",
+          height: "54px",
         }}
       >
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
-          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold h-[60px]";
+          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold h-[54px] pb-0.5";
           const accentClass = getAccent(item.label);
           const iconClass = item.prominent
             ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${

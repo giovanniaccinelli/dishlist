@@ -154,7 +154,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-transparent text-black pb-[72px] flex flex-col">
+    <div className="h-[100dvh] overflow-hidden bg-transparent text-black pb-[64px] flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-left">
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}

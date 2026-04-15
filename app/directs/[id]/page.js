@@ -129,7 +129,7 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative pb-[72px] flex flex-col">
+    <div className="h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative pb-[64px] flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-start justify-between shrink-0">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
@@ -185,7 +185,7 @@ export default function DirectChat() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-[72px] left-0 right-0 z-40 px-4">
+      <div className="fixed bottom-[64px] left-0 right-0 z-40 px-4">
         <div className="rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-2">
             <button

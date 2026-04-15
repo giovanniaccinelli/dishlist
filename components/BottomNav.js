@@ -36,7 +36,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/94 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] h-[68px] flex items-start pt-1.5 pb-0 z-50">
+      <div className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/94 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] h-[62px] flex items-start pt-0 pb-0 z-50">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;

@@ -493,7 +493,7 @@ export default function DishDetail() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent text-black relative pb-[84px]">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent text-black relative pb-[72px]">
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <AppBackButton fallback="/" />
       </div>

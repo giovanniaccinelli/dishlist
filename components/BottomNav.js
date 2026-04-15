@@ -36,11 +36,11 @@ export default function BottomNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/94 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] flex items-center pt-2 pb-2 z-50">
+      <div className="fixed bottom-0 left-0 right-0 w-full translate-y-0 will-change-transform border-t border-black/10 bg-white/94 backdrop-blur-xl shadow-[0_-10px_24px_rgba(0,0,0,0.05)] h-[68px] flex items-start pt-1.5 pb-0 z-50">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
-          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold min-h-[62px]";
+          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold h-[62px]";
           const accentClass = getAccent(item.label);
           const iconClass = item.prominent
             ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
@@ -49,7 +49,7 @@ export default function BottomNav() {
             : `w-14 h-9 rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-black/[0.05] text-black" : "bg-transparent text-black/45"
               }`;
-          const labelClass = `mt-1 ${active ? "text-black" : "text-black/45"}`;
+          const labelClass = `${active ? "text-black" : "text-black/45"}`;
 
           if (item.requiresAuth && !user) {
             return (
@@ -69,11 +69,11 @@ export default function BottomNav() {
                   <Icon size={item.prominent ? 26 : 22} />
                 </div>
                 {item.prominent ? (
-                  <span className="mt-1 invisible">upload</span>
+                  <span className="mt-0.5 invisible">upload</span>
                 ) : (
-                  <div className="mt-1 flex flex-col items-center">
+                  <div className="mt-0.5 flex flex-col items-center">
                     <span className="text-black/45">{item.label}</span>
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-transparent" />
+                    <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-transparent" />
                   </div>
                 )}
               </button>
@@ -90,11 +90,11 @@ export default function BottomNav() {
                 <Icon size={item.prominent ? 26 : 22} />
               </div>
               {item.prominent ? (
-                <span className="mt-1 invisible">upload</span>
+                <span className="mt-0.5 invisible">upload</span>
               ) : (
-                <div className="mt-1 flex flex-col items-center">
+                <div className="mt-0.5 flex flex-col items-center">
                   <span className={labelClass}>{item.label}</span>
-                  <span className={`mt-1 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
+                  <span className={`mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
                 </div>
               )}
             </Link>

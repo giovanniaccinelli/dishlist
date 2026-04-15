@@ -173,8 +173,8 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-transparent px-4 pt-1 text-black relative pb-20">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
         <AppBackButton fallback="/dishlists" />
         <button
           type="button"
@@ -214,7 +214,7 @@ export default function PublicProfile() {
               aria-label="Open stories"
             >
               <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
                   {profileUser.photoURL ? (
                     <img
                       src={profileUser.photoURL}

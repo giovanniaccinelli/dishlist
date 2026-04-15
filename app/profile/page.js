@@ -515,8 +515,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="app-top-nav -mx-6 px-6 pb-3 mb-2 flex justify-end">
+    <div className="min-h-screen bg-transparent px-4 pt-1 text-black relative pb-20">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
@@ -577,7 +577,7 @@ export default function Profile() {
               aria-label="Open your stories"
             >
               <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
                   {effectiveProfilePhotoURL ? (
                     <img
                       src={effectiveProfilePhotoURL}

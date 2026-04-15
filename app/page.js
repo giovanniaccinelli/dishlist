@@ -440,10 +440,10 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="app-top-nav px-5 pb-3 flex items-center justify-between shrink-0">
+      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
-          <h1 className="text-3xl font-bold">DishList</h1>
+          <img src="/logo-real.png" alt="DishList logo" className="w-8 h-8 rounded-full object-cover" />
+          <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -452,7 +452,7 @@ export default function Feed() {
               setDraftExcludedTags(excludedTags);
               setFilterOpen(true);
             }}
-            className={`w-11 h-11 rounded-[1.1rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02] ${
+            className={`w-[2.4rem] h-[2.4rem] rounded-[0.95rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02] ${
               excludedTags.length > 0
                 ? "border-[#D9BC48] bg-[linear-gradient(180deg,rgba(255,236,180,0.96)_0%,rgba(247,221,133,0.96)_100%)] text-black"
                 : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] text-black"
@@ -485,7 +485,7 @@ export default function Feed() {
           </div>
         </div>
       )}
-      <div className="px-5 pt-3 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+      <div className="px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
@@ -532,7 +532,7 @@ export default function Feed() {
           <ChevronRight size={25} />
         </button>
       </div>
-      <div className="px-5 pt-3 pb-[calc(86px+env(safe-area-inset-bottom))] flex-1 min-h-0 overflow-hidden relative">
+      <div className="px-4 pt-1 pb-[calc(62px+env(safe-area-inset-bottom))] flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

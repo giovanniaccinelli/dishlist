@@ -292,9 +292,9 @@ export default function Dishes() {
 
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
+    <div className="min-h-screen bg-transparent px-4 pt-1 text-black relative pb-20">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}

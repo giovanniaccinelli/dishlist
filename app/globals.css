@@ -72,19 +72,19 @@
   position: sticky;
   top: 0;
   z-index: 45;
-  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-top: max(0.45rem, env(safe-area-inset-top));
   background: transparent;
   border-bottom: 0;
 }
 
 .top-action-btn {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 1.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.95rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 244, 236, 0.96) 100%);
   color: #111;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.07);
   display: inline-flex;
   align-items: center;
   justify-content: center;

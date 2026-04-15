@@ -129,8 +129,8 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-black relative pb-24">
-      <div className="app-top-nav px-5 pb-3 flex items-start justify-between">
+    <div className="min-h-screen bg-transparent text-black relative pb-20">
+      <div className="app-top-nav px-4 pb-2 flex items-start justify-between">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
           <div className="text-xl font-bold leading-none">{otherUser?.displayName || "Chat"}</div>
@@ -138,7 +138,7 @@ export default function DirectChat() {
         <div className="w-[74px]" />
       </div>
 
-      <div className="px-5 pb-36 space-y-3">
+      <div className="px-4 pb-26 space-y-3">
         {messages.map((m) => {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {

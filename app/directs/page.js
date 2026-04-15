@@ -73,10 +73,10 @@ export default function Directs() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-black relative pb-24">
-      <div className="app-top-nav -mx-6 px-6 pb-3 mb-4 flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-transparent px-4 pt-1 text-black relative pb-20">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
         <AppBackButton fallback="/" />
-        <h1 className="text-3xl font-bold">Directs</h1>
+        <h1 className="text-2xl font-bold">Directs</h1>
       </div>
       {displayConvos.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">

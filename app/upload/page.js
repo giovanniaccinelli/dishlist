@@ -154,8 +154,8 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-black pb-24">
-      <div className="app-top-nav px-5 pb-3 flex items-center justify-between">
+    <div className="min-h-screen bg-transparent text-black pb-20">
+      <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-left">
           {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
         </h1>
@@ -180,7 +180,7 @@ export default function UploadPage() {
         </div>
       </div>
 
-      <div className="px-4 min-h-[calc(100vh-132px)] flex items-start justify-center pt-0">
+      <div className="px-4 min-h-[calc(100vh-108px)] flex items-start justify-center pt-0">
         {showUploadForm ? (
           <motion.div
             className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-6 rounded-[2rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-1"

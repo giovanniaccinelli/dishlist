@@ -493,8 +493,8 @@ export default function DishDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-black relative pb-24">
-      <div className="px-5 pt-6 pb-3 flex items-center justify-between">
+    <div className="min-h-screen bg-transparent text-black relative pb-20">
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <AppBackButton fallback="/" />
       </div>
 

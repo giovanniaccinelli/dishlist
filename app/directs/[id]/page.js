@@ -129,8 +129,8 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent text-black relative pb-20">
-      <div className="app-top-nav px-4 pb-2 flex items-start justify-between">
+    <div className="h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative pb-[84px] flex flex-col">
+      <div className="app-top-nav px-4 pb-2 flex items-start justify-between shrink-0">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
           <div className="text-xl font-bold leading-none">{otherUser?.displayName || "Chat"}</div>
@@ -138,7 +138,7 @@ export default function DirectChat() {
         <div className="w-[74px]" />
       </div>
 
-      <div className="px-4 pb-26 space-y-3">
+      <div className="px-4 pb-[132px] space-y-3 flex-1 min-h-0 overflow-y-auto">
         {messages.map((m) => {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
@@ -185,13 +185,13 @@ export default function DirectChat() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-[84px] left-0 right-0 z-40 px-5">
-        <div className="rounded-[28px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.08)] backdrop-blur">
+      <div className="fixed bottom-[86px] left-0 right-0 z-40 px-4">
+        <div className="rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] border border-black/10 bg-white text-black shadow-[0_8px_20px_rgba(0,0,0,0.07)]"
               aria-label="Share a dish"
             >
               <Plus size={22} />
@@ -201,11 +201,11 @@ export default function DirectChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message..."
-              className="h-12 min-w-0 flex-1 rounded-2xl border border-black/10 bg-white px-4 text-black focus:outline-none focus:ring-2 focus:ring-[#2B74B8]/20"
+              className="h-12 min-w-0 flex-1 rounded-[1.1rem] border border-black/10 bg-white px-4 text-black focus:outline-none focus:ring-2 focus:ring-[#2B74B8]/20"
             />
             <button
               onClick={sendText}
-              className="flex h-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-[#0F3D63] to-[#2B74B8] px-4 text-white shadow-[0_10px_24px_rgba(43,116,184,0.28)]"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] bg-gradient-to-r from-[#0F3D63] to-[#2B74B8] text-white shadow-[0_10px_24px_rgba(43,116,184,0.24)]"
             >
               <SendHorizonal size={18} />
             </button>

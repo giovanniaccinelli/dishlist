@@ -191,6 +191,10 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={() => {
+                  if (uploadStep > 0) {
+                    goToPreviousStep();
+                    return;
+                  }
                   setShowUploadForm(false);
                   setUploadStep(0);
                 }}

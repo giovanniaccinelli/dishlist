@@ -515,7 +515,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[64px]">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[62px]">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end">
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
@@ -765,7 +765,7 @@ export default function Profile() {
       {/* Add Dish button */}
       <motion.button
         onClick={() => router.push("/upload")}
-        className="add-action-btn fixed bottom-[72px] right-6 w-16 h-16 text-[40px] z-50"
+        className="add-action-btn fixed bottom-[70px] right-6 w-16 h-16 text-[40px] z-50"
         disabled={loadingUpload}
         aria-label="Add dish"
       >

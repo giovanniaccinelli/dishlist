@@ -73,7 +73,7 @@ export default function Directs() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[64px]">
+    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[62px]">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
         <AppBackButton fallback="/" />
         <h1 className="text-2xl font-bold">Directs</h1>

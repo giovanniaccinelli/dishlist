@@ -150,7 +150,22 @@ export function AuthProvider({ children }) {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    await signInWithRedirect(auth, provider);
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await saveUserDoc(result.user);
+    } catch (error) {
+      if (
+        error?.code === "auth/popup-blocked" ||
+        error?.code === "auth/popup-closed-by-user" ||
+        error?.code === "auth/cancelled-popup-request" ||
+        error?.code === "auth/operation-not-supported-in-this-environment"
+      ) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      throw error;
+    }
   };
 
   const signInWithEmail = async (email, password) => {

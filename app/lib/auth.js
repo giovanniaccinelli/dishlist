@@ -106,10 +106,15 @@ export function AuthProvider({ children }) {
   };
 
   const getNativeAppleCredential = async () => {
-    const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+    const nativeAppleSignIn =
+      Capacitor.Plugins?.SignInWithApple || window?.Capacitor?.Plugins?.SignInWithApple;
+    if (!nativeAppleSignIn?.authorize) {
+      throw new Error("Native Sign in with Apple is not available in this build.");
+    }
+
     const rawNonce = randomNonce();
     const hashedNonce = await sha256(rawNonce);
-    const result = await SignInWithApple.authorize({
+    const result = await nativeAppleSignIn.authorize({
       clientId: APPLE_SERVICE_ID,
       redirectURI: APPLE_REDIRECT_URI,
       scopes: "email name",

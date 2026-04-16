@@ -60,19 +60,21 @@ extension SignInWithApple: ASAuthorizationControllerDelegate {
             return
         }
 
-        let result: [String: Any?] = [
-            "response": [
-                "user": credential.user,
-                "email": credential.email,
-                "givenName": credential.fullName?.givenName,
-                "familyName": credential.fullName?.familyName,
-                "identityToken": identityTokenString,
-                "authorizationCode": authorizationCodeString,
-            ],
+        let response: [String: Any] = [
+            "user": credential.user,
+            "email": credential.email ?? "",
+            "givenName": credential.fullName?.givenName ?? "",
+            "familyName": credential.fullName?.familyName ?? "",
+            "identityToken": identityTokenString,
+            "authorizationCode": authorizationCodeString,
+        ]
+
+        let result: [String: Any] = [
+            "response": response,
         ]
 
         guard let call = activeCall() else { return }
-        call.resolve(result as PluginCallResultData)
+        call.resolve(result)
         bridge?.releaseCall(call)
         activeCallbackId = nil
     }

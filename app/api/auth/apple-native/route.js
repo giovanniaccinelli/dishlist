@@ -39,13 +39,18 @@ const getAppleKey = async (kid) => {
 
 const verifyAppleToken = async (identityToken, expectedNonce) => {
   const parsed = parseJwt(identityToken);
-  if (parsed.header.alg !== "ES256") throw new Error("Invalid Apple token algorithm.");
+  if (!["RS256", "ES256"].includes(parsed.header.alg)) {
+    throw new Error(`Invalid Apple token algorithm: ${parsed.header.alg}`);
+  }
 
   const publicKey = await getAppleKey(parsed.header.kid);
   const verifier = crypto.createVerify("SHA256");
   verifier.update(parsed.signingInput);
   verifier.end();
-  const valid = verifier.verify({ key: publicKey, dsaEncoding: "ieee-p1363" }, parsed.signature);
+  const valid =
+    parsed.header.alg === "ES256"
+      ? verifier.verify({ key: publicKey, dsaEncoding: "ieee-p1363" }, parsed.signature)
+      : verifier.verify(publicKey, parsed.signature);
   if (!valid) throw new Error("Invalid Apple identity token signature.");
 
   const now = Math.floor(Date.now() / 1000);

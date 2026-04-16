@@ -39,9 +39,9 @@ workflows:
         script: |
           keychain initialize
           rm -rf "$HOME/Library/MobileDevice/Provisioning Profiles"/*
+          node scripts/delete-ios-appstore-profiles.mjs
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --delete-stale-profiles \
             --create
           keychain add-certificates
           xcode-project use-profiles

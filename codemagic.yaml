@@ -38,14 +38,21 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+          rm -rf "$HOME/Library/MobileDevice/Provisioning Profiles"/*
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
           keychain add-certificates
           xcode-project use-profiles
+          echo "----- INSTALLED PROVISIONING PROFILE ENTITLEMENTS -----"
+          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" -maxdepth 1 -print -exec sh -c 'security cms -D -i "$1" > /tmp/profile.plist && /usr/libexec/PlistBuddy -c "Print :Entitlements" /tmp/profile.plist || true' sh {} \;
       - name: Build signed IPA
         script: |
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {
+            echo "----- XCODEBUILD LOGS -----"
+            find /tmp/xcodebuild_logs -maxdepth 1 -type f -print -exec cat {} \;
+            exit 1
+          }
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

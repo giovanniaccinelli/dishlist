@@ -36,19 +36,17 @@ export default function BottomNav() {
 
   return (
     <>
-      <div
-        className="fixed bottom-0 left-0 right-0 w-full h-[54px] translate-y-0 will-change-transform border-t border-black/10 bg-white shadow-[0_-10px_24px_rgba(0,0,0,0.05)] flex items-end pt-0 pb-0 z-50"
-      >
+      <div className="bottom-nav-shell">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
-          const wrapperClass = "w-1/5 flex flex-col items-center justify-end text-xs font-semibold h-[54px] pb-0";
+          const wrapperClass = "bottom-nav-item";
           const accentClass = getAccent(item.label);
           const iconClass = item.prominent
-            ? `w-14 h-9 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
+            ? `w-14 h-10 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
                 active ? "scale-105" : ""
               }`
-            : `w-14 h-9 rounded-2xl flex items-center justify-center transition-all ${
+            : `w-14 h-10 rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-black/[0.05] text-black" : "bg-transparent text-black/45"
               }`;
           const labelClass = `${active ? "text-black" : "text-black/45"}`;
@@ -64,16 +62,16 @@ export default function BottomNav() {
                 <div
                   className={
                     item.prominent
-                      ? "w-14 h-9 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                      : "w-14 h-9 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                      ? "w-14 h-10 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                      : "w-14 h-10 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
                   }
                 >
                   <Icon size={item.prominent ? 26 : 22} />
                 </div>
                 {item.prominent ? (
-                  <span className="mt-0.5 invisible">upload</span>
+                  <span className="mt-1 invisible">upload</span>
                 ) : (
-                  <div className="mt-0.5 flex flex-col items-center">
+                  <div className="mt-1 flex flex-col items-center">
                     <span className="text-black/45">{item.label}</span>
                     <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-transparent" />
                   </div>
@@ -92,9 +90,9 @@ export default function BottomNav() {
                 <Icon size={item.prominent ? 26 : 22} />
               </div>
               {item.prominent ? (
-                <span className="mt-0.5 invisible">upload</span>
+                <span className="mt-1 invisible">upload</span>
               ) : (
-                <div className="mt-0.5 flex flex-col items-center">
+                <div className="mt-1 flex flex-col items-center">
                   <span className={labelClass}>{item.label}</span>
                   <span className={`mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
                 </div>

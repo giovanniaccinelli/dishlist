@@ -8,7 +8,9 @@ import {
   OAuthProvider,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  getRedirectResult,
   signInWithPopup,
+  signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -57,6 +59,14 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) await saveUserDoc(result.user);
+      })
+      .catch((err) => {
+        console.error("Redirect sign-in failed:", err);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -78,8 +88,7 @@ export function AuthProvider({ children }) {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    const result = await signInWithPopup(auth, provider);
-    await saveUserDoc(result.user);
+    await signInWithRedirect(auth, provider);
   };
 
   const signInWithEmail = async (email, password) => {

@@ -1076,10 +1076,14 @@ export async function deleteUserAccountData(userId) {
       batch.set(docSnap.ref, updates, { merge: true });
     });
 
-    const commentsSnap = await getDocs(query(collectionGroup(db, "comments"), where("userId", "==", userId)));
-    await commitBatch(commentsSnap.docs, (batch, docSnap) => {
-      batch.delete(docSnap.ref);
-    });
+    const dishesWithUserCommentsSnap = await getDocs(collection(db, "dishes"));
+    for (const dishDoc of dishesWithUserCommentsSnap.docs) {
+      const commentsSnap = await getDocs(collection(db, "dishes", dishDoc.id, "comments"));
+      const userCommentDocs = commentsSnap.docs.filter((commentDoc) => commentDoc.data()?.userId === userId);
+      await commitBatch(userCommentDocs, (batch, docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+    }
 
     const conversationsSnap = await getDocs(
       query(collection(db, "conversations"), where("participants", "array-contains", userId))

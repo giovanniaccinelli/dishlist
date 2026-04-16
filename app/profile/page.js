@@ -365,6 +365,7 @@ export default function Profile() {
     try {
       await deleteAccount({ password: deletePassword });
       setDeleteAccountModal(false);
+      alert("Your account has been deleted.");
       router.replace("/");
     } catch (err) {
       console.error("Failed to delete account:", err);
@@ -559,7 +560,7 @@ export default function Profile() {
             <Settings size={18} />
           </button>
           {profileOptionsOpen && (
-            <div className="absolute mt-2 right-0 z-30 bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-44">
+            <div className="absolute top-full right-0 mt-2 z-[90] bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-48">
               <button
                 type="button"
                 onClick={() => {

@@ -2,7 +2,12 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import {
+  deleteUser,
+  EmailAuthProvider,
   GoogleAuthProvider,
+  OAuthProvider,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -12,6 +17,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { setDoc, doc, getDoc } from "firebase/firestore";
+import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
 
@@ -68,6 +74,14 @@ export function AuthProvider({ children }) {
     await saveUserDoc(result.user);
   };
 
+  const signInWithApple = async () => {
+    const provider = new OAuthProvider("apple.com");
+    provider.addScope("email");
+    provider.addScope("name");
+    const result = await signInWithPopup(auth, provider);
+    await saveUserDoc(result.user);
+  };
+
   const signInWithEmail = async (email, password) => {
     if (!email || !password) throw new Error("Email and password are required");
     const result = await signInWithEmailAndPassword(auth, email, password);
@@ -97,16 +111,40 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   };
 
+  const deleteAccount = async ({ password = "" } = {}) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("No user logged in");
+
+    const providerIds = currentUser.providerData.map((provider) => provider.providerId);
+    if (providerIds.includes("password")) {
+      if (!password) throw new Error("Password is required to delete this account.");
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+    } else if (providerIds.includes("apple.com")) {
+      const provider = new OAuthProvider("apple.com");
+      provider.addScope("email");
+      provider.addScope("name");
+      await reauthenticateWithPopup(currentUser, provider);
+    } else if (providerIds.includes("google.com")) {
+      await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
+    }
+
+    await deleteUserAccountData(currentUser.uid);
+    await deleteUser(currentUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         signInWithGoogle,
+        signInWithApple,
         signInWithEmail,
         signUpWithEmail,
         updateProfile,
         logout,
+        deleteAccount,
       }}
     >
       {children}

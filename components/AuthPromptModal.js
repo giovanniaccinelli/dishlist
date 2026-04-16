@@ -5,7 +5,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
 
 export default function AuthPromptModal({ open, onClose, title = "Log in required" }) {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { signInWithApple, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -151,6 +151,21 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
             <span className="text-xs text-black/50">or</span>
             <div className="h-px flex-1 bg-black/10" />
           </div>
+
+          <button
+            onClick={async () => {
+              setAuthError("");
+              try {
+                await signInWithApple();
+                onClose?.();
+              } catch (err) {
+                setAuthError(err?.message || "Apple sign-in failed.");
+              }
+            }}
+            className="w-full rounded-full border border-black bg-black py-3 text-white font-semibold shadow-[0_12px_28px_rgba(0,0,0,0.16)]"
+          >
+            Continue with Apple
+          </button>
 
           <button
             onClick={async () => {

@@ -1025,6 +1025,82 @@ export async function updateOwnerNameForDishes(userId, ownerName, ownerPhotoURL 
   await batch.commit();
 }
 
+export async function deleteUserAccountData(userId) {
+  if (!userId) return false;
+
+  const commitBatch = async (items, writer) => {
+    for (let i = 0; i < items.length; i += 400) {
+      const batch = writeBatch(db);
+      items.slice(i, i + 400).forEach((item) => writer(batch, item));
+      await batch.commit();
+    }
+  };
+
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() || {} : {};
+
+    if (userData.photoURL) {
+      await deleteImageByUrl(userData.photoURL).catch((err) => {
+        console.warn("Failed to delete profile photo during account deletion:", err);
+      });
+    }
+
+    const ownedDishesSnap = await getDocs(query(collection(db, "dishes"), where("owner", "==", userId)));
+    const ownedDishIds = ownedDishesSnap.docs.map((dishDoc) => dishDoc.id);
+    for (const dishDoc of ownedDishesSnap.docs) {
+      const dish = dishDoc.data() || {};
+      await removeDishFromAllUsers(dishDoc.id);
+      await deleteDishAndImage(dishDoc.id, dish.imageURL || dish.imageUrl || dish.image_url || dish.image || "");
+    }
+
+    const savedSnap = await getDocs(collection(db, "users", userId, "saved"));
+    const toTrySnap = await getDocs(collection(db, "users", userId, "toTry"));
+    const storiesSnap = await getDocs(collection(db, "users", userId, "stories"));
+    await commitBatch([...savedSnap.docs, ...toTrySnap.docs, ...storiesSnap.docs], (batch, docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    const usersSnap = await getDocs(collection(db, "users"));
+    await commitBatch(usersSnap.docs.filter((docSnap) => docSnap.id !== userId), (batch, docSnap) => {
+      const updates = {
+        followers: arrayRemove(userId),
+        following: arrayRemove(userId),
+      };
+      if (ownedDishIds.length > 0) {
+        updates.savedDishes = arrayRemove(...ownedDishIds);
+        updates.swipedDishes = arrayRemove(...ownedDishIds);
+        updates.toTryDishes = arrayRemove(...ownedDishIds);
+      }
+      batch.set(docSnap.ref, updates, { merge: true });
+    });
+
+    const commentsSnap = await getDocs(query(collectionGroup(db, "comments"), where("userId", "==", userId)));
+    await commitBatch(commentsSnap.docs, (batch, docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    const conversationsSnap = await getDocs(
+      query(collection(db, "conversations"), where("participants", "array-contains", userId))
+    );
+    for (const convoDoc of conversationsSnap.docs) {
+      const messagesSnap = await getDocs(collection(db, "conversations", convoDoc.id, "messages"));
+      await commitBatch(messagesSnap.docs, (batch, docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+      await deleteDoc(convoDoc.ref);
+    }
+
+    await deleteDoc(userRef);
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to delete user account data:", err);
+    throw err;
+  }
+}
+
 // One-time cleanup: remove stale "id" field from dishes to avoid collisions.
 export async function cleanupDishIdField() {
   const snapshot = await getDocs(collection(db, "dishes"));

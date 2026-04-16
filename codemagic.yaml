@@ -37,27 +37,34 @@ workflows:
           agvtool new-version -all "$BUILD_NUMBER"
       - name: Set up code signing
         script: |
-          keychain initialize
-          rm -rf "$HOME/Library/MobileDevice/Provisioning Profiles"/*
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          keychain add-certificates
+          set -euo pipefail
           xcode-project use-profiles
           echo "----- INSTALLED PROVISIONING PROFILE ENTITLEMENTS -----"
           MATCHED_APPLE_SIGN_IN_PROFILE=0
-          for profile in "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision; do
-            [ -e "$profile" ] || continue
-            echo "$profile"
-            security cms -D -i "$profile" > /tmp/profile.plist
-            /usr/libexec/PlistBuddy -c "Print :Entitlements" /tmp/profile.plist || true
-            if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
-              MATCHED_APPLE_SIGN_IN_PROFILE=1
-            fi
+          FOUND_PROFILE=0
+          for profile_dir in \
+            "$HOME/Library/MobileDevice/Provisioning Profiles" \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            [ -d "$profile_dir" ] || continue
+            for profile in "$profile_dir"/*.mobileprovision "$profile_dir"/*.provisionprofile; do
+              [ -e "$profile" ] || continue
+              FOUND_PROFILE=1
+              echo "$profile"
+              security cms -D -i "$profile" > /tmp/profile.plist
+              /usr/libexec/PlistBuddy -c "Print :Entitlements" /tmp/profile.plist || true
+              if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
+                MATCHED_APPLE_SIGN_IN_PROFILE=1
+              fi
+            done
           done
+          if [ "$FOUND_PROFILE" != "1" ]; then
+            echo "ERROR: Codemagic did not install any provisioning profile."
+            echo "Check Codemagic iOS code signing settings/integration for bundle $BUNDLE_ID."
+            exit 1
+          fi
           if [ "$MATCHED_APPLE_SIGN_IN_PROFILE" != "1" ]; then
             echo "ERROR: Installed provisioning profile still does not include com.apple.developer.applesignin."
-            echo "The Apple App ID/provisioning profile is still missing Sign in with Apple, so archive would fail."
+            echo "Regenerate the App Store provisioning profile after enabling Sign in with Apple on the App ID."
             exit 1
           fi
       - name: Build signed IPA

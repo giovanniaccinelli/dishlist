@@ -12,7 +12,7 @@ import {
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
-  signInWithCredential,
+  signInWithCustomToken,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -24,9 +24,6 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
-const APPLE_SERVICE_ID = "com.giovanniaccinelli.dishlist.web";
-const APPLE_REDIRECT_URI = "https://dishlist-7f0ae.firebaseapp.com/__/auth/handler";
-
 const randomNonce = (length = 32) => {
   const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
   const randomValues = new Uint8Array(length);
@@ -105,44 +102,54 @@ export function AuthProvider({ children }) {
     await saveUserDoc(result.user);
   };
 
-  const getNativeAppleCredential = async () => {
+  const getNativeAppleIdentity = async () => {
     const nativeAppleSignIn =
       Capacitor.Plugins?.SignInWithApple || window?.Capacitor?.Plugins?.SignInWithApple;
     if (!nativeAppleSignIn?.authorize) {
       throw new Error("Native Sign in with Apple is not available in this build.");
     }
 
-    const rawNonce = randomNonce();
-    const hashedNonce = await sha256(rawNonce);
+    const hashedNonce = await sha256(randomNonce());
     const result = await nativeAppleSignIn.authorize({
-      clientId: APPLE_SERVICE_ID,
-      redirectURI: APPLE_REDIRECT_URI,
       scopes: "email name",
       state: randomNonce(16),
       nonce: hashedNonce,
     });
 
-    const { identityToken, givenName, familyName } = result?.response || {};
+    const { identityToken, givenName, familyName, email } = result?.response || {};
     if (!identityToken) throw new Error("Apple did not return an identity token.");
 
-    const provider = new OAuthProvider("apple.com");
-    const credential = provider.credential({
-      idToken: identityToken,
-      rawNonce,
-    });
     const displayName = [givenName, familyName].filter(Boolean).join(" ").trim();
-    return { credential, displayName };
+    return { identityToken, displayName, email, nonce: hashedNonce };
   };
 
   const signInWithApple = async () => {
+    if (isNativeIOS()) {
+      const appleIdentity = await getNativeAppleIdentity();
+      const response = await fetch("/api/auth/apple-native", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(appleIdentity),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.customToken) {
+        throw new Error(data.error || "Apple sign in failed.");
+      }
+      const result = await signInWithCustomToken(auth, data.customToken);
+      if (data.displayName && !result.user.displayName) {
+        await firebaseUpdateProfile(result.user, { displayName: data.displayName });
+      }
+      await saveUserDoc({
+        ...result.user,
+        displayName: data.displayName || result.user.displayName,
+        email: data.email || result.user.email,
+      });
+      return;
+    }
+
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-
-    // Firebase Web Auth expects the Apple Services ID audience
-    // (com.giovanniaccinelli.dishlist.web). Native iOS Apple tokens use the
-    // bundle ID audience instead, so the Firebase-supported redirect flow is
-    // the correct path for this Capacitor/Web SDK app.
     await signInWithRedirect(auth, provider);
   };
 

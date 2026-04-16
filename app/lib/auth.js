@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import {
   deleteUser,
   EmailAuthProvider,
@@ -11,6 +12,7 @@ import {
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
+  signInWithCredential,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -22,6 +24,25 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
+const APPLE_SERVICE_ID = "com.giovanniaccinelli.dishlist.web";
+const APPLE_REDIRECT_URI = "https://dishlist-7f0ae.firebaseapp.com/__/auth/handler";
+
+const randomNonce = (length = 32) => {
+  const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
+  const randomValues = new Uint8Array(length);
+  crypto.getRandomValues(randomValues);
+  return Array.from(randomValues, (value) => charset[value % charset.length]).join("");
+};
+
+const sha256 = async (input) => {
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const isNativeIOS = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -84,7 +105,41 @@ export function AuthProvider({ children }) {
     await saveUserDoc(result.user);
   };
 
+  const getNativeAppleCredential = async () => {
+    const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+    const rawNonce = randomNonce();
+    const hashedNonce = await sha256(rawNonce);
+    const result = await SignInWithApple.authorize({
+      clientId: APPLE_SERVICE_ID,
+      redirectURI: APPLE_REDIRECT_URI,
+      scopes: "email name",
+      state: randomNonce(16),
+      nonce: hashedNonce,
+    });
+
+    const { identityToken, givenName, familyName } = result?.response || {};
+    if (!identityToken) throw new Error("Apple did not return an identity token.");
+
+    const provider = new OAuthProvider("apple.com");
+    const credential = provider.credential({
+      idToken: identityToken,
+      rawNonce,
+    });
+    const displayName = [givenName, familyName].filter(Boolean).join(" ").trim();
+    return { credential, displayName };
+  };
+
   const signInWithApple = async () => {
+    if (isNativeIOS()) {
+      const { credential, displayName } = await getNativeAppleCredential();
+      const result = await signInWithCredential(auth, credential);
+      if (displayName && !result.user.displayName) {
+        await firebaseUpdateProfile(result.user, { displayName });
+      }
+      await saveUserDoc({ ...result.user, displayName: displayName || result.user.displayName });
+      return;
+    }
+
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
@@ -130,10 +185,15 @@ export function AuthProvider({ children }) {
       const credential = EmailAuthProvider.credential(currentUser.email, password);
       await reauthenticateWithCredential(currentUser, credential);
     } else if (providerIds.includes("apple.com")) {
-      const provider = new OAuthProvider("apple.com");
-      provider.addScope("email");
-      provider.addScope("name");
-      await reauthenticateWithPopup(currentUser, provider);
+      if (isNativeIOS()) {
+        const { credential } = await getNativeAppleCredential();
+        await reauthenticateWithCredential(currentUser, credential);
+      } else {
+        const provider = new OAuthProvider("apple.com");
+        provider.addScope("email");
+        provider.addScope("name");
+        await reauthenticateWithPopup(currentUser, provider);
+      }
     } else if (providerIds.includes("google.com")) {
       await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
     }

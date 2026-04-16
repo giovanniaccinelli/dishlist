@@ -135,19 +135,14 @@ export function AuthProvider({ children }) {
   };
 
   const signInWithApple = async () => {
-    if (isNativeIOS()) {
-      const { credential, displayName } = await getNativeAppleCredential();
-      const result = await signInWithCredential(auth, credential);
-      if (displayName && !result.user.displayName) {
-        await firebaseUpdateProfile(result.user, { displayName });
-      }
-      await saveUserDoc({ ...result.user, displayName: displayName || result.user.displayName });
-      return;
-    }
-
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
+
+    // Firebase Web Auth expects the Apple Services ID audience
+    // (com.giovanniaccinelli.dishlist.web). Native iOS Apple tokens use the
+    // bundle ID audience instead, so the Firebase-supported redirect flow is
+    // the correct path for this Capacitor/Web SDK app.
     await signInWithRedirect(auth, provider);
   };
 
@@ -190,10 +185,7 @@ export function AuthProvider({ children }) {
       const credential = EmailAuthProvider.credential(currentUser.email, password);
       await reauthenticateWithCredential(currentUser, credential);
     } else if (providerIds.includes("apple.com")) {
-      if (isNativeIOS()) {
-        const { credential } = await getNativeAppleCredential();
-        await reauthenticateWithCredential(currentUser, credential);
-      } else {
+      if (!isNativeIOS()) {
         const provider = new OAuthProvider("apple.com");
         provider.addScope("email");
         provider.addScope("name");

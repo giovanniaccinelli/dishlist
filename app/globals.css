@@ -20,7 +20,7 @@
   }
 
   :root {
-    --app-top-nav-gap: 1.1rem;
+    --app-top-nav-gap: 1.55rem;
     --app-bottom-nav-core-height: 4.25rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
   }

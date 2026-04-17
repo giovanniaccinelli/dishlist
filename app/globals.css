@@ -20,7 +20,7 @@
   }
 
   :root {
-    --app-top-nav-gap: 2.45rem;
+    --app-top-nav-gap: 2.85rem;
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
   }
@@ -137,6 +137,29 @@
 
 .bottom-nav-spacer {
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.35rem);
+}
+
+.bottom-nav-floating-action {
+  bottom: calc(var(--app-bottom-nav-height) + 1rem);
+}
+
+.bottom-nav-chat-bar {
+  bottom: calc(var(--app-bottom-nav-height) + 0.65rem);
+}
+
+.bottom-nav-chat-scroll {
+  padding-bottom: calc(var(--app-bottom-nav-height) + 6.5rem);
+}
+
+.screen-between-navs-center {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

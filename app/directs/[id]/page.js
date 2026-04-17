@@ -129,7 +129,7 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative pb-[62px] flex flex-col">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-start justify-between shrink-0">
         <AppBackButton fallback="/directs" />
         <div className="flex-1 px-4 text-center">
@@ -138,7 +138,7 @@ export default function DirectChat() {
         <div className="w-[74px]" />
       </div>
 
-      <div className="px-4 pb-[132px] space-y-3 flex-1 min-h-0 overflow-y-auto">
+      <div className="bottom-nav-chat-scroll px-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
         {messages.map((m) => {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
@@ -185,7 +185,7 @@ export default function DirectChat() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-[62px] left-0 right-0 z-40 px-4">
+      <div className="bottom-nav-chat-bar fixed left-0 right-0 z-40 px-4">
         <div className="rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-2">
             <button

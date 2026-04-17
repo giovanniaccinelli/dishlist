@@ -292,7 +292,7 @@ export default function Dishes() {
 
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[62px]">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
         <h1 className="text-2xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
         <div className="flex items-center gap-2">
@@ -492,7 +492,7 @@ export default function Dishes() {
       )}
 
       {!loading && usingGlobalFilter && filtered.length > visibleDishes.length && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 mb-3 flex justify-center">
           <button
             onClick={() => setFilteredLimit((prev) => prev + DISHES_PAGE_SIZE)}
             className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm"
@@ -503,7 +503,7 @@ export default function Dishes() {
       )}
 
       {!loading && !usingGlobalFilter && hasMore && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 mb-3 flex justify-center">
           <button
             onClick={fetchMoreDishes}
             disabled={loadingMore}

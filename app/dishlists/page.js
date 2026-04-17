@@ -243,7 +243,7 @@ export default function Dishlists() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative pb-[62px]">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dishlists</h1>
         <div className="flex items-center gap-2">
@@ -425,7 +425,7 @@ export default function Dishlists() {
           </div>
 
           {!search.trim() && hasMoreUsers && (
-            <div className="mt-6 flex justify-center">
+            <div className="mt-6 mb-3 flex justify-center">
               <button
                 onClick={loadMoreUsers}
                 disabled={loadingMoreUsers}

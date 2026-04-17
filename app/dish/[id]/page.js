@@ -493,12 +493,12 @@ export default function DishDetail() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-none bg-transparent text-black relative pb-[62px]">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <AppBackButton fallback="/" />
       </div>
 
-      <div className={`px-5 ${editOpen ? "pointer-events-none" : ""}`}>
+      <div className={`px-5 flex-1 min-h-0 flex items-center ${editOpen ? "pointer-events-none" : ""}`}>
         <SwipeDeck
           dishes={orderedList}
           preserveContinuity

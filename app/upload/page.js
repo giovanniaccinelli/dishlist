@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
+import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
 import { publishCustomStory, saveDishToFirestore, uploadDishImageVariants } from "../lib/firebaseHelpers";
@@ -37,6 +38,8 @@ export default function UploadPage() {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
   const [storyMode, setStoryMode] = useState(false);
+  const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -80,7 +83,9 @@ export default function UploadPage() {
       return;
     }
     if (!dishName.trim()) {
-      alert("Please enter a dish name.");
+      setToastVariant("error");
+      setToast("Dish name is required");
+      setTimeout(() => setToast(""), 1200);
       return;
     }
     setLoadingUpload(true);
@@ -104,7 +109,9 @@ export default function UploadPage() {
           ownerPhotoURL: user.photoURL || "",
         });
         if (!ok) throw new Error("Failed to publish story.");
-        router.replace("/profile");
+        setToastVariant("success");
+        setToast("Story published");
+        setTimeout(() => router.replace("/profile"), 700);
       } else {
         await saveDishToFirestore({
           name: dishName.trim(),
@@ -119,11 +126,15 @@ export default function UploadPage() {
           ownerPhotoURL: user.photoURL || "",
           createdAt: new Date(),
         });
-        router.replace("/profile");
+        setToastVariant("success");
+        setToast("Dish uploaded");
+        setTimeout(() => router.replace("/profile"), 700);
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);
-      alert(`Failed to ${storyMode ? "publish story" : "upload dish"}. Please try again.`);
+      setToastVariant("error");
+      setToast(storyMode ? "Story failed" : "Upload failed");
+      setTimeout(() => setToast(""), 1400);
     } finally {
       setLoadingUpload(false);
     }
@@ -136,7 +147,9 @@ export default function UploadPage() {
 
   const goToNextStep = () => {
     if (uploadStep === 0 && !dishName.trim()) {
-      alert("Please enter a dish name.");
+      setToastVariant("error");
+      setToast("Dish name is required");
+      setTimeout(() => setToast(""), 1200);
       return;
     }
     setUploadStep((prev) => Math.min(prev + 1, 3));
@@ -516,6 +529,7 @@ export default function UploadPage() {
           />
         )}
       </AnimatePresence>
+      <AppToast message={toast} variant={toastVariant} />
       <BottomNav />
     </div>
   );

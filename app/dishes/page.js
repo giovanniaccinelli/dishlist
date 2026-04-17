@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
 import { DishGridLoading, DishInlineLoading } from "../../components/AppLoadingState";
+import AppToast from "../../components/AppToast";
 import {
   getAllDishesFromFirestore,
   getDishesPage,
@@ -41,6 +42,7 @@ export default function Dishes() {
   const [allDishesLoading, setAllDishesLoading] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
@@ -282,11 +284,13 @@ export default function Dishes() {
       ? await publishDishAsStory(user.uid, dish)
       : await saveDishToUserList(user.uid, dish.id, dish);
     if (!saved) {
-      setToast(storyPicker ? "STORY FAILED" : "SAVE FAILED");
+      setToastVariant("error");
+      setToast(storyPicker ? "Story failed" : "Save failed");
       setTimeout(() => setToast(""), 1200);
       return;
     }
-    setToast(storyPicker ? "ADDED TO STORY" : "ADDING TO YOUR DISHLIST");
+    setToastVariant("success");
+    setToast(storyPicker ? "Added to Story" : "Added to DishList");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -546,18 +550,7 @@ export default function Dishes() {
         users={saversUsers}
         currentUserId={user?.uid}
       />
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AppToast message={toast} variant={toastVariant} />
     </div>
   );
 }

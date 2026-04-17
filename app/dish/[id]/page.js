@@ -10,6 +10,7 @@ import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
 import { FullScreenLoading } from "../../../components/AppLoadingState";
+import AppToast from "../../../components/AppToast";
 import AppBackButton from "../../../components/AppBackButton";
 import { getDishImageUrl } from "../../lib/dishImage";
 import {
@@ -142,6 +143,7 @@ export default function DishDetail() {
   const [editStep, setEditStep] = useState(0);
   const [savingEdit, setSavingEdit] = useState(false);
   const [pageToast, setPageToast] = useState("");
+  const [pageToastVariant, setPageToastVariant] = useState("success");
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
@@ -386,11 +388,14 @@ export default function DishDetail() {
 
       setEditOpen(false);
       setEditingDish(null);
+      setPageToastVariant("success");
       setPageToast("Dish updated");
       setTimeout(() => setPageToast(""), 1200);
     } catch (err) {
       console.error("Failed to update dish:", err);
-      alert("Failed to update dish.");
+      setPageToastVariant("error");
+      setPageToast("Update failed");
+      setTimeout(() => setPageToast(""), 1200);
     } finally {
       setSavingEdit(false);
     }
@@ -414,6 +419,7 @@ export default function DishDetail() {
       setDish((prev) => (prev?.id === editingDish.id ? null : prev));
       setEditOpen(false);
       setEditingDish(null);
+      setPageToastVariant("success");
       setPageToast("Dish deleted");
       setTimeout(() => setPageToast(""), 1200);
       if (deckList.length <= 1) {
@@ -447,11 +453,13 @@ export default function DishDetail() {
 
   const handleAddToStory = async (dishCard) => {
     if (!userId) {
+      setPageToastVariant("neutral");
       setPageToast("Please sign in");
       setTimeout(() => setPageToast(""), 1200);
       return false;
     }
     const ok = await publishDishAsStory(userId, dishCard);
+    setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Story published" : "Story failed");
     setTimeout(() => setPageToast(""), 1200);
     return ok;
@@ -535,8 +543,8 @@ export default function DishDetail() {
                 ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
                 : undefined
             }
-            actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "ADDING TO YOUR DISHLIST" : "Removed"}
-            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "ADDED TO MY DISHLIST" : undefined}
+            actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "Added to DishList" : "Removed"}
+            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "Added to My DishList" : undefined}
             trackSwipes={false}
             onResetFeed={handleResetDeck}
           />
@@ -777,18 +785,7 @@ export default function DishDetail() {
         </div>
       )}
 
-      <AnimatePresence>
-        {pageToast && (
-          <motion.div
-            className="fixed inset-x-4 top-24 z-50 bg-black text-white text-center py-3 rounded-xl font-semibold"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {pageToast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AppToast message={pageToast} variant={pageToastVariant} />
 
       <SaversModal
         open={saversOpen}

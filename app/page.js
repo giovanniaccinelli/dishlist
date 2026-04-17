@@ -546,7 +546,7 @@ export default function Feed() {
             dismissOnAction
             actionLabel="+"
             actionClassName="add-action-btn w-14 h-14 text-[36px]"
-            actionToast="ADDING TO YOUR DISHLIST"
+            actionToast="Added to DishList"
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
             onResetFeed={() => handleResetFeed("for_you")}
@@ -598,7 +598,7 @@ export default function Feed() {
               dismissOnAction
               actionLabel="+"
               actionClassName="add-action-btn w-14 h-14 text-[36px]"
-              actionToast="ADDING TO YOUR DISHLIST"
+              actionToast="Added to DishList"
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}
               onResetFeed={() => handleResetFeed("following")}

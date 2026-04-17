@@ -9,6 +9,7 @@ import { useAuth } from "../../lib/auth";
 import { useUnreadDirects } from "../../lib/useUnreadDirects";
 import BottomNav from "../../../components/BottomNav";
 import { FullScreenLoading } from "../../../components/AppLoadingState";
+import AppToast from "../../../components/AppToast";
 import AppBackButton from "../../../components/AppBackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -39,6 +40,7 @@ export default function PublicProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
   const [connectionsOpen, setConnectionsOpen] = useState(false);
   const [connectionsTitle, setConnectionsTitle] = useState("");
   const [connectionsLoading, setConnectionsLoading] = useState(false);
@@ -101,11 +103,13 @@ export default function PublicProfile() {
     }
     const saved = await saveDishToUserList(user.uid, dish.id, dish);
     if (!saved) {
-      setToast("SAVE FAILED");
+      setToastVariant("error");
+      setToast("Save failed");
       setTimeout(() => setToast(""), 1200);
       return;
     }
-    setToast("ADDING TO YOUR DISHLIST");
+    setToastVariant("success");
+    setToast("Added to DishList");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -630,18 +634,7 @@ export default function PublicProfile() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide shadow-lg"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AppToast message={toast} variant={toastVariant} />
       <StoryViewerModal
         open={storiesOpen}
         onClose={() => setStoriesOpen(false)}

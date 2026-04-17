@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
+import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
@@ -37,6 +38,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   secondaryActionClassName,
   actionToast,
   secondaryActionToast,
+  rightSwipeToast = "Added to To Try",
+  rightSwipeErrorToast = "Action failed",
   trackSwipes = true,
   onAuthRequired,
   preserveContinuity = true,
@@ -53,6 +56,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [deckInitialized, setDeckInitialized] = useState(false);
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
@@ -256,16 +260,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Promise.resolve(onAction(card))
       .then((result) => {
         if (result === false) {
-          setToast("ACTION FAILED");
+          setToastVariant("error");
+          setToast("Action failed");
           setTimeout(() => setToast(""), 1200);
           return;
         }
-        setToast(actionToast || "ADDING TO YOUR DISHLIST");
+        setToastVariant("success");
+        setToast(actionToast || "Added to DishList");
         setTimeout(() => setToast(""), 1200);
       })
       .catch((err) => {
         console.error("Deck action failed:", err);
-        setToast("ACTION FAILED");
+        setToastVariant("error");
+        setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
       });
   };
@@ -291,18 +298,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Promise.resolve(onSecondaryAction(card))
       .then((result) => {
         if (result === false) {
-          setToast("ACTION FAILED");
+          setToastVariant("error");
+          setToast("Action failed");
           setTimeout(() => setToast(""), 1200);
           return;
         }
         if (secondaryActionToast) {
+          setToastVariant("success");
           setToast(secondaryActionToast);
           setTimeout(() => setToast(""), 1200);
         }
       })
       .catch((err) => {
         console.error("Deck secondary action failed:", err);
-        setToast("ACTION FAILED");
+        setToastVariant("error");
+        setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
       });
   };
@@ -327,9 +337,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         runAction(dish);
       }
       if (info.offset.x > 0 && typeof onRightSwipe === "function") {
-        Promise.resolve(onRightSwipe(dish)).catch((err) => {
-          console.error("Right swipe action failed:", err);
-        });
+        Promise.resolve(onRightSwipe(dish))
+          .then((result) => {
+            if (result === false) {
+              setToastVariant("error");
+              setToast(rightSwipeErrorToast);
+              setTimeout(() => setToast(""), 1200);
+              return;
+            }
+            setToastVariant("success");
+            setToast(rightSwipeToast);
+            setTimeout(() => setToast(""), 1200);
+          })
+          .catch((err) => {
+            console.error("Right swipe action failed:", err);
+            setToastVariant("error");
+            setToast(rightSwipeErrorToast);
+            setTimeout(() => setToast(""), 1200);
+          });
       }
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
 
@@ -436,9 +461,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             >
               <motion.div
                 style={{ scale: rightCueScale }}
-                className="w-48 h-48 rounded-full border-4 border-white/80 bg-[#2BD36B]/35 backdrop-blur-sm flex items-center justify-center"
+                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-white/80 bg-[#2BD36B]/35 px-5 text-center backdrop-blur-sm"
               >
-                <Plus size={110} strokeWidth={2.1} className="text-white" />
+                {typeof onRightSwipe === "function" ? (
+                  <>
+                    <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-white">
+                      To Try
+                    </div>
+                    <Plus size={92} strokeWidth={2.2} className="text-white" />
+                  </>
+                ) : (
+                  <Plus size={110} strokeWidth={2.1} className="text-white" />
+                )}
               </motion.div>
             </motion.div>
           )}
@@ -788,18 +822,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         setReplyTo={setReplyTo}
       />
 
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            className="fixed inset-x-4 top-24 z-50 bg-[#1F8B3B] text-white text-center py-3 rounded-xl font-bold tracking-wide"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AppToast message={toast} variant={toastVariant} />
     </div>
   );
 });

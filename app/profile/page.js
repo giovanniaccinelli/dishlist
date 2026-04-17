@@ -25,6 +25,7 @@ import {
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
+import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -81,6 +82,8 @@ export default function Profile() {
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+  const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -221,7 +224,9 @@ export default function Profile() {
 
   const handlePost = async () => {
     if (!dishName) {
-      alert("Please enter a dish name.");
+      setToastVariant("error");
+      setToast("Dish name is required");
+      setTimeout(() => setToast(""), 1200);
       return;
     }
     setLoadingUpload(true);
@@ -255,8 +260,13 @@ export default function Profile() {
       setDishImage(null);
       setPreview(null);
       setIsModalOpen(false);
+      setToastVariant("success");
+      setToast("Dish uploaded");
+      setTimeout(() => setToast(""), 1200);
     } catch {
-      alert("Failed to upload dish. Please try again.");
+      setToastVariant("error");
+      setToast("Upload failed");
+      setTimeout(() => setToast(""), 1400);
     }
     setLoadingUpload(false);
   };
@@ -336,6 +346,9 @@ export default function Profile() {
       setEditProfileModal(false);
       setNewPhotoFile(null);
       setRemovePhoto(false);
+      setToastVariant("success");
+      setToast("Profile updated");
+      setTimeout(() => setToast(""), 1200);
 
       updateOwnerNameForDishes(user.uid, cleanedName, nextPhotoURL || "").catch((err) => {
         console.warn("Failed to update owner metadata on dishes:", err);
@@ -348,7 +361,9 @@ export default function Profile() {
       }
     } catch (err) {
       console.error("Failed to update profile:", err);
-      alert("Failed to update profile.");
+      setToastVariant("error");
+      setToast("Profile update failed");
+      setTimeout(() => setToast(""), 1400);
     } finally {
       setSavingProfile(false);
     }
@@ -1261,6 +1276,7 @@ export default function Profile() {
         canDelete
         onDelete={handleDeleteStory}
       />
+      <AppToast message={toast} variant={toastVariant} />
       <AnimatePresence>
         {storyActionOpen && (
           <motion.div

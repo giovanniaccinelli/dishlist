@@ -40,6 +40,7 @@ const matchesFlexibleDishSearch = (dish, rawTerm) => {
 
   const haystacks = [
     normalizeSearchText(dish?.name),
+    normalizeSearchText(dish?.description),
     ...(Array.isArray(dish?.tags) ? dish.tags.map((tag) => normalizeSearchText(tag)) : []),
   ].filter(Boolean);
 
@@ -48,8 +49,19 @@ const matchesFlexibleDishSearch = (dish, rawTerm) => {
   const tokens = term.split(" ").filter(Boolean);
   if (!tokens.length) return true;
 
+  const hayTokens = haystacks.flatMap((item) => item.split(" ").filter(Boolean));
   const matchedTokens = tokens.filter((token) =>
-    haystacks.some((item) => item.includes(token))
+    haystacks.some((item) => item.includes(token)) ||
+    hayTokens.some(
+      (hayToken) =>
+        hayToken.startsWith(token) ||
+        token.startsWith(hayToken) ||
+        hayToken.includes(token) ||
+        (token.length >= 4 &&
+          hayToken.length >= 4 &&
+          Math.abs(hayToken.length - token.length) <= 2 &&
+          hayToken.slice(0, token.length - 1) === token.slice(0, token.length - 1))
+    )
   );
 
   return matchedTokens.length >= Math.max(1, Math.ceil(tokens.length * 0.6));
@@ -91,6 +103,11 @@ export default function Dishes() {
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
   const dishesLoadMoreRef = useRef(null);
+  const sessionSeedRef = useRef(`dishes-session-${Date.now()}`);
+  const sessionOrderRef = useRef([]);
+
+  const getSessionRank = (dish) =>
+    hashString(`${sessionSeedRef.current}:${dish?.id || dish?.name || ""}`);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -204,6 +221,23 @@ export default function Dishes() {
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
 
+  useEffect(() => {
+    const source =
+      usingGlobalFilter && Array.isArray(allDishesPool) && allDishesPool.length > 0
+        ? allDishesPool
+        : dishes;
+    const currentOrder = sessionOrderRef.current;
+    const knownIds = new Set(currentOrder);
+    const unseenRanked = source
+      .filter((dish) => dish?.id && !knownIds.has(dish.id))
+      .slice()
+      .sort((leftDish, rightDish) => getSessionRank(leftDish) - getSessionRank(rightDish))
+      .map((dish) => dish.id);
+
+    if (!unseenRanked.length) return;
+    sessionOrderRef.current = [...currentOrder, ...unseenRanked];
+  }, [allDishesPool, dishes, usingGlobalFilter]);
+
   const ensureAllDishesLoaded = async () => {
     if (allDishesPool) return allDishesPool;
     if (allDishesLoading) return null;
@@ -272,12 +306,12 @@ export default function Dishes() {
     const searchFiltered = term
       ? tagFiltered.filter((dish) => matchesFlexibleDishSearch(dish, term))
       : tagFiltered;
-    const shuffleSeed = `${normalizeSearchText(term)}|${normalizedSelectedTags.join("|")}`;
+    const orderIndex = new Map(sessionOrderRef.current.map((dishId, index) => [dishId, index]));
     return searchFiltered
       .slice()
       .sort((leftDish, rightDish) =>
-        hashString(`${shuffleSeed}:${leftDish.id || leftDish.name || ""}`) -
-        hashString(`${shuffleSeed}:${rightDish.id || rightDish.name || ""}`)
+        (orderIndex.get(leftDish.id) ?? Number.MAX_SAFE_INTEGER) -
+        (orderIndex.get(rightDish.id) ?? Number.MAX_SAFE_INTEGER)
       );
   }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
@@ -379,7 +413,11 @@ export default function Dishes() {
     setSelectedTagsApplied([]);
     setSelectedTagsDraft([]);
     setSearch(dishName || "");
-    router.push(`/dishes?${params.toString()}`);
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", `/dishes?${params.toString()}`);
+    } else {
+      router.push(`/dishes?${params.toString()}`);
+    }
   };
 
 

@@ -598,10 +598,23 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       </p>
                     )}
                   </div>
-                  <h2 className="text-2xl font-bold">{currentCard.name}</h2>
-                  <p className="text-sm text-white/80 line-clamp-2">
-                    {currentCard.description || "No description yet."}
-                  </p>
+                  <button
+                    type="button"
+                    data-no-drag="true"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
+                    }}
+                    className="text-left text-2xl font-bold hover:underline"
+                  >
+                    {currentCard.name}
+                  </button>
+                  {currentCard.description ? (
+                    <p className="text-sm text-white/80 line-clamp-2">
+                      {currentCard.description}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </div>

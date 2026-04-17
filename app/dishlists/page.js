@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
-import { FullScreenLoading, PeopleGridLoading } from "../../components/AppLoadingState";
+import {
+  FullScreenLoading,
+  PeopleGridLoading,
+  PeopleInlineLoading,
+} from "../../components/AppLoadingState";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import {
   collection,
@@ -16,7 +20,6 @@ import {
   doc,
   arrayUnion,
   arrayRemove,
-  limit,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -27,6 +30,20 @@ import { CircleUserRound, Send } from "lucide-react";
 const INITIAL_USERS_LIMIT = 10;
 const USER_PREVIEW_CACHE_TTL = 60 * 1000;
 const userPreviewCache = new Map();
+
+const getFollowersCount = (user) =>
+  Number(user.followersCount ?? (Array.isArray(user.followers) ? user.followers.length : 0));
+
+const sortUsersByFollowers = (usersList) =>
+  usersList.slice().sort((a, b) => {
+    const followerDelta = getFollowersCount(b) - getFollowersCount(a);
+    if (followerDelta !== 0) return followerDelta;
+
+    const storyDelta = (b.activeStories || []).length - (a.activeStories || []).length;
+    if (storyDelta !== 0) return storyDelta;
+
+    return (a.displayName || "").localeCompare(b.displayName || "");
+  });
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
@@ -39,9 +56,11 @@ export default function Dishlists() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [visibleUsersLimit, setVisibleUsersLimit] = useState(INITIAL_USERS_LIMIT);
   const [storyGroups, setStoryGroups] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
+  const peopleLoadMoreRef = useRef(null);
 
   const attachPreviewData = async (usersList) => {
     return Promise.all(
@@ -57,14 +76,12 @@ export default function Dishlists() {
           previewImages.push(getDishImageUrl(dishData, "thumb"));
         };
 
-        const savedSnap = await getDocs(query(collection(db, "users", u.id, "saved"), limit(9)));
-        savedSnap.docs.forEach((d) => pushImage(d.data()));
+        const savedSnap = await getDocs(collection(db, "users", u.id, "saved"));
+        savedSnap.docs.slice(0, 9).forEach((d) => pushImage(d.data()));
 
         if (previewImages.length < 9) {
-          const uploadedSnap = await getDocs(
-            query(collection(db, "dishes"), where("owner", "==", u.id), limit(9 - previewImages.length))
-          );
-          uploadedSnap.docs.forEach((d) => pushImage(d.data()));
+          const uploadedSnap = await getDocs(query(collection(db, "dishes"), where("owner", "==", u.id)));
+          uploadedSnap.docs.slice(0, 9 - previewImages.length).forEach((d) => pushImage(d.data()));
         }
 
         const activeStories = await getActiveStoriesForUser(u.id);
@@ -86,15 +103,21 @@ export default function Dishlists() {
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
-    const snapshot = await getDocs(query(collection(db, "users"), limit(INITIAL_USERS_LIMIT)));
-    const usersList = snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
-    const withPreview = await attachPreviewData(usersList);
-    setUsers(withPreview);
-    setHasMoreUsers(usersList.length === INITIAL_USERS_LIMIT);
-    setLoadingUsers(false);
+    try {
+      const snapshot = await getDocs(collection(db, "users"));
+      const usersList = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+      const withPreview = await attachPreviewData(usersList);
+      const sortedUsers = sortUsersByFollowers(withPreview);
+      setUsers(sortedUsers);
+      setAllUsersPool(sortedUsers);
+      setVisibleUsersLimit(INITIAL_USERS_LIMIT);
+      setHasMoreUsers(sortedUsers.length > INITIAL_USERS_LIMIT);
+    } finally {
+      setLoadingUsers(false);
+    }
   };
 
   const fetchAllUsersForSearch = async () => {
@@ -107,9 +130,10 @@ export default function Dishlists() {
         ...docSnap.data(),
       }));
       const withPreview = await attachPreviewData(usersList);
-      setAllUsersPool(withPreview);
+      const sortedUsers = sortUsersByFollowers(withPreview);
+      setAllUsersPool(sortedUsers);
       if (!search.trim()) {
-        setHasMoreUsers(users.length < withPreview.length);
+        setHasMoreUsers(visibleUsersLimit < sortedUsers.length);
       }
     } finally {
       setSearchLoading(false);
@@ -119,30 +143,10 @@ export default function Dishlists() {
   const loadMoreUsers = async () => {
     if (loadingMoreUsers || loadingUsers || search.trim()) return;
     setLoadingMoreUsers(true);
-    try {
-      let pool = allUsersPool;
-      if (!pool) {
-        const snapshot = await getDocs(collection(db, "users"));
-        const usersList = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
-        pool = await attachPreviewData(usersList);
-        setAllUsersPool(pool);
-      }
-
-      setUsers((prev) => {
-        const ids = new Set(prev.map((u) => u.id));
-        const nextChunk = pool
-          .filter((u) => !ids.has(u.id))
-          .slice(0, INITIAL_USERS_LIMIT);
-        const merged = [...prev, ...nextChunk];
-        setHasMoreUsers(merged.length < pool.length);
-        return merged;
-      });
-    } finally {
+    window.setTimeout(() => {
+      setVisibleUsersLimit((prev) => prev + INITIAL_USERS_LIMIT);
       setLoadingMoreUsers(false);
-    }
+    }, 180);
   };
 
   useEffect(() => {
@@ -156,24 +160,44 @@ export default function Dishlists() {
 
   const filteredUsers = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const source = term ? allUsersPool || [] : users;
+    const source = term ? allUsersPool || [] : allUsersPool || users;
     const filtered = term
       ? source.filter((u) => u.displayName?.toLowerCase().includes(term))
       : source;
-    return filtered.slice().sort((a, b) => {
-      const aFollowers = Number(
-        a.followersCount ?? (Array.isArray(a.followers) ? a.followers.length : 0)
-      );
-      const bFollowers = Number(
-        b.followersCount ?? (Array.isArray(b.followers) ? b.followers.length : 0)
-      );
-      if (aFollowers !== bFollowers) return bFollowers - aFollowers;
-      const aStories = (a.activeStories || []).length;
-      const bStories = (b.activeStories || []).length;
-      if (aStories !== bStories) return bStories - aStories;
-      return (a.displayName || "").localeCompare(b.displayName || "");
-    });
+    return sortUsersByFollowers(filtered);
   }, [users, allUsersPool, search]);
+
+  const visibleUsers = useMemo(() => {
+    if (search.trim()) return filteredUsers;
+    return filteredUsers.slice(0, visibleUsersLimit);
+  }, [filteredUsers, search, visibleUsersLimit]);
+
+  useEffect(() => {
+    if (search.trim()) {
+      setHasMoreUsers(false);
+      return;
+    }
+    setHasMoreUsers(visibleUsersLimit < filteredUsers.length);
+  }, [filteredUsers.length, search, visibleUsersLimit]);
+
+  useEffect(() => {
+    if (search.trim() || !hasMoreUsers || loadingMoreUsers || loadingUsers) return;
+
+    const node = peopleLoadMoreRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreUsers();
+        }
+      },
+      { rootMargin: "240px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMoreUsers, loadingMoreUsers, loadingUsers, search, visibleUsers.length]);
 
   const visibleStoryGroups = useMemo(() => {
     const source = search.trim() ? filteredUsers : (allUsersPool || users);
@@ -333,7 +357,7 @@ export default function Dishlists() {
       ) : (
         <div>
           <div className="grid grid-cols-2 gap-4">
-            {filteredUsers.map((u) => {
+            {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
               const previewCells = Array.from({ length: 9 }, (_, idx) => u.previewImages?.[idx] || "");
@@ -429,14 +453,8 @@ export default function Dishlists() {
           </div>
 
           {!search.trim() && hasMoreUsers && (
-            <div className="mt-6 mb-3 flex justify-center">
-              <button
-                onClick={loadMoreUsers}
-                disabled={loadingMoreUsers}
-                className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm disabled:opacity-60"
-              >
-                {loadingMoreUsers ? "Loading..." : "Load More"}
-              </button>
+            <div ref={peopleLoadMoreRef} className="mt-6 mb-3">
+              {loadingMoreUsers ? <PeopleInlineLoading /> : <div className="h-10" aria-hidden="true" />}
             </div>
           )}
         </div>

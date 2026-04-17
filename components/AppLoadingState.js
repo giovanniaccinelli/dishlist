@@ -79,6 +79,31 @@ export function PeopleGridLoading({ searching = false }) {
   );
 }
 
+export function PeopleInlineLoading() {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {Array.from({ length: 2 }).map((_, idx) => (
+        <div key={idx} className="overflow-hidden rounded-2xl border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
+          <div className="mb-3 flex items-start gap-3">
+            <PulseBlock className="h-10 w-10 rounded-full" />
+            <div className="min-w-0 flex-1 pt-1">
+              <PulseBlock className="mb-2 h-3.5 w-24 rounded-full" />
+            </div>
+          </div>
+          <div className="mb-3 grid grid-cols-3 gap-1.5">
+            {Array.from({ length: 9 }).map((_, imageIdx) => (
+              <PulseBlock key={imageIdx} className="aspect-square rounded-lg" />
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <PulseBlock className="h-8 w-20 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function CategoryRowsLoading() {
   return (
     <div className="space-y-6">
@@ -108,6 +133,16 @@ export function DishGridLoading({ label = "Loading dishes" }) {
           <PulseBlock key={idx} className="h-28 rounded-2xl" />
         ))}
       </div>
+    </div>
+  );
+}
+
+export function DishInlineLoading() {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <PulseBlock key={idx} className="h-28 rounded-2xl" />
+      ))}
     </div>
   );
 }

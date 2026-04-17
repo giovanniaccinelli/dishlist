@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
-import { DishGridLoading } from "../../components/AppLoadingState";
+import { DishGridLoading, DishInlineLoading } from "../../components/AppLoadingState";
 import {
   getAllDishesFromFirestore,
   getDishesPage,
@@ -49,6 +49,7 @@ export default function Dishes() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const dishesLoadMoreRef = useRef(null);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -237,6 +238,40 @@ export default function Dishes() {
   }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
   const visibleDishes = usingGlobalFilter ? filtered.slice(0, filteredLimit) : filtered;
+  const hasMoreFilteredDishes = usingGlobalFilter && filtered.length > visibleDishes.length;
+  const shouldShowInfiniteLoader = !loading && (hasMoreFilteredDishes || (!usingGlobalFilter && hasMore));
+
+  useEffect(() => {
+    if (!shouldShowInfiniteLoader || loadingMore || applyingFilters || allDishesLoading) return;
+
+    const node = dishesLoadMoreRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (usingGlobalFilter) {
+          setFilteredLimit((prev) => Math.min(prev + DISHES_PAGE_SIZE, filtered.length));
+          return;
+        }
+        fetchMoreDishes();
+      },
+      { rootMargin: "260px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [
+    allDishesLoading,
+    applyingFilters,
+    filtered.length,
+    hasMore,
+    hasMoreFilteredDishes,
+    loading,
+    loadingMore,
+    shouldShowInfiniteLoader,
+    usingGlobalFilter,
+  ]);
 
   const handleSave = async (dish) => {
     if (!user) {
@@ -492,26 +527,13 @@ export default function Dishes() {
         </div>
       )}
 
-      {!loading && usingGlobalFilter && filtered.length > visibleDishes.length && (
-        <div className="mt-6 mb-3 flex justify-center">
-          <button
-            onClick={() => setFilteredLimit((prev) => prev + DISHES_PAGE_SIZE)}
-            className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm"
-          >
-            Load More
-          </button>
-        </div>
-      )}
-
-      {!loading && !usingGlobalFilter && hasMore && (
-        <div className="mt-6 mb-3 flex justify-center">
-          <button
-            onClick={fetchMoreDishes}
-            disabled={loadingMore}
-            className="bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] px-6 py-3 rounded-full font-semibold border border-[#D8C9AF] shadow-sm disabled:opacity-60"
-          >
-            {loadingMore ? "Loading..." : "Load More"}
-          </button>
+      {shouldShowInfiniteLoader && (
+        <div ref={dishesLoadMoreRef} className="mt-6 mb-3">
+          {loadingMore || (usingGlobalFilter && allDishesLoading) ? (
+            <DishInlineLoading />
+          ) : (
+            <div className="h-10" aria-hidden="true" />
+          )}
         </div>
       )}
 

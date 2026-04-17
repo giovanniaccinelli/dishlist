@@ -27,6 +27,29 @@ const INITIAL_USERS_LIMIT = 10;
 const USER_PREVIEW_CACHE_TTL = 60 * 1000;
 const userPreviewCache = new Map();
 
+function PeopleSkeletonCard() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
+      <div className="mb-3 flex items-start gap-3">
+        <div className="h-10 w-10 animate-pulse rounded-full bg-black/8" />
+        <div className="min-w-0 flex-1 pt-1">
+          <div className="mb-2 h-3.5 w-24 animate-pulse rounded-full bg-black/8" />
+          <div className="h-2.5 w-16 animate-pulse rounded-full bg-black/6" />
+        </div>
+      </div>
+      <div className="mb-3 grid grid-cols-3 gap-1.5">
+        {Array.from({ length: 9 }).map((_, idx) => (
+          <div key={idx} className="aspect-square animate-pulse rounded-lg bg-black/[0.055]" />
+        ))}
+      </div>
+      <div className="flex justify-between items-center">
+        <div className="h-3 w-14 animate-pulse rounded-full bg-black/6" />
+        <div className="h-8 w-20 animate-pulse rounded-full bg-black/8" />
+      </div>
+    </div>
+  );
+}
+
 export default function Dishlists() {
   const { user, loading } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
@@ -160,6 +183,13 @@ export default function Dishlists() {
       ? source.filter((u) => u.displayName?.toLowerCase().includes(term))
       : source;
     return filtered.slice().sort((a, b) => {
+      const aFollowers = Number(
+        a.followersCount ?? (Array.isArray(a.followers) ? a.followers.length : 0)
+      );
+      const bFollowers = Number(
+        b.followersCount ?? (Array.isArray(b.followers) ? b.followers.length : 0)
+      );
+      if (aFollowers !== bFollowers) return bFollowers - aFollowers;
       const aStories = (a.activeStories || []).length;
       const bStories = (b.activeStories || []).length;
       if (aStories !== bStories) return bStories - aStories;
@@ -319,9 +349,20 @@ export default function Dishlists() {
       ) : null}
 
       {loadingUsers ? (
-        <div className="text-black/60">Loading users...</div>
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <PeopleSkeletonCard key={`people-loading-${idx}`} />
+          ))}
+        </div>
       ) : search.trim() && searchLoading ? (
-        <div className="text-black/60">Searching all users...</div>
+        <div>
+          <div className="mb-3 text-sm font-medium text-black/45">Searching people...</div>
+          <div className="grid grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <PeopleSkeletonCard key={`people-search-${idx}`} />
+            ))}
+          </div>
+        </div>
       ) : filteredUsers.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
           No users found.
@@ -373,6 +414,9 @@ export default function Dishlists() {
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold leading-tight max-h-9 overflow-hidden">
                         {u.displayName || "User"}
+                      </div>
+                      <div className="mt-1 text-[11px] font-medium text-black/45">
+                        {Number(u.followersCount ?? (u.followers || []).length)} followers
                       </div>
                     </div>
                   </div>

@@ -67,14 +67,6 @@ const matchesFlexibleDishSearch = (dish, rawTerm) => {
   return matchedTokens.length >= Math.max(1, Math.ceil(tokens.length * 0.6));
 };
 
-const hashString = (value) => {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-  return hash;
-};
-
 export default function Dishes() {
   const router = useRouter();
   const { user } = useAuth();
@@ -103,11 +95,6 @@ export default function Dishes() {
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
   const dishesLoadMoreRef = useRef(null);
-  const sessionSeedRef = useRef(`dishes-session-${Date.now()}`);
-  const sessionOrderRef = useRef([]);
-
-  const getSessionRank = (dish) =>
-    hashString(`${sessionSeedRef.current}:${dish?.id || dish?.name || ""}`);
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -221,23 +208,6 @@ export default function Dishes() {
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
 
-  useEffect(() => {
-    const source =
-      usingGlobalFilter && Array.isArray(allDishesPool) && allDishesPool.length > 0
-        ? allDishesPool
-        : dishes;
-    const currentOrder = sessionOrderRef.current;
-    const knownIds = new Set(currentOrder);
-    const unseenRanked = source
-      .filter((dish) => dish?.id && !knownIds.has(dish.id))
-      .slice()
-      .sort((leftDish, rightDish) => getSessionRank(leftDish) - getSessionRank(rightDish))
-      .map((dish) => dish.id);
-
-    if (!unseenRanked.length) return;
-    sessionOrderRef.current = [...currentOrder, ...unseenRanked];
-  }, [allDishesPool, dishes, usingGlobalFilter]);
-
   const ensureAllDishesLoaded = async () => {
     if (allDishesPool) return allDishesPool;
     if (allDishesLoading) return null;
@@ -306,13 +276,16 @@ export default function Dishes() {
     const searchFiltered = term
       ? tagFiltered.filter((dish) => matchesFlexibleDishSearch(dish, term))
       : tagFiltered;
-    const orderIndex = new Map(sessionOrderRef.current.map((dishId, index) => [dishId, index]));
     return searchFiltered
       .slice()
-      .sort((leftDish, rightDish) =>
-        (orderIndex.get(leftDish.id) ?? Number.MAX_SAFE_INTEGER) -
-        (orderIndex.get(rightDish.id) ?? Number.MAX_SAFE_INTEGER)
-      );
+      .sort((leftDish, rightDish) => {
+        const savesDelta = Number(rightDish?.saves || 0) - Number(leftDish?.saves || 0);
+        if (savesDelta !== 0) return savesDelta;
+        const recencyDelta =
+          Number(rightDish?.createdAt?.seconds || 0) - Number(leftDish?.createdAt?.seconds || 0);
+        if (recencyDelta !== 0) return recencyDelta;
+        return String(leftDish?.name || "").localeCompare(String(rightDish?.name || ""));
+      });
   }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
   const visibleDishes = usingGlobalFilter ? filtered.slice(0, filteredLimit) : filtered;

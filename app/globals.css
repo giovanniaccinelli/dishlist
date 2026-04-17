@@ -20,8 +20,8 @@
   }
 
   :root {
-    --app-top-nav-gap: 2rem;
-    --app-bottom-nav-core-height: 4.25rem;
+    --app-top-nav-gap: 2.45rem;
+    --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -114,8 +114,8 @@
   display: flex;
   align-items: flex-start;
   height: var(--app-bottom-nav-height);
-  padding-top: 0.35rem;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.45rem);
+  padding-top: 0.45rem;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.55rem);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.05);
@@ -132,7 +132,7 @@
   justify-content: flex-start;
   font-size: 0.75rem;
   font-weight: 600;
-  padding-top: 0.1rem;
+  padding-top: 0.2rem;
 }
 
 .bottom-nav-spacer {

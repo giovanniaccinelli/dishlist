@@ -486,10 +486,10 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
-          className="flex h-10 w-11 items-center justify-center rounded-[1rem] bg-black/82 text-white shadow-[0_12px_24px_rgba(0,0,0,0.16)] transition-transform active:scale-[0.97]"
+          className="flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
           aria-label="Previous dish"
         >
-          <ChevronLeft size={20} strokeWidth={2.4} />
+          <ChevronLeft size={21} strokeWidth={2.8} />
         </button>
         <div className="relative mx-auto flex items-end gap-10 border-b border-black/12">
           <button
@@ -523,10 +523,10 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.next?.()}
-          className="flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] bg-black/82 text-white shadow-[0_12px_24px_rgba(0,0,0,0.16)] transition-transform active:scale-[0.97]"
+          className="flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
           aria-label="Next dish"
         >
-          <ChevronRight size={20} strokeWidth={2.4} />
+          <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
       <div className="bottom-nav-spacer px-4 pt-1 flex-1 min-h-0 overflow-hidden relative">

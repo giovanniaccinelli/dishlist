@@ -494,53 +494,56 @@ export default function DishDetail() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
         <AppBackButton fallback="/" />
+        <div className="w-[74px]" />
       </div>
 
-      <div className={`px-5 flex-1 min-h-0 flex items-center ${editOpen ? "pointer-events-none" : ""}`}>
-        <SwipeDeck
-          dishes={orderedList}
-          preserveContinuity
-          disabled={editOpen}
-          currentUser={user}
-          onAction={shouldUseStoryActions ? handleAddToStory : shouldUsePublicActions ? handleAdd : handleRemove}
-          onSecondaryAction={
-            canEditFromThisView
-              ? openEditModal
-              : isToTrySource && !isForeignProfileContext
-                ? handleUpgrade
+      <div className={`screen-between-navs-center px-5 ${editOpen ? "pointer-events-none" : ""}`}>
+        <div className="w-full">
+          <SwipeDeck
+            dishes={orderedList}
+            preserveContinuity
+            disabled={editOpen}
+            currentUser={user}
+            onAction={shouldUseStoryActions ? handleAddToStory : shouldUsePublicActions ? handleAdd : handleRemove}
+            onSecondaryAction={
+              canEditFromThisView
+                ? openEditModal
+                : isToTrySource && !isForeignProfileContext
+                  ? handleUpgrade
+                  : undefined
+            }
+            onSavesPress={handleOpenSavers}
+            onSharePress={handleShare}
+            onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
+            actionOnRightSwipe={!shouldUsePublicActions}
+            dismissOnAction={isPublicSource}
+            onAuthRequired={() => alert("Please sign in to comment.")}
+            actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
+            secondaryActionLabel={
+              canEditFromThisView ? "Edit" : isToTrySource && !isForeignProfileContext ? "Move to DishList" : undefined
+            }
+            actionClassName={
+              shouldUseStoryActions
+                ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
+                : shouldUsePublicActions
+                  ? "add-action-btn w-14 h-14"
+                  : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
+            }
+            secondaryActionClassName={
+              canEditFromThisView
+                ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
+                : isToTrySource
+                ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
                 : undefined
-          }
-          onSavesPress={handleOpenSavers}
-          onSharePress={handleShare}
-          onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
-          actionOnRightSwipe={!shouldUsePublicActions}
-          dismissOnAction={isPublicSource}
-          onAuthRequired={() => alert("Please sign in to comment.")}
-          actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
-          secondaryActionLabel={
-            canEditFromThisView ? "Edit" : isToTrySource && !isForeignProfileContext ? "Move to DishList" : undefined
-          }
-          actionClassName={
-            shouldUseStoryActions
-              ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
-              : shouldUsePublicActions
-                ? "add-action-btn w-14 h-14"
-                : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
-          }
-          secondaryActionClassName={
-            canEditFromThisView
-              ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
-              : isToTrySource
-              ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
-              : undefined
-          }
-          actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "ADDING TO YOUR DISHLIST" : "Removed"}
-          secondaryActionToast={isToTrySource && !isForeignProfileContext ? "ADDED TO MY DISHLIST" : undefined}
-          trackSwipes={false}
-          onResetFeed={handleResetDeck}
-        />
+            }
+            actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "ADDING TO YOUR DISHLIST" : "Removed"}
+            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "ADDED TO MY DISHLIST" : undefined}
+            trackSwipes={false}
+            onResetFeed={handleResetDeck}
+          />
+        </div>
       </div>
 
       {editOpen && (

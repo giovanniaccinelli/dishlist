@@ -274,7 +274,7 @@ export default function DirectChat() {
 
       {pickerOpen ? (
         <div
-          className="fixed inset-0 z-50 bg-black/45 px-4 py-6"
+          className="top-nav-modal-frame fixed inset-0 z-50 bg-black/45 px-4"
           onClick={() => {
             setPickerOpen(false);
             setConfirmDish(null);

@@ -148,7 +148,7 @@
 }
 
 .bottom-nav-chat-scroll {
-  padding-bottom: calc(var(--app-bottom-nav-height) + 6.5rem);
+  padding-bottom: calc(var(--app-bottom-nav-height) + 4.85rem);
 }
 
 .screen-between-navs-center {
@@ -160,6 +160,11 @@
   justify-content: center;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+.top-nav-modal-frame {
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 2.75rem);
+  padding-bottom: calc(var(--app-bottom-nav-height) + 0.75rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

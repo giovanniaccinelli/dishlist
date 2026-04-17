@@ -14,8 +14,6 @@ import StoryViewerModal from "../../components/StoryViewerModal";
 import {
   collection,
   getDocs,
-  query,
-  where,
   updateDoc,
   doc,
   arrayUnion,
@@ -23,13 +21,11 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { getActiveStoriesForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { getActiveStoriesForUser, getAllDishesFromFirestore, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Send } from "lucide-react";
 
 const INITIAL_USERS_LIMIT = 10;
-const USER_PREVIEW_CACHE_TTL = 60 * 1000;
-const userPreviewCache = new Map();
 
 const getProfileDishCount = (user) => Number(user.profileDishCount ?? 0);
 
@@ -61,62 +57,84 @@ export default function Dishlists() {
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const peopleLoadMoreRef = useRef(null);
 
-  const attachPreviewData = async (usersList) => {
-    return Promise.all(
-      usersList.map(async (u) => {
-        const cached = userPreviewCache.get(u.id);
-        if (cached && Date.now() - cached.cachedAt < USER_PREVIEW_CACHE_TTL) {
-          return { ...u, ...cached.value };
-        }
+  const attachPreviewData = (usersList, allDishes) => {
+    const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
+    const uploadedByOwner = new Map();
 
-        const previewImages = [];
-        const pushImage = (dishData) => {
-          if (!dishData || previewImages.length >= 9) return;
-          previewImages.push(getDishImageUrl(dishData, "thumb"));
-        };
+    allDishes.forEach((dish) => {
+      if (!dish?.owner) return;
+      const current = uploadedByOwner.get(dish.owner) || [];
+      current.push(dish);
+      uploadedByOwner.set(dish.owner, current);
+    });
 
-        const savedSnap = await getDocs(collection(db, "users", u.id, "saved"));
-        savedSnap.docs.slice(0, 9).forEach((d) => pushImage(d.data()));
-        const uploadedSnap = await getDocs(query(collection(db, "dishes"), where("owner", "==", u.id)));
+    return usersList.map((u) => {
+      const savedDishIds = Array.isArray(u.savedDishes) ? u.savedDishes : [];
+      const toTryDishIds = Array.isArray(u.toTryDishes) ? u.toTryDishes : [];
+      const uploadedDishes = uploadedByOwner.get(u.id) || [];
+      const previewImages = [];
+      const seen = new Set();
 
-        if (previewImages.length < 9) {
-          uploadedSnap.docs.slice(0, 9 - previewImages.length).forEach((d) => pushImage(d.data()));
-        }
+      const pushImage = (dishData) => {
+        const imageUrl = getDishImageUrl(dishData, "thumb");
+        if (!imageUrl || seen.has(imageUrl) || previewImages.length >= 9) return;
+        seen.add(imageUrl);
+        previewImages.push(imageUrl);
+      };
 
-        const toTrySnap = await getDocs(collection(db, "users", u.id, "toTry"));
+      savedDishIds.forEach((dishId) => pushImage(dishById.get(dishId)));
+      uploadedDishes.forEach((dish) => pushImage(dish));
 
-        const activeStories = await getActiveStoriesForUser(u.id);
+      return {
+        ...u,
+        previewImages,
+        activeStories: [],
+        hasActiveStory: Boolean(u.hasActiveStory),
+        profileDishCount: savedDishIds.length + toTryDishIds.length + uploadedDishes.length,
+      };
+    });
+  };
 
-        const value = {
-          previewImages,
-          activeStories,
-          profileDishCount:
-            savedSnap.docs.length + uploadedSnap.docs.length + toTrySnap.docs.length,
-        };
-        userPreviewCache.set(u.id, { value, cachedAt: Date.now() });
+  const enrichUsersWithStories = async (usersList) => {
+    const storyUsers = usersList.filter((userItem) => userItem.hasActiveStory);
+    if (!storyUsers.length) return usersList;
 
-        return {
-          ...u,
-          ...value,
-        };
-      })
+    const storyEntries = await Promise.all(
+      storyUsers.map(async (userItem) => [
+        userItem.id,
+        await getActiveStoriesForUser(userItem.id),
+      ])
     );
+
+    const storiesByUserId = new Map(storyEntries);
+    return usersList.map((userItem) => ({
+      ...userItem,
+      activeStories: storiesByUserId.get(userItem.id) || [],
+    }));
   };
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const snapshot = await getDocs(collection(db, "users"));
+      const [snapshot, allDishes] = await Promise.all([
+        getDocs(collection(db, "users")),
+        getAllDishesFromFirestore(),
+      ]);
       const usersList = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
-      const withPreview = await attachPreviewData(usersList);
+      const withPreview = attachPreviewData(usersList, allDishes);
       const sortedUsers = sortUsersByProfileDishes(withPreview);
       setUsers(sortedUsers);
       setAllUsersPool(sortedUsers);
       setVisibleUsersLimit(INITIAL_USERS_LIMIT);
       setHasMoreUsers(sortedUsers.length > INITIAL_USERS_LIMIT);
+      void enrichUsersWithStories(sortedUsers).then((usersWithStories) => {
+        const sortedWithStories = sortUsersByProfileDishes(usersWithStories);
+        setUsers(sortedWithStories);
+        setAllUsersPool(sortedWithStories);
+      });
     } finally {
       setLoadingUsers(false);
     }
@@ -126,17 +144,7 @@ export default function Dishlists() {
     if (allUsersPool) return;
     setSearchLoading(true);
     try {
-      const snapshot = await getDocs(collection(db, "users"));
-      const usersList = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
-      const withPreview = await attachPreviewData(usersList);
-      const sortedUsers = sortUsersByProfileDishes(withPreview);
-      setAllUsersPool(sortedUsers);
-      if (!search.trim()) {
-        setHasMoreUsers(visibleUsersLimit < sortedUsers.length);
-      }
+      await fetchUsers();
     } finally {
       setSearchLoading(false);
     }

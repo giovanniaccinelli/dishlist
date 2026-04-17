@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import BottomNav from "../../components/BottomNav";
 import { DishGridLoading, DishInlineLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -24,8 +25,46 @@ import SaversModal from "../../components/SaversModal";
 const DISHES_PAGE_SIZE = 24;
 
 const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
+const normalizeSearchText = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const matchesFlexibleDishSearch = (dish, rawTerm) => {
+  const term = normalizeSearchText(rawTerm);
+  if (!term) return true;
+
+  const haystacks = [
+    normalizeSearchText(dish?.name),
+    ...(Array.isArray(dish?.tags) ? dish.tags.map((tag) => normalizeSearchText(tag)) : []),
+  ].filter(Boolean);
+
+  if (haystacks.some((item) => item.includes(term))) return true;
+
+  const tokens = term.split(" ").filter(Boolean);
+  if (!tokens.length) return true;
+
+  const matchedTokens = tokens.filter((token) =>
+    haystacks.some((item) => item.includes(token))
+  );
+
+  return matchedTokens.length >= Math.max(1, Math.ceil(tokens.length * 0.6));
+};
+
+const hashString = (value) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+};
 
 export default function Dishes() {
+  const router = useRouter();
   const { user } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [storyPicker, setStoryPicker] = useState(false);
@@ -160,6 +199,7 @@ export default function Dishes() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     setStoryPicker(params.get("storyPicker") === "1");
+    setSearch(params.get("q") || "");
   }, []);
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
@@ -213,7 +253,7 @@ export default function Dishes() {
   }, [search, selectedTagsApplied]);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.trim();
     const source =
       usingGlobalFilter && Array.isArray(allDishesPool) && allDishesPool.length > 0
         ? allDishesPool
@@ -229,14 +269,16 @@ export default function Dishes() {
             const dishTags = d.tags.map((tag) => normalizeTag(tag)).filter(Boolean);
             return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
           });
-    if (!term) return tagFiltered;
-    return tagFiltered.filter((d) => {
-      const nameMatch = d.name?.toLowerCase().includes(term);
-      const tagMatch = Array.isArray(d.tags)
-        ? d.tags.some((tag) => normalizeTag(tag).includes(term))
-        : false;
-      return nameMatch || tagMatch;
-    });
+    const searchFiltered = term
+      ? tagFiltered.filter((dish) => matchesFlexibleDishSearch(dish, term))
+      : tagFiltered;
+    const shuffleSeed = `${normalizeSearchText(term)}|${normalizedSelectedTags.join("|")}`;
+    return searchFiltered
+      .slice()
+      .sort((leftDish, rightDish) =>
+        hashString(`${shuffleSeed}:${leftDish.id || leftDish.name || ""}`) -
+        hashString(`${shuffleSeed}:${rightDish.id || rightDish.name || ""}`)
+      );
   }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
   const visibleDishes = usingGlobalFilter ? filtered.slice(0, filteredLimit) : filtered;
@@ -328,6 +370,16 @@ export default function Dishes() {
     } finally {
       setSaversLoading(false);
     }
+  };
+
+  const handleDishNameSearch = (dishName) => {
+    const params = new URLSearchParams();
+    params.set("q", dishName || "");
+    if (storyPicker) params.set("storyPicker", "1");
+    setSelectedTagsApplied([]);
+    setSelectedTagsDraft([]);
+    setSearch(dishName || "");
+    router.push(`/dishes?${params.toString()}`);
   };
 
 
@@ -488,9 +540,17 @@ export default function Dishes() {
                   }}
                 />
                 <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                  <div className="text-[11px] font-semibold leading-tight truncate">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleDishNameSearch(dish.name || "");
+                    }}
+                    className="pointer-events-auto text-left text-[11px] font-semibold leading-tight truncate hover:underline"
+                  >
                     {dish.name || "Untitled dish"}
-                  </div>
+                  </button>
                 <button
                   type="button"
                   onClick={(e) => {

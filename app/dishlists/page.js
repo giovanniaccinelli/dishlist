@@ -31,13 +31,12 @@ const INITIAL_USERS_LIMIT = 10;
 const USER_PREVIEW_CACHE_TTL = 60 * 1000;
 const userPreviewCache = new Map();
 
-const getFollowersCount = (user) =>
-  Number(user.followersCount ?? (Array.isArray(user.followers) ? user.followers.length : 0));
+const getProfileDishCount = (user) => Number(user.profileDishCount ?? 0);
 
-const sortUsersByFollowers = (usersList) =>
+const sortUsersByProfileDishes = (usersList) =>
   usersList.slice().sort((a, b) => {
-    const followerDelta = getFollowersCount(b) - getFollowersCount(a);
-    if (followerDelta !== 0) return followerDelta;
+    const profileDishDelta = getProfileDishCount(b) - getProfileDishCount(a);
+    if (profileDishDelta !== 0) return profileDishDelta;
 
     const storyDelta = (b.activeStories || []).length - (a.activeStories || []).length;
     if (storyDelta !== 0) return storyDelta;
@@ -78,18 +77,21 @@ export default function Dishlists() {
 
         const savedSnap = await getDocs(collection(db, "users", u.id, "saved"));
         savedSnap.docs.slice(0, 9).forEach((d) => pushImage(d.data()));
+        const uploadedSnap = await getDocs(query(collection(db, "dishes"), where("owner", "==", u.id)));
 
         if (previewImages.length < 9) {
-          const uploadedSnap = await getDocs(query(collection(db, "dishes"), where("owner", "==", u.id)));
           uploadedSnap.docs.slice(0, 9 - previewImages.length).forEach((d) => pushImage(d.data()));
         }
+
+        const toTrySnap = await getDocs(collection(db, "users", u.id, "toTry"));
 
         const activeStories = await getActiveStoriesForUser(u.id);
 
         const value = {
           previewImages,
           activeStories,
-          followersCount: Array.isArray(u.followers) ? u.followers.length : 0,
+          profileDishCount:
+            savedSnap.docs.length + uploadedSnap.docs.length + toTrySnap.docs.length,
         };
         userPreviewCache.set(u.id, { value, cachedAt: Date.now() });
 
@@ -110,7 +112,7 @@ export default function Dishlists() {
         ...docSnap.data(),
       }));
       const withPreview = await attachPreviewData(usersList);
-      const sortedUsers = sortUsersByFollowers(withPreview);
+      const sortedUsers = sortUsersByProfileDishes(withPreview);
       setUsers(sortedUsers);
       setAllUsersPool(sortedUsers);
       setVisibleUsersLimit(INITIAL_USERS_LIMIT);
@@ -130,7 +132,7 @@ export default function Dishlists() {
         ...docSnap.data(),
       }));
       const withPreview = await attachPreviewData(usersList);
-      const sortedUsers = sortUsersByFollowers(withPreview);
+      const sortedUsers = sortUsersByProfileDishes(withPreview);
       setAllUsersPool(sortedUsers);
       if (!search.trim()) {
         setHasMoreUsers(visibleUsersLimit < sortedUsers.length);
@@ -164,7 +166,7 @@ export default function Dishlists() {
     const filtered = term
       ? source.filter((u) => u.displayName?.toLowerCase().includes(term))
       : source;
-    return sortUsersByFollowers(filtered);
+    return sortUsersByProfileDishes(filtered);
   }, [users, allUsersPool, search]);
 
   const visibleUsers = useMemo(() => {
@@ -237,7 +239,6 @@ export default function Dishlists() {
         return {
           ...u,
           followers: nextFollowers,
-          followersCount: nextFollowers.length,
         };
       });
     setUsers((prev) => updateList(prev));

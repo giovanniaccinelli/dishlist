@@ -103,8 +103,8 @@ function ExpandedCategoryModal({ row, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
-      <div className="min-h-screen px-5 pt-6 pb-24 text-black">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="min-h-screen px-5 pt-1 pb-24 text-black">
+        <div className="app-top-nav -mx-5 mb-6 px-5 flex items-center justify-between">
           <h1 className="text-2xl font-bold">{row.title}</h1>
           <button
             type="button"

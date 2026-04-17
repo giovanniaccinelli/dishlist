@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
+import { FeedLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
@@ -431,11 +432,7 @@ export default function Feed() {
   };
 
   if (loading || loadingDishes) {
-    return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
-        Loading...
-      </div>
-    );
+    return <FeedLoading />;
   }
 
   return (

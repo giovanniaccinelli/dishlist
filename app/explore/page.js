@@ -7,6 +7,7 @@ import { ChevronRight, CircleUserRound, Search as SearchIcon, Send, X } from "lu
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
+import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -363,7 +364,7 @@ export default function Explore() {
       </div>
 
       {loading ? (
-        <div className="text-black/60">Loading categories...</div>
+        <CategoryRowsLoading />
       ) : (
         <div>
           {categoryRows.map((row) => (

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
+import { FullScreenLoading } from "../../components/AppLoadingState";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { useAuth } from "../lib/auth";
 import { publishCustomStory, saveDishToFirestore, uploadDishImageVariants } from "../lib/firebaseHelpers";
@@ -146,11 +147,7 @@ export default function UploadPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
-        Loading...
-      </div>
-    );
+    return <FullScreenLoading title="Loading upload" />;
   }
 
   return (

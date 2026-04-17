@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BottomNav from "../../components/BottomNav";
+import { DishGridLoading } from "../../components/AppLoadingState";
 import {
   getAllDishesFromFirestore,
   getDishesPage,
@@ -409,9 +410,9 @@ export default function Dishes() {
       </div>
 
       {loading ? (
-        <div className="text-black/60">Loading dishes...</div>
+        <DishGridLoading label="Loading dishes" />
       ) : applyingFilters || (usingGlobalFilter && allDishesLoading && !allDishesPool) ? (
-        <div className="text-black/60">Loading filtered dishes...</div>
+        <DishGridLoading label="Loading filtered dishes" />
       ) : loadError && visibleDishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
           <p>{loadError}</p>

@@ -8,6 +8,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import { useUnreadDirects } from "../../lib/useUnreadDirects";
 import BottomNav from "../../../components/BottomNav";
+import { FullScreenLoading } from "../../../components/AppLoadingState";
 import AppBackButton from "../../../components/AppBackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -165,11 +166,7 @@ export default function PublicProfile() {
 
 
   if (!profileUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-black">
-        Loading profile...
-      </div>
-    );
+    return <FullScreenLoading title="Loading profile" />;
   }
 
   return (

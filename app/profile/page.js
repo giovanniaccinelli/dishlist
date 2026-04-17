@@ -24,6 +24,7 @@ import {
   removeSavedDishFromUser,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
+import { FullScreenLoading } from "../../components/AppLoadingState";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -420,11 +421,7 @@ export default function Profile() {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-black">
-        Loading...
-      </div>
-    );
+    return <FullScreenLoading title="Loading profile" />;
   }
 
   if (!user) {

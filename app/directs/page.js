@@ -7,6 +7,7 @@ import { db } from "../lib/firebase";
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
+import { FullScreenLoading, ListLoading } from "../../components/AppLoadingState";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import AppBackButton from "../../components/AppBackButton";
 
@@ -16,6 +17,7 @@ export default function Directs() {
   const [conversations, setConversations] = useState([]);
   const [usersMap, setUsersMap] = useState({});
   const { unreadConversationIds } = useUnreadDirects(user?.uid);
+  const isInitialLoading = !!user?.uid && conversations.length === 0 && Object.keys(usersMap).length === 0;
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -78,7 +80,9 @@ export default function Directs() {
         <AppBackButton fallback="/" />
         <h1 className="text-2xl font-bold">Directs</h1>
       </div>
-      {displayConvos.length === 0 ? (
+      {isInitialLoading ? (
+        <ListLoading />
+      ) : displayConvos.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
           No conversations yet.
         </div>

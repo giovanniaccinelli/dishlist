@@ -9,6 +9,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
 import BottomNav from "../../../components/BottomNav";
+import { FullScreenLoading } from "../../../components/AppLoadingState";
 import AppBackButton from "../../../components/AppBackButton";
 import { getDishImageUrl } from "../../lib/dishImage";
 import {
@@ -469,11 +470,7 @@ export default function DishDetail() {
   };
 
   if (loading || loadingDish) {
-    return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
-        Loading...
-      </div>
-    );
+    return <FullScreenLoading title="Loading dish" />;
   }
 
   if (!user && !isPublicSource) {

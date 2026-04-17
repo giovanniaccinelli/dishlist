@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../lib/auth";
 import BottomNav from "../../components/BottomNav";
+import { FullScreenLoading, PeopleGridLoading } from "../../components/AppLoadingState";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import {
   collection,
@@ -26,29 +27,6 @@ import { CircleUserRound, Send } from "lucide-react";
 const INITIAL_USERS_LIMIT = 10;
 const USER_PREVIEW_CACHE_TTL = 60 * 1000;
 const userPreviewCache = new Map();
-
-function PeopleSkeletonCard() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
-      <div className="mb-3 flex items-start gap-3">
-        <div className="h-10 w-10 animate-pulse rounded-full bg-black/8" />
-        <div className="min-w-0 flex-1 pt-1">
-          <div className="mb-2 h-3.5 w-24 animate-pulse rounded-full bg-black/8" />
-          <div className="h-2.5 w-16 animate-pulse rounded-full bg-black/6" />
-        </div>
-      </div>
-      <div className="mb-3 grid grid-cols-3 gap-1.5">
-        {Array.from({ length: 9 }).map((_, idx) => (
-          <div key={idx} className="aspect-square animate-pulse rounded-lg bg-black/[0.055]" />
-        ))}
-      </div>
-      <div className="flex justify-between items-center">
-        <div className="h-3 w-14 animate-pulse rounded-full bg-black/6" />
-        <div className="h-8 w-20 animate-pulse rounded-full bg-black/8" />
-      </div>
-    </div>
-  );
-}
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
@@ -265,11 +243,7 @@ export default function Dishlists() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-black">
-        Loading...
-      </div>
-    );
+    return <FullScreenLoading title="Loading people" />;
   }
 
   return (
@@ -349,20 +323,9 @@ export default function Dishlists() {
       ) : null}
 
       {loadingUsers ? (
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, idx) => (
-            <PeopleSkeletonCard key={`people-loading-${idx}`} />
-          ))}
-        </div>
+        <PeopleGridLoading />
       ) : search.trim() && searchLoading ? (
-        <div>
-          <div className="mb-3 text-sm font-medium text-black/45">Searching people...</div>
-          <div className="grid grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <PeopleSkeletonCard key={`people-search-${idx}`} />
-            ))}
-          </div>
-        </div>
+        <PeopleGridLoading searching />
       ) : filteredUsers.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
           No users found.
@@ -414,9 +377,6 @@ export default function Dishlists() {
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold leading-tight max-h-9 overflow-hidden">
                         {u.displayName || "User"}
-                      </div>
-                      <div className="mt-1 text-[11px] font-medium text-black/45">
-                        {Number(u.followersCount ?? (u.followers || []).length)} followers
                       </div>
                     </div>
                   </div>

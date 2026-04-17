@@ -10,8 +10,8 @@ import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
-import { getSavedDishesFromFirestore, getDishesFromFirestore, getToTryDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
-import { Plus, SendHorizonal, X } from "lucide-react";
+import { deleteMessageForSender, getSavedDishesFromFirestore, getDishesFromFirestore, getToTryDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
+import { Plus, SendHorizonal, Trash2, X } from "lucide-react";
 
 export default function DirectChat() {
   const { id } = useParams();
@@ -26,7 +26,9 @@ export default function DirectChat() {
   const [ownDishlist, setOwnDishlist] = useState([]);
   const [ownToTry, setOwnToTry] = useState([]);
   const [pickerTab, setPickerTab] = useState("dishlist");
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const endRef = useRef(null);
+  const longPressTimerRef = useRef(null);
 
   useEffect(() => {
     if (!user?.uid || !id) return;
@@ -114,6 +116,27 @@ export default function DirectChat() {
     setPickerOpen(false);
   };
 
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = (message) => {
+    if (!message || message.senderId !== user?.uid) return;
+    clearLongPressTimer();
+    longPressTimerRef.current = setTimeout(() => {
+      setDeleteTarget(message);
+    }, 450);
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!deleteTarget?.id || !user?.uid) return;
+    const ok = await deleteMessageForSender(id, deleteTarget.id, user.uid);
+    if (ok) setDeleteTarget(null);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
@@ -138,17 +161,36 @@ export default function DirectChat() {
         <div className="w-[74px]" />
       </div>
 
-      <div className="bottom-nav-chat-scroll px-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
+      <div className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-3">
         {messages.map((m) => {
           const isMine = m.senderId === user.uid;
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
             const imageSrc = getDishImageUrl(dish, "thumb");
             return (
-              <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+              <div
+                key={m.id}
+                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                onContextMenu={(e) => {
+                  if (!isMine) return;
+                  e.preventDefault();
+                  setDeleteTarget(m);
+                }}
+                onTouchStart={() => startLongPress(m)}
+                onTouchEnd={clearLongPressTimer}
+                onTouchMove={clearLongPressTimer}
+                onMouseDown={() => startLongPress(m)}
+                onMouseUp={clearLongPressTimer}
+                onMouseLeave={clearLongPressTimer}
+              >
                 <Link
                   href={`/dish/${m.dishId}?source=public&mode=single`}
-                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative w-full max-w-[75%]"
+                  className={`pressable-card relative w-full max-w-[78%] overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
+                    isMine
+                      ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
+                      : "border-black/10 bg-white"
+                  }`}
                 >
                   <img
                     src={imageSrc}
@@ -158,8 +200,8 @@ export default function DirectChat() {
                       e.currentTarget.src = DEFAULT_DISH_IMAGE;
                     }}
                   />
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                    <div className="text-[11px] font-semibold leading-tight truncate">
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                    <div className="text-[12px] font-semibold leading-tight truncate">
                       {dish?.name || "Dish"}
                     </div>
                     <div className="text-[10px] text-white/80">
@@ -171,22 +213,39 @@ export default function DirectChat() {
             );
           }
           return (
-            <div key={m.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+            <div
+              key={m.id}
+              className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+              onContextMenu={(e) => {
+                if (!isMine) return;
+                e.preventDefault();
+                setDeleteTarget(m);
+              }}
+              onTouchStart={() => startLongPress(m)}
+              onTouchEnd={clearLongPressTimer}
+              onTouchMove={clearLongPressTimer}
+              onMouseDown={() => startLongPress(m)}
+              onMouseUp={clearLongPressTimer}
+              onMouseLeave={clearLongPressTimer}
+            >
               <div
-                className={`w-fit max-w-[75%] rounded-2xl px-3 py-2 ${
-                  isMine ? "bg-black text-white" : "bg-white border border-black/10"
+                className={`w-fit max-w-[78%] rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
+                  isMine
+                    ? "bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
+                    : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
                 }`}
               >
-                <div className="text-sm whitespace-pre-wrap break-words">{m.text}</div>
+                <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
               </div>
             </div>
           );
         })}
         <div ref={endRef} />
+        </div>
       </div>
 
       <div className="bottom-nav-chat-bar fixed left-0 right-0 z-40 px-4">
-        <div className="rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto w-full max-w-md rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -330,6 +389,35 @@ export default function DirectChat() {
                 className="rounded-full bg-gradient-to-r from-[#0F3D63] to-[#2B74B8] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(43,116,184,0.28)]"
               >
                 Send dish
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-[70] bg-black/35 px-4 py-10" onClick={() => setDeleteTarget(null)}>
+          <div
+            className="mx-auto mt-auto max-w-sm rounded-[28px] border border-black/10 bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.22)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-1 text-lg font-bold text-black">Delete message?</div>
+            <p className="mb-4 text-sm text-black/60">This removes the message from the conversation for everyone.</p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteMessage}
+                className="inline-flex items-center gap-2 rounded-full bg-[#C93A3A] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,58,58,0.25)]"
+              >
+                <Trash2 size={16} />
+                Delete
               </button>
             </div>
           </div>

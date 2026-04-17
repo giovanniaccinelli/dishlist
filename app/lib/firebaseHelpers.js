@@ -819,6 +819,62 @@ export async function sendMessage(conversationId, message) {
   }
 }
 
+export async function deleteMessageForSender(conversationId, messageId, userId) {
+  if (!conversationId || !messageId || !userId) return false;
+  try {
+    const messageRef = doc(db, "conversations", conversationId, "messages", messageId);
+    const messageSnap = await getDoc(messageRef);
+    if (!messageSnap.exists()) return false;
+
+    const messageData = messageSnap.data();
+    if (messageData?.senderId !== userId) return false;
+
+    await deleteDoc(messageRef);
+
+    const convoRef = doc(db, "conversations", conversationId);
+    const latestSnap = await getDocs(
+      query(
+        collection(db, "conversations", conversationId, "messages"),
+        orderBy("createdAt", "desc"),
+        limitResults(1)
+      )
+    );
+
+    if (latestSnap.empty) {
+      await setDoc(
+        convoRef,
+        {
+          lastMessage: null,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      return true;
+    }
+
+    const latest = latestSnap.docs[0].data();
+    await setDoc(
+      convoRef,
+      {
+        lastMessage: {
+          senderId: latest.senderId || "",
+          type: latest.type || "text",
+          text: latest.text || "",
+          dishId: latest.dishId || "",
+          createdAt: latest.createdAt?.toDate?.() || new Date(),
+        },
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    return true;
+  } catch (err) {
+    console.error("Failed to delete message:", err);
+    return false;
+  }
+}
+
 export async function markConversationAsRead(conversationId, userId) {
   if (!conversationId || !userId) return false;
   try {

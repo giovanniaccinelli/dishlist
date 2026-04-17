@@ -489,7 +489,7 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
-          className="h-11 w-11 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E2C7A5] bg-[linear-gradient(180deg,rgba(255,248,238,0.98)_0%,rgba(247,225,195,0.98)_100%)] text-[#7A3E11] shadow-[0_12px_28px_rgba(183,120,40,0.18)]"
           aria-label="Previous dish"
         >
           <ChevronLeft size={25} />
@@ -526,7 +526,7 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.next?.()}
-          className="h-11 w-11 rounded-full border border-black/10 bg-white/90 text-black shadow-[0_10px_24px_rgba(0,0,0,0.1)] flex items-center justify-center justify-self-end"
+          className="flex h-11 w-11 items-center justify-center justify-self-end rounded-full border border-[#A8D8BA] bg-[linear-gradient(180deg,rgba(245,255,248,0.98)_0%,rgba(205,245,216,0.98)_100%)] text-[#14643A] shadow-[0_12px_28px_rgba(48,153,85,0.18)]"
           aria-label="Next dish"
         >
           <ChevronRight size={25} />

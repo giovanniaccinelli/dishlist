@@ -118,52 +118,52 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-black px-5 py-6">
-      <div className="max-w-xl mx-auto min-h-[calc(100vh-3rem)] flex flex-col">
-        <div className="flex items-center gap-3 mb-5">
-          <img src="/logo-real.png" alt="DishList logo" className="w-10 h-10 rounded-full object-cover" />
-          <h1 className="text-3xl font-bold">DishList</h1>
+    <div className="h-[100dvh] overflow-y-auto bg-transparent text-black px-4 py-4">
+      <div className="max-w-xl mx-auto flex flex-col">
+        <div className="flex items-center gap-3 mb-4">
+          <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
+          <h1 className="text-[1.8rem] font-bold leading-none">DishList</h1>
         </div>
 
         <motion.div
-          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[2rem] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.08)] border border-black/10 flex-1 flex flex-col"
+          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[1.75rem] p-4 shadow-[0_20px_56px_rgba(0,0,0,0.08)] border border-black/10 flex flex-col"
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
           {step === 0 ? (
             <>
-              <div className="mb-6">
-                <h2 className="text-[2.2rem] leading-[0.95] font-semibold text-black">
+              <div className="mb-4">
+                <h2 className="text-[1.85rem] leading-[0.96] font-semibold text-black">
                   Save your first 3 dishes
                 </h2>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                  className="w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(66,143,223,0.12)] border-[2px] border-[#5FA8F2] backdrop-blur-[6px]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-8">
+                  <div className="flex h-full flex-col justify-between gap-5">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[2.1rem] font-semibold leading-[0.95]">Got a few in mind?</p>
-                        <div className="h-11 w-11 rounded-[1rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(95,168,242,0.24)] shrink-0">
-                          <PenLine size={20} />
+                        <p className="text-[1.65rem] font-semibold leading-[0.96]">Got a few in mind?</p>
+                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(95,168,242,0.24)] shrink-0">
+                          <PenLine size={18} />
                         </div>
                       </div>
-                      <p className="mt-4 text-base text-black/78 max-w-[18rem]">
+                      <p className="mt-3 text-[0.95rem] leading-5 text-black/78 max-w-[16rem]">
                         Start by adding three dishes you already know you want in your DishList.
                       </p>
                     </div>
                     <div>
-                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-black/55">
                         Steps
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2.5">
                         {ONBOARDING_STEP_PREVIEW.map((step) => (
                           <div key={step.label}>
-                            <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
                             <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
                           </div>
                         ))}
@@ -175,22 +175,22 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
+                  className="w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-8">
+                  <div className="flex h-full flex-col justify-between gap-5">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[2.1rem] font-semibold leading-none">Swipe on the feed</p>
-                        <div className="h-11 w-11 rounded-[1rem] bg-[#1EA956] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(30,169,86,0.24)] shrink-0">
-                          <Hand size={20} />
+                        <p className="text-[1.65rem] font-semibold leading-none">Swipe on the feed</p>
+                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#1EA956] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(30,169,86,0.24)] shrink-0">
+                          <Hand size={18} />
                         </div>
                       </div>
-                      <p className="mt-4 text-base text-black/62 max-w-[17rem]">
+                      <p className="mt-3 text-[0.95rem] leading-5 text-black/62 max-w-[16rem]">
                         Start swiping right away. After your third save, we ask you to create the profile.
                       </p>
                     </div>
                     <div>
-                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-black/55">
                         Tags you can explore
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -210,14 +210,14 @@ export default function Onboarding() {
 
               <button
                 onClick={handleSkip}
-                className="mt-6 w-full rounded-2xl border border-black/12 bg-white px-5 py-4 text-base font-semibold text-black/72 hover:text-black shadow-sm"
+                className="mt-4 w-full rounded-[1.25rem] border border-black/12 bg-white px-5 py-3 text-[0.95rem] font-semibold text-black/72 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-2">
                   {[0, 1, 2].map((bar) => (
                     <span
@@ -233,11 +233,11 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              <div className="mb-5">
-                <h2 className="text-[2rem] leading-none font-semibold mt-1 text-black">
+              <div className="mb-4">
+                <h2 className="text-[1.8rem] leading-none font-semibold mt-1 text-black">
                   Name a dish
                 </h2>
-                <p className="mt-3 text-sm text-black/60">You can add an image later.</p>
+                <p className="mt-2 text-sm text-black/60">You can add an image later.</p>
               </div>
 
               <input
@@ -252,10 +252,10 @@ export default function Onboarding() {
                   });
                 }}
                 placeholder={`Dish ${step}`}
-                className="w-full p-4 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20"
+                className="w-full p-3.5 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20"
               />
 
-              <div className="mt-5 flex-1">
+              <div className="mt-4">
                 <p className="text-sm font-semibold text-black/70 mb-3">Some ideas</p>
                 <div className="grid grid-cols-3 gap-2">
                   {ideaDishes.map((dish) => (
@@ -294,7 +294,7 @@ export default function Onboarding() {
 
               {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
 
-              <div className="mt-6 flex items-center justify-between">
+              <div className="mt-5 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => {

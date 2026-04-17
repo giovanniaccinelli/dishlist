@@ -282,6 +282,9 @@ export default function Profile() {
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
     setUploadedDishes(refreshedUploaded);
     setSavedDishes(refreshedSaved);
+    setToastVariant("success");
+    setToast("Dish deleted");
+    setTimeout(() => setToast(""), 1200);
   };
 
   const handleRemoveSavedDish = async (dish) => {
@@ -290,6 +293,9 @@ export default function Profile() {
     if (!ok) return;
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
     setSavedDishes(refreshedSaved);
+    setToastVariant("success");
+    setToast("Removed from DishList");
+    setTimeout(() => setToast(""), 1200);
   };
 
   const handleRemoveToTryDish = async (dish) => {
@@ -298,6 +304,9 @@ export default function Profile() {
     if (!ok) return;
     const refreshed = await getToTryDishesFromFirestore(user.uid);
     setToTryDishes(refreshed);
+    setToastVariant("success");
+    setToast("Removed from To Try");
+    setTimeout(() => setToast(""), 1200);
   };
 
   const handleEditProfile = async () => {

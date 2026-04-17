@@ -543,8 +543,18 @@ export default function DishDetail() {
                 ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
                 : undefined
             }
-            actionToast={shouldUseStoryActions ? undefined : shouldUsePublicActions ? "Added to DishList" : "Removed"}
-            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "Added to My DishList" : undefined}
+            actionToast={
+              shouldUseStoryActions
+                ? undefined
+                : shouldUsePublicActions
+                  ? "Added to DishList"
+                  : source === "saved"
+                    ? "Removed from DishList"
+                    : source === "uploaded"
+                      ? "Dish deleted"
+                      : "Removed from To Try"
+            }
+            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "Moved to DishList" : undefined}
             trackSwipes={false}
             onResetFeed={handleResetDeck}
           />

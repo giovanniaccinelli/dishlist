@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
@@ -47,10 +47,15 @@ export default function StoryViewerModal({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [progressMs, setProgressMs] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const didAdvanceRef = useRef(false);
   useEffect(() => {
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
     setStoryIndex(0);
+    setProgressMs(0);
+    setIsPaused(false);
   }, [open, initialGroupIndex, groups.length]);
 
   const currentGroup = groups[groupIndex] || null;
@@ -64,11 +69,39 @@ export default function StoryViewerModal({
 
   useEffect(() => {
     if (!open || !currentStory?.id) return;
-    const timer = window.setTimeout(() => {
-      goNext();
-    }, STORY_DURATION_MS);
-    return () => window.clearTimeout(timer);
+    setProgressMs(0);
+    setIsPaused(false);
+    didAdvanceRef.current = false;
   }, [open, currentStory?.id, groupIndex, storyIndex]);
+
+  useEffect(() => {
+    if (!open || !currentStory?.id || isPaused) return;
+    let frameId = 0;
+    let previousTime = performance.now();
+
+    const tick = (now) => {
+      const delta = now - previousTime;
+      previousTime = now;
+
+      setProgressMs((prev) => {
+        const next = Math.min(prev + delta, STORY_DURATION_MS);
+        if (next >= STORY_DURATION_MS && !didAdvanceRef.current) {
+          didAdvanceRef.current = true;
+          window.setTimeout(() => {
+            goNext();
+          }, 0);
+        }
+        return next;
+      });
+
+      if (!didAdvanceRef.current) {
+        frameId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused]);
 
   const goNext = () => {
     if (!currentGroup) return onClose?.();
@@ -128,6 +161,17 @@ export default function StoryViewerModal({
 
   if (!open || !currentStory) return null;
 
+  const progressWidth = `${Math.min((progressMs / STORY_DURATION_MS) * 100, 100)}%`;
+
+  const handlePressStart = (event) => {
+    if (event.target.closest("[data-no-story-pause='true']")) return;
+    setIsPaused(true);
+  };
+
+  const handlePressEnd = () => {
+    setIsPaused(false);
+  };
+
   const openDish = () => {
     const storyDishId = currentStory.dishId || currentStory.id;
     if (!storyDishId) return;
@@ -164,7 +208,11 @@ export default function StoryViewerModal({
           drag
           dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
           dragElastic={0.12}
+          onPointerDown={handlePressStart}
+          onPointerUp={handlePressEnd}
+          onPointerCancel={handlePressEnd}
           onDragEnd={(_, info) => {
+            setIsPaused(false);
             if (Math.abs(info.offset.x) > Math.abs(info.offset.y) && Math.abs(info.offset.x) > 70) {
               if (info.offset.x < 0) goNextGroup();
               else goPrevGroup();
@@ -201,13 +249,7 @@ export default function StoryViewerModal({
                 {idx < storyIndex ? (
                   <div className="h-full w-full rounded-full bg-white" />
                 ) : idx === storyIndex ? (
-                  <motion.div
-                    key={story.id || idx}
-                    className="h-full rounded-full bg-white"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: STORY_DURATION_MS / 1000, ease: "linear" }}
-                  />
+                  <div className="h-full rounded-full bg-white" style={{ width: progressWidth }} />
                 ) : (
                   <div className="h-full w-0 rounded-full bg-transparent" />
                 )}
@@ -238,6 +280,7 @@ export default function StoryViewerModal({
               {canDelete ? (
                 <button
                   type="button"
+                  data-no-story-pause="true"
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
@@ -254,6 +297,7 @@ export default function StoryViewerModal({
               ) : null}
               <button
                 type="button"
+                data-no-story-pause="true"
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
@@ -295,6 +339,7 @@ export default function StoryViewerModal({
             <div className="mt-4 flex justify-end">
               <button
                 type="button"
+                data-no-story-pause="true"
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}

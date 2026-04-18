@@ -49,6 +49,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   onCardViewed,
   fitHeight = false,
   storyPushStatsByDish = {},
+  showStoryHistoryCounter = false,
 }, ref) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
@@ -513,22 +514,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onPointerMoveCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setStoryHistoryOpen(true);
-                }}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-black/65 px-3 text-xs font-semibold text-white"
-                aria-label="Open story push history"
-              >
-                <StoryStatIcon />
-                <span>: {currentStoryPushCount}</span>
-              </button>
-              <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
+            <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
                 data-no-drag="true"
                 onClick={(e) => {
@@ -555,9 +541,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               >
                 recipe
               </button>
-              </div>
             </div>
           </div>
+          {showStoryHistoryCounter ? (
+            <button
+              type="button"
+              data-no-drag="true"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setStoryHistoryOpen(true);
+              }}
+              className="absolute top-4 left-4 z-30 inline-flex h-9 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold text-white"
+              aria-label="Open story push history"
+            >
+              <StoryStatIcon size={11} />
+              <span>:</span>
+              <span>{currentStoryPushCount}</span>
+            </button>
+          ) : null}
           {typeof onSharePress === "function" && (
             <button
               type="button"
@@ -869,12 +871,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         replyTo={replyTo}
         setReplyTo={setReplyTo}
       />
-      <StoryHistoryModal
-        open={storyHistoryOpen}
-        onClose={() => setStoryHistoryOpen(false)}
-        dishName={currentCard?.name || "Dish"}
-        history={currentStoryPushHistory}
-      />
+      {showStoryHistoryCounter ? (
+        <StoryHistoryModal
+          open={storyHistoryOpen}
+          onClose={() => setStoryHistoryOpen(false)}
+          dishName={currentCard?.name || "Dish"}
+          history={currentStoryPushHistory}
+        />
+      ) : null}
 
       <AppToast message={toast} variant={toastVariant} />
     </div>

@@ -513,6 +513,7 @@ export default function DishDetail() {
             trackSwipes={false}
             onResetFeed={handleResetDeck}
             storyPushStatsByDish={storyPushStats}
+            showStoryHistoryCounter={!isPublicSource}
           />
         </div>
       </div>

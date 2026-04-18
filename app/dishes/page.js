@@ -23,7 +23,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 
 const DISHES_PAGE_SIZE = 24;
-const DISHES_SCROLL_BATCH = 18;
+const DISHES_SCROLL_BATCH = 3;
 
 const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 const normalizeSearchText = (value) =>
@@ -78,42 +78,42 @@ function StoryPlateIcon({ size = 16, className = "" }) {
       aria-hidden="true"
       className={className}
     >
-      <circle cx="12" cy="12" r="5.15" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="12" cy="12" r="8.35" stroke="currentColor" strokeWidth="1.8" opacity="0.72" />
+      <circle cx="12" cy="12" r="4.15" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="6.85" stroke="currentColor" strokeWidth="1.7" opacity="0.86" />
       <path
-        d="M4.7 4.4V10.2"
+        d="M4.1 3.9V9"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M3.5 4.4V7.5"
+        d="M2.8 3.9V6.9"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M5.9 4.4V7.5"
+        d="M5.4 3.9V6.9"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M4.7 10.2V19.1"
+        d="M4.1 9V19"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M18.8 4.4C17.2 5.35 16.35 7.05 16.35 9.32V12.08"
+        d="M19.9 3.9C18.35 4.85 17.55 6.52 17.55 8.72V11.4"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M18.8 4.4V19.1"
+        d="M19.9 3.9V19"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
     </svg>
@@ -142,7 +142,7 @@ export default function Dishes() {
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
-  const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
+  const [visibleLimit, setVisibleLimit] = useState(DISHES_PAGE_SIZE);
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [loadingMoreFiltered, setLoadingMoreFiltered] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
@@ -308,7 +308,7 @@ export default function Dishes() {
   }, [search]);
 
   useEffect(() => {
-    setFilteredLimit(DISHES_PAGE_SIZE);
+    setVisibleLimit(DISHES_PAGE_SIZE);
   }, [search, selectedTagsApplied]);
 
   const filtered = useMemo(() => {
@@ -343,15 +343,15 @@ export default function Dishes() {
       });
   }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
 
-  const visibleDishes = usingGlobalFilter ? filtered.slice(0, filteredLimit) : filtered;
-  const hasMoreFilteredDishes = usingGlobalFilter && filtered.length > visibleDishes.length;
-  const shouldShowInfiniteLoader = !loading && (hasMoreFilteredDishes || (!usingGlobalFilter && hasMore));
+  const visibleDishes = filtered.slice(0, visibleLimit);
+  const hasMoreVisibleDishes = filtered.length > visibleDishes.length;
+  const shouldShowInfiniteLoader = !loading && (hasMoreVisibleDishes || (!usingGlobalFilter && hasMore));
 
-  const loadMoreFilteredDishes = () => {
-    if (loadingMoreFiltered || !hasMoreFilteredDishes) return;
+  const loadMoreVisibleDishes = () => {
+    if (loadingMoreFiltered || !hasMoreVisibleDishes) return;
     setLoadingMoreFiltered(true);
     window.setTimeout(() => {
-      setFilteredLimit((prev) => Math.min(prev + DISHES_SCROLL_BATCH, filtered.length));
+      setVisibleLimit((prev) => Math.min(prev + DISHES_SCROLL_BATCH, filtered.length));
       setLoadingMoreFiltered(false);
     }, 110);
   };
@@ -374,16 +374,16 @@ export default function Dishes() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0]?.isIntersecting) return;
-        if (usingGlobalFilter) {
-          loadMoreFilteredDishes();
+        if (hasMoreVisibleDishes) {
+          loadMoreVisibleDishes();
           return;
         }
         fetchMoreDishes();
       },
       {
         root,
-        rootMargin: "180px 0px",
-        threshold: 0.01,
+        rootMargin: "24px 0px",
+        threshold: 0.18,
       }
     );
 
@@ -394,12 +394,13 @@ export default function Dishes() {
     applyingFilters,
     filtered.length,
     hasMore,
-    hasMoreFilteredDishes,
+    hasMoreVisibleDishes,
     loading,
     loadingMore,
     loadingMoreFiltered,
     shouldShowInfiniteLoader,
     usingGlobalFilter,
+    visibleLimit,
   ]);
 
   const handleSave = async (dish) => {
@@ -442,7 +443,7 @@ export default function Dishes() {
     await ensureAllDishesLoaded();
     setSelectedTagsApplied(selectedTagsDraft);
     setShowTagsPicker(false);
-    setFilteredLimit(DISHES_PAGE_SIZE);
+    setVisibleLimit(DISHES_PAGE_SIZE);
     setApplyingFilters(false);
   };
 

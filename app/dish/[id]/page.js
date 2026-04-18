@@ -38,19 +38,19 @@ import ShareModal from "../../../components/ShareModal";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="5.15" stroke="currentColor" strokeWidth="1.9" />
-      <circle cx="12" cy="12" r="8.35" stroke="currentColor" strokeWidth="1.9" opacity="0.72" />
-      <path d="M4.7 4.4V10.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-      <path d="M3.5 4.4V7.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M5.9 4.4V7.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M4.7 10.2V19.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="4.15" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="6.85" stroke="currentColor" strokeWidth="1.9" opacity="0.86" />
+      <path d="M4.1 3.9V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M2.8 3.9V6.9" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M5.4 3.9V6.9" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M4.1 9V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
       <path
-        d="M18.8 4.4C17.2 5.35 16.35 7.05 16.35 9.32V12.08"
+        d="M19.9 3.9C18.35 4.85 17.55 6.52 17.55 8.72V11.4"
         stroke="currentColor"
         strokeWidth="1.9"
         strokeLinecap="round"
       />
-      <path d="M18.8 4.4V19.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M19.9 3.9V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }
@@ -472,14 +472,14 @@ export default function DishDetail() {
             }
             actionClassName={
               shouldUseStoryActions
-                ? "w-14 h-14 rounded-full bg-white/92 text-[#2BD36B] border border-white/80 shadow-[0_10px_30px_rgba(0,0,0,0.18)] flex items-center justify-center"
+                ? "add-action-btn w-14 h-14 text-[#2BD36B]"
                 : shouldUsePublicActions
                   ? "add-action-btn w-14 h-14"
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
             }
             secondaryActionClassName={
               canEditFromThisView
-                ? "px-4 py-2 rounded-full bg-white text-black border border-black/20 text-sm font-semibold shadow-lg"
+                ? "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-semibold uppercase tracking-[0.14em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]"
                 : isToTrySource
                 ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
                 : undefined

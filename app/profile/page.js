@@ -22,6 +22,7 @@ import {
   deleteStory,
   removeDishFromToTry,
   removeSavedDishFromUser,
+  getStoryPushStatsForUser,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -42,6 +43,21 @@ const STORY_CHOOSER_STEPS = [
   { label: "Recipe", color: "#D7B443" },
   { label: "Story", color: "#111111" },
 ];
+
+function StoryStatIcon({ size = 10 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M0.2 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M22.65 3.55C20.35 4.8 19.2 6.8 19.2 9.35V11.75" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M22.65 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
@@ -82,6 +98,7 @@ export default function Profile() {
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+  const [storyPushStats, setStoryPushStats] = useState({});
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
@@ -106,9 +123,11 @@ export default function Profile() {
         const toTry = await getToTryDishesFromFirestore(user.uid);
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const stories = await getActiveStoriesForUser(user.uid);
+        const pushStats = await getStoryPushStatsForUser(user.uid);
         setUploadedDishes(uploaded);
         setToTryDishes(toTry);
         setActiveStories(stories);
+        setStoryPushStats(pushStats);
         if (userSnap.exists()) {
           const data = userSnap.data();
           setProfileMeta({
@@ -187,11 +206,18 @@ export default function Profile() {
       setActiveStories(stories);
     });
 
+    const storyPushesRef = collection(db, "users", user.uid, "storyPushes");
+    const unsubscribeStoryPushes = onSnapshot(storyPushesRef, async () => {
+      const stats = await getStoryPushStatsForUser(user.uid);
+      setStoryPushStats(stats);
+    });
+
     return () => {
       unsubscribeUser();
       unsubscribeSaved();
       unsubscribeToTry();
       unsubscribeStories();
+      unsubscribeStoryPushes();
     };
   }, [user]);
 
@@ -443,6 +469,28 @@ export default function Profile() {
     }
   };
 
+  const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+
+  const renderDishCounters = (dish) => (
+    <div className="flex items-center gap-2 text-[10px] text-white/80">
+      <div className="inline-flex items-center gap-1">
+        <StoryStatIcon />
+        <span>: {getStoryPushCount(dish)}</span>
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          handleOpenSavers(dish);
+        }}
+        className="pointer-events-auto text-left"
+      >
+        saves: {Number(dish.saves || 0)}
+      </button>
+    </div>
+  );
+
 
   if (loading) {
     return <FullScreenLoading title="Loading profile" />;
@@ -512,17 +560,7 @@ export default function Profile() {
                   <div className="text-[11px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleOpenSavers(dish);
-                  }}
-                  className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
-                >
-                  saves: {Number(dish.saves || 0)}
-                </button>
+                  {renderDishCounters(dish)}
                 </div>
                 {(allowDelete || onRemovePreview) && (
                   <button
@@ -786,6 +824,7 @@ export default function Profile() {
                       <div className="text-[11px] font-semibold leading-tight truncate">
                         {dish.name || "Untitled dish"}
                       </div>
+                      {renderDishCounters(dish)}
                       {Array.isArray(dish.tags) && dish.tags.length > 0 && (
                         <div className="flex gap-1 overflow-hidden">
                           {dish.tags.slice(0, 2).map((tag, idx) => (

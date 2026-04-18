@@ -630,6 +630,7 @@ function buildStoryPayload(userId, story) {
 export async function publishDishAsStory(userId, dish) {
   if (!userId || !dish?.id) return false;
   try {
+    const publishedAtMs = Date.now();
     const storyRef = doc(db, "users", userId, "stories", dish.id);
     await setDoc(storyRef, buildStoryPayload(userId, { ...dish, dishId: dish.id }), { merge: true });
     await setDoc(
@@ -637,6 +638,19 @@ export async function publishDishAsStory(userId, dish) {
       {
         hasActiveStory: true,
         storyUpdatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    await setDoc(
+      doc(db, "users", userId, "storyPushes", dish.id),
+      {
+        dishId: dish.id,
+        count: increment(1),
+        history: arrayUnion({
+          pushedAtMs: publishedAtMs,
+          pushedAtISO: new Date(publishedAtMs).toISOString(),
+        }),
+        updatedAt: serverTimestamp(),
       },
       { merge: true }
     );
@@ -746,6 +760,26 @@ export async function getTrendingStoryDishes(limitCount = 20) {
   } catch (err) {
     console.error("Failed to load trending story dishes:", err);
     return [];
+  }
+}
+
+export async function getStoryPushStatsForUser(userId) {
+  if (!userId) return {};
+  try {
+    const snapshot = await getDocs(collection(db, "users", userId, "storyPushes"));
+    const stats = {};
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      stats[docSnap.id] = {
+        count: Number(data.count || 0),
+        history: Array.isArray(data.history) ? data.history : [],
+        updatedAt: data.updatedAt || null,
+      };
+    });
+    return stats;
+  } catch (err) {
+    console.error("Failed to load story push stats:", err);
+    return {};
   }
 }
 

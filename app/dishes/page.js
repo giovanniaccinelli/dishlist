@@ -81,37 +81,37 @@ function StoryPlateIcon({ size = 16, className = "" }) {
       <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.8" />
       <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.8" opacity="0.88" />
       <path
-        d="M2.15 3.55V8.7"
+        d="M1.35 3.55V8.7"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M0.95 3.55V6.2"
+        d="M0.2 3.55V6.2"
         stroke="#2BD36B"
         strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M3.35 3.55V6.2"
+        d="M2.5 3.55V6.2"
         stroke="#2BD36B"
         strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M2.15 8.7V19"
+        d="M1.35 8.7V19"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M21.85 3.55C19.8 4.7 18.75 6.65 18.75 9.15V11.55"
+        d="M22.65 3.55C20.35 4.8 19.2 6.8 19.2 9.35V11.75"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M21.85 3.55V19"
+        d="M22.65 3.55V19"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"

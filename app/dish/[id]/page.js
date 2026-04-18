@@ -38,19 +38,19 @@ import ShareModal from "../../../components/ShareModal";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.05" stroke="currentColor" strokeWidth="1.9" />
-      <circle cx="12" cy="12" r="6.8" stroke="currentColor" strokeWidth="1.9" opacity="0.88" />
-      <path d="M3.25 3.55V8.55" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-      <path d="M1.95 3.55V6.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M4.55 3.55V6.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M3.25 8.55V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.9" opacity="0.88" />
+      <path d="M2.15 3.55V8.7" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M0.95 3.55V6.2" stroke="#2BD36B" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M3.35 3.55V6.2" stroke="#2BD36B" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M2.15 8.7V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
       <path
-        d="M20.75 3.55C18.9 4.6 17.95 6.45 17.95 8.9V11.25"
-        stroke="currentColor"
+        d="M21.85 3.55C19.8 4.7 18.75 6.65 18.75 9.15V11.55"
+        stroke="#2BD36B"
         strokeWidth="1.9"
         strokeLinecap="round"
       />
-      <path d="M20.75 3.55V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M21.85 3.55V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }

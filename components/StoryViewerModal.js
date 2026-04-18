@@ -50,6 +50,8 @@ export default function StoryViewerModal({
   const [progressMs, setProgressMs] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const didAdvanceRef = useRef(false);
+  const pressStartedAtRef = useRef(0);
+  const suppressTapUntilRef = useRef(0);
   useEffect(() => {
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
@@ -104,6 +106,7 @@ export default function StoryViewerModal({
   }, [open, currentStory?.id, groupIndex, storyIndex, isPaused]);
 
   const goNext = () => {
+    if (Date.now() < suppressTapUntilRef.current) return;
     if (!currentGroup) return onClose?.();
     if (storyIndex < currentStories.length - 1) {
       setStoryIndex((prev) => prev + 1);
@@ -118,6 +121,7 @@ export default function StoryViewerModal({
   };
 
   const goPrev = () => {
+    if (Date.now() < suppressTapUntilRef.current) return;
     if (!currentGroup) return;
     if (storyIndex > 0) {
       setStoryIndex((prev) => prev - 1);
@@ -165,10 +169,15 @@ export default function StoryViewerModal({
 
   const handlePressStart = (event) => {
     if (event.target.closest("[data-no-story-pause='true']")) return;
+    pressStartedAtRef.current = Date.now();
     setIsPaused(true);
   };
 
   const handlePressEnd = () => {
+    if (pressStartedAtRef.current && Date.now() - pressStartedAtRef.current > 180) {
+      suppressTapUntilRef.current = Date.now() + 280;
+    }
+    pressStartedAtRef.current = 0;
     setIsPaused(false);
   };
 

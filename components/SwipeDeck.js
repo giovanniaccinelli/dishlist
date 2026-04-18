@@ -552,10 +552,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 e.preventDefault();
                 setStoryHistoryOpen(true);
               }}
-              className="absolute top-4 left-4 z-30 inline-flex h-9 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold text-white"
+              className="absolute top-4 left-4 z-30 inline-flex items-center gap-1 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white"
               aria-label="Open story push history"
             >
-              <StoryStatIcon size={11} />
+              <StoryStatIcon size={12} />
               <span>:</span>
               <span>{currentStoryPushCount}</span>
             </button>

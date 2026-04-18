@@ -73,7 +73,7 @@ function StoryPlateIcon({ size = 16, className = "" }) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 26 24"
       fill="none"
       aria-hidden="true"
       className={className}
@@ -105,13 +105,13 @@ function StoryPlateIcon({ size = 16, className = "" }) {
         strokeLinecap="round"
       />
       <path
-        d="M22.65 3.55C20.35 4.8 19.2 6.8 19.2 9.35V11.75"
+        d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M22.65 3.55V19"
+        d="M23.6 3.55V19"
         stroke="#2BD36B"
         strokeWidth="1.7"
         strokeLinecap="round"

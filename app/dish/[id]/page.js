@@ -27,6 +27,7 @@ import {
   removeDishFromToTry,
   removeSavedDishFromUser,
   saveDishToUserList,
+  getStoryPushStatsForUser,
   upgradeToMyDishlist,
   updateDishAndSavedCopies,
   uploadDishImageVariants,
@@ -37,7 +38,7 @@ import ShareModal from "../../../components/ShareModal";
 
 function StoryActionIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 26 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.9" />
       <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.9" opacity="0.88" />
       <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
@@ -45,12 +46,12 @@ function StoryActionIcon() {
       <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.45" strokeLinecap="round" />
       <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
       <path
-        d="M22.65 3.55C20.35 4.8 19.2 6.8 19.2 9.35V11.75"
+        d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08"
         stroke="#2BD36B"
         strokeWidth="1.9"
         strokeLinecap="round"
       />
-      <path d="M22.65 3.55V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }
@@ -90,6 +91,7 @@ export default function DishDetail() {
   const [saversUsers, setSaversUsers] = useState([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareDish, setShareDish] = useState(null);
+  const [storyPushStats, setStoryPushStats] = useState({});
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -129,6 +131,10 @@ export default function DishDetail() {
       const found = items.find((d) => d.id === dishId) || null;
       if (found) {
         setDish(found);
+        if (listOwnerId) {
+          const stats = await getStoryPushStatsForUser(listOwnerId);
+          setStoryPushStats(stats);
+        }
         if (mode === "shuffle") {
           const others = items.filter((d) => d.id !== dishId);
           setDeckList([found, ...shuffleArray(others)]);
@@ -142,6 +148,10 @@ export default function DishDetail() {
       const fallbackDish = snap.exists() ? { id: snap.id, ...snap.data() } : null;
       setDish(fallbackDish);
       setDeckList(fallbackDish ? [fallbackDish] : []);
+      if (listOwnerId) {
+        const stats = await getStoryPushStatsForUser(listOwnerId);
+        setStoryPushStats(stats);
+      }
       setLoadingDish(false);
     })();
   }, [dishId, listOwnerId, source, mode]);
@@ -400,6 +410,10 @@ export default function DishDetail() {
       return false;
     }
     const ok = await publishDishAsStory(userId, dishCard);
+    if (ok) {
+      const stats = await getStoryPushStatsForUser(userId);
+      setStoryPushStats(stats);
+    }
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Story published" : "Story failed");
     setTimeout(() => setPageToast(""), 1200);
@@ -498,6 +512,7 @@ export default function DishDetail() {
             secondaryActionToast={isToTrySource && !isForeignProfileContext ? "Moved to DishList" : undefined}
             trackSwipes={false}
             onResetFeed={handleResetDeck}
+            storyPushStatsByDish={storyPushStats}
           />
         </div>
       </div>

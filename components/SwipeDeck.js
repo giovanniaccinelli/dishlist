@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, CornerUpRight } from "lucide-react";
 import CommentsModal from "./CommentsModal";
+import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
@@ -47,6 +48,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   currentUser = null,
   onCardViewed,
   fitHeight = false,
+  storyPushStatsByDish = {},
 }, ref) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
@@ -67,6 +69,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [previewComment, setPreviewComment] = useState(null);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
+  const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
   const tagsRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
   const dragX = useMotionValue(0);
@@ -142,6 +145,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const commentBottom = tagsBottom + tagsHeight + 8;
   const textBottom = Math.max(120, commentBottom + 40);
   const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
+  const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
+  const currentStoryPushCount = Number(currentStoryStats?.count || 0);
+  const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
+
+  const StoryStatIcon = ({ size = 10 }) => (
+    <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M0.2 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
 
   const stopRecipePanelInteraction = (e) => {
     e.stopPropagation();
@@ -494,7 +513,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onPointerMoveCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
-            <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setStoryHistoryOpen(true);
+                }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-black/65 px-3 text-xs font-semibold text-white"
+                aria-label="Open story push history"
+              >
+                <StoryStatIcon />
+                <span>: {currentStoryPushCount}</span>
+              </button>
+              <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
                 data-no-drag="true"
                 onClick={(e) => {
@@ -521,6 +555,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               >
                 recipe
               </button>
+              </div>
             </div>
           </div>
           {typeof onSharePress === "function" && (
@@ -833,6 +868,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         currentUser={currentUser}
         replyTo={replyTo}
         setReplyTo={setReplyTo}
+      />
+      <StoryHistoryModal
+        open={storyHistoryOpen}
+        onClose={() => setStoryHistoryOpen(false)}
+        dishName={currentCard?.name || "Dish"}
+        history={currentStoryPushHistory}
       />
 
       <AppToast message={toast} variant={toastVariant} />

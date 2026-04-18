@@ -37,79 +37,20 @@ import ShareModal from "../../../components/ShareModal";
 
 function StoryActionIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="5.15" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="8.35" stroke="currentColor" strokeWidth="1.9" opacity="0.72" />
+      <path d="M4.7 4.4V10.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M3.5 4.4V7.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M5.9 4.4V7.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M4.7 10.2V19.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
       <path
-        d="M14 2.8C13.04 2.86 12.11 3.03 11.23 3.3"
+        d="M18.8 4.4C17.2 5.35 16.35 7.05 16.35 9.32V12.08"
         stroke="currentColor"
-        strokeWidth="2.8"
+        strokeWidth="1.9"
         strokeLinecap="round"
       />
-      <path
-        d="M9.4 3.97C8.69 4.31 8.02 4.73 7.4 5.22"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M6.03 6.52C5.52 7.12 5.08 7.77 4.72 8.47"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M4.02 10.02C3.75 10.86 3.56 11.74 3.47 12.66"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3.55 14.65C3.64 15.73 3.86 16.76 4.2 17.73"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M4.93 19.52C5.49 20.5 6.21 21.37 7.07 22.09"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8.83 23.36C9.96 24.03 11.22 24.49 12.56 24.69"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.58 24.73C17.44 24.59 20.12 23.37 22.1 21.35"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M23.45 19.45C24.49 17.71 25.06 15.68 25.1 13.57"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M24.73 11.57C24.29 7.74 21.75 4.45 18.15 3.12"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14 9.1V18.9"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.1 14H18.9"
-        stroke="currentColor"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-      />
+      <path d="M18.8 4.4V19.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }

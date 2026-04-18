@@ -23,6 +23,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 
 const DISHES_PAGE_SIZE = 24;
+const DISHES_SCROLL_BATCH = 18;
 
 const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 const normalizeSearchText = (value) =>
@@ -67,6 +68,58 @@ const matchesFlexibleDishSearch = (dish, rawTerm) => {
   return matchedTokens.length >= Math.max(1, Math.ceil(tokens.length * 0.6));
 };
 
+function StoryPlateIcon({ size = 16, className = "" }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="5.15" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="8.35" stroke="currentColor" strokeWidth="1.8" opacity="0.72" />
+      <path
+        d="M4.7 4.4V10.2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3.5 4.4V7.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5.9 4.4V7.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.7 10.2V19.1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M18.8 4.4C17.2 5.35 16.35 7.05 16.35 9.32V12.08"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M18.8 4.4V19.1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function Dishes() {
   const router = useRouter();
   const { user } = useAuth();
@@ -91,9 +144,11 @@ export default function Dishes() {
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [filteredLimit, setFilteredLimit] = useState(DISHES_PAGE_SIZE);
   const [applyingFilters, setApplyingFilters] = useState(false);
+  const [loadingMoreFiltered, setLoadingMoreFiltered] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const scrollContainerRef = useRef(null);
   const dishesLoadMoreRef = useRef(null);
 
   const fetchDishes = async () => {
@@ -292,22 +347,44 @@ export default function Dishes() {
   const hasMoreFilteredDishes = usingGlobalFilter && filtered.length > visibleDishes.length;
   const shouldShowInfiniteLoader = !loading && (hasMoreFilteredDishes || (!usingGlobalFilter && hasMore));
 
+  const loadMoreFilteredDishes = () => {
+    if (loadingMoreFiltered || !hasMoreFilteredDishes) return;
+    setLoadingMoreFiltered(true);
+    window.setTimeout(() => {
+      setFilteredLimit((prev) => Math.min(prev + DISHES_SCROLL_BATCH, filtered.length));
+      setLoadingMoreFiltered(false);
+    }, 110);
+  };
+
   useEffect(() => {
-    if (!shouldShowInfiniteLoader || loadingMore || applyingFilters || allDishesLoading) return;
+    if (
+      !shouldShowInfiniteLoader ||
+      loadingMore ||
+      loadingMoreFiltered ||
+      applyingFilters ||
+      allDishesLoading
+    ) {
+      return;
+    }
 
     const node = dishesLoadMoreRef.current;
-    if (!node) return;
+    const root = scrollContainerRef.current;
+    if (!node || !root) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0]?.isIntersecting) return;
         if (usingGlobalFilter) {
-          setFilteredLimit((prev) => Math.min(prev + DISHES_PAGE_SIZE, filtered.length));
+          loadMoreFilteredDishes();
           return;
         }
         fetchMoreDishes();
       },
-      { rootMargin: "260px 0px" }
+      {
+        root,
+        rootMargin: "180px 0px",
+        threshold: 0.01,
+      }
     );
 
     observer.observe(node);
@@ -320,6 +397,7 @@ export default function Dishes() {
     hasMoreFilteredDishes,
     loading,
     loadingMore,
+    loadingMoreFiltered,
     shouldShowInfiniteLoader,
     usingGlobalFilter,
   ]);
@@ -395,7 +473,10 @@ export default function Dishes() {
 
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div
+      ref={scrollContainerRef}
+      className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative"
+    >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
         <h1 className="text-2xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
         <div className="flex items-center gap-2">
@@ -594,7 +675,7 @@ export default function Dishes() {
                   className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                   aria-label="Add to dishlist"
                 >
-                  <Plus size={16} strokeWidth={2.1} />
+                  {storyPicker ? <StoryPlateIcon size={18} /> : <Plus size={16} strokeWidth={2.1} />}
                 </button>
               </div>
             );
@@ -604,7 +685,7 @@ export default function Dishes() {
 
       {shouldShowInfiniteLoader && (
         <div ref={dishesLoadMoreRef} className="mt-6 mb-3">
-          {loadingMore || (usingGlobalFilter && allDishesLoading) ? (
+          {loadingMore || loadingMoreFiltered || (usingGlobalFilter && allDishesLoading) ? (
             <DishInlineLoading />
           ) : (
             <div className="h-10" aria-hidden="true" />

@@ -38,19 +38,19 @@ import ShareModal from "../../../components/ShareModal";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.15" stroke="currentColor" strokeWidth="1.9" />
-      <circle cx="12" cy="12" r="6.85" stroke="currentColor" strokeWidth="1.9" opacity="0.86" />
-      <path d="M4.1 3.9V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-      <path d="M2.8 3.9V6.9" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M5.4 3.9V6.9" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M4.1 9V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="4.05" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="6.8" stroke="currentColor" strokeWidth="1.9" opacity="0.88" />
+      <path d="M3.25 3.55V8.55" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M1.95 3.55V6.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M4.55 3.55V6.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M3.25 8.55V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
       <path
-        d="M19.9 3.9C18.35 4.85 17.55 6.52 17.55 8.72V11.4"
+        d="M20.75 3.55C18.9 4.6 17.95 6.45 17.95 8.9V11.25"
         stroke="currentColor"
         strokeWidth="1.9"
         strokeLinecap="round"
       />
-      <path d="M19.9 3.9V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M20.75 3.55V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }
@@ -479,7 +479,7 @@ export default function DishDetail() {
             }
             secondaryActionClassName={
               canEditFromThisView
-                ? "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-semibold uppercase tracking-[0.14em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]"
+                ? "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-black uppercase tracking-[0.12em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]"
                 : isToTrySource
                 ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
                 : undefined

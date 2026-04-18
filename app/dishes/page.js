@@ -78,40 +78,40 @@ function StoryPlateIcon({ size = 16, className = "" }) {
       aria-hidden="true"
       className={className}
     >
-      <circle cx="12" cy="12" r="4.15" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="12" cy="12" r="6.85" stroke="currentColor" strokeWidth="1.7" opacity="0.86" />
+      <circle cx="12" cy="12" r="4.05" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="currentColor" strokeWidth="1.8" opacity="0.88" />
       <path
-        d="M4.1 3.9V9"
+        d="M3.25 3.55V8.55"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M2.8 3.9V6.9"
+        d="M1.95 3.55V6.15"
         stroke="currentColor"
         strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M5.4 3.9V6.9"
+        d="M4.55 3.55V6.15"
         stroke="currentColor"
         strokeWidth="1.25"
         strokeLinecap="round"
       />
       <path
-        d="M4.1 9V19"
+        d="M3.25 8.55V19"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M19.9 3.9C18.35 4.85 17.55 6.52 17.55 8.72V11.4"
+        d="M20.75 3.55C18.9 4.6 17.95 6.45 17.95 8.9V11.25"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M19.9 3.9V19"
+        d="M20.75 3.55V19"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
@@ -595,7 +595,7 @@ export default function Dishes() {
 
       {loading ? (
         <DishGridLoading label="Loading dishes" />
-      ) : applyingFilters || (usingGlobalFilter && allDishesLoading && !allDishesPool) ? (
+      ) : applyingFilters ? (
         <DishGridLoading label="Loading filtered dishes" />
       ) : loadError && visibleDishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-black/70">
@@ -613,11 +613,11 @@ export default function Dishes() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
-          {visibleDishes.map((dish, index) => {
+          {visibleDishes.map((dish) => {
             const imageSrc = getDishImageUrl(dish, "thumb");
             return (
               <div
-                key={`${dish.id}-${index}`}
+                key={dish.id || `${dish.owner || "dish"}-${dish.name || "untitled"}`}
                 className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
               >
                 <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
@@ -676,7 +676,7 @@ export default function Dishes() {
                   className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
                   aria-label="Add to dishlist"
                 >
-                  {storyPicker ? <StoryPlateIcon size={18} /> : <Plus size={16} strokeWidth={2.1} />}
+                  {storyPicker ? <StoryPlateIcon size={18} className="text-[#2BD36B]" /> : <Plus size={16} strokeWidth={2.1} />}
                 </button>
               </div>
             );

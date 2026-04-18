@@ -24,6 +24,7 @@ import SaversModal from "../../components/SaversModal";
 
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
+const DISH_ROW_ESTIMATE_PX = 148;
 
 const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 const normalizeSearchText = (value) =>
@@ -347,13 +348,21 @@ export default function Dishes() {
   const hasMoreVisibleDishes = filtered.length > visibleDishes.length;
   const shouldShowInfiniteLoader = !loading && (hasMoreVisibleDishes || (!usingGlobalFilter && hasMore));
 
-  const loadMoreVisibleDishes = () => {
+  const loadMoreVisibleDishes = (node, root) => {
     if (loadingMoreFiltered || !hasMoreVisibleDishes) return;
+    let nextBatch = DISHES_SCROLL_BATCH;
+    if (node && root) {
+      const nodeTop = node.getBoundingClientRect().top;
+      const rootBottom = root.getBoundingClientRect().bottom;
+      const overshoot = Math.max(rootBottom - nodeTop, 0);
+      const extraRows = Math.max(1, Math.ceil(overshoot / DISH_ROW_ESTIMATE_PX));
+      nextBatch = Math.min(extraRows * 3, 15);
+    }
     setLoadingMoreFiltered(true);
     window.setTimeout(() => {
-      setVisibleLimit((prev) => Math.min(prev + DISHES_SCROLL_BATCH, filtered.length));
+      setVisibleLimit((prev) => Math.min(prev + nextBatch, filtered.length));
       setLoadingMoreFiltered(false);
-    }, 110);
+    }, 70);
   };
 
   useEffect(() => {
@@ -375,15 +384,15 @@ export default function Dishes() {
       (entries) => {
         if (!entries[0]?.isIntersecting) return;
         if (hasMoreVisibleDishes) {
-          loadMoreVisibleDishes();
+          loadMoreVisibleDishes(node, root);
           return;
         }
         fetchMoreDishes();
       },
       {
         root,
-        rootMargin: "24px 0px",
-        threshold: 0.18,
+        rootMargin: "120px 0px",
+        threshold: 0.05,
       }
     );
 

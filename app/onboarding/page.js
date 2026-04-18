@@ -13,6 +13,7 @@ const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
+const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const ONBOARDING_STEP_PREVIEW = [
   { label: "Dish 1", color: "#5FA8F2" },
   { label: "Dish 2", color: "#23C268" },
@@ -24,6 +25,7 @@ export default function Onboarding() {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [names, setNames] = useState(["", "", ""]);
+  const [selectedDishIds, setSelectedDishIds] = useState([null, null, null]);
   const [error, setError] = useState("");
   const [ideaDishes, setIdeaDishes] = useState([]);
   const [ideasLoading, setIdeasLoading] = useState(false);
@@ -40,6 +42,18 @@ export default function Onboarding() {
       const parsed = JSON.parse(existing);
       if (Array.isArray(parsed) && parsed.length) {
         setNames([parsed[0] || "", parsed[1] || "", parsed[2] || ""]);
+      }
+    } catch {}
+    const selected = sessionStorage.getItem(SELECTED_DISHES_KEY);
+    if (!selected) return;
+    try {
+      const parsedSelected = JSON.parse(selected);
+      if (Array.isArray(parsedSelected) && parsedSelected.length) {
+        setSelectedDishIds([
+          parsedSelected[0] || null,
+          parsedSelected[1] || null,
+          parsedSelected[2] || null,
+        ]);
       }
     } catch {}
   }, []);
@@ -79,6 +93,7 @@ export default function Onboarding() {
       localStorage.setItem(DONE_KEY, "1");
       sessionStorage.setItem(MODE_KEY, "names");
       sessionStorage.setItem(NAMES_KEY, JSON.stringify(cleaned));
+      sessionStorage.setItem(SELECTED_DISHES_KEY, JSON.stringify(selectedDishIds));
       sessionStorage.setItem(SAVED_KEY, JSON.stringify([]));
     }
     router.replace("/?onboarding=1");
@@ -103,6 +118,7 @@ export default function Onboarding() {
       sessionStorage.setItem(MODE_KEY, "feed");
       sessionStorage.setItem(SAVED_KEY, JSON.stringify([]));
       sessionStorage.removeItem(NAMES_KEY);
+      sessionStorage.removeItem(SELECTED_DISHES_KEY);
     }
     router.replace("/?onboarding=feed");
   };
@@ -112,6 +128,7 @@ export default function Onboarding() {
       localStorage.setItem(DONE_KEY, "1");
       sessionStorage.removeItem(MODE_KEY);
       sessionStorage.removeItem(NAMES_KEY);
+      sessionStorage.removeItem(SELECTED_DISHES_KEY);
       sessionStorage.removeItem(SAVED_KEY);
     }
     router.replace("/");
@@ -250,6 +267,11 @@ export default function Onboarding() {
                     next[currentInputStep] = e.target.value;
                     return next;
                   });
+                  setSelectedDishIds((prev) => {
+                    const next = [...prev];
+                    next[currentInputStep] = null;
+                    return next;
+                  });
                 }}
                 placeholder={`Dish ${step}`}
                 className="w-full p-3.5 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20"
@@ -267,6 +289,11 @@ export default function Onboarding() {
                         setNames((prev) => {
                           const next = [...prev];
                           next[currentInputStep] = dish.name || "";
+                          return next;
+                        });
+                        setSelectedDishIds((prev) => {
+                          const next = [...prev];
+                          next[currentInputStep] = dish.id || null;
                           return next;
                         });
                       }}

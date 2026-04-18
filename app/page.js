@@ -33,6 +33,7 @@ const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
+const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const LAST_APP_OPEN_KEY = "feed:lastAppOpenAt";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
@@ -214,6 +215,13 @@ export default function Feed() {
         return [];
       }
     })();
+    const pendingSelectedDishIds = (() => {
+      try {
+        return JSON.parse(sessionStorage.getItem(SELECTED_DISHES_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    })();
     const pendingSaved = (() => {
       try {
         return JSON.parse(sessionStorage.getItem(SAVED_KEY) || "[]");
@@ -221,14 +229,34 @@ export default function Feed() {
         return [];
       }
     })();
-    if (!pendingNames.length && !pendingSaved.length) return;
+    if (!pendingNames.length && !pendingSaved.length && !pendingSelectedDishIds.length) return;
     (async () => {
+      const selectedIds = Array.from(
+        new Set(
+          pendingSelectedDishIds
+            .map((id) => String(id || "").trim())
+            .filter(Boolean)
+        )
+      ).slice(0, 3);
+
+      if (selectedIds.length) {
+        for (const dishId of selectedIds) {
+          const snap = await getDoc(doc(db, "dishes", dishId));
+          if (!snap.exists()) continue;
+          const dishData = { id: snap.id, ...snap.data() };
+          await saveDishToUserList(userId, dishId, dishData);
+        }
+      }
+
       if (pendingNames.length) {
-        const uniqueNames = Array.from(new Set(pendingNames.map((n) => String(n).trim()).filter(Boolean))).slice(
-          0,
-          3
-        );
-        for (const name of uniqueNames) {
+        const selectedIdSet = new Set(selectedIds);
+        const seenNames = new Set();
+        for (let index = 0; index < 3; index += 1) {
+          if (selectedIdSet.has(String(pendingSelectedDishIds[index] || "").trim())) continue;
+          const name = String(pendingNames[index] || "").trim();
+          if (!name) continue;
+          if (seenNames.has(name)) continue;
+          seenNames.add(name);
           await createDishForUser({
             name,
             description: "",
@@ -253,6 +281,7 @@ export default function Feed() {
         }
       }
       sessionStorage.removeItem(NAMES_KEY);
+      sessionStorage.removeItem(SELECTED_DISHES_KEY);
       sessionStorage.removeItem(SAVED_KEY);
       sessionStorage.removeItem(MODE_KEY);
     })();

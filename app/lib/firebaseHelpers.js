@@ -126,6 +126,10 @@ function normalizeDishlistName(name) {
   return String(name || "").trim().slice(0, 40);
 }
 
+function normalizeDishlistNameKey(name) {
+  return normalizeDishlistName(name).toLowerCase();
+}
+
 function customDishlistsCollection(userId) {
   return collection(db, "users", userId, "dishlists");
 }
@@ -643,6 +647,33 @@ export async function createCustomDishlist(userId, name, initialDishes = []) {
   }
   clearReadCache(userId);
   return dishlistRef.id;
+}
+
+export async function getPopularCustomDishlistNames(max = 8) {
+  try {
+    const snapshot = await getDocs(collectionGroup(db, "dishlists"));
+    const reserved = new Set(["top picks", "all dishes", "uploaded"]);
+    const counts = new Map();
+
+    snapshot.docs.forEach((dishlistDoc) => {
+      const rawName = dishlistDoc.data()?.name || "";
+      const cleanedName = normalizeDishlistName(rawName);
+      const key = normalizeDishlistNameKey(cleanedName);
+      if (!cleanedName || reserved.has(key)) return;
+      const existing = counts.get(key) || { name: cleanedName, count: 0 };
+      existing.count += 1;
+      if (cleanedName.length < existing.name.length) existing.name = cleanedName;
+      counts.set(key, existing);
+    });
+
+    return Array.from(counts.values())
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+      .slice(0, max)
+      .map((entry) => entry.name);
+  } catch (err) {
+    console.error("Failed to fetch popular dishlist names:", err);
+    return [];
+  }
 }
 
 export async function addDishToCustomDishlist(userId, dishlistId, dishId, dishData = null) {

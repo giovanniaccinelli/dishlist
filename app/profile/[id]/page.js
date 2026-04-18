@@ -122,6 +122,11 @@ export default function PublicProfile() {
     if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("saved");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.set("list", "saved");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
   }, [activeDishlistId, customDishlists]);
 
   const selectDishlist = (dishlistId) => {

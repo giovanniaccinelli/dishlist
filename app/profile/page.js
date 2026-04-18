@@ -26,6 +26,7 @@ import {
   removeDishFromCustomDishlist,
   removeSavedDishFromUser,
   getStoryPushStatsForUser,
+  getPopularCustomDishlistNames,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -80,6 +81,7 @@ export default function Profile() {
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
+  const [popularDishlistNames, setPopularDishlistNames] = useState([]);
   const [selectedDishIds, setSelectedDishIds] = useState([]);
   const [createSourceDishlistId, setCreateSourceDishlistId] = useState("saved");
   const [creatingDishlist, setCreatingDishlist] = useState(false);
@@ -254,7 +256,17 @@ export default function Profile() {
     if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("saved");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.set("list", "saved");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
   }, [activeDishlistId, customDishlists]);
+
+  useEffect(() => {
+    if (!createDishlistOpen || createDishlistStep !== 0) return;
+    getPopularCustomDishlistNames().then(setPopularDishlistNames);
+  }, [createDishlistOpen, createDishlistStep]);
 
   const selectDishlist = (dishlistId) => {
     setActiveDishlistId(dishlistId);
@@ -341,7 +353,6 @@ export default function Profile() {
   };
 
   const handleDeleteDish = async (dish) => {
-    if (!confirm("Remove this dish?")) return;
     await deleteDishAndImage(
       dish.id,
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image
@@ -357,7 +368,6 @@ export default function Profile() {
   };
 
   const handleRemoveSavedDish = async (dish) => {
-    if (!confirm("Remove this dish from your DishList?")) return;
     const ok = await removeSavedDishFromUser(user.uid, dish.id);
     if (!ok) return;
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
@@ -368,7 +378,6 @@ export default function Profile() {
   };
 
   const handleRemoveToTryDish = async (dish) => {
-    if (!confirm("Remove this dish from To Try?")) return;
     const ok = await removeDishFromToTry(user.uid, dish.id);
     if (!ok) return;
     const refreshed = await getToTryDishesFromFirestore(user.uid);
@@ -669,6 +678,27 @@ export default function Profile() {
     setSelectedDishIds([]);
     setCreateSourceDishlistId(allDishlists[0]?.id || "saved");
     setCreateDishlistOpen(true);
+  };
+
+  const getRemovalTargetMeta = (source) => {
+    if (source === "saved") {
+      return {
+        label: "Top picks",
+        description: "Remove it from Top picks only",
+        buttonClass: "border-[#D8C66A] bg-[#FFFBE7]",
+        iconClass: "border-[#D0B74A] bg-[#D0B74A] text-white",
+      };
+    }
+    const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
+    if (customDishlist) {
+      return {
+        label: customDishlist.name || "Dishlist",
+        description: `Remove it from ${customDishlist.name || "this dishlist"} only`,
+        buttonClass: "border-[#8FD7AE] bg-[#F3FFF7]",
+        iconClass: "border-[#2F9B5F] bg-[#2F9B5F] text-white",
+      };
+    }
+    return null;
   };
 
   const handleCreateDishlist = async () => {
@@ -1592,6 +1622,25 @@ export default function Profile() {
                     placeholder="Dishlist name"
                     className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
                   />
+                  {popularDishlistNames.length ? (
+                    <div className="mt-4">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/42">
+                        Popular names
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {popularDishlistNames.map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => setNewDishlistName(name)}
+                            className="rounded-full border border-[#8FD7AE] bg-[#F3FFF7] px-3 py-1.5 text-[11px] font-semibold text-[#176A37]"
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="mt-4 flex justify-end">
                     <button
                       type="button"
@@ -1720,6 +1769,9 @@ export default function Profile() {
       />
       <AnimatePresence>
         {removePreviewTarget ? (
+          (() => {
+            const removalMeta = getRemovalTargetMeta(removePreviewTarget.source);
+            return (
           <motion.div
             className="fixed inset-0 z-[92] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
             initial={{ opacity: 0 }}
@@ -1756,17 +1808,19 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
-                {removePreviewTarget.source !== "uploaded" ? (
+                {removalMeta ? (
                   <button
                     type="button"
                     onClick={() => confirmDishPreviewRemove("list")}
-                    className="flex items-center justify-between rounded-[1.25rem] border border-[#E7B0B0] bg-[#FFF5F5] px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
+                    className={`flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${removalMeta.buttonClass}`}
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-black">Remove from this dishlist only</div>
-                      <div className="mt-0.5 text-xs text-black/48">Keep it everywhere else</div>
+                      <div className="truncate text-sm font-semibold text-black">
+                        Remove from {removalMeta.label} only
+                      </div>
+                      <div className="mt-0.5 text-xs text-black/48">{removalMeta.description}</div>
                     </div>
-                    <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white">
+                    <div className={`ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${removalMeta.iconClass}`}>
                       <Minus size={16} />
                     </div>
                   </button>
@@ -1787,6 +1841,8 @@ export default function Profile() {
               </div>
             </motion.div>
           </motion.div>
+            );
+          })()
         ) : null}
       </AnimatePresence>
       <AppToast message={toast} variant={toastVariant} />

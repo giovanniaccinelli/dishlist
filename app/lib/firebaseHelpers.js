@@ -153,6 +153,16 @@ function makeSystemDishlist(id, name, dishes) {
   };
 }
 
+function dedupeDishArray(dishes) {
+  return Array.from(
+    new Map(
+      (dishes || [])
+        .filter((dish) => dish?.id)
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
+}
+
 async function enrichWithOwnerPhotos(items) {
   if (!Array.isArray(items) || items.length === 0) return items;
   const ownerIds = Array.from(new Set(items.map((i) => i.owner).filter(Boolean)));
@@ -303,8 +313,9 @@ export async function updateDishAndSavedCopies(dishId, updates) {
 
 // Save dish to global dishes collection
 export async function saveDishToFirestore(dish) {
-  await addDoc(collection(db, "dishes"), dish);
+  const docRef = await addDoc(collection(db, "dishes"), dish);
   clearReadCache(dish?.owner || null);
+  return docRef.id;
 }
 
 export async function createDishForUser(dish) {
@@ -584,12 +595,24 @@ export async function getCustomDishlistDishes(userId, dishlistId) {
 
 export async function getAllDishlistsForUser(userId) {
   if (!userId) return [];
-  const [saved, toTry, custom] = await Promise.all([
+  const [saved, toTry, uploaded, custom] = await Promise.all([
     getSavedDishesFromFirestore(userId),
     getToTryDishesFromFirestore(userId),
+    getDishesFromFirestore(userId),
     getCustomDishlistsForUser(userId),
   ]);
-  return [makeSystemDishlist("saved", "My DishList", saved), makeSystemDishlist("to_try", "To Try", toTry), ...custom];
+  const allDishes = dedupeDishArray([
+    ...uploaded,
+    ...saved,
+    ...toTry,
+    ...custom.flatMap((dishlist) => dishlist.dishes || []),
+  ]);
+  return [
+    makeSystemDishlist("saved", "Top picks", saved),
+    makeSystemDishlist("all_dishes", "All dishes", allDishes),
+    makeSystemDishlist("uploaded", "Uploaded", uploaded),
+    ...custom,
+  ];
 }
 
 export async function createCustomDishlist(userId, name, initialDishes = []) {
@@ -665,6 +688,8 @@ export async function removeDishFromCustomDishlist(userId, dishlistId, dishId) {
 
 export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   if (!userId || !dishData?.id || !dishlistId) return false;
+  if (dishlistId === "uploaded") return true;
+  if (dishlistId === "all_dishes") return true;
   if (dishlistId === "saved") return saveDishToUserList(userId, dishData.id, dishData);
   if (dishlistId === "to_try") return addDishToToTryList(userId, dishData.id, dishData);
   return addDishToCustomDishlist(userId, dishlistId, dishData.id, dishData);

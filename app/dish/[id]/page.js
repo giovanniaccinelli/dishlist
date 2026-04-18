@@ -100,6 +100,7 @@ export default function DishDetail() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -122,6 +123,9 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "all_dishes") {
+        const lists = await getAllDishlistsForUser(listOwnerId);
+        items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
       } else if (source === "dishlist" && listId) {
         items = await getCustomDishlistDishes(listOwnerId, listId);
       } else if (source === "uploaded") {
@@ -210,8 +214,11 @@ export default function DishDetail() {
     setDishlistPickerOpen(true);
     setDishlistsLoading(true);
     try {
-      const nextLists = await getAllDishlistsForUser(userId);
+      const nextLists = (await getAllDishlistsForUser(userId)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
       setDishlists(nextLists);
+      setSelectedDishlistIds(["saved"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -236,6 +243,9 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "all_dishes") {
+        const lists = await getAllDishlistsForUser(listOwnerId);
+        items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
       } else if (source === "dishlist" && listId) {
         items = await getCustomDishlistDishes(listOwnerId, listId);
       } else if (source === "uploaded") {
@@ -440,9 +450,14 @@ export default function DishDetail() {
     return ok;
   };
 
-  const handleDishlistSelect = async (dishlist) => {
-    if (!userId || !dishlist?.id || !dishlistPickerDish?.id) return;
-    const ok = await saveDishToSelectedDishlist(userId, dishlist.id, dishlistPickerDish);
+  const handleDishlistSelect = async () => {
+    if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
+    const results = await Promise.all(
+      selectedDishlistIds.map((dishlistId) =>
+        saveDishToSelectedDishlist(userId, dishlistId, dishlistPickerDish)
+      )
+    );
+    const ok = results.every(Boolean);
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Added to DishList" : "Save failed");
     setTimeout(() => setPageToast(""), 1200);
@@ -807,7 +822,17 @@ export default function DishDetail() {
         }}
         lists={dishlists}
         dishName={dishlistPickerDish?.name || "dish"}
-        onSelect={handleDishlistSelect}
+        mode="multiple"
+        selectedIds={selectedDishlistIds}
+        onToggle={(dishlist) =>
+          setSelectedDishlistIds((prev) =>
+            prev.includes(dishlist.id)
+              ? prev.filter((id) => id !== dishlist.id)
+              : [...prev, dishlist.id]
+          )
+        }
+        onConfirm={handleDishlistSelect}
+        confirmLabel="Add dish"
         loading={dishlistsLoading}
       />
 

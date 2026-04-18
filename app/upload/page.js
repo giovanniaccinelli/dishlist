@@ -8,8 +8,15 @@ import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
+import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { useAuth } from "../lib/auth";
-import { publishCustomStory, saveDishToFirestore, uploadDishImageVariants } from "../lib/firebaseHelpers";
+import {
+  getAllDishlistsForUser,
+  publishCustomStory,
+  saveDishToFirestore,
+  saveDishToSelectedDishlist,
+  uploadDishImageVariants,
+} from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 
@@ -40,6 +47,10 @@ export default function UploadPage() {
   const [storyMode, setStoryMode] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
+  const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
+  const [dishlists, setDishlists] = useState([]);
+  const [dishlistsLoading, setDishlistsLoading] = useState(false);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "saved"]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -88,6 +99,7 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
+    setDishlistPickerOpen(false);
     setLoadingUpload(true);
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "" };
@@ -113,7 +125,7 @@ export default function UploadPage() {
         setToast("Story published");
         setTimeout(() => router.replace("/profile"), 700);
       } else {
-        await saveDishToFirestore({
+        const dishPayload = {
           name: dishName.trim(),
           description: dishDescription.trim(),
           recipeIngredients: dishRecipeIngredients.trim(),
@@ -125,7 +137,15 @@ export default function UploadPage() {
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
           createdAt: new Date(),
-        });
+        };
+        const dishId = await saveDishToFirestore(dishPayload);
+        const savedTargets = selectedDishlistIds.filter((dishlistId) => dishlistId !== "uploaded");
+        if (dishId && savedTargets.length) {
+          const savedDish = { id: dishId, ...dishPayload };
+          await Promise.all(
+            savedTargets.map((dishlistId) => saveDishToSelectedDishlist(user.uid, dishlistId, savedDish))
+          );
+        }
         setToastVariant("success");
         setToast("Dish uploaded");
         setTimeout(() => router.replace("/profile"), 700);
@@ -153,6 +173,24 @@ export default function UploadPage() {
       return;
     }
     setUploadStep((prev) => Math.min(prev + 1, 3));
+  };
+
+  const openDishlistPicker = async () => {
+    if (!user || storyMode) {
+      handlePost();
+      return;
+    }
+    setDishlistPickerOpen(true);
+    setDishlistsLoading(true);
+    try {
+      const nextLists = (await getAllDishlistsForUser(user.uid)).filter(
+        (dishlist) => dishlist.id !== "all_dishes"
+      );
+      setDishlists(nextLists);
+      setSelectedDishlistIds(["uploaded", "saved"]);
+    } finally {
+      setDishlistsLoading(false);
+    }
   };
 
   const goToPreviousStep = () => {
@@ -401,7 +439,7 @@ export default function UploadPage() {
                 </label>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={handlePost}
+                  onClick={openDishlistPicker}
                   className="w-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
                   disabled={loadingUpload}
                 >
@@ -529,6 +567,25 @@ export default function UploadPage() {
           />
         )}
       </AnimatePresence>
+      <DishlistPickerModal
+        open={dishlistPickerOpen}
+        onClose={() => setDishlistPickerOpen(false)}
+        lists={dishlists}
+        dishName={dishName || "dish"}
+        loading={dishlistsLoading}
+        mode="multiple"
+        selectedIds={selectedDishlistIds}
+        lockedIds={["uploaded"]}
+        onToggle={(dishlist) =>
+          setSelectedDishlistIds((prev) =>
+            prev.includes(dishlist.id)
+              ? prev.filter((id) => id !== dishlist.id)
+              : [...prev, dishlist.id]
+          )
+        }
+        onConfirm={handlePost}
+        confirmLabel="Upload dish"
+      />
       <AppToast message={toast} variant={toastVariant} />
       <BottomNav />
     </div>

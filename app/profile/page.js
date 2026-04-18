@@ -239,7 +239,7 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (activeDishlistId === "saved" || activeDishlistId === "to_try") return;
+    if (activeDishlistId === "saved" || activeDishlistId === "all_dishes") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("saved");
   }, [activeDishlistId, customDishlists]);
@@ -506,8 +506,27 @@ export default function Profile() {
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
 
   const allDishlists = [
-    { id: "saved", name: "My DishList", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: toTryDishes, count: toTryDishes.length },
+    { id: "saved", name: "Top picks", type: "system", dishes: savedDishes, count: savedDishes.length },
+    {
+      id: "all_dishes",
+      name: "All dishes",
+      type: "system",
+      dishes: Array.from(
+        new Map(
+          [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
+            .filter((dish) => dish?.id)
+            .map((dish) => [dish.id, dish])
+        ).values()
+      ),
+      count: Array.from(
+        new Set(
+          [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
+            .map((dish) => dish?.id)
+            .filter(Boolean)
+        )
+      ).length,
+    },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
     ...customDishlists,
   ];
 
@@ -828,10 +847,10 @@ export default function Profile() {
         ) : null}
       </div>
 
-      <div className="mb-6 flex items-center gap-2">
+      <div className="mb-6 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: "My DishList" },
-          { id: "to_try", label: "To Try" },
+          { id: "saved", label: "Top picks" },
+          { id: "all_dishes", label: "All dishes" },
         ].map((item) => {
           const active = activeDishlistId === item.id;
           return (
@@ -852,7 +871,7 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setDishlistsOpen(true)}
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-black/18 bg-white/92 text-black"
+          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
           aria-label="Open all dishlists"
         >
           <MoreHorizontal size={18} />
@@ -860,7 +879,7 @@ export default function Profile() {
       </div>
 
       <DishGrid
-        title={activeDishlist?.name || "My DishList"}
+        title={activeDishlist?.name || "Top picks"}
         dishes={activeDishlist?.dishes || []}
         allowDelete={false}
         source={activeDishlist?.type === "custom" ? "dishlist" : activeDishlist?.id || "saved"}
@@ -872,8 +891,6 @@ export default function Profile() {
               : undefined
         }
       />
-
-      <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
 
       {/* Add Dish button */}
       <motion.button
@@ -1336,20 +1353,21 @@ export default function Profile() {
       <AnimatePresence>
         {dishlistsOpen && (
           <motion.div
-            className="fixed inset-0 z-[88] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[88] bg-[#F6F6F2] overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setDishlistsOpen(false)}
           >
             <motion.div
-              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-white p-4 shadow-[0_30px_80px_rgba(0,0,0,0.18)]"
-              initial={{ y: 18, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 12, opacity: 0 }}
+              className="min-h-screen w-full px-4 pb-28 pt-24"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mx-auto w-full max-w-3xl">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
                     Dishlists
@@ -1360,7 +1378,7 @@ export default function Profile() {
                   Close
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3 max-h-[68vh] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
                   const preview = [...(dishlist.dishes || [])]
                     .sort(() => Math.random() - 0.5)
@@ -1414,6 +1432,7 @@ export default function Profile() {
                     <div className="text-sm font-semibold">Create dishlist</div>
                   </div>
                 </button>
+              </div>
               </div>
             </motion.div>
           </motion.div>

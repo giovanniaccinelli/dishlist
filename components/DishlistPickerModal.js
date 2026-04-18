@@ -1,16 +1,27 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ListPlus } from "lucide-react";
+import { Check, Lock, Plus } from "lucide-react";
 
 export default function DishlistPickerModal({
   open,
   onClose,
   lists = [],
   dishName = "dish",
-  onSelect,
   loading = false,
+  title = "Choose dishlists",
+  eyebrow = "Add To",
+  mode = "multiple",
+  selectedIds = [],
+  lockedIds = [],
+  onToggle,
+  onSelect,
+  onConfirm,
+  confirmLabel = "Save",
 }) {
+  const selectedSet = new Set(selectedIds);
+  const lockedSet = new Set(lockedIds);
+
   return (
     <AnimatePresence>
       {open ? (
@@ -33,14 +44,12 @@ export default function DishlistPickerModal({
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
-                  Add To
+                  {eyebrow}
                 </p>
                 <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
-                  Choose a dishlist
+                  {title}
                 </h3>
-                <p className="mt-1 text-sm text-black/55">
-                  {dishName}
-                </p>
+                <p className="mt-1 text-sm text-black/55">{dishName}</p>
               </div>
               <button
                 type="button"
@@ -59,28 +68,65 @@ export default function DishlistPickerModal({
                 No dishlists yet.
               </div>
             ) : (
-              <div className="flex max-h-[52vh] flex-col gap-2 overflow-y-auto pr-1">
-                {lists.map((dishlist) => (
-                  <button
-                    key={dishlist.id}
-                    type="button"
-                    onClick={() => onSelect?.(dishlist)}
-                    className="flex items-center justify-between rounded-[1.25rem] border border-black/8 bg-white/90 px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-black">
-                        {dishlist.name}
-                      </div>
-                      <div className="mt-0.5 text-xs text-black/48">
-                        {Number(dishlist.count || 0)} dishes
-                      </div>
+              <>
+                <div className="flex max-h-[52vh] flex-col gap-2 overflow-y-auto pr-1">
+                  {lists.map((dishlist) => {
+                    const selected = selectedSet.has(dishlist.id);
+                    const locked = lockedSet.has(dishlist.id);
+                    return (
+                      <button
+                        key={dishlist.id}
+                        type="button"
+                        onClick={() => {
+                          if (mode === "single") {
+                            onSelect?.(dishlist);
+                            return;
+                          }
+                          if (locked) return;
+                          onToggle?.(dishlist);
+                        }}
+                        className={`flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${
+                          selected
+                            ? "border-[#2BD36B] bg-[#F4FFF7]"
+                            : "border-black/8 bg-white/90"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold text-black">
+                            {dishlist.name}
+                          </div>
+                          <div className="mt-0.5 text-xs text-black/48">
+                            {Number(dishlist.count || 0)} dishes
+                          </div>
+                        </div>
+                        <div
+                          className={`ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${
+                            selected
+                              ? "border-[#2BD36B] bg-[#2BD36B] text-white"
+                              : "border-black/10 bg-[#F7F5EF] text-black/65"
+                          }`}
+                        >
+                          {locked ? <Lock size={15} /> : selected ? <Check size={16} /> : <Plus size={16} />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {mode === "multiple" ? (
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="text-xs text-black/50">
+                      {selectedIds.length} selected
                     </div>
-                    <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65">
-                      {dishlist.type === "system" ? <Check size={16} /> : <ListPlus size={16} />}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    <button
+                      type="button"
+                      onClick={onConfirm}
+                      className="rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
+                    >
+                      {confirmLabel}
+                    </button>
+                  </div>
+                ) : null}
+              </>
             )}
           </motion.div>
         </motion.div>

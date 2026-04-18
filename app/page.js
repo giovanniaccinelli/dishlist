@@ -63,6 +63,7 @@ export default function Feed() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
@@ -403,8 +404,11 @@ export default function Feed() {
     setDishlistPickerOpen(true);
     setDishlistsLoading(true);
     try {
-      const nextLists = await getAllDishlistsForUser(userId);
+      const nextLists = (await getAllDishlistsForUser(userId)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
       setDishlists(nextLists);
+      setSelectedDishlistIds(["saved"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -467,11 +471,13 @@ export default function Feed() {
     setShareOpen(true);
   };
 
-  const handleDishlistSelect = async (dishlist) => {
-    if (!userId || !dishlist?.id || !dishlistPickerDish?.id) return;
+  const handleDishlistSelect = async () => {
+    if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
     const dishToAdd = dishlistPickerDish;
-    const ok = await saveDishToSelectedDishlist(userId, dishlist.id, dishToAdd);
-    if (!ok) return;
+    const results = await Promise.all(
+      selectedDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
+    );
+    if (results.some((result) => !result)) return;
     setDishlistPickerOpen(false);
     setDishlistPickerDish(null);
     setAddedDishIds((prev) => {
@@ -774,7 +780,17 @@ export default function Feed() {
         }}
         lists={dishlists}
         dishName={dishlistPickerDish?.name || "dish"}
-        onSelect={handleDishlistSelect}
+        mode="multiple"
+        selectedIds={selectedDishlistIds}
+        onToggle={(dishlist) =>
+          setSelectedDishlistIds((prev) =>
+            prev.includes(dishlist.id)
+              ? prev.filter((id) => id !== dishlist.id)
+              : [...prev, dishlist.id]
+          )
+        }
+        onConfirm={handleDishlistSelect}
+        confirmLabel="Add dish"
         loading={dishlistsLoading}
       />
       <BottomNav />

@@ -146,6 +146,7 @@ export default function Dishes() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
@@ -440,17 +441,24 @@ export default function Dishes() {
     setDishlistPickerOpen(true);
     setDishlistsLoading(true);
     try {
-      const nextLists = await getAllDishlistsForUser(user.uid);
+      const nextLists = (await getAllDishlistsForUser(user.uid)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
       setDishlists(nextLists);
+      setSelectedDishlistIds(["saved"]);
     } finally {
       setDishlistsLoading(false);
     }
   };
 
-  const handleDishlistSelect = async (dishlist) => {
-    if (!user?.uid || !dishlist?.id || !dishlistPickerDish?.id) return;
-    const saved = await saveDishToSelectedDishlist(user.uid, dishlist.id, dishlistPickerDish);
-    if (!saved) {
+  const handleDishlistSelect = async () => {
+    if (!user?.uid || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
+    const results = await Promise.all(
+      selectedDishlistIds.map((dishlistId) =>
+        saveDishToSelectedDishlist(user.uid, dishlistId, dishlistPickerDish)
+      )
+    );
+    if (results.some((result) => !result)) {
       setToastVariant("error");
       setToast("Save failed");
       setTimeout(() => setToast(""), 1200);
@@ -752,7 +760,17 @@ export default function Dishes() {
         }}
         lists={dishlists}
         dishName={dishlistPickerDish?.name || "dish"}
-        onSelect={handleDishlistSelect}
+        mode="multiple"
+        selectedIds={selectedDishlistIds}
+        onToggle={(dishlist) =>
+          setSelectedDishlistIds((prev) =>
+            prev.includes(dishlist.id)
+              ? prev.filter((id) => id !== dishlist.id)
+              : [...prev, dishlist.id]
+          )
+        }
+        onConfirm={handleDishlistSelect}
+        confirmLabel="Add dish"
         loading={dishlistsLoading}
       />
       <AppToast message={toast} variant={toastVariant} />

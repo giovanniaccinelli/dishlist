@@ -302,12 +302,30 @@ export default function DishDetail() {
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
   const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist";
-  const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
-  const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
+  const canManageOwnDish = Boolean(userId && orderedList.some((item) => item?.owner === userId));
   const isForeignProfileContext = Boolean(profileId && profileId !== userId);
   const shouldUsePublicActions = isPublicSource || isForeignProfileContext;
   const shouldUseStoryActions =
     !shouldUsePublicActions && (canManageOwnDish || ((isSavedListSource || isToTrySource) && !isForeignProfileContext));
+  const getSecondaryActionLabel = (dishCard) => {
+    if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) return "Edit";
+    if (isToTrySource && !isForeignProfileContext) return "Move to DishList";
+    return undefined;
+  };
+  const getSecondaryActionClassName = (dishCard) => {
+    if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) {
+      return "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-black uppercase tracking-[0.12em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]";
+    }
+    if (isToTrySource && !isForeignProfileContext) {
+      return "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center";
+    }
+    return undefined;
+  };
+  const getSecondaryActionToast = (dishCard) => {
+    if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) return undefined;
+    if (isToTrySource && !isForeignProfileContext) return "Moved to DishList";
+    return undefined;
+  };
   const backFallback = (() => {
     const params = new URLSearchParams();
     if (source === "dishlist" && listId) {
@@ -551,24 +569,26 @@ export default function DishDetail() {
             disabled={editOpen}
             currentUser={user}
             onAction={shouldUseStoryActions ? handleAddToStory : shouldUsePublicActions ? handleAdd : handleRemove}
-            onSecondaryAction={
-              canEditFromThisView
-                ? openEditModal
-                : isToTrySource && !isForeignProfileContext
-                  ? handleUpgrade
-                  : undefined
-            }
+            onSecondaryAction={canManageOwnDish || (isToTrySource && !isForeignProfileContext) ? (dishCard) => {
+              if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) {
+                openEditModal(dishCard);
+                return;
+              }
+              if (isToTrySource && !isForeignProfileContext) {
+                return handleUpgrade(dishCard);
+              }
+              return false;
+            } : undefined}
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
             onTertiaryAction={!isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
             onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
             actionOnRightSwipe={!shouldUsePublicActions}
             dismissOnAction={shouldUsePublicActions ? false : isPublicSource}
+            dismissOnSecondaryAction={false}
             onAuthRequired={() => alert("Please sign in to comment.")}
             actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
-            secondaryActionLabel={
-              canEditFromThisView ? "Edit" : isToTrySource && !isForeignProfileContext ? "Move to DishList" : undefined
-            }
+            secondaryActionLabel={getSecondaryActionLabel}
             actionClassName={
               shouldUseStoryActions
                 ? "add-action-btn w-14 h-14 text-[#2BD36B]"
@@ -578,13 +598,7 @@ export default function DishDetail() {
             }
             tertiaryActionLabel={!isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
             tertiaryActionClassName="add-action-btn w-14 h-14"
-            secondaryActionClassName={
-              canEditFromThisView
-                ? "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-black uppercase tracking-[0.12em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]"
-                : isToTrySource
-                ? "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center"
-                : undefined
-            }
+            secondaryActionClassName={getSecondaryActionClassName}
             actionToast={
               shouldUseStoryActions
                 ? undefined
@@ -596,7 +610,7 @@ export default function DishDetail() {
                       ? "Dish deleted"
                       : "Removed from To Try"
             }
-            secondaryActionToast={isToTrySource && !isForeignProfileContext ? "Moved to DishList" : undefined}
+            secondaryActionToast={getSecondaryActionToast}
             trackSwipes={false}
             onResetFeed={handleResetDeck}
             storyPushStatsByDish={storyPushStats}

@@ -153,6 +153,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
+  const resolvedSecondaryActionLabel =
+    typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
+  const resolvedSecondaryActionClassName =
+    typeof secondaryActionClassName === "function"
+      ? secondaryActionClassName(currentCard)
+      : secondaryActionClassName;
+  const resolvedSecondaryActionToast =
+    typeof secondaryActionToast === "function" ? secondaryActionToast(currentCard) : secondaryActionToast;
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -327,9 +335,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           setTimeout(() => setToast(""), 1200);
           return;
         }
-        if (secondaryActionToast) {
+        if (resolvedSecondaryActionToast) {
           setToastVariant("success");
-          setToast(secondaryActionToast);
+          setToast(resolvedSecondaryActionToast);
           setTimeout(() => setToast(""), 1200);
         }
       })
@@ -601,10 +609,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               type="button"
               data-no-drag="true"
               onClick={handleTertiaryActionPress}
-              className={
-                tertiaryActionClassName ||
-                "add-action-btn absolute z-30 w-14 h-14"
-              }
+              className={`absolute z-30 ${tertiaryActionClassName || "add-action-btn w-14 h-14"}`}
               style={{ bottom: actionBottom, right: actionLabel ? 168 : 96 }}
               aria-label="Additional action"
             >
@@ -795,7 +800,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
 
-          {secondaryActionLabel && (
+          {resolvedSecondaryActionLabel && (
             <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
@@ -827,13 +832,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   handleSecondaryActionPress(e);
                 }}
                 className={
-                  secondaryActionClassName ||
+                  resolvedSecondaryActionClassName ||
                   "px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
                 }
                 aria-label="Secondary action"
                 disabled={disabled}
               >
-                {secondaryActionLabel}
+                {resolvedSecondaryActionLabel}
               </button>
             </div>
           )}

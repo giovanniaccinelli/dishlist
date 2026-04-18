@@ -10,8 +10,8 @@ import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
-import { deleteMessageForSender, getSavedDishesFromFirestore, getDishesFromFirestore, getToTryDishesFromFirestore, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
-import { Plus, SendHorizonal, Trash2, X } from "lucide-react";
+import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
+import { ArrowLeft, Plus, SendHorizonal, Trash2, X } from "lucide-react";
 
 export default function DirectChat() {
   const { id } = useParams();
@@ -23,9 +23,8 @@ export default function DirectChat() {
   const [dishMap, setDishMap] = useState({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDish, setConfirmDish] = useState(null);
-  const [ownDishlist, setOwnDishlist] = useState([]);
-  const [ownToTry, setOwnToTry] = useState([]);
-  const [pickerTab, setPickerTab] = useState("dishlist");
+  const [pickerDishlists, setPickerDishlists] = useState([]);
+  const [pickerDishlistId, setPickerDishlistId] = useState("saved");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
@@ -75,23 +74,14 @@ export default function DirectChat() {
   useEffect(() => {
     if (!user?.uid) return;
     (async () => {
-      const [uploaded, saved, toTry] = await Promise.all([
-        getDishesFromFirestore(user.uid),
-        getSavedDishesFromFirestore(user.uid),
-        getToTryDishesFromFirestore(user.uid),
-      ]);
-      const merged = [...uploaded, ...saved];
-      const unique = [];
-      const seen = new Set();
-      merged.forEach((dish) => {
-        if (!dish?.id || seen.has(dish.id)) return;
-        seen.add(dish.id);
-        unique.push(dish);
-      });
-      setOwnDishlist(unique);
-      setOwnToTry(toTry);
+      const allDishlists = await getAllDishlistsForUser(user.uid);
+      setPickerDishlists(allDishlists);
+      setPickerDishlistId(allDishlists[0]?.id || "saved");
     })();
   }, [user?.uid]);
+
+  const activePickerDishlist =
+    pickerDishlists.find((dishlist) => dishlist.id === pickerDishlistId) || pickerDishlists[0] || null;
 
   const sendText = async () => {
     if (!input.trim() || !user?.uid) return;
@@ -249,7 +239,10 @@ export default function DirectChat() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setPickerOpen(true)}
+              onClick={() => {
+                setPickerOpen(true);
+                setConfirmDish(null);
+              }}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] border border-black/10 bg-white text-black shadow-[0_8px_20px_rgba(0,0,0,0.07)]"
               aria-label="Share a dish"
             >
@@ -285,7 +278,10 @@ export default function DirectChat() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Share a dish</h2>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">Share Dish</div>
+                <h2 className="mt-2 text-xl font-bold">Pick a dishlist first</h2>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -298,56 +294,79 @@ export default function DirectChat() {
                 <X size={18} />
               </button>
             </div>
-            <div className="mb-4 flex justify-center">
-              <div className="flex items-end gap-10 border-b border-black/12">
-                <button
-                  type="button"
-                  onClick={() => setPickerTab("dishlist")}
-                  className={`relative pb-2 text-sm font-semibold transition ${pickerTab === "dishlist" ? "text-black" : "text-black/45"}`}
-                >
-                  My DishList
-                  {pickerTab === "dishlist" ? (
-                    <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#23C268]" />
-                  ) : null}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPickerTab("to_try")}
-                  className={`relative pb-2 text-sm font-semibold transition ${pickerTab === "to_try" ? "text-black" : "text-black/45"}`}
-                >
-                  To Try
-                  {pickerTab === "to_try" ? (
-                    <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#D9BC48]" />
-                  ) : null}
-                </button>
-              </div>
-            </div>
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
-              <div className="grid grid-cols-3 gap-3 content-start">
-                {(pickerTab === "dishlist" ? ownDishlist : ownToTry).map((dish) => {
-                const imageSrc = getDishImageUrl(dish, "thumb");
-                return (
-                  <button
-                    key={dish.id}
-                    type="button"
-                    onClick={() => setConfirmDish(dish)}
-                    className="relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
-                  >
-                    <img
-                      src={imageSrc}
-                      alt={dish.name || "Dish"}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                      }}
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white">
-                      <div className="truncate text-xs font-semibold">{dish.name || "Dish"}</div>
-                    </div>
-                  </button>
-                );
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {pickerDishlists.map((dishlist) => {
+                  const preview = [...(dishlist.dishes || [])].sort(() => Math.random() - 0.5).slice(0, 4);
+                  const selected = dishlist.id === activePickerDishlist?.id;
+                  return (
+                    <button
+                      key={dishlist.id}
+                      type="button"
+                      onClick={() => setPickerDishlistId(dishlist.id)}
+                      className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
+                        selected ? "border-[#2BD36B] bg-[#F4FFF7]" : "border-black/10 bg-white"
+                      }`}
+                    >
+                      <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {Array.from({ length: 4 }).map((_, index) => {
+                          const dish = preview[index];
+                          return dish ? (
+                            <img
+                              key={`${dishlist.id}-${dish.id}-${index}`}
+                              src={getDishImageUrl(dish, "thumb")}
+                              alt={dish.name || dishlist.name}
+                              className="aspect-square w-full rounded-[0.85rem] object-cover"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                          ) : (
+                            <div
+                              key={`${dishlist.id}-empty-${index}`}
+                              className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                            />
+                          );
+                        })}
+                      </div>
+                    </button>
+                  );
                 })}
               </div>
+              {activePickerDishlist ? (
+                <div className="mt-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <ArrowLeft size={16} className="text-black/35 rotate-180" />
+                    <div className="text-sm font-semibold text-black">{activePickerDishlist.name}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 content-start">
+                    {(activePickerDishlist.dishes || []).map((dish) => {
+                      const imageSrc = getDishImageUrl(dish, "thumb");
+                      return (
+                        <button
+                          key={dish.id}
+                          type="button"
+                          onClick={() => setConfirmDish(dish)}
+                          className="relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
+                        >
+                          <img
+                            src={imageSrc}
+                            alt={dish.name || "Dish"}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                            }}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white">
+                            <div className="truncate text-xs font-semibold">{dish.name || "Dish"}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -402,7 +421,7 @@ export default function DirectChat() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 text-lg font-bold text-black">Delete message?</div>
-            <p className="mb-4 text-sm text-black/60">This removes the message from the conversation for everyone.</p>
+            <p className="mb-4 text-sm text-black/60">This removes the message you sent from the chat.</p>
             <div className="flex justify-end gap-2">
               <button
                 type="button"

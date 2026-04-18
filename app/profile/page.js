@@ -33,7 +33,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { MoreHorizontal, Plus, Search, Settings, Send, Shuffle } from "lucide-react";
+import { Minus, MoreHorizontal, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -81,6 +81,7 @@ export default function Profile() {
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
   const [selectedDishIds, setSelectedDishIds] = useState([]);
+  const [createSourceDishlistId, setCreateSourceDishlistId] = useState("saved");
   const [creatingDishlist, setCreatingDishlist] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -116,6 +117,7 @@ export default function Profile() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
+  const [removePreviewTarget, setRemovePreviewTarget] = useState(null);
   const profileOptionsRef = useRef(null);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
@@ -518,26 +520,30 @@ export default function Profile() {
     await refreshCustomDishlists(user.uid);
   };
 
-  const handleDishPreviewRemove = async (dish, source) => {
-    const choice = window.prompt(
-      'Type "list" to remove from this dishlist only, or "profile" to remove it completely from your profile.'
-    );
-    if (!choice) return;
-    const normalizedChoice = choice.trim().toLowerCase();
-    if (normalizedChoice === "profile") {
+  const handleDishPreviewRemove = (dish, source) => {
+    setRemovePreviewTarget({ dish, source });
+  };
+
+  const confirmDishPreviewRemove = async (scope) => {
+    const target = removePreviewTarget;
+    if (!target?.dish) return;
+    const { dish, source } = target;
+    if (scope === "profile") {
       await removeDishFromProfileOnly(dish);
       setToastVariant("success");
       setToast("Removed from profile");
       setTimeout(() => setToast(""), 1200);
+      setRemovePreviewTarget(null);
       return;
     }
-    if (normalizedChoice !== "list") return;
     if (source === "saved") {
       await handleRemoveSavedDish(dish);
+      setRemovePreviewTarget(null);
       return;
     }
     if (source === "uploaded") {
       await handleDeleteDish(dish);
+      setRemovePreviewTarget(null);
       return;
     }
     const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
@@ -549,6 +555,7 @@ export default function Profile() {
         setToast("Removed from dishlist");
         setTimeout(() => setToast(""), 1200);
       }
+      setRemovePreviewTarget(null);
       return;
     }
     const allDishesMembership = [
@@ -572,6 +579,7 @@ export default function Profile() {
         setTimeout(() => setToast(""), 1200);
       }
     }
+    setRemovePreviewTarget(null);
   };
 
   const openConnections = async (type) => {
@@ -642,8 +650,10 @@ export default function Profile() {
         .flatMap((dishlist) => dishlist.dishes || [])
         .filter((dish) => selectedDishIds.includes(dish.id))
         .map((dish) => [dish.id, dish])
-    ).values()
+  ).values()
   );
+  const createSourceDishlist =
+    allDishlists.find((dishlist) => dishlist.id === createSourceDishlistId) || allDishlists[0] || null;
 
   const toggleDishSelection = (dish) => {
     if (!dish?.id) return;
@@ -657,6 +667,7 @@ export default function Profile() {
     setCreateDishlistStep(0);
     setNewDishlistName("");
     setSelectedDishIds([]);
+    setCreateSourceDishlistId(allDishlists[0]?.id || "saved");
     setCreateDishlistOpen(true);
   };
 
@@ -1596,16 +1607,57 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <div className="max-h-[58vh] space-y-4 overflow-y-auto pr-1">
-                    {allDishlists.map((dishlist) => (
-                      <div key={`create-${dishlist.id}`}>
-                        <div className="mb-2 text-sm font-semibold text-black">{dishlist.name}</div>
+                  <div className="max-h-[58vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {allDishlists.map((dishlist) => {
+                        const preview = [...(dishlist.dishes || [])].sort(() => Math.random() - 0.5).slice(0, 4);
+                        const selected = dishlist.id === createSourceDishlist?.id;
+                        return (
+                          <button
+                            key={`create-${dishlist.id}`}
+                            type="button"
+                            onClick={() => setCreateSourceDishlistId(dishlist.id)}
+                            className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
+                              selected ? "border-[#2BD36B] bg-[#F4FFF7]" : "border-black/10 bg-white"
+                            }`}
+                          >
+                            <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {Array.from({ length: 4 }).map((_, index) => {
+                                const dish = preview[index];
+                                return dish ? (
+                                  <img
+                                    key={`${dishlist.id}-${dish.id}-${index}`}
+                                    src={getDishImageUrl(dish, "thumb")}
+                                    alt={dish.name || dishlist.name}
+                                    className="aspect-square w-full rounded-[0.85rem] object-cover"
+                                    loading="lazy"
+                                    decoding="async"
+                                    onError={(event) => {
+                                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                    }}
+                                  />
+                                ) : (
+                                  <div
+                                    key={`${dishlist.id}-empty-${index}`}
+                                    className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                                  />
+                                );
+                              })}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {createSourceDishlist ? (
+                      <div className="mt-5">
+                        <div className="mb-2 text-sm font-semibold text-black">{createSourceDishlist.name}</div>
                         <div className="grid grid-cols-3 gap-2">
-                          {(dishlist.dishes || []).map((dish) => {
+                          {(createSourceDishlist.dishes || []).map((dish) => {
                             const selected = selectedDishIds.includes(dish.id);
                             return (
                               <button
-                                key={`${dishlist.id}-${dish.id}`}
+                                key={`${createSourceDishlist.id}-${dish.id}`}
                                 type="button"
                                 onClick={() => toggleDishSelection(dish)}
                                 className={`overflow-hidden rounded-[1rem] border text-left ${
@@ -1630,7 +1682,7 @@ export default function Profile() {
                           })}
                         </div>
                       </div>
-                    ))}
+                    ) : null}
                   </div>
                   <div className="mt-4 flex items-center justify-between gap-3">
                     <button
@@ -1666,6 +1718,77 @@ export default function Profile() {
         canDelete
         onDelete={handleDeleteStory}
       />
+      <AnimatePresence>
+        {removePreviewTarget ? (
+          <motion.div
+            className="fixed inset-0 z-[92] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setRemovePreviewTarget(null)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
+                    Remove Dish
+                  </p>
+                  <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
+                    Choose how to remove it
+                  </h3>
+                  <p className="mt-1 text-sm text-black/55">{removePreviewTarget.dish?.name || "dish"}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRemovePreviewTarget(null)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/60"
+                  aria-label="Close remove options"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {removePreviewTarget.source !== "uploaded" ? (
+                  <button
+                    type="button"
+                    onClick={() => confirmDishPreviewRemove("list")}
+                    className="flex items-center justify-between rounded-[1.25rem] border border-[#E7B0B0] bg-[#FFF5F5] px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-black">Remove from this dishlist only</div>
+                      <div className="mt-0.5 text-xs text-black/48">Keep it everywhere else</div>
+                    </div>
+                    <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white">
+                      <Minus size={16} />
+                    </div>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => confirmDishPreviewRemove("profile")}
+                  className="flex items-center justify-between rounded-[1.25rem] border border-[#D56A6A] bg-[#FFF1F1] px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-black">Remove from profile completely</div>
+                    <div className="mt-0.5 text-xs text-black/48">Delete it from your saved lists and profile</div>
+                  </div>
+                  <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#C93A3A] bg-[#C93A3A] text-white">
+                    <Trash2 size={16} />
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <AppToast message={toast} variant={toastVariant} />
       <AnimatePresence>
         {storyActionOpen && (

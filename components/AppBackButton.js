@@ -3,10 +3,19 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-export default function AppBackButton({ fallback = "/", label = "Back", className = "" }) {
+export default function AppBackButton({
+  fallback = "/",
+  label = "Back",
+  className = "",
+  preferFallback = false,
+}) {
   const router = useRouter();
 
   const goBack = () => {
+    if (preferFallback) {
+      router.push(fallback);
+      return;
+    }
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;

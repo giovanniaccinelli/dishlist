@@ -101,6 +101,7 @@ export default function DishDetail() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
+  const [lockedDishlistIds, setLockedDishlistIds] = useState([]);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -219,10 +220,31 @@ export default function DishDetail() {
       );
       setDishlists(nextLists);
       setSelectedDishlistIds(["saved"]);
+      setLockedDishlistIds([]);
     } finally {
       setDishlistsLoading(false);
     }
     return { skipToast: true };
+  };
+
+  const handleManageDishlists = async (dishToAdd) => {
+    if (!userId || !dishToAdd?.id) return;
+    setDishlistPickerDish(dishToAdd);
+    setDishlistPickerOpen(true);
+    setDishlistsLoading(true);
+    try {
+      const nextLists = (await getAllDishlistsForUser(userId)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
+      const memberships = nextLists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dishToAdd.id))
+        .map((dishlist) => dishlist.id);
+      setDishlists(nextLists);
+      setSelectedDishlistIds(memberships);
+      setLockedDishlistIds(memberships);
+    } finally {
+      setDishlistsLoading(false);
+    }
   };
 
   const handleUpgrade = async (dishToUpgrade) => {
@@ -279,11 +301,25 @@ export default function DishDetail() {
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
+  const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist";
   const canManageOwnDish = Boolean(userId && orderedList[0]?.owner === userId);
   const canEditFromThisView = canManageOwnDish && !isSavedSource && !isToTrySource;
   const isForeignProfileContext = Boolean(profileId && profileId !== userId);
   const shouldUsePublicActions = isPublicSource || isForeignProfileContext;
-  const shouldUseStoryActions = !shouldUsePublicActions && (canManageOwnDish || ((isSavedSource || isToTrySource) && !isForeignProfileContext));
+  const shouldUseStoryActions =
+    !shouldUsePublicActions && (canManageOwnDish || ((isSavedListSource || isToTrySource) && !isForeignProfileContext));
+  const backFallback = (() => {
+    const params = new URLSearchParams();
+    if (source === "dishlist" && listId) {
+      params.set("list", listId);
+    } else if (source && source !== "public") {
+      params.set("list", source);
+    }
+    if (profileId) {
+      return `/profile/${profileId}${params.toString() ? `?${params.toString()}` : ""}`;
+    }
+    return `/profile${params.toString() ? `?${params.toString()}` : ""}`;
+  })();
 
   const toggleEditTag = (tag) => {
     setEditTags((prev) => {
@@ -464,6 +500,7 @@ export default function DishDetail() {
     if (ok) {
       setDishlistPickerOpen(false);
       setDishlistPickerDish(null);
+      setLockedDishlistIds([]);
     }
   };
 
@@ -502,7 +539,7 @@ export default function DishDetail() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
-        <AppBackButton fallback="/" />
+        <AppBackButton fallback={backFallback} preferFallback />
         <div className="w-[74px]" />
       </div>
 
@@ -523,6 +560,7 @@ export default function DishDetail() {
             }
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
+            onTertiaryAction={!isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
             onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
             actionOnRightSwipe={!shouldUsePublicActions}
             dismissOnAction={shouldUsePublicActions ? false : isPublicSource}
@@ -538,6 +576,8 @@ export default function DishDetail() {
                   ? "add-action-btn w-14 h-14"
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
             }
+            tertiaryActionLabel={!isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
+            tertiaryActionClassName="add-action-btn w-14 h-14"
             secondaryActionClassName={
               canEditFromThisView
                 ? "min-w-[104px] px-4 py-3 rounded-[1rem] border-2 border-white/75 bg-black/22 text-white text-[12px] font-black uppercase tracking-[0.12em] backdrop-blur-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]"
@@ -819,11 +859,13 @@ export default function DishDetail() {
         onClose={() => {
           setDishlistPickerOpen(false);
           setDishlistPickerDish(null);
+          setLockedDishlistIds([]);
         }}
         lists={dishlists}
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={selectedDishlistIds}
+        lockedIds={lockedDishlistIds}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

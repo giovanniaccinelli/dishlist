@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -29,14 +29,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   onRightSwipe,
   onSavesPress,
   onSharePress,
+  onTertiaryAction,
   actionOnRightSwipe = true,
   dismissOnAction = true,
   onSecondaryAction,
+  dismissOnTertiaryAction = false,
   dismissOnSecondaryAction = true,
   actionLabel = "+",
   secondaryActionLabel,
+  tertiaryActionLabel,
   actionClassName,
   secondaryActionClassName,
+  tertiaryActionClassName,
   actionToast,
   secondaryActionToast,
   rightSwipeToast = "Added to To Try",
@@ -337,6 +341,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       });
   };
 
+  const handleTertiaryActionPress = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (disabled || isEjecting) return;
+    if (typeof onTertiaryAction !== "function") return;
+    const card = currentCard;
+    if (dismissOnTertiaryAction) advanceCard();
+    dragX.set(0);
+    Promise.resolve(onTertiaryAction(card)).catch((err) => {
+      console.error("Deck tertiary action failed:", err);
+      setToastVariant("error");
+      setToast("Action failed");
+      setTimeout(() => setToast(""), 1200);
+    });
+  };
+
   const handleStartOver = () => {
     if (typeof onResetFeed === "function") {
       onResetFeed();
@@ -570,12 +590,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onSharePress(currentCard);
               }}
               className="add-action-btn absolute z-30 w-14 h-14"
-              style={{ bottom: actionBottom, right: actionLabel ? 96 : 24 }}
+              style={{ bottom: actionBottom, right: tertiaryActionLabel ? 168 : actionLabel ? 96 : 24 }}
               aria-label="Share dish"
             >
               <CornerUpRight size={24} strokeWidth={2.1} />
             </button>
           )}
+          {tertiaryActionLabel ? (
+            <button
+              type="button"
+              data-no-drag="true"
+              onClick={handleTertiaryActionPress}
+              className={
+                tertiaryActionClassName ||
+                "add-action-btn absolute z-30 w-14 h-14"
+              }
+              style={{ bottom: actionBottom, right: actionLabel ? 168 : 96 }}
+              aria-label="Additional action"
+            >
+              {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
+            </button>
+          ) : null}
           <button
             type="button"
             data-no-drag="true"

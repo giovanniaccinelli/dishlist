@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -49,6 +49,8 @@ function StoryStatIcon({ size = 10 }) {
 
 export default function PublicProfile() {
   const { id } = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [profileUser, setProfileUser] = useState(null);
@@ -109,10 +111,26 @@ export default function PublicProfile() {
   }, [id, user]);
 
   useEffect(() => {
-    if (activeDishlistId === "saved" || activeDishlistId === "to_try") return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const queryDishlistId = params.get("list");
+    if (!queryDishlistId) return;
+    setActiveDishlistId(queryDishlistId);
+  }, []);
+
+  useEffect(() => {
+    if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("saved");
   }, [activeDishlistId, customDishlists]);
+
+  const selectDishlist = (dishlistId) => {
+    setActiveDishlistId(dishlistId);
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("list", dishlistId);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   // Follow/Unfollow handler
   const handleFollow = async () => {
@@ -199,6 +217,8 @@ export default function PublicProfile() {
     const pool =
       source === "uploaded"
         ? dishes
+        : source === "all_dishes"
+          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || []
         : source === "to_try"
           ? toTryDishes
           : source === "saved"
@@ -416,7 +436,7 @@ export default function PublicProfile() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveDishlistId(item.id)}
+              onClick={() => selectDishlist(item.id)}
               className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                 active
                   ? "border-black bg-black text-white"
@@ -619,7 +639,7 @@ export default function PublicProfile() {
                       key={dishlist.id}
                       type="button"
                       onClick={() => {
-                        setActiveDishlistId(dishlist.id);
+                        selectDishlist(dishlist.id);
                         setDishlistsOpen(false);
                       }}
                       className="rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"

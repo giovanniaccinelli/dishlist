@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../lib/auth";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   createCustomDishlist,
@@ -23,6 +23,7 @@ import {
   markStoryViewed,
   deleteStory,
   removeDishFromToTry,
+  removeDishFromCustomDishlist,
   removeSavedDishFromUser,
   getStoryPushStatsForUser,
 } from "../lib/firebaseHelpers";
@@ -65,6 +66,7 @@ export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProfileModal, setEditProfileModal] = useState(false);
@@ -239,10 +241,26 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (activeDishlistId === "saved" || activeDishlistId === "all_dishes") return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const queryDishlistId = params.get("list");
+    if (!queryDishlistId) return;
+    setActiveDishlistId(queryDishlistId);
+  }, []);
+
+  useEffect(() => {
+    if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("saved");
   }, [activeDishlistId, customDishlists]);
+
+  const selectDishlist = (dishlistId) => {
+    setActiveDishlistId(dishlistId);
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("list", dishlistId);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const handleStoryViewed = async (story) => {
     if (!user?.uid || !story?.id) return;
@@ -454,6 +472,8 @@ export default function Profile() {
     const pool =
       source === "uploaded"
         ? uploadedDishes
+        : source === "all_dishes"
+          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || []
         : source === "to_try"
           ? toTryDishes
           : source === "saved"
@@ -469,6 +489,89 @@ export default function Profile() {
       return;
     }
     router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle`);
+  };
+
+  const removeDishFromProfileOnly = async (dish) => {
+    const customMemberships = customDishlists.filter((dishlist) =>
+      (dishlist.dishes || []).some((item) => item.id === dish.id)
+    );
+    await Promise.all(customMemberships.map((dishlist) => removeDishFromCustomDishlist(user.uid, dishlist.id, dish.id)));
+    const savedMembership = savedDishes.some((item) => item.id === dish.id);
+    const toTryMembership = toTryDishes.some((item) => item.id === dish.id);
+    if (savedMembership) await removeSavedDishFromUser(user.uid, dish.id);
+    if (toTryMembership) await removeDishFromToTry(user.uid, dish.id);
+    if (dish.owner === user.uid) {
+      await deleteDishAndImage(
+        dish.id,
+        dish.imageURL || dish.imageUrl || dish.image_url || dish.image
+      );
+      await removeDishFromAllUsers(dish.id);
+    }
+    const [refreshedUploaded, refreshedSaved, refreshedToTry] = await Promise.all([
+      getDishesFromFirestore(user.uid),
+      getSavedDishesFromFirestore(user.uid),
+      getToTryDishesFromFirestore(user.uid),
+    ]);
+    setUploadedDishes(refreshedUploaded);
+    setSavedDishes(refreshedSaved);
+    setToTryDishes(refreshedToTry);
+    await refreshCustomDishlists(user.uid);
+  };
+
+  const handleDishPreviewRemove = async (dish, source) => {
+    const choice = window.prompt(
+      'Type "list" to remove from this dishlist only, or "profile" to remove it completely from your profile.'
+    );
+    if (!choice) return;
+    const normalizedChoice = choice.trim().toLowerCase();
+    if (normalizedChoice === "profile") {
+      await removeDishFromProfileOnly(dish);
+      setToastVariant("success");
+      setToast("Removed from profile");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
+    if (normalizedChoice !== "list") return;
+    if (source === "saved") {
+      await handleRemoveSavedDish(dish);
+      return;
+    }
+    if (source === "uploaded") {
+      await handleDeleteDish(dish);
+      return;
+    }
+    const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
+    if (customDishlist) {
+      const ok = await removeDishFromCustomDishlist(user.uid, customDishlist.id, dish.id);
+      if (ok) {
+        await refreshCustomDishlists(user.uid);
+        setToastVariant("success");
+        setToast("Removed from dishlist");
+        setTimeout(() => setToast(""), 1200);
+      }
+      return;
+    }
+    const allDishesMembership = [
+      savedDishes.some((item) => item.id === dish.id) ? "saved" : null,
+      ...customDishlists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
+        .map((dishlist) => dishlist.id),
+      dish.owner === user.uid ? "uploaded" : null,
+    ].filter(Boolean);
+    const firstMembership = allDishesMembership[0];
+    if (firstMembership === "saved") {
+      await handleRemoveSavedDish(dish);
+    } else if (firstMembership === "uploaded") {
+      await handleDeleteDish(dish);
+    } else if (firstMembership) {
+      const ok = await removeDishFromCustomDishlist(user.uid, firstMembership, dish.id);
+      if (ok) {
+        await refreshCustomDishlists(user.uid);
+        setToastVariant("success");
+        setToast("Removed from dishlist");
+        setTimeout(() => setToast(""), 1200);
+      }
+    }
   };
 
   const openConnections = async (type) => {
@@ -565,7 +668,7 @@ export default function Profile() {
       const dishlistId = await createCustomDishlist(user.uid, newDishlistName, selectedCreateDishes);
       await refreshCustomDishlists(user.uid);
       if (dishlistId) {
-        setActiveDishlistId(dishlistId);
+        selectDishlist(dishlistId);
       }
       setCreateDishlistOpen(false);
       setToastVariant("success");
@@ -687,7 +790,7 @@ export default function Profile() {
                         handleDeleteDish(dish);
                       }
                     }}
-                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
+                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-100 transition"
                   >
                     Remove
                   </button>
@@ -857,7 +960,7 @@ export default function Profile() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveDishlistId(item.id)}
+              onClick={() => selectDishlist(item.id)}
               className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                 active
                   ? "border-black bg-black text-white"
@@ -883,13 +986,7 @@ export default function Profile() {
         dishes={activeDishlist?.dishes || []}
         allowDelete={false}
         source={activeDishlist?.type === "custom" ? "dishlist" : activeDishlist?.id || "saved"}
-        onRemovePreview={
-          activeDishlistId === "saved"
-            ? handleRemoveSavedDish
-            : activeDishlistId === "to_try"
-              ? handleRemoveToTryDish
-              : undefined
-        }
+        onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
       />
 
       {/* Add Dish button */}
@@ -1388,7 +1485,7 @@ export default function Profile() {
                       key={dishlist.id}
                       type="button"
                       onClick={() => {
-                        setActiveDishlistId(dishlist.id);
+                        selectDishlist(dishlist.id);
                         setDishlistsOpen(false);
                       }}
                       className="rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"

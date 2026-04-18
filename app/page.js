@@ -12,17 +12,20 @@ import {
   addDishToToTryList,
   createDishForUser,
   getAllDishesFromFirestore,
+  getAllDishlistsForUser,
   getDishesFromFirestore,
   getFollowingForUser,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getUsersWhoSavedDish,
   recountDishSavesFromUsers,
+  saveDishToSelectedDishlist,
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
 import { ChevronLeft, ChevronRight, CircleUserRound, Funnel, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
+import DishlistPickerModal from "../components/DishlistPickerModal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
@@ -56,6 +59,10 @@ export default function Feed() {
   const [saversUsers, setSaversUsers] = useState([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareDish, setShareDish] = useState(null);
+  const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
+  const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
+  const [dishlists, setDishlists] = useState([]);
+  const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
@@ -390,18 +397,18 @@ export default function Feed() {
         return true;
       }
       setShowAuthPrompt(true);
-      return false;
+      return { skipToast: true };
     }
-    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
-    if (!saved) return false;
-    setAddedDishIds((prev) => {
-      const next = new Set(prev);
-      next.add(dishToAdd.id);
-      return next;
-    });
-    setForYouDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
-    setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
-    return true;
+    setDishlistPickerDish(dishToAdd);
+    setDishlistPickerOpen(true);
+    setDishlistsLoading(true);
+    try {
+      const nextLists = await getAllDishlistsForUser(userId);
+      setDishlists(nextLists);
+    } finally {
+      setDishlistsLoading(false);
+    }
+    return { skipToast: true };
   };
 
   const handleRightSwipeToTry = async (dishToAdd) => {
@@ -458,6 +465,22 @@ export default function Feed() {
     }
     setShareDish(dish);
     setShareOpen(true);
+  };
+
+  const handleDishlistSelect = async (dishlist) => {
+    if (!userId || !dishlist?.id || !dishlistPickerDish?.id) return;
+    const dishToAdd = dishlistPickerDish;
+    const ok = await saveDishToSelectedDishlist(userId, dishlist.id, dishToAdd);
+    if (!ok) return;
+    setDishlistPickerOpen(false);
+    setDishlistPickerDish(null);
+    setAddedDishIds((prev) => {
+      const next = new Set(prev);
+      next.add(dishToAdd.id);
+      return next;
+    });
+    setForYouDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+    setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
   };
 
   if (loading || loadingDishes) {
@@ -572,7 +595,7 @@ export default function Feed() {
             currentUser={user}
             fitHeight
             actionOnRightSwipe={false}
-            dismissOnAction
+            dismissOnAction={false}
             actionLabel="+"
             actionClassName="add-action-btn w-14 h-14 text-[36px]"
             actionToast="Added to DishList"
@@ -624,7 +647,7 @@ export default function Feed() {
               currentUser={user}
               fitHeight
               actionOnRightSwipe={false}
-              dismissOnAction
+              dismissOnAction={false}
               actionLabel="+"
               actionClassName="add-action-btn w-14 h-14 text-[36px]"
               actionToast="Added to DishList"
@@ -742,6 +765,17 @@ export default function Feed() {
         onClose={() => setShareOpen(false)}
         dish={shareDish}
         currentUser={user}
+      />
+      <DishlistPickerModal
+        open={dishlistPickerOpen}
+        onClose={() => {
+          setDishlistPickerOpen(false);
+          setDishlistPickerDish(null);
+        }}
+        lists={dishlists}
+        dishName={dishlistPickerDish?.name || "dish"}
+        onSelect={handleDishlistSelect}
+        loading={dishlistsLoading}
       />
       <BottomNav />
     </div>

@@ -279,10 +279,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
     Promise.resolve(onAction(card))
       .then((result) => {
+        if (result && typeof result === "object" && result.skipToast) {
+          return;
+        }
         if (result === false) {
-          setToastVariant("error");
-          setToast("Action failed");
-          setTimeout(() => setToast(""), 1200);
           return;
         }
         setToastVariant("success");

@@ -70,6 +70,89 @@ function normalizeTags(tags) {
   return Array.from(new Set(cleaned)).slice(0, 6);
 }
 
+function buildDishPayload(dishId, dishData = null) {
+  return dishData
+    ? {
+        dishId,
+        name: dishData.name || "",
+        description: dishData.description || "",
+        recipeIngredients: dishData.recipeIngredients || "",
+        recipeMethod: dishData.recipeMethod || "",
+        tags: normalizeTags(dishData.tags),
+        isPublic: dishData.isPublic !== false,
+        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
+        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
+        imageURL:
+          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
+        owner: dishData.owner || "",
+        ownerName: dishData.ownerName || "",
+        ownerPhotoURL: dishData.ownerPhotoURL || "",
+        createdAt: dishData.createdAt || new Date(),
+      }
+    : { dishId, createdAt: new Date() };
+}
+
+async function hydrateDishPayload(dishId, payload) {
+  if (payload?.name) return payload;
+  try {
+    const dishSnap = await getDoc(doc(db, "dishes", dishId));
+    if (!dishSnap.exists()) return payload;
+    const data = dishSnap.data();
+    return {
+      dishId,
+      name: data.name || payload?.name || "",
+      description: data.description || payload?.description || "",
+      recipeIngredients: data.recipeIngredients || payload?.recipeIngredients || "",
+      recipeMethod: data.recipeMethod || payload?.recipeMethod || "",
+      tags: normalizeTags(data.tags || payload?.tags),
+      isPublic: data.isPublic !== false,
+      cardURL: data.cardURL || data.imageURL || data.imageUrl || payload?.cardURL || "",
+      thumbURL:
+        data.thumbURL || data.thumbnailURL || data.cardURL || data.imageURL || payload?.thumbURL || "",
+      imageURL:
+        data.imageURL || data.imageUrl || data.image_url || data.image || payload?.imageURL || "",
+      owner: data.owner || payload?.owner || "",
+      ownerName: data.ownerName || payload?.ownerName || "",
+      ownerPhotoURL: data.ownerPhotoURL || payload?.ownerPhotoURL || "",
+      createdAt: data.createdAt || payload?.createdAt || new Date(),
+    };
+  } catch (err) {
+    console.warn("Failed to hydrate dish payload, continuing:", err);
+    return payload;
+  }
+}
+
+function normalizeDishlistName(name) {
+  return String(name || "").trim().slice(0, 40);
+}
+
+function customDishlistsCollection(userId) {
+  return collection(db, "users", userId, "dishlists");
+}
+
+function customDishlistDoc(userId, dishlistId) {
+  return doc(db, "users", userId, "dishlists", dishlistId);
+}
+
+function customDishlistItemsCollection(userId, dishlistId) {
+  return collection(db, "users", userId, "dishlists", dishlistId, "items");
+}
+
+function customDishlistItemDoc(userId, dishlistId, dishId) {
+  return doc(db, "users", userId, "dishlists", dishlistId, "items", dishId);
+}
+
+function makeSystemDishlist(id, name, dishes) {
+  return {
+    id,
+    name,
+    type: "system",
+    dishes,
+    dishIds: dishes.map((dish) => dish.id).filter(Boolean),
+    count: dishes.length,
+  };
+}
+
 async function enrichWithOwnerPhotos(items) {
   if (!Array.isArray(items) || items.length === 0) return items;
   const ownerIds = Array.from(new Set(items.map((i) => i.owner).filter(Boolean)));
@@ -296,54 +379,8 @@ export async function getDishesFromFirestore(userId) {
 export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
   if (!userId || !dishId) throw new Error("Missing userId or dishId");
 
-  let payload = dishData
-    ? {
-        dishId,
-        name: dishData.name || "",
-        description: dishData.description || "",
-        recipeIngredients: dishData.recipeIngredients || "",
-        recipeMethod: dishData.recipeMethod || "",
-        tags: normalizeTags(dishData.tags),
-        isPublic: dishData.isPublic !== false,
-        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
-        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
-        imageURL:
-          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
-        owner: dishData.owner || "",
-        ownerName: dishData.ownerName || "",
-        ownerPhotoURL: dishData.ownerPhotoURL || "",
-        createdAt: new Date(),
-      }
-    : { dishId, createdAt: new Date() };
-
-  // If payload is missing core fields, fetch from dishes/{id} to guarantee a complete saved card
-  if (!payload.name) {
-    try {
-      const dishSnap = await getDoc(doc(db, "dishes", dishId));
-      if (dishSnap.exists()) {
-        const data = dishSnap.data();
-        payload = {
-          dishId,
-          name: data.name || payload.name || "",
-          description: data.description || payload.description || "",
-          recipeIngredients: data.recipeIngredients || payload.recipeIngredients || "",
-          recipeMethod: data.recipeMethod || payload.recipeMethod || "",
-          tags: normalizeTags(data.tags || payload.tags),
-          isPublic: data.isPublic !== false,
-          cardURL: data.cardURL || data.imageURL || data.imageUrl || payload.cardURL || "",
-          thumbURL: data.thumbURL || data.thumbnailURL || data.cardURL || data.imageURL || payload.thumbURL || "",
-          imageURL:
-            data.imageURL || data.imageUrl || data.image_url || data.image || payload.imageURL || "",
-          owner: data.owner || payload.owner || "",
-          ownerName: data.ownerName || payload.ownerName || "",
-          ownerPhotoURL: data.ownerPhotoURL || payload.ownerPhotoURL || "",
-          createdAt: data.createdAt || payload.createdAt || new Date(),
-        };
-      }
-    } catch (err) {
-      console.warn("Failed to hydrate saved dish payload, continuing:", err);
-    }
-  }
+  let payload = buildDishPayload(dishId, dishData);
+  payload = await hydrateDishPayload(dishId, payload);
 
   // Persist the saved dish doc (source of truth) with a short verify + retry
   const savedRef = doc(db, "users", userId, "saved", dishId);
@@ -434,25 +471,7 @@ export async function clearSwipedDishesForUser(userId) {
 export async function saveDishToUserList(userId, dishId, dishData = null) {
   if (!userId || !dishId) return false;
 
-  const payload = dishData
-    ? {
-        dishId,
-        name: dishData.name || "",
-        description: dishData.description || "",
-        recipeIngredients: dishData.recipeIngredients || "",
-        recipeMethod: dishData.recipeMethod || "",
-        tags: normalizeTags(dishData.tags),
-        isPublic: dishData.isPublic !== false,
-        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
-        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
-        imageURL:
-          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
-        owner: dishData.owner || "",
-        ownerName: dishData.ownerName || "",
-        ownerPhotoURL: dishData.ownerPhotoURL || "",
-        createdAt: dishData.createdAt || new Date(),
-      }
-    : { dishId, createdAt: new Date() };
+  const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
 
   const userRef = doc(db, "users", userId);
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
@@ -474,25 +493,7 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
 export async function addDishToToTryList(userId, dishId, dishData = null) {
   if (!userId || !dishId) return false;
 
-  const payload = dishData
-    ? {
-        dishId,
-        name: dishData.name || "",
-        description: dishData.description || "",
-        recipeIngredients: dishData.recipeIngredients || "",
-        recipeMethod: dishData.recipeMethod || "",
-        tags: normalizeTags(dishData.tags),
-        isPublic: dishData.isPublic !== false,
-        cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
-        thumbURL: dishData.thumbURL || dishData.thumbnailURL || dishData.cardURL || dishData.imageURL || "",
-        imageURL:
-          dishData.imageURL || dishData.imageUrl || dishData.image_url || dishData.image || "",
-        owner: dishData.owner || "",
-        ownerName: dishData.ownerName || "",
-        ownerPhotoURL: dishData.ownerPhotoURL || "",
-        createdAt: dishData.createdAt || new Date(),
-      }
-    : { dishId, createdAt: new Date() };
+  const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
 
   const userRef = doc(db, "users", userId);
   const toTryDocRef = doc(db, "users", userId, "toTry", dishId);
@@ -540,6 +541,133 @@ export async function getToTryDishesFromFirestore(userId) {
     const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
     return enrichWithOwnerPhotos(results);
   });
+}
+
+export async function getCustomDishlistsForUser(userId) {
+  if (!userId) return [];
+  return cachedRead(`user:${userId}:customDishlists`, async () => {
+    const snapshot = await getDocs(customDishlistsCollection(userId));
+    const items = await Promise.all(
+      snapshot.docs.map(async (dishlistDoc) => {
+        const data = dishlistDoc.data() || {};
+        const itemSnap = await getDocs(customDishlistItemsCollection(userId, dishlistDoc.id));
+        const dishes = itemSnap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
+        const enriched = await enrichWithOwnerPhotos(dishes);
+        return {
+          id: dishlistDoc.id,
+          name: data.name || "Dishlist",
+          type: "custom",
+          createdAt: data.createdAt || null,
+          updatedAt: data.updatedAt || null,
+          dishIds: enriched.map((dish) => dish.id).filter(Boolean),
+          count: enriched.length,
+          dishes: enriched,
+        };
+      })
+    );
+    return items.sort((a, b) => {
+      const aTime = a?.updatedAt?.seconds || a?.createdAt?.seconds || 0;
+      const bTime = b?.updatedAt?.seconds || b?.createdAt?.seconds || 0;
+      return bTime - aTime;
+    });
+  });
+}
+
+export async function getCustomDishlistDishes(userId, dishlistId) {
+  if (!userId || !dishlistId) return [];
+  return cachedRead(`user:${userId}:customDishlist:${dishlistId}`, async () => {
+    const snapshot = await getDocs(customDishlistItemsCollection(userId, dishlistId));
+    const dishes = snapshot.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
+    return enrichWithOwnerPhotos(dishes);
+  });
+}
+
+export async function getAllDishlistsForUser(userId) {
+  if (!userId) return [];
+  const [saved, toTry, custom] = await Promise.all([
+    getSavedDishesFromFirestore(userId),
+    getToTryDishesFromFirestore(userId),
+    getCustomDishlistsForUser(userId),
+  ]);
+  return [makeSystemDishlist("saved", "My DishList", saved), makeSystemDishlist("to_try", "To Try", toTry), ...custom];
+}
+
+export async function createCustomDishlist(userId, name, initialDishes = []) {
+  const cleanedName = normalizeDishlistName(name);
+  if (!userId || !cleanedName) return null;
+  const dishlistRef = doc(customDishlistsCollection(userId));
+  const now = serverTimestamp();
+  const uniqueDishes = Array.from(
+    new Map(
+      initialDishes
+        .filter((dish) => dish?.id)
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
+  await setDoc(dishlistRef, {
+    name: cleanedName,
+    createdAt: now,
+    updatedAt: now,
+    dishIds: uniqueDishes.map((dish) => dish.id),
+  });
+  if (uniqueDishes.length) {
+    const batch = writeBatch(db);
+    for (const dish of uniqueDishes) {
+      const payload = await hydrateDishPayload(dish.id, buildDishPayload(dish.id, dish));
+      batch.set(customDishlistItemDoc(userId, dishlistRef.id, dish.id), payload, { merge: true });
+    }
+    await batch.commit();
+  }
+  clearReadCache(userId);
+  return dishlistRef.id;
+}
+
+export async function addDishToCustomDishlist(userId, dishlistId, dishId, dishData = null) {
+  if (!userId || !dishlistId || !dishId) return false;
+  const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
+  try {
+    await setDoc(
+      customDishlistDoc(userId, dishlistId),
+      {
+        updatedAt: serverTimestamp(),
+        dishIds: arrayUnion(dishId),
+      },
+      { merge: true }
+    );
+    await setDoc(customDishlistItemDoc(userId, dishlistId, dishId), payload, { merge: true });
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to add dish to custom dishlist:", err);
+    return false;
+  }
+}
+
+export async function removeDishFromCustomDishlist(userId, dishlistId, dishId) {
+  if (!userId || !dishlistId || !dishId) return false;
+  try {
+    await setDoc(
+      customDishlistDoc(userId, dishlistId),
+      {
+        updatedAt: serverTimestamp(),
+        dishIds: arrayRemove(dishId),
+      },
+      { merge: true }
+    );
+    await deleteDoc(customDishlistItemDoc(userId, dishlistId, dishId));
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to remove dish from custom dishlist:", err);
+    return false;
+  }
+}
+
+export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
+  if (!userId || !dishData?.id || !dishlistId) return false;
+  if (dishlistId === "saved") return saveDishToUserList(userId, dishData.id, dishData);
+  if (dishlistId === "to_try") return addDishToToTryList(userId, dishData.id, dishData);
+  return addDishToCustomDishlist(userId, dishlistId, dishData.id, dishData);
 }
 
 export async function getUsersWhoSavedDish(dishId) {

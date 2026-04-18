@@ -18,6 +18,8 @@ import {
   deleteDishAndImage,
   deleteImageByUrl,
   getAllDishesFromFirestore,
+  getAllDishlistsForUser,
+  getCustomDishlistDishes,
   getDishesFromFirestore,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
@@ -26,7 +28,7 @@ import {
   removeDishFromAllUsers,
   removeDishFromToTry,
   removeSavedDishFromUser,
-  saveDishToUserList,
+  saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
   upgradeToMyDishlist,
   updateDishAndSavedCopies,
@@ -35,6 +37,7 @@ import {
 import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
+import DishlistPickerModal from "../../../components/DishlistPickerModal";
 
 function StoryActionIcon() {
   return (
@@ -65,6 +68,7 @@ export default function DishDetail() {
   const source = searchParams.get("source") || "saved";
   const mode = searchParams.get("mode") || "single";
   const profileId = searchParams.get("profileId");
+  const listId = searchParams.get("listId");
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const listOwnerId = profileId || userId;
@@ -92,6 +96,10 @@ export default function DishDetail() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareDish, setShareDish] = useState(null);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
+  const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
+  const [dishlists, setDishlists] = useState([]);
+  const [dishlistsLoading, setDishlistsLoading] = useState(false);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -114,6 +122,8 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "dishlist" && listId) {
+        items = await getCustomDishlistDishes(listOwnerId, listId);
       } else if (source === "uploaded") {
         items = await getDishesFromFirestore(listOwnerId);
       } else if (source === "to_try") {
@@ -154,7 +164,7 @@ export default function DishDetail() {
       }
       setLoadingDish(false);
     })();
-  }, [dishId, listOwnerId, source, mode]);
+  }, [dishId, listOwnerId, source, mode, listId]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
@@ -194,10 +204,18 @@ export default function DishDetail() {
   const handleAdd = async (dishToAdd) => {
     if (!userId) {
       alert("Please sign in to save dishes.");
-      return false;
+      return { skipToast: true };
     }
-    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
-    return Boolean(saved);
+    setDishlistPickerDish(dishToAdd);
+    setDishlistPickerOpen(true);
+    setDishlistsLoading(true);
+    try {
+      const nextLists = await getAllDishlistsForUser(userId);
+      setDishlists(nextLists);
+    } finally {
+      setDishlistsLoading(false);
+    }
+    return { skipToast: true };
   };
 
   const handleUpgrade = async (dishToUpgrade) => {
@@ -218,6 +236,8 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         items = all.filter((d) => d.isPublic !== false);
+      } else if (source === "dishlist" && listId) {
+        items = await getCustomDishlistDishes(listOwnerId, listId);
       } else if (source === "uploaded") {
         items = await getDishesFromFirestore(listOwnerId);
       } else if (source === "to_try") {
@@ -420,6 +440,18 @@ export default function DishDetail() {
     return ok;
   };
 
+  const handleDishlistSelect = async (dishlist) => {
+    if (!userId || !dishlist?.id || !dishlistPickerDish?.id) return;
+    const ok = await saveDishToSelectedDishlist(userId, dishlist.id, dishlistPickerDish);
+    setPageToastVariant(ok ? "success" : "error");
+    setPageToast(ok ? "Added to DishList" : "Save failed");
+    setTimeout(() => setPageToast(""), 1200);
+    if (ok) {
+      setDishlistPickerOpen(false);
+      setDishlistPickerDish(null);
+    }
+  };
+
   const goToNextEditStep = () => {
     if (editStep === 0 && !editName.trim()) {
       alert("Dish name is required.");
@@ -478,7 +510,7 @@ export default function DishDetail() {
             onSharePress={handleShare}
             onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
             actionOnRightSwipe={!shouldUsePublicActions}
-            dismissOnAction={isPublicSource}
+            dismissOnAction={shouldUsePublicActions ? false : isPublicSource}
             onAuthRequired={() => alert("Please sign in to comment.")}
             actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
             secondaryActionLabel={
@@ -766,6 +798,17 @@ export default function DishDetail() {
         onClose={() => setShareOpen(false)}
         dish={shareDish}
         currentUser={user}
+      />
+      <DishlistPickerModal
+        open={dishlistPickerOpen}
+        onClose={() => {
+          setDishlistPickerOpen(false);
+          setDishlistPickerDish(null);
+        }}
+        lists={dishlists}
+        dishName={dishlistPickerDish?.name || "dish"}
+        onSelect={handleDishlistSelect}
+        loading={dishlistsLoading}
       />
 
       <BottomNav />

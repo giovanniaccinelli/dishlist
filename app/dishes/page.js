@@ -7,11 +7,12 @@ import BottomNav from "../../components/BottomNav";
 import { DishGridLoading, DishInlineLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import {
+  getAllDishlistsForUser,
   getAllDishesFromFirestore,
   getDishesPage,
   publishDishAsStory,
   getUsersWhoSavedDish,
-  saveDishToUserList,
+  saveDishToSelectedDishlist,
 } from "../lib/firebaseHelpers";
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
@@ -21,6 +22,7 @@ import { CircleUserRound, Plus, Send } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
+import DishlistPickerModal from "../../components/DishlistPickerModal";
 
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
@@ -140,6 +142,10 @@ export default function Dishes() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
+  const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
+  const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
+  const [dishlists, setDishlists] = useState([]);
+  const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
@@ -417,17 +423,43 @@ export default function Dishes() {
       setShowAuthPrompt(true);
       return;
     }
-    const saved = storyPicker
-      ? await publishDishAsStory(user.uid, dish)
-      : await saveDishToUserList(user.uid, dish.id, dish);
-    if (!saved) {
-      setToastVariant("error");
-      setToast(storyPicker ? "Story failed" : "Save failed");
+    if (storyPicker) {
+      const saved = await publishDishAsStory(user.uid, dish);
+      if (!saved) {
+        setToastVariant("error");
+        setToast("Story failed");
+        setTimeout(() => setToast(""), 1200);
+        return;
+      }
+      setToastVariant("success");
+      setToast("Added to Story");
       setTimeout(() => setToast(""), 1200);
       return;
     }
+    setDishlistPickerDish(dish);
+    setDishlistPickerOpen(true);
+    setDishlistsLoading(true);
+    try {
+      const nextLists = await getAllDishlistsForUser(user.uid);
+      setDishlists(nextLists);
+    } finally {
+      setDishlistsLoading(false);
+    }
+  };
+
+  const handleDishlistSelect = async (dishlist) => {
+    if (!user?.uid || !dishlist?.id || !dishlistPickerDish?.id) return;
+    const saved = await saveDishToSelectedDishlist(user.uid, dishlist.id, dishlistPickerDish);
+    if (!saved) {
+      setToastVariant("error");
+      setToast("Save failed");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
+    setDishlistPickerOpen(false);
+    setDishlistPickerDish(null);
     setToastVariant("success");
-    setToast(storyPicker ? "Added to Story" : "Added to DishList");
+    setToast("Added to DishList");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -711,6 +743,17 @@ export default function Dishes() {
         loading={saversLoading}
         users={saversUsers}
         currentUserId={user?.uid}
+      />
+      <DishlistPickerModal
+        open={dishlistPickerOpen}
+        onClose={() => {
+          setDishlistPickerOpen(false);
+          setDishlistPickerDish(null);
+        }}
+        lists={dishlists}
+        dishName={dishlistPickerDish?.name || "dish"}
+        onSelect={handleDishlistSelect}
+        loading={dishlistsLoading}
       />
       <AppToast message={toast} variant={toastVariant} />
     </div>

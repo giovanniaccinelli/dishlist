@@ -6,6 +6,8 @@ import { useAuth } from "../lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  createCustomDishlist,
+  getCustomDishlistsForUser,
   uploadDishImageVariants,
   uploadProfileImage,
   deleteImageByUrl,
@@ -30,7 +32,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Plus, Search, Settings, Send, Shuffle } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Settings, Send, Shuffle } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -69,8 +71,15 @@ export default function Profile() {
   const [uploadedDishes, setUploadedDishes] = useState([]);
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
+  const [customDishlists, setCustomDishlists] = useState([]);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
-  const [profileTab, setProfileTab] = useState("my");
+  const [activeDishlistId, setActiveDishlistId] = useState("saved");
+  const [dishlistsOpen, setDishlistsOpen] = useState(false);
+  const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
+  const [newDishlistName, setNewDishlistName] = useState("");
+  const [createDishlistStep, setCreateDishlistStep] = useState(0);
+  const [selectedDishIds, setSelectedDishIds] = useState([]);
+  const [creatingDishlist, setCreatingDishlist] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
@@ -109,6 +118,12 @@ export default function Profile() {
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
+  const refreshCustomDishlists = async (ownerId = user?.uid) => {
+    if (!ownerId) return [];
+    const lists = await getCustomDishlistsForUser(ownerId);
+    setCustomDishlists(lists);
+    return lists;
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -124,10 +139,12 @@ export default function Profile() {
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const stories = await getActiveStoriesForUser(user.uid);
         const pushStats = await getStoryPushStatsForUser(user.uid);
+        const custom = await getCustomDishlistsForUser(user.uid);
         setUploadedDishes(uploaded);
         setToTryDishes(toTry);
         setActiveStories(stories);
         setStoryPushStats(pushStats);
+        setCustomDishlists(custom);
         if (userSnap.exists()) {
           const data = userSnap.data();
           setProfileMeta({
@@ -220,6 +237,12 @@ export default function Profile() {
       unsubscribeStoryPushes();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (activeDishlistId === "saved" || activeDishlistId === "to_try") return;
+    if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
+    setActiveDishlistId("saved");
+  }, [activeDishlistId, customDishlists]);
 
   const handleStoryViewed = async (story) => {
     if (!user?.uid || !story?.id) return;
@@ -427,13 +450,24 @@ export default function Profile() {
   };
 
   const openShuffleDeck = (source) => {
+    const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
     const pool =
-      source === "uploaded" ? uploadedDishes : source === "to_try" ? toTryDishes : savedDishes;
+      source === "uploaded"
+        ? uploadedDishes
+        : source === "to_try"
+          ? toTryDishes
+          : source === "saved"
+            ? savedDishes
+            : customDishlist?.dishes || [];
     if (!pool.length) {
       alert("No dishes to shuffle.");
       return;
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    if (customDishlist) {
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle`);
+      return;
+    }
     router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle`);
   };
 
@@ -470,6 +504,63 @@ export default function Profile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+
+  const allDishlists = [
+    { id: "saved", name: "My DishList", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: toTryDishes, count: toTryDishes.length },
+    ...customDishlists,
+  ];
+
+  const activeDishlist =
+    allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+
+  const selectedCreateDishes = Array.from(
+    new Map(
+      allDishlists
+        .flatMap((dishlist) => dishlist.dishes || [])
+        .filter((dish) => selectedDishIds.includes(dish.id))
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
+
+  const toggleDishSelection = (dish) => {
+    if (!dish?.id) return;
+    setSelectedDishIds((prev) =>
+      prev.includes(dish.id) ? prev.filter((id) => id !== dish.id) : [...prev, dish.id]
+    );
+  };
+
+  const handleOpenCreateDishlist = () => {
+    setDishlistsOpen(false);
+    setCreateDishlistStep(0);
+    setNewDishlistName("");
+    setSelectedDishIds([]);
+    setCreateDishlistOpen(true);
+  };
+
+  const handleCreateDishlist = async () => {
+    if (!user?.uid || creatingDishlist) return;
+    if (!newDishlistName.trim()) return;
+    setCreatingDishlist(true);
+    try {
+      const dishlistId = await createCustomDishlist(user.uid, newDishlistName, selectedCreateDishes);
+      await refreshCustomDishlists(user.uid);
+      if (dishlistId) {
+        setActiveDishlistId(dishlistId);
+      }
+      setCreateDishlistOpen(false);
+      setToastVariant("success");
+      setToast("Dishlist created");
+      setTimeout(() => setToast(""), 1200);
+    } catch (err) {
+      console.error("Failed to create dishlist:", err);
+      setToastVariant("error");
+      setToast("Dishlist creation failed");
+      setTimeout(() => setToast(""), 1400);
+    } finally {
+      setCreatingDishlist(false);
+    }
+  };
 
   const renderDishCounters = (dish) => (
     <div className="flex items-center gap-2 text-[10px] text-white/80">
@@ -536,7 +627,11 @@ export default function Profile() {
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
                 <Link
-                  href={`/dish/${dish.id}?source=${source}&mode=single`}
+                  href={
+                    source === "dishlist"
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single`
+                      : `/dish/${dish.id}?source=${source}&mode=single`
+                  }
                   className="absolute inset-0 z-10"
                 >
                   <span className="sr-only">Open dish</span>
@@ -733,128 +828,52 @@ export default function Profile() {
         ) : null}
       </div>
 
-      <div className="mb-5 flex justify-center">
-        <div className="relative flex items-end gap-10 border-b border-black/12">
-          <button
-            type="button"
-            onClick={() => setProfileTab("my")}
-            className={`relative pb-2 text-sm font-semibold transition ${
-              profileTab === "my" ? "text-black" : "text-black/45"
-            }`}
-          >
-            My DishList
-            {profileTab === "my" ? (
-              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#2BD36B]" />
-            ) : null}
-          </button>
-          <button
-            type="button"
-            onClick={() => setProfileTab("totry")}
-            className={`relative pb-2 text-sm font-semibold transition ${
-              profileTab === "totry" ? "text-black" : "text-black/45"
-            }`}
-          >
-            To Try
-            {profileTab === "totry" ? (
-              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-[#FACC15]" />
-            ) : null}
-          </button>
-        </div>
+      <div className="mb-6 flex items-center gap-2">
+        {[
+          { id: "saved", label: "My DishList" },
+          { id: "to_try", label: "To Try" },
+        ].map((item) => {
+          const active = activeDishlistId === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveDishlistId(item.id)}
+              className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                active
+                  ? "border-black bg-black text-white"
+                  : "border-black/18 bg-white/92 text-black"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setDishlistsOpen(true)}
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-black/18 bg-white/92 text-black"
+          aria-label="Open all dishlists"
+        >
+          <MoreHorizontal size={18} />
+        </button>
       </div>
 
-      {profileTab === "my" ? (
-        <>
-          <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
-          <DishGrid
-            title="Saved"
-            dishes={savedDishes}
-            allowDelete={false}
-            source="saved"
-            onRemovePreview={handleRemoveSavedDish}
-          />
-        </>
-      ) : (
-        <>
-          <div className="flex items-center justify-between mt-8 mb-4">
-            <h2 className="text-xl font-semibold">To Try</h2>
-            <button
-              onClick={() => openShuffleDeck("to_try")}
-              className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
-              disabled={toTryDishes.length === 0}
-            >
-              <Shuffle size={14} />
-              Shuffle
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {toTryDishes.length === 0 ? (
-              <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
-                No dishes in To Try.
-              </div>
-            ) : (
-              <AnimatePresence>
-                {toTryDishes.map((dish, index) => (
-                <motion.div
-                  key={`${dish.id}-${index}`}
-                  className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                  >
-                    <Link href={`/dish/${dish.id}?source=to_try&mode=single`} className="absolute inset-0 z-10">
-                      <span className="sr-only">Open To Try dish</span>
-                    </Link>
-                    {(() => {
-                      const imageSrc = getDishImageUrl(dish, "thumb");
-                      return (
-                        <img
-                          src={imageSrc}
-                          alt={dish.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-28 object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                          }}
-                        />
-                      );
-                    })()}
-                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                      <div className="text-[11px] font-semibold leading-tight truncate">
-                        {dish.name || "Untitled dish"}
-                      </div>
-                      {renderDishCounters(dish)}
-                      {Array.isArray(dish.tags) && dish.tags.length > 0 && (
-                        <div className="flex gap-1 overflow-hidden">
-                          {dish.tags.slice(0, 2).map((tag, idx) => (
-                            <span
-                              key={`${dish.id}-tag-${idx}`}
-                              className="px-1.5 py-0.5 rounded-full bg-white/20 text-[9px] leading-none truncate"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRemoveToTryDish(dish);
-                      }}
-                      className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition"
-                    >
-                      Remove
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            )}
-          </div>
-        </>
-      )}
+      <DishGrid
+        title={activeDishlist?.name || "My DishList"}
+        dishes={activeDishlist?.dishes || []}
+        allowDelete={false}
+        source={activeDishlist?.type === "custom" ? "dishlist" : activeDishlist?.id || "saved"}
+        onRemovePreview={
+          activeDishlistId === "saved"
+            ? handleRemoveSavedDish
+            : activeDishlistId === "to_try"
+              ? handleRemoveToTryDish
+              : undefined
+        }
+      />
+
+      <DishGrid title="Uploaded" dishes={uploadedDishes} allowDelete source="uploaded" />
 
       {/* Add Dish button */}
       <motion.button
@@ -1314,6 +1333,213 @@ export default function Profile() {
         users={saversUsers}
         currentUserId={user?.uid}
       />
+      <AnimatePresence>
+        {dishlistsOpen && (
+          <motion.div
+            className="fixed inset-0 z-[88] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDishlistsOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-white p-4 shadow-[0_30px_80px_rgba(0,0,0,0.18)]"
+              initial={{ y: 18, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 12, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                    Dishlists
+                  </div>
+                  <h3 className="mt-2 text-[1.7rem] leading-none font-semibold text-black">Your lists</h3>
+                </div>
+                <button type="button" onClick={() => setDishlistsOpen(false)} className="text-sm text-black/55">
+                  Close
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 max-h-[68vh] overflow-y-auto pr-1">
+                {allDishlists.map((dishlist) => {
+                  const preview = [...(dishlist.dishes || [])]
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 4);
+                  return (
+                    <button
+                      key={dishlist.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveDishlistId(dishlist.id);
+                        setDishlistsOpen(false);
+                      }}
+                      className="rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
+                    >
+                      <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {Array.from({ length: 4 }).map((_, index) => {
+                          const dish = preview[index];
+                          return dish ? (
+                            <img
+                              key={`${dishlist.id}-${dish.id}-${index}`}
+                              src={getDishImageUrl(dish, "thumb")}
+                              alt={dish.name || dishlist.name}
+                              className="aspect-square w-full rounded-[0.85rem] object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                          ) : (
+                            <div
+                              key={`${dishlist.id}-empty-${index}`}
+                              className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                            />
+                          );
+                        })}
+                      </div>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={handleOpenCreateDishlist}
+                  className="min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#2BD36B]/55 bg-[#F3FFF7] p-3 text-left"
+                >
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#176A37]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2BD36B] text-white">
+                      <Plus size={22} />
+                    </div>
+                    <div className="text-sm font-semibold">Create dishlist</div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {createDishlistOpen && (
+          <motion.div
+            className="fixed inset-0 z-[89] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              if (creatingDishlist) return;
+              setCreateDishlistOpen(false);
+            }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-white p-4 shadow-[0_30px_80px_rgba(0,0,0,0.18)]"
+              initial={{ y: 18, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 12, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                    New Dishlist
+                  </div>
+                  <h3 className="mt-2 text-[1.7rem] leading-none font-semibold text-black">
+                    {createDishlistStep === 0 ? "Name it" : "Add dishes"}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateDishlistOpen(false)}
+                  className="text-sm text-black/55"
+                >
+                  Close
+                </button>
+              </div>
+
+              {createDishlistStep === 0 ? (
+                <>
+                  <input
+                    type="text"
+                    value={newDishlistName}
+                    onChange={(event) => setNewDishlistName(event.target.value)}
+                    placeholder="Dishlist name"
+                    className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                  />
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newDishlistName.trim()) return;
+                        setCreateDishlistStep(1);
+                      }}
+                      className="rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="max-h-[58vh] space-y-4 overflow-y-auto pr-1">
+                    {allDishlists.map((dishlist) => (
+                      <div key={`create-${dishlist.id}`}>
+                        <div className="mb-2 text-sm font-semibold text-black">{dishlist.name}</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(dishlist.dishes || []).map((dish) => {
+                            const selected = selectedDishIds.includes(dish.id);
+                            return (
+                              <button
+                                key={`${dishlist.id}-${dish.id}`}
+                                type="button"
+                                onClick={() => toggleDishSelection(dish)}
+                                className={`overflow-hidden rounded-[1rem] border text-left ${
+                                  selected ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/35" : "border-black/10"
+                                }`}
+                              >
+                                <img
+                                  src={getDishImageUrl(dish, "thumb")}
+                                  alt={dish.name}
+                                  className="h-20 w-full object-cover"
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={(event) => {
+                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                  }}
+                                />
+                                <div className="px-2 py-1.5 text-[11px] font-semibold text-black truncate">
+                                  {dish.name || "Untitled dish"}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCreateDishlistStep(0)}
+                      className="rounded-full border border-black/12 px-4 py-3 text-sm font-medium text-black/72"
+                      disabled={creatingDishlist}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreateDishlist}
+                      disabled={creatingDishlist}
+                      className="rounded-full bg-[#2BD36B] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                      {creatingDishlist ? "Creating..." : `Create (${selectedCreateDishes.length})`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <StoryViewerModal
         open={storiesOpen}
         onClose={() => setStoriesOpen(false)}

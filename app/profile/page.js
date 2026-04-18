@@ -790,7 +790,7 @@ export default function Profile() {
                         handleDeleteDish(dish);
                       }
                     }}
-                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-100 transition"
+                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 group-active:opacity-100 focus:opacity-100 transition"
                   >
                     Remove
                   </button>

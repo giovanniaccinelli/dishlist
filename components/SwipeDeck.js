@@ -43,7 +43,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   tertiaryActionClassName,
   actionToast,
   secondaryActionToast,
-  rightSwipeToast = "Added to To Try",
+  rightSwipeToast = "Added to All dishes",
   rightSwipeErrorToast = "Action failed",
   trackSwipes = true,
   onAuthRequired,
@@ -506,7 +506,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 {typeof onRightSwipe === "function" ? (
                   <>
                     <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-white">
-                      To Try
+                      All dishes
                     </div>
                     <Plus size={92} strokeWidth={2.2} className="text-white" />
                   </>
@@ -590,7 +590,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onSharePress(currentCard);
               }}
               className="add-action-btn absolute z-30 w-14 h-14"
-              style={{ bottom: actionBottom, right: tertiaryActionLabel ? 168 : actionLabel ? 96 : 24 }}
+              style={{ bottom: actionBottom, right: actionLabel ? 96 : 24 }}
               aria-label="Share dish"
             >
               <CornerUpRight size={24} strokeWidth={2.1} />

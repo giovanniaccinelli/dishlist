@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
+import AppToast from "../components/AppToast";
 import { FeedLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
@@ -64,6 +65,8 @@ export default function Feed() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
+  const [toast, setToast] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
@@ -477,9 +480,17 @@ export default function Feed() {
     const results = await Promise.all(
       selectedDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
     );
-    if (results.some((result) => !result)) return;
+    if (results.some((result) => !result)) {
+      setToastVariant("error");
+      setToast("Save failed");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
     setDishlistPickerOpen(false);
     setDishlistPickerDish(null);
+    setToastVariant("success");
+    setToast("Added to DishList");
+    setTimeout(() => setToast(""), 1200);
     setAddedDishIds((prev) => {
       const next = new Set(prev);
       next.add(dishToAdd.id);
@@ -793,6 +804,7 @@ export default function Feed() {
         confirmLabel="Add dish"
         loading={dishlistsLoading}
       />
+      <AppToast message={toast} variant={toastVariant} />
       <BottomNav />
     </div>
   );

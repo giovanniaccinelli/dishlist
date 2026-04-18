@@ -123,7 +123,7 @@ export default function UploadPage() {
         if (!ok) throw new Error("Failed to publish story.");
         setToastVariant("success");
         setToast("Story published");
-        setTimeout(() => router.replace("/profile"), 700);
+        setTimeout(() => router.replace("/profile"), 1200);
       } else {
         const dishPayload = {
           name: dishName.trim(),
@@ -148,7 +148,7 @@ export default function UploadPage() {
         }
         setToastVariant("success");
         setToast("Dish uploaded");
-        setTimeout(() => router.replace("/profile"), 700);
+        setTimeout(() => router.replace("/profile"), 1200);
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);

@@ -13,6 +13,43 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, X } from "lucide-react";
 
+const toDate = (value) => {
+  if (!value) return null;
+  if (typeof value?.toDate === "function") return value.toDate();
+  if (value instanceof Date) return value;
+  return null;
+};
+
+const formatMessageDay = (value) => {
+  const date = toDate(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+};
+
+const formatMessageTime = (value) => {
+  const date = toDate(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+};
+
+const isSameDay = (left, right) => {
+  const leftDate = toDate(left);
+  const rightDate = toDate(right);
+  if (!leftDate || !rightDate) return false;
+  return (
+    leftDate.getFullYear() === rightDate.getFullYear() &&
+    leftDate.getMonth() === rightDate.getMonth() &&
+    leftDate.getDate() === rightDate.getDate()
+  );
+};
+
 export default function DirectChat() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -161,14 +198,81 @@ export default function DirectChat() {
 
       <div className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-md flex-col gap-3">
-        {messages.map((m) => {
+        {messages.map((m, index) => {
           const isMine = m.senderId === user.uid;
+          const previousMessage = index > 0 ? messages[index - 1] : null;
+          const showDayDivider = !previousMessage || !isSameDay(previousMessage.createdAt, m.createdAt);
+          const dayLabel = formatMessageDay(m.createdAt);
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
             const imageSrc = getDishImageUrl(dish, "thumb");
             return (
+              <div key={m.id}>
+                {showDayDivider && dayLabel ? (
+                  <div className="flex justify-center py-1">
+                    <div className="rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
+                      {dayLabel}
+                    </div>
+                  </div>
+                ) : null}
+                <div
+                  className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                  onContextMenu={(e) => {
+                    if (!isMine) return;
+                    e.preventDefault();
+                    setDeleteTarget(m);
+                  }}
+                  onTouchStart={() => startLongPress(m)}
+                  onTouchEnd={clearLongPressTimer}
+                  onTouchMove={clearLongPressTimer}
+                  onMouseDown={() => startLongPress(m)}
+                  onMouseUp={clearLongPressTimer}
+                  onMouseLeave={clearLongPressTimer}
+                >
+                  <div className="flex max-w-[78%] flex-col">
+                    <Link
+                      href={`/dish/${m.dishId}?source=public&mode=single`}
+                      className={`pressable-card relative w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
+                        isMine
+                          ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
+                          : "border-black/10 bg-white"
+                      }`}
+                    >
+                      <img
+                        src={imageSrc}
+                        alt={dish?.name || "Dish"}
+                        className="w-full h-28 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                        }}
+                      />
+                      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                        <div className="text-[12px] font-semibold leading-tight truncate">
+                          {dish?.name || "Dish"}
+                        </div>
+                        <div className="text-[10px] text-white/80">
+                          saves: {Number(dish?.saves || 0)}
+                        </div>
+                      </div>
+                    </Link>
+                    <div className={`mt-1 px-1 text-[11px] text-black/42 ${isMine ? "text-right" : "text-left"}`}>
+                      {formatMessageTime(m.createdAt)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={m.id}>
+              {showDayDivider && dayLabel ? (
+                <div className="flex justify-center py-1">
+                  <div className="rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
+                    {dayLabel}
+                  </div>
+                </div>
+              ) : null}
               <div
-                key={m.id}
                 className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                 onContextMenu={(e) => {
                   if (!isMine) return;
@@ -182,58 +286,20 @@ export default function DirectChat() {
                 onMouseUp={clearLongPressTimer}
                 onMouseLeave={clearLongPressTimer}
               >
-                <Link
-                  href={`/dish/${m.dishId}?source=public&mode=single`}
-                  className={`pressable-card relative w-full max-w-[78%] overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
-                    isMine
-                      ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
-                      : "border-black/10 bg-white"
-                  }`}
-                >
-                  <img
-                    src={imageSrc}
-                    alt={dish?.name || "Dish"}
-                    className="w-full h-28 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                    }}
-                  />
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                    <div className="text-[12px] font-semibold leading-tight truncate">
-                      {dish?.name || "Dish"}
-                    </div>
-                    <div className="text-[10px] text-white/80">
-                      saves: {Number(dish?.saves || 0)}
-                    </div>
+                <div className="flex max-w-[78%] flex-col">
+                  <div
+                    className={`w-fit rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
+                      isMine
+                        ? "self-end bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
+                        : "self-start border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
+                    }`}
+                  >
+                    <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
                   </div>
-                </Link>
-              </div>
-            );
-          }
-          return (
-            <div
-              key={m.id}
-              className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-              onContextMenu={(e) => {
-                if (!isMine) return;
-                e.preventDefault();
-                setDeleteTarget(m);
-              }}
-              onTouchStart={() => startLongPress(m)}
-              onTouchEnd={clearLongPressTimer}
-              onTouchMove={clearLongPressTimer}
-              onMouseDown={() => startLongPress(m)}
-              onMouseUp={clearLongPressTimer}
-              onMouseLeave={clearLongPressTimer}
-            >
-              <div
-                className={`w-fit max-w-[78%] rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
-                  isMine
-                    ? "bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
-                    : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
-                }`}
-              >
-                <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
+                  <div className={`mt-1 px-1 text-[11px] text-black/42 ${isMine ? "text-right" : "text-left"}`}>
+                    {formatMessageTime(m.createdAt)}
+                  </div>
+                </div>
               </div>
             </div>
           );

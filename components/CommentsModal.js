@@ -3,6 +3,24 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+const toDate = (value) => {
+  if (!value) return null;
+  if (typeof value?.toDate === "function") return value.toDate();
+  if (value instanceof Date) return value;
+  return null;
+};
+
+const formatCommentTime = (value) => {
+  const date = toDate(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+};
+
 export default function CommentsModal({
   open,
   onClose,
@@ -128,9 +146,11 @@ export default function CommentsModal({
                             <div className="truncate text-sm font-semibold leading-tight text-black">
                               {c.userName || "User"}
                             </div>
-                            {c.parentId ? (
-                              <div className="text-[11px] font-medium text-black/38">reply</div>
-                            ) : null}
+                            <div className="text-[11px] font-medium text-black/38">
+                              {c.parentId ? "reply" : ""}
+                              {formatCommentTime(c.createdAt) ? (c.parentId ? " • " : "") : ""}
+                              {formatCommentTime(c.createdAt)}
+                            </div>
                           </div>
                         </div>
                         {currentUser?.uid === c.userId && (

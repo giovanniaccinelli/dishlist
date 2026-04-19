@@ -377,7 +377,7 @@ export default function Dishlists() {
                   style={{ contentVisibility: "auto", containIntrinsicSize: "226px" }}
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
-                  <div className="mb-3 flex items-start gap-2.5">
+                  <div className="mb-3 flex items-stretch gap-2.5 rounded-[1.1rem] border border-black/8 bg-[#FAF7F0] p-2.5">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -389,7 +389,7 @@ export default function Dishlists() {
                         setStoryGroupIndex(Math.max(nextIndex, 0));
                         setStoriesOpen(true);
                       }}
-                      className={`w-10 h-10 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
+                      className={`h-14 w-14 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >
                       <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
                         <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
@@ -399,7 +399,7 @@ export default function Dishlists() {
                               alt="Profile"
                               loading="lazy"
                               decoding="async"
-                              className="w-10 h-10 rounded-full object-cover"
+                              className="h-full w-full rounded-full object-cover"
                             />
                           ) : (
                             u.displayName?.[0] || "U"
@@ -407,7 +407,7 @@ export default function Dishlists() {
                         </div>
                       </div>
                     </button>
-                    <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 pt-0.5">
+                    <div className="flex min-h-14 min-w-0 flex-1 flex-col justify-between">
                       <div className="min-w-0 text-sm font-semibold leading-tight">
                         <div className="line-clamp-2">{u.displayName || "User"}</div>
                       </div>
@@ -418,7 +418,7 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold border transition ${
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold border transition self-start ${
                             alreadyFollowing
                               ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"

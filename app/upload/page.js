@@ -204,8 +204,8 @@ export default function UploadPage() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden bg-transparent text-black flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-left">
-          {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to DishList"}
+        <h1 className="text-xl font-bold leading-none text-left">
+          {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to a DishList"}
         </h1>
         <div className="flex items-center gap-2">
           <button

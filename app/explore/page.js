@@ -329,7 +329,14 @@ function ExploreRow({ row, onExpand }) {
   return (
     <section className="mb-6" style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}>
       <div className="mb-2.5 flex items-center justify-between">
-        <CategoryTitle row={row} />
+        <button
+          type="button"
+          onClick={onExpand}
+          className="min-w-0 text-left"
+          aria-label={`Open ${title}`}
+        >
+          <CategoryTitle row={row} />
+        </button>
         {dishes.length > 3 ? (
           <button
             type="button"
@@ -359,7 +366,9 @@ function ExpandedCategoryModal({ row, onClose }) {
     <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
       <div className="min-h-screen px-5 pt-1 pb-24 text-black">
         <div className="app-top-nav -mx-5 mb-6 px-5 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{row.title}</h1>
+          <div className="min-w-0 pr-4">
+            <CategoryTitle row={row} />
+          </div>
           <button
             type="button"
             onClick={onClose}

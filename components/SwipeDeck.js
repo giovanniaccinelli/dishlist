@@ -153,6 +153,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
+  const nextCard = deck[currentIndex + 1] || null;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -166,6 +167,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel) &&
     typeof onSharePress === "function";
+  const nextCardOpacity = useTransform(dragX, [-120, -18, 0, 18, 120], [0.88, 0.18, 0, 0.18, 0.88]);
+  const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [0.98, 0.955, 0.94, 0.955, 0.98]);
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -498,6 +501,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
+        {nextCard ? (
+          <motion.div
+            className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            style={{ opacity: nextCardOpacity, scale: nextCardScale }}
+          >
+            {renderImage(nextCard)}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/52 via-black/14 to-transparent" />
+          </motion.div>
+        ) : null}
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
@@ -879,7 +891,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleSecondaryActionPress(e);
                 }}
-                className={resolvedSecondaryActionClassName || "add-action-btn h-14 w-full"}
+                className="add-action-btn h-14 w-full"
                 aria-label="Secondary action"
                 disabled={disabled}
               >
@@ -889,7 +901,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 type="button"
                 data-no-drag="true"
                 onClick={handleTertiaryActionPress}
-                className={tertiaryActionClassName || "add-action-btn h-14 w-full"}
+                className="add-action-btn h-14 w-full"
                 aria-label="Additional action"
               >
                 {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
@@ -936,7 +948,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleActionPress(e);
                 }}
-                className={actionClassName || "add-action-btn h-14 w-full text-[36px]"}
+                className={`add-action-btn h-14 w-full ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[36px]"}`}
                 aria-label="Action"
                 disabled={disabled}
               >

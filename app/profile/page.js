@@ -1548,7 +1548,11 @@ export default function Profile() {
       <AnimatePresence>
         {dishlistsOpen && (
           <motion.div
-            className="fixed inset-0 z-[88] bg-transparent overflow-y-auto"
+            className="fixed inset-0 z-[88] overflow-y-auto"
+            style={{
+              background:
+                "radial-gradient(circle at 0% -8%, rgba(255, 177, 94, 0.34) 0, rgba(255, 177, 94, 0.18) 16rem, transparent 29rem), radial-gradient(circle at 104% 16%, rgba(122, 217, 87, 0.2) 0, rgba(122, 217, 87, 0.11) 15rem, transparent 31rem), radial-gradient(circle at 50% 100%, rgba(255, 122, 89, 0.14) 0, transparent 24rem), #F6F6F2",
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1610,7 +1614,7 @@ export default function Profile() {
                         setDishlistsOpen(false);
                         setDishlistsEditMode(false);
                       }}
-                      className="w-full rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
+                      className="w-full rounded-[1.5rem] border border-black/10 bg-white p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
                     >
                       <div className="mb-2 truncate text-[1rem] font-bold text-black">{dishlist.name}</div>
                       <div className="grid grid-cols-2 gap-1.5">

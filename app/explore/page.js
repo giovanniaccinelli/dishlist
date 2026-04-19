@@ -53,7 +53,7 @@ function BurgerIcon({ className = "" }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
       <path d="M5 10.2c.6-2.9 3.3-5 7-5s6.4 2.1 7 5" />
       <path d="M4.5 12.2h15" />
-      <path d="M5.5 15.2h13c0 2-1.6 3.3-3.8 3.3H9.3c-2.2 0-3.8-1.3-3.8-3.3Z" />
+      <path d="M4.9 15.2h14.2c0 2-1.7 3.3-4 3.3H8.9c-2.3 0-4-1.3-4-3.3Z" />
       <path d="M7.2 12.2v1.4" />
       <path d="M10.1 12.2v1.4" />
       <path d="M13.9 12.2v1.4" />
@@ -75,9 +75,10 @@ function WalletIcon({ className = "" }) {
 function SteakIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M6.2 7.2c2.5-2.5 7-3.2 10-1.1 3.3 2.4 3.8 7.1 1.2 10.5-2.2 2.9-6.3 3.8-9.6 2.1a6.6 6.6 0 0 1-1.6-1.2c-2.7-2.7-2.7-7 .0-10.3Z" />
-      <path d="M9.9 9.7c1.2-.8 2.9-.8 4 0 1.4 1 1.8 2.8.9 4.2-.9 1.4-2.7 2-4.2 1.2-1.4-.8-2-2.5-1.4-4 .1-.5.4-1 .7-1.4Z" />
-      <path d="M15.7 7.2c.9.5 1.7 1.2 2.2 2.1" />
+      <path d="M8 6.1c2.8-1.5 6.3-1.3 8.8.6 2.9 2.2 3.3 6.6 1 9.7-2.1 2.8-6 3.9-9.1 2.6-1-.4-1.8-1.1-2.5-1.8-2.4-2.7-2.2-7 .5-9.9L8 6.1Z" />
+      <path d="M14.9 6.3 18.3 3l1.2 1.2-3.2 3.4" />
+      <path d="M15.8 5.4 18.7 8.3" />
+      <path d="M9.8 10.1c1.3-.7 2.8-.7 4 0 1.7 1 2.2 3.2 1.1 4.8-1.1 1.6-3.3 2.1-4.9 1-1.5-1-2-3.1-1.1-4.7.2-.4.5-.8.9-1.1Z" />
     </svg>
   );
 }
@@ -85,11 +86,10 @@ function SteakIcon({ className = "" }) {
 function DroolingMouthIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M6.2 10.4c1.4-1.8 3.6-2.8 5.8-2.8s4.4 1 5.8 2.8" />
-      <path d="M7 11.6c.4 3 2.4 5.2 5 5.2s4.6-2.2 5-5.2" />
-      <path d="M8.1 11.6h7.8" />
-      <path d="M15.8 15.6c.2 1 .2 2.1-.1 3" />
-      <path d="M15.5 18.6c.7 0 1.3-.6 1.3-1.3" />
+      <path d="M6.6 10.2c1.4-1.6 3.3-2.5 5.4-2.5s4 .9 5.4 2.5" />
+      <path d="M7.6 11.8c.6 2.4 2.2 4 4.4 4s3.8-1.6 4.4-4" />
+      <path d="M8.3 12h7.4" />
+      <path d="M16.4 15.3c.5.7.7 1.6.5 2.5-.1.7-.6 1.3-1.2 1.3-.8 0-1.4-.8-1.3-1.8.1-.8.6-1.5 1.2-2" />
     </svg>
   );
 }
@@ -97,10 +97,11 @@ function DroolingMouthIcon({ className = "" }) {
 function FeatherIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M19.4 4.6c-6.2.9-11.1 5.8-12 12" />
-      <path d="M6.5 18.5c3.1-.8 5.6-3.3 6.4-6.4" />
-      <path d="M4.4 19.6 14 10" />
-      <path d="M10.8 6.8c2.2-.9 4.6-1.7 8.6-2.2" />
+      <path d="M19.7 4.3c-6.6 1.1-11.8 6.3-12.9 12.9" />
+      <path d="M6.8 17.2c4-1 7.1-4.1 8.1-8.1" />
+      <path d="M4.6 19.4 14.8 9.2" />
+      <path d="M10.8 13.2 7.9 10.3" />
+      <path d="M13.2 10.8 10.9 8.5" />
     </svg>
   );
 }
@@ -123,12 +124,23 @@ function NoWheatIcon({ className = "" }) {
 function CoinStackIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <ellipse cx="8" cy="16.5" rx="3.1" ry="1.7" />
-      <path d="M4.9 16.5v2.1c0 .9 1.4 1.7 3.1 1.7s3.1-.8 3.1-1.7v-2.1" />
-      <ellipse cx="12.7" cy="11.8" rx="3.1" ry="1.7" />
-      <path d="M9.6 11.8v2.1c0 .9 1.4 1.7 3.1 1.7s3.1-.8 3.1-1.7v-2.1" />
-      <ellipse cx="17.3" cy="7.3" rx="3.1" ry="1.7" />
-      <path d="M14.2 7.3v2.1c0 .9 1.4 1.7 3.1 1.7s3.1-.8 3.1-1.7V7.3" />
+      <ellipse cx="7.4" cy="16.7" rx="3" ry="1.6" />
+      <path d="M4.4 16.7v1.9c0 .9 1.3 1.6 3 1.6s3-.7 3-1.6v-1.9" />
+      <ellipse cx="12.3" cy="12.2" rx="3" ry="1.6" />
+      <path d="M9.3 12.2v1.9c0 .9 1.3 1.6 3 1.6s3-.7 3-1.6v-1.9" />
+      <ellipse cx="17.2" cy="7.7" rx="3" ry="1.6" />
+      <path d="M14.2 7.7v1.9c0 .9 1.3 1.6 3 1.6s3-.7 3-1.6V7.7" />
+    </svg>
+  );
+}
+
+function ChiliIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M7.4 14.8c0-3.8 2.8-6.8 6.5-6.8 1.7 0 3.5.7 4.7 2" />
+      <path d="M7.4 14.8c0 2.5 1.9 4.4 4.4 4.4 4.2 0 7.2-2.7 7.2-6.7 0-1-.2-1.9-.6-2.7" />
+      <path d="M13.8 8c-.2-1.6.2-2.8 1.1-4" />
+      <path d="M15.3 4c.8.2 1.5.6 2 1.3" />
     </svg>
   );
 }
@@ -150,7 +162,7 @@ const TAG_DECOR = {
   light: { icon: FeatherIcon, iconClass: "text-[#7C8796]", pillClass: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
   vegan: { icon: Sprout, iconClass: "text-[#2E9E57]", pillClass: "bg-[#E0F7E9] text-[#1F6A3D] border-[#A7E2BE]" },
   "low carb": { icon: NoWheatIcon, iconClass: "text-[#C53A4A]", pillClass: "bg-[#FFE3E0] text-[#8A1F2D] border-[#F3A0A9]" },
-  spicy: { icon: Flame, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
+  spicy: { icon: ChiliIcon, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
   gourmet: { icon: ChefHat, iconClass: "text-[#8A6A46]", pillClass: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
 };

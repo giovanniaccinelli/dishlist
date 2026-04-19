@@ -283,6 +283,12 @@ export default function Profile() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  const getProfileAddTargetListId = () => {
+    if (!activeDishlist?.id) return "saved";
+    if (activeDishlist.id === "all_dishes") return "saved";
+    return activeDishlist.id;
+  };
+
   const handleStoryViewed = async (story) => {
     if (!user?.uid || !story?.id) return;
     await markStoryViewed(user.uid, story.id, user.uid);
@@ -1102,7 +1108,7 @@ export default function Profile() {
 
       {/* Add Dish button */}
       <motion.button
-        onClick={() => router.push("/upload")}
+        onClick={() => router.push(`/upload?targetList=${encodeURIComponent(getProfileAddTargetListId())}`)}
         className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
         disabled={loadingUpload}
         aria-label="Add dish"

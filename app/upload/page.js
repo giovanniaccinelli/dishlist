@@ -51,13 +51,16 @@ export default function UploadPage() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "saved"]);
+  const [targetDishlistId, setTargetDishlistId] = useState("saved");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const nextStoryMode = params.get("story") === "1";
+    const nextTargetDishlistId = params.get("targetList") || "saved";
     setStoryMode(nextStoryMode);
     setShowUploadForm(nextStoryMode);
+    setTargetDishlistId(nextTargetDishlistId);
   }, []);
 
   useEffect(() => {
@@ -187,7 +190,13 @@ export default function UploadPage() {
         (dishlist) => dishlist.id !== "all_dishes"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["uploaded", "saved"]);
+      const nextSelectedIds = ["uploaded"];
+      if (targetDishlistId !== "all_dishes" && targetDishlistId !== "uploaded") {
+        nextSelectedIds.push(targetDishlistId);
+      } else {
+        nextSelectedIds.push("saved");
+      }
+      setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);
     }
@@ -521,7 +530,12 @@ export default function UploadPage() {
                 </div>
               </button>
               <button
-                onClick={() => router.push(storyMode ? "/dishes?storyPicker=1" : "/dishes")}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (storyMode) params.set("storyPicker", "1");
+                  if (targetDishlistId) params.set("targetList", targetDishlistId);
+                  router.push(`/dishes?${params.toString()}`);
+                }}
                 className="w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-6 py-6 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
               >
                 <div className="flex h-full flex-col justify-between gap-5">

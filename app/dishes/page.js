@@ -147,6 +147,7 @@ export default function Dishes() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
+  const [targetDishlistId, setTargetDishlistId] = useState("saved");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
@@ -267,6 +268,7 @@ export default function Dishes() {
     const params = new URLSearchParams(window.location.search);
     setStoryPicker(params.get("storyPicker") === "1");
     setSearch(params.get("q") || "");
+    setTargetDishlistId(params.get("targetList") || "saved");
   }, []);
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
@@ -445,7 +447,11 @@ export default function Dishes() {
         (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["saved"]);
+      const nextSelectedIds =
+        targetDishlistId !== "all_dishes" && targetDishlistId !== "uploaded"
+          ? [targetDishlistId]
+          : ["saved"];
+      setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);
     }

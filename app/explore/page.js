@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, CircleUserRound, Search as SearchIcon, Send, X } from "lucide-react";
+import { ChevronRight, CircleUserRound, Flame, Search as SearchIcon, Send, Trophy, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
@@ -69,14 +69,41 @@ function DishPreview({ dish, title }) {
   );
 }
 
-function ExploreRow({ title, dishes, onExpand }) {
+function CategoryTitle({ row }) {
+  if (row.key === "most-saved") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[1.05rem] font-semibold tracking-tight text-black/88">{row.title}</span>
+        <Trophy size={15} className="text-[#D7B443]" />
+      </div>
+    );
+  }
+
+  if (row.key === "trending") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[1.05rem] font-semibold tracking-tight text-black/88">{row.title}</span>
+        <Flame size={15} className="text-[#F26A21]" />
+      </div>
+    );
+  }
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[12px] font-semibold ${getTagChipClass(row.rawTag || row.title)}`}>
+      {row.title}
+    </span>
+  );
+}
+
+function ExploreRow({ row, onExpand }) {
+  const { title, dishes } = row;
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
 
   return (
     <section className="mb-6" style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}>
       <div className="mb-2.5 flex items-center justify-between">
-        <h2 className="text-[1.05rem] font-semibold tracking-tight text-black/88">{title}</h2>
+        <CategoryTitle row={row} />
         {dishes.length > 3 ? (
           <button
             type="button"
@@ -229,18 +256,24 @@ export default function Explore() {
       dishes: trendingPool.slice(0, BASE_LIMIT),
     });
 
-    TAG_OPTIONS.forEach((tag) => {
+    const tagRows = TAG_OPTIONS.map((tag) => {
       const tagged = basePool.filter(
         (dish) =>
           Array.isArray(dish.tags) &&
           dish.tags.some((dishTag) => String(dishTag).toLowerCase() === String(tag).toLowerCase())
       );
-      rows.push({
+      return {
         key: `tag-${tag}`,
+        rawTag: tag,
         title: String(tag).replace(/\b\w/g, (char) => char.toUpperCase()),
         dishes: tagged.slice(0, BASE_LIMIT),
-      });
-    });
+        totalCount: tagged.length,
+      };
+    })
+      .filter((row) => row.totalCount > 0)
+      .sort((a, b) => b.totalCount - a.totalCount || a.title.localeCompare(b.title));
+
+    rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
   }, [allDishes, search, selectedTagsApplied, trendingDishes]);
@@ -368,7 +401,7 @@ export default function Explore() {
       ) : (
         <div>
           {categoryRows.map((row) => (
-            <ExploreRow key={row.key} title={row.title} dishes={row.dishes} onExpand={() => openExpandedRow(row)} />
+            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} />
           ))}
         </div>
       )}

@@ -377,7 +377,7 @@ export default function Dishlists() {
                   style={{ contentVisibility: "auto", containIntrinsicSize: "226px" }}
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
-                  <div className="mb-3 flex items-stretch gap-2.5 rounded-[1.1rem] border border-black/8 bg-[#FAF7F0] p-2.5">
+                  <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -389,7 +389,7 @@ export default function Dishlists() {
                         setStoryGroupIndex(Math.max(nextIndex, 0));
                         setStoriesOpen(true);
                       }}
-                      className={`h-14 w-14 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
+                      className={`h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >
                       <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
                         <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
@@ -407,7 +407,7 @@ export default function Dishlists() {
                         </div>
                       </div>
                     </button>
-                    <div className="flex min-h-14 min-w-0 flex-1 flex-col justify-between">
+                    <div className="flex min-h-12 min-w-0 flex-1 flex-col justify-between">
                       <div className="min-w-0 text-sm font-semibold leading-tight">
                         <div className="line-clamp-2">{u.displayName || "User"}</div>
                       </div>

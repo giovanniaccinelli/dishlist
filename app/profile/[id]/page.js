@@ -329,24 +329,38 @@ export default function PublicProfile() {
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
         <AppBackButton fallback="/dishlists" />
-        <button
-          type="button"
-          onClick={async () => {
-            if (!user) {
-              setShowAuthPrompt(true);
-              return;
-            }
-            const conversationId = await getOrCreateConversation(user, profileUser);
-            if (conversationId) {
-              window.location.href = `/directs/${conversationId}`;
-            }
-          }}
-          className="top-action-btn relative"
-          aria-label="Directs"
-        >
-          <Send size={18} />
-          {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
-        </button>
+        <div className="flex items-center gap-2">
+          {user?.uid !== id ? (
+            <button
+              onClick={handleFollow}
+              className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
+                isFollowing
+                  ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                  : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+              }`}
+            >
+              {isFollowing ? "Unfollow" : "Follow"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={async () => {
+              if (!user) {
+                setShowAuthPrompt(true);
+                return;
+              }
+              const conversationId = await getOrCreateConversation(user, profileUser);
+              if (conversationId) {
+                window.location.href = `/directs/${conversationId}`;
+              }
+            }}
+            className="top-action-btn relative"
+            aria-label="Directs"
+          >
+            <Send size={18} />
+            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          </button>
+        </div>
       </div>
 
       <div className="mb-5">
@@ -385,20 +399,6 @@ export default function PublicProfile() {
           </div>
 
           <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
-            {user?.uid !== id ? (
-              <div className="mb-2 flex justify-start">
-                <button
-                  onClick={handleFollow}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
-                    isFollowing
-                      ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                      : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-                  }`}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </button>
-              </div>
-            ) : null}
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
             <div className="grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">

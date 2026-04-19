@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where } from "firebase/firestore";
@@ -64,6 +65,7 @@ export default function DirectChat() {
   const [pickerDishlistId, setPickerDishlistId] = useState("saved");
   const [pickerSearch, setPickerSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [dragOffsets, setDragOffsets] = useState({});
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
 
@@ -203,6 +205,10 @@ export default function DirectChat() {
           const previousMessage = index > 0 ? messages[index - 1] : null;
           const showDayDivider = !previousMessage || !isSameDay(previousMessage.createdAt, m.createdAt);
           const dayLabel = formatMessageDay(m.createdAt);
+          const messageTime = formatMessageTime(m.createdAt);
+          const dragOffset = Number(dragOffsets[m.id] || 0);
+          const revealedOffset = isMine ? Math.max(0, -dragOffset) : Math.max(0, dragOffset);
+          const timeOpacity = Math.min(revealedOffset / 44, 1);
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
             const imageSrc = getDishImageUrl(dish, "thumb");
@@ -229,35 +235,54 @@ export default function DirectChat() {
                   onMouseUp={clearLongPressTimer}
                   onMouseLeave={clearLongPressTimer}
                 >
-                  <div className="flex max-w-[78%] flex-col">
-                    <Link
-                      href={`/dish/${m.dishId}?source=public&mode=single`}
-                      className={`pressable-card relative w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
-                        isMine
-                          ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
-                          : "border-black/10 bg-white"
-                      }`}
-                    >
-                      <img
-                        src={imageSrc}
-                        alt={dish?.name || "Dish"}
-                        className="w-full h-28 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                        }}
-                      />
-                      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                        <div className="text-[12px] font-semibold leading-tight truncate">
-                          {dish?.name || "Dish"}
-                        </div>
-                        <div className="text-[10px] text-white/80">
-                          saves: {Number(dish?.saves || 0)}
-                        </div>
+                  <div className="relative w-full max-w-[78%]">
+                    {messageTime ? (
+                      <div
+                        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] text-black/42 ${
+                          isMine ? "right-0 text-right" : "left-0 text-left"
+                        }`}
+                        style={{ opacity: timeOpacity }}
+                      >
+                        {messageTime}
                       </div>
-                    </Link>
-                    <div className={`mt-1 px-1 text-[11px] text-black/42 ${isMine ? "text-right" : "text-left"}`}>
-                      {formatMessageTime(m.createdAt)}
-                    </div>
+                    ) : null}
+                    <motion.div
+                      drag="x"
+                      dragConstraints={isMine ? { left: -72, right: 0 } : { left: 0, right: 72 }}
+                      dragElastic={0.08}
+                      onDrag={(_, info) => {
+                        setDragOffsets((prev) => ({ ...prev, [m.id]: info.offset.x }));
+                      }}
+                      onDragEnd={() => {
+                        setDragOffsets((prev) => ({ ...prev, [m.id]: 0 }));
+                      }}
+                    >
+                      <Link
+                        href={`/dish/${m.dishId}?source=public&mode=single`}
+                        className={`pressable-card relative block w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
+                          isMine
+                            ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
+                            : "border-black/10 bg-white"
+                        }`}
+                      >
+                        <img
+                          src={imageSrc}
+                          alt={dish?.name || "Dish"}
+                          className="w-full h-28 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                          }}
+                        />
+                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                          <div className="text-[12px] font-semibold leading-tight truncate">
+                            {dish?.name || "Dish"}
+                          </div>
+                          <div className="text-[10px] text-white/80">
+                            saves: {Number(dish?.saves || 0)}
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
                   </div>
                 </div>
               </div>
@@ -286,19 +311,35 @@ export default function DirectChat() {
                 onMouseUp={clearLongPressTimer}
                 onMouseLeave={clearLongPressTimer}
               >
-                <div className="flex max-w-[78%] flex-col">
-                  <div
+                <div className="relative max-w-[78%]">
+                  {messageTime ? (
+                    <div
+                      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] text-black/42 ${
+                        isMine ? "right-0 text-right" : "left-0 text-left"
+                      }`}
+                      style={{ opacity: timeOpacity }}
+                    >
+                      {messageTime}
+                    </div>
+                  ) : null}
+                  <motion.div
+                    drag="x"
+                    dragConstraints={isMine ? { left: -72, right: 0 } : { left: 0, right: 72 }}
+                    dragElastic={0.08}
+                    onDrag={(_, info) => {
+                      setDragOffsets((prev) => ({ ...prev, [m.id]: info.offset.x }));
+                    }}
+                    onDragEnd={() => {
+                      setDragOffsets((prev) => ({ ...prev, [m.id]: 0 }));
+                    }}
                     className={`w-fit rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
                       isMine
-                        ? "self-end bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
-                        : "self-start border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
+                        ? "ml-auto bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
+                        : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
                     }`}
                   >
                     <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
-                  </div>
-                  <div className={`mt-1 px-1 text-[11px] text-black/42 ${isMine ? "text-right" : "text-left"}`}>
-                    {formatMessageTime(m.createdAt)}
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>

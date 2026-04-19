@@ -75,21 +75,18 @@ function WalletIcon({ className = "" }) {
 function SteakIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M8 6.1c2.8-1.5 6.3-1.3 8.8.6 2.9 2.2 3.3 6.6 1 9.7-2.1 2.8-6 3.9-9.1 2.6-1-.4-1.8-1.1-2.5-1.8-2.4-2.7-2.2-7 .5-9.9L8 6.1Z" />
-      <path d="M14.9 6.3 18.3 3l1.2 1.2-3.2 3.4" />
-      <path d="M15.8 5.4 18.7 8.3" />
-      <path d="M9.8 10.1c1.3-.7 2.8-.7 4 0 1.7 1 2.2 3.2 1.1 4.8-1.1 1.6-3.3 2.1-4.9 1-1.5-1-2-3.1-1.1-4.7.2-.4.5-.8.9-1.1Z" />
+      <path d="M7.1 8.1c2.4-2.5 6.5-3.3 9.6-1.7 3.8 2 5 6.8 2.6 10.3-2.2 3.1-6.5 4.2-10 2.5-.8-.4-1.5-.9-2.1-1.6-2.6-2.7-2.6-6.8-.1-9.5Z" />
+      <path d="M15 6.6c.6-.7 1.4-1.5 2.7-2.7l1.4 1.4c-1.1 1.3-2 2.2-2.7 2.8" />
+      <path d="M15.9 5.9c.9.4 1.7 1.1 2.3 2" />
+      <path d="M10 10.2c1.3-.8 3-.8 4.2 0 1.6 1.1 2 3.3.9 4.9-1.1 1.5-3.2 1.9-4.8.8-1.5-1-1.9-3-.9-4.6.2-.4.4-.8.6-1.1Z" />
     </svg>
   );
 }
 
-function DroolingMouthIcon({ className = "" }) {
+function HeartIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M6.6 10.2c1.4-1.6 3.3-2.5 5.4-2.5s4 .9 5.4 2.5" />
-      <path d="M7.6 11.8c.6 2.4 2.2 4 4.4 4s3.8-1.6 4.4-4" />
-      <path d="M8.3 12h7.4" />
-      <path d="M16.4 15.3c.5.7.7 1.6.5 2.5-.1.7-.6 1.3-1.2 1.3-.8 0-1.4-.8-1.3-1.8.1-.8.6-1.5 1.2-2" />
+      <path d="M12 19.4 5.8 13.2a4.3 4.3 0 0 1 0-6.1 4.2 4.2 0 0 1 6 0l.2.2.2-.2a4.2 4.2 0 0 1 6 0 4.3 4.3 0 0 1 0 6.1L12 19.4Z" />
     </svg>
   );
 }
@@ -137,17 +134,18 @@ function CoinStackIcon({ className = "" }) {
 function ChiliIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M7.4 14.8c0-3.8 2.8-6.8 6.5-6.8 1.7 0 3.5.7 4.7 2" />
-      <path d="M7.4 14.8c0 2.5 1.9 4.4 4.4 4.4 4.2 0 7.2-2.7 7.2-6.7 0-1-.2-1.9-.6-2.7" />
-      <path d="M13.8 8c-.2-1.6.2-2.8 1.1-4" />
-      <path d="M15.3 4c.8.2 1.5.6 2 1.3" />
+      <path d="M6.2 16.1c0-4.4 3.2-7.8 7.5-7.8 1.9 0 3.8.7 5.1 2" />
+      <path d="M6.2 16.1c0 2.4 1.8 4.2 4.2 4.2 4.5 0 8.1-2.9 8.1-7.2 0-.9-.2-1.8-.5-2.6" />
+      <path d="M13.9 8.2c-.1-1.5.3-2.7 1.2-4" />
+      <path d="M15.5 4.2c.8.2 1.5.7 2 1.4" />
+      <path d="M8.8 19.2c1.9-.2 3.7-1.3 4.9-3.1" />
     </svg>
   );
 }
 
 const TAG_DECOR = {
   "high protein": { icon: SteakIcon, iconClass: "text-[#A34723]", pillClass: "bg-[#FDE6D8] text-[#7C2D12] border-[#F2B38D]" },
-  comfort: { icon: DroolingMouthIcon, iconClass: "text-[#C96A1B]", pillClass: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
+  comfort: { icon: HeartIcon, iconClass: "text-[#C96A1B]", pillClass: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
   "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
   quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
   cheat: { icon: BurgerIcon, iconClass: "text-[#C6582C]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },

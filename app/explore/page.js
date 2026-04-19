@@ -3,7 +3,26 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, CircleUserRound, Flame, Search as SearchIcon, Send, Trophy, X } from "lucide-react";
+import {
+  ChefHat,
+  ChevronRight,
+  CircleUserRound,
+  Clock3,
+  Coins,
+  Dumbbell,
+  Flame,
+  Leaf,
+  MoonStar,
+  Snowflake,
+  Sun,
+  Search as SearchIcon,
+  Send,
+  Sprout,
+  Timer,
+  Trophy,
+  Wheat,
+  X,
+} from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
@@ -14,26 +33,109 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
+function PlateIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.25" />
+      <circle cx="12" cy="12" r="7.2" />
+      <path d="M3.5 4.5v4.2" />
+      <path d="M2.2 4.5v2.3" />
+      <path d="M4.8 4.5v2.3" />
+      <path d="M3.5 8.7v10.8" />
+      <path d="M20.3 4.5c-2.4 1.1-3.6 3-3.6 5.5v1.6" />
+      <path d="M20.3 4.5v15" />
+    </svg>
+  );
+}
+
+function BurgerIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M5 10.2c.6-2.9 3.3-5 7-5s6.4 2.1 7 5" />
+      <path d="M4.5 12.2h15" />
+      <path d="M5.5 15.2h13c0 2-1.6 3.3-3.8 3.3H9.3c-2.2 0-3.8-1.3-3.8-3.3Z" />
+      <path d="M7.2 12.2v1.4" />
+      <path d="M10.1 12.2v1.4" />
+      <path d="M13.9 12.2v1.4" />
+      <path d="M16.8 12.2v1.4" />
+    </svg>
+  );
+}
+
+function WalletIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M4.5 7.5h12.5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+      <path d="M15.5 11.2h4v3.6h-4a1.8 1.8 0 1 1 0-3.6Z" />
+      <path d="M6.5 7.5V6.7c0-1 0-1.7.4-2.2.5-.6 1.2-.7 2.4-.7h4.3" />
+    </svg>
+  );
+}
+
+function SteakIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M7.4 6.2c3.1-2.1 7.8-1.4 10.3 1.1 2.8 2.8 2.7 7.5-.3 10.5-2.4 2.4-5.9 2.9-8.6 1.6-.8-.4-1.5-.9-2.1-1.5-2.8-2.8-2.7-7.6.7-10.3Z" />
+      <path d="M10.1 10.2c1.1-.8 2.9-.5 3.8.4.9.9 1 2.6.2 3.7-.9 1.2-2.7 1.5-3.9.5-1.1-1-1.1-3 .1-4.6Z" />
+    </svg>
+  );
+}
+
+function SmileIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.3" />
+      <path d="M9.2 10.2h.01" />
+      <path d="M14.8 10.2h.01" />
+      <path d="M8.5 14.2c1 1.5 2.3 2.2 3.5 2.2 1.2 0 2.5-.7 3.5-2.2" />
+      <path d="M15.8 15.6c.6.1 1.1.5 1.3 1" />
+    </svg>
+  );
+}
+
+function FeatherIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M20 4c-6.5 1-11.6 6.1-12.6 12.6" />
+      <path d="M6.2 17.8c.9-4.7 4.6-8.4 9.3-9.3" />
+      <path d="M4 20l5.2-5.2" />
+    </svg>
+  );
+}
+
+function NoWheatIcon({ className = "" }) {
+  return (
+    <div className={`relative ${className}`} aria-hidden="true">
+      <Wheat className="h-full w-full" />
+      <span className="absolute inset-0 flex items-center justify-center text-[#D72D2D]">
+        <svg viewBox="0 0 24 24" className="h-full w-full" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <path d="M5 19 19 5" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
 const TAG_DECOR = {
-  "high protein": { icon: "🥩", className: "bg-[#FDE6D8] text-[#7C2D12] border-[#F2B38D]" },
-  comfort: { icon: "🤤", className: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
-  "carb heavy": { icon: "🌾", className: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
-  quick: { icon: "⏱️", className: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
-  cheat: { icon: "🍔", className: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
-  easy: { icon: "✨", className: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
-  fit: { icon: "🏋️", className: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
-  premium: { icon: "🪙", className: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
-  veg: { icon: "🍃", className: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
-  fancy: { icon: "🍽️", className: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
-  budget: { icon: "👛", className: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
-  winter: { icon: "❄️", className: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
-  "late night": { icon: "🌙", className: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },
-  light: { icon: "🪶", className: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
-  vegan: { icon: "🌱", className: "bg-[#E0F7E9] text-[#1F6A3D] border-[#A7E2BE]" },
-  "low carb": { icon: "🚫🌾", className: "bg-[#FFE3E0] text-[#8A1F2D] border-[#F3A0A9]" },
-  spicy: { icon: "🌶️", className: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
-  gourmet: { icon: "👨‍🍳", className: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
-  summer: { icon: "☀️", className: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
+  "high protein": { icon: SteakIcon, iconClass: "text-[#A34723]", pillClass: "bg-[#FDE6D8] text-[#7C2D12] border-[#F2B38D]" },
+  comfort: { icon: SmileIcon, iconClass: "text-[#C96A1B]", pillClass: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
+  "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
+  quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
+  cheat: { icon: BurgerIcon, iconClass: "text-[#C6582C]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
+  easy: { icon: Clock3, iconClass: "text-[#6366F1]", pillClass: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
+  fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
+  premium: { icon: Coins, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
+  veg: { icon: Leaf, iconClass: "text-[#33A047]", pillClass: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
+  fancy: { icon: PlateIcon, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
+  budget: { icon: WalletIcon, iconClass: "text-[#9B6A4A]", pillClass: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
+  winter: { icon: Snowflake, iconClass: "text-[#3C89C9]", pillClass: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
+  "late night": { icon: MoonStar, iconClass: "text-[#5E54C7]", pillClass: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },
+  light: { icon: FeatherIcon, iconClass: "text-[#7C8796]", pillClass: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
+  vegan: { icon: Sprout, iconClass: "text-[#2E9E57]", pillClass: "bg-[#E0F7E9] text-[#1F6A3D] border-[#A7E2BE]" },
+  "low carb": { icon: NoWheatIcon, iconClass: "text-[#C53A4A]", pillClass: "bg-[#FFE3E0] text-[#8A1F2D] border-[#F3A0A9]" },
+  spicy: { icon: Flame, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
+  gourmet: { icon: ChefHat, iconClass: "text-[#8A6A46]", pillClass: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
+  summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
@@ -110,15 +212,19 @@ function CategoryTitle({ row }) {
   }
 
   const decor = TAG_DECOR[String(row.rawTag || "").toLowerCase()] || {
-    icon: "•",
-    className: getTagChipClass(row.rawTag || row.title, true),
+    icon: CircleUserRound,
+    iconClass: "text-black/55",
+    pillClass: getTagChipClass(row.rawTag || row.title, true),
   };
+  const Icon = decor.icon;
 
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.className}`}>
-      <span className="text-[1.15rem] leading-none" aria-hidden="true">{decor.icon}</span>
-      <span>{row.title}</span>
-    </span>
+    <div className="flex items-center gap-2">
+      <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
+        {row.title}
+      </span>
+      <Icon className={`h-[1.3rem] w-[1.3rem] shrink-0 ${decor.iconClass}`} />
+    </div>
   );
 }
 

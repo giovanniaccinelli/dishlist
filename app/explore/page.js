@@ -50,11 +50,11 @@ function PlateIcon({ className = "" }) {
 function FriesIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M7 5.2v7.1" />
-      <path d="M10.2 4.5v7.8" />
-      <path d="M13.4 4.9v7.4" />
-      <path d="M16.6 5.4v6.9" />
-      <path d="M5.4 9.2h13.2l-1.1 9.1H6.5L5.4 9.2Z" />
+      <path d="M8 4.9v6.8" />
+      <path d="M11.2 4.2v7.5" />
+      <path d="M14.4 4.7v7" />
+      <path d="M17.2 5.3v6.4" />
+      <path d="M6 9.4h12l-1.3 8.6H7.3L6 9.4Z" />
     </svg>
   );
 }
@@ -72,10 +72,10 @@ function WalletIcon({ className = "" }) {
 function DrumstickIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M7.8 8.4c2.6-2.2 6.4-2.3 8.8-.2 2.5 2.2 2.8 6 .7 8.6-2.1 2.6-5.9 3.1-8.7 1.3l-1.4-1.1" />
-      <path d="M7.2 17.1 5.6 18.7" />
-      <path d="M5.1 16.5a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
-      <path d="M7.3 18.7a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+      <path d="M8.1 8.3c2.2-2 5.6-2.2 7.9-.5 2.8 2.1 3.2 6.1 1 8.9-2 2.5-5.6 3.1-8.3 1.4l-1.5-1.1" />
+      <path d="M7 16.9 5.2 18.7" />
+      <path d="M4.7 16.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+      <path d="M7.2 19.1a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
     </svg>
   );
 }
@@ -91,11 +91,11 @@ function HeartIcon({ className = "" }) {
 function SaladIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M5 15.4c1.4-3.8 4.1-5.7 7-5.7s5.6 1.9 7 5.7" />
-      <path d="M4.7 15.4h14.6l-1.2 3.5H5.9l-1.2-3.5Z" />
-      <path d="M9 10.2c0-1.2.9-2.2 2.1-2.2" />
-      <path d="M12 9.2c.1-1.1.9-2 2-2.2" />
-      <path d="M15 10.1c.2-.9.9-1.6 1.8-1.7" />
+      <path d="M5.1 15.1c1.5-3.3 4-4.9 6.9-4.9s5.4 1.6 6.9 4.9" />
+      <path d="M4.8 15.1h14.4l-1.2 3.6H6l-1.2-3.6Z" />
+      <path d="M8.8 11c.2-1.1 1-1.9 2-2.1" />
+      <path d="M12.1 10.2c.3-1 1.1-1.8 2.1-1.9" />
+      <path d="M15.2 11.1c.2-.8.9-1.4 1.7-1.5" />
     </svg>
   );
 }
@@ -131,10 +131,10 @@ function CoinStackIcon({ className = "" }) {
 function ChiliIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M5.3 16.6c.7-3.9 3.7-6.7 7.4-6.7 1.7 0 3.5.6 5 1.9" />
-      <path d="M5.3 16.6c.2 2.3 1.8 3.8 4 3.8 4.8 0 8.5-3 9.4-7.3" />
-      <path d="M14.6 9.5c-.2-1.8.3-3.3 1.8-4.9" />
-      <path d="M16.8 4.3c1 .1 1.9.7 2.4 1.6" />
+      <path d="M5.8 16.8c.6-4.1 3.6-6.9 7.3-6.9 1.6 0 3.2.5 4.7 1.6" />
+      <path d="M5.8 16.8c.3 2.2 1.8 3.7 3.9 3.7 4.5 0 8.1-2.8 9-6.9" />
+      <path d="M15 9.4c-.1-1.8.4-3.2 1.7-4.7" />
+      <path d="M16.8 4.2c.9.2 1.8.7 2.3 1.5" />
     </svg>
   );
 }

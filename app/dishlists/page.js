@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../lib/auth";
@@ -23,19 +24,19 @@ import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CircleUserRound, Send } from "lucide-react";
+import { CircleUserRound, Plus, Send } from "lucide-react";
 
-function StoryPromptIcon({ className = "" }) {
+function StoryStatIcon({ size = 10, className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <circle cx="12" cy="12" r="4.05" />
-      <circle cx="12" cy="12" r="6.8" />
-      <path d="M1.35 3.55V8.7" />
-      <path d="M0.2 3.55V6.2" />
-      <path d="M2.5 3.55V6.2" />
-      <path d="M1.35 8.7V19" />
-      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" />
-      <path d="M23.6 3.55V19" />
+    <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className={className}>
+      <circle cx="12" cy="12" r="4.05" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="currentColor" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M0.2 3.55V6.2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M2.5 3.55V6.2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M1.35 8.7V19" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55V19" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -70,6 +71,7 @@ export default function Dishlists() {
   const [storyGroups, setStoryGroups] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
+  const [storyActionOpen, setStoryActionOpen] = useState(false);
   const peopleLoadMoreRef = useRef(null);
 
   const attachPreviewData = (usersList, allDishes) => {
@@ -331,13 +333,13 @@ export default function Dishlists() {
             {user ? (
               <button
                 type="button"
-                onClick={() => router.push("/upload?story=1")}
+                onClick={() => setStoryActionOpen(true)}
                 className="shrink-0 flex flex-col items-center gap-2"
               >
                 <div className="w-16 h-16 rounded-full p-[3px] bg-[#2BD36B]">
                   <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
                     <div className="w-full h-full rounded-full bg-black/6 overflow-hidden flex items-center justify-center text-[#2BD36B]">
-                      <StoryPromptIcon className="h-7 w-7" />
+                      <StoryStatIcon size={28} className="shrink-0" />
                     </div>
                   </div>
                 </div>
@@ -508,6 +510,99 @@ export default function Dishlists() {
         initialGroupIndex={storyGroupIndex}
         onViewed={handleStoryViewed}
       />
+      <AnimatePresence>
+        {storyActionOpen && (
+          <motion.div
+            className="fixed inset-0 z-[90] overflow-y-auto bg-black/45 backdrop-blur-sm flex items-center justify-center p-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setStoryActionOpen(false)}
+          >
+            <motion.div
+              className="my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() => setStoryActionOpen(false)}
+                  className="text-sm text-black/55"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    router.push("/upload?story=1");
+                  }}
+                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                >
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[2.15rem] font-semibold leading-none">Create dish</p>
+                        <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
+                      </div>
+                      <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
+                        <Plus size={32} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                        Steps
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        {[
+                          { label: "Name", color: "#5FA8F2" },
+                          { label: "Details", color: "#23C268" },
+                          { label: "Recipe", color: "#D7B443" },
+                          { label: "Story", color: "#111111" },
+                        ].map((step) => (
+                          <div key={step.label}>
+                            <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    router.push("/dishes?storyPicker=1");
+                  }}
+                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                >
+                  <div className="flex h-full flex-col justify-between gap-8">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[2.15rem] font-semibold leading-none text-black">Find dish</p>
+                        <p className="mt-4 text-base text-black/78">Choose an existing dish to share.</p>
+                      </div>
+                      <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center shadow-md border-[2px] border-[#1EA956]/55 shrink-0 aspect-square">
+                        <Search size={28} />
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-sm text-black/65">
+                      <p>Pick from your uploaded dishes or saved DishLists.</p>
+                      <p>Share it instantly to your story.</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

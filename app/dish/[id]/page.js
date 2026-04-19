@@ -314,7 +314,7 @@ export default function DishDetail() {
   };
   const getSecondaryActionClassName = (dishCard) => {
     if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) {
-      return "inline-flex h-11 min-w-[82px] items-center justify-center px-3 rounded-[0.9rem] border-2 border-white/75 bg-black/22 text-white text-[11px] font-black uppercase tracking-[0.08em] backdrop-blur-sm shadow-[0_10px_22px_rgba(0,0,0,0.18)]";
+      return "inline-flex h-14 min-w-[82px] items-center justify-center px-3 rounded-[0.9rem] border-2 border-white/75 bg-black/22 text-white text-[11px] font-black uppercase tracking-[0.08em] backdrop-blur-sm shadow-[0_10px_22px_rgba(0,0,0,0.18)]";
     }
     if (isToTrySource && !isForeignProfileContext) {
       return "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center";

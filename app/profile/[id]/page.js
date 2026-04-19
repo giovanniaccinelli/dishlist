@@ -293,6 +293,7 @@ export default function PublicProfile() {
 
   const activeDishlist =
     allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+  const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
 
   const renderDishCounters = (dish) => (
     <div className="flex items-center gap-2 text-[10px] text-white/80">
@@ -382,10 +383,6 @@ export default function PublicProfile() {
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
             <div className="grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{savedDishes.length}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">saved</div>
-              </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileUser.followers?.length || 0}</div>
                 <button
                   onClick={() => openConnections("followers")}
@@ -404,8 +401,12 @@ export default function PublicProfile() {
                 </button>
               </div>
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">dishes</div>
+              </div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">posted</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">uploaded</div>
               </div>
             </div>
           </div>

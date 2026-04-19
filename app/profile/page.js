@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   createCustomDishlist,
+  deleteCustomDishlist,
   getCustomDishlistsForUser,
   uploadDishImageVariants,
   uploadProfileImage,
@@ -34,7 +35,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import { Minus, MoreHorizontal, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
+import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -78,6 +79,8 @@ export default function Profile() {
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [activeDishlistId, setActiveDishlistId] = useState("saved");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
+  const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
+  const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -652,6 +655,7 @@ export default function Profile() {
 
   const activeDishlist =
     allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+  const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
 
   const selectedCreateDishes = Array.from(
     new Map(
@@ -673,6 +677,7 @@ export default function Profile() {
 
   const handleOpenCreateDishlist = () => {
     setDishlistsOpen(false);
+    setDishlistsEditMode(false);
     setCreateDishlistStep(0);
     setNewDishlistName("");
     setSelectedDishIds([]);
@@ -723,6 +728,26 @@ export default function Profile() {
     } finally {
       setCreatingDishlist(false);
     }
+  };
+
+  const handleDeleteDishlist = async () => {
+    if (!user?.uid || !dishlistDeleteTarget?.id) return;
+    const deleted = await deleteCustomDishlist(user.uid, dishlistDeleteTarget.id);
+    if (!deleted) {
+      setToastVariant("error");
+      setToast("Dishlist deletion failed");
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    await refreshCustomDishlists(user.uid);
+    if (activeDishlistId === dishlistDeleteTarget.id) {
+      selectDishlist("saved");
+    }
+    setDishlistDeleteTarget(null);
+    setDishlistsEditMode(false);
+    setToastVariant("success");
+    setToast("Dishlist deleted");
+    setTimeout(() => setToast(""), 1200);
   };
 
   const renderDishCounters = (dish) => (
@@ -957,10 +982,6 @@ export default function Profile() {
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
             <div className="grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{savedDishes.length}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">saved</div>
-              </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileMeta.followers.length}</div>
                 <button
                   onClick={() => openConnections("followers")}
@@ -979,8 +1000,12 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">dishes</div>
+              </div>
+              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{uploadedDishes.length}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">posted</div>
+                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">uploaded</div>
               </div>
             </div>
           </div>
@@ -1504,6 +1529,17 @@ export default function Profile() {
               exit={{ opacity: 0 }}
               onClick={(event) => event.stopPropagation()}
             >
+              <button
+                type="button"
+                onClick={() => {
+                  setDishlistsOpen(false);
+                  setDishlistsEditMode(false);
+                }}
+                className="fixed right-5 top-6 z-[89] flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                aria-label="Close dishlists"
+              >
+                <X size={18} />
+              </button>
               <div className="mx-auto w-full max-w-3xl">
               <div className="mb-6 flex items-center justify-between">
                 <div>
@@ -1512,8 +1548,17 @@ export default function Profile() {
                   </div>
                   <h3 className="mt-2 text-[1.7rem] leading-none font-semibold text-black">Your lists</h3>
                 </div>
-                <button type="button" onClick={() => setDishlistsOpen(false)} className="text-sm text-black/55">
-                  Close
+                <button
+                  type="button"
+                  onClick={() => setDishlistsEditMode((prev) => !prev)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
+                    dishlistsEditMode
+                      ? "border border-[#D56A6A] bg-[#FFF1F1] text-[#B34747]"
+                      : "border border-black/10 bg-white text-black/70"
+                  }`}
+                >
+                  <Pencil size={14} />
+                  {dishlistsEditMode ? "Done" : "Edit"}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -1522,14 +1567,18 @@ export default function Profile() {
                     .sort(() => Math.random() - 0.5)
                     .slice(0, 4);
                   return (
-                    <button
+                    <div
                       key={dishlist.id}
+                      className="relative"
+                    >
+                    <button
                       type="button"
                       onClick={() => {
                         selectDishlist(dishlist.id);
                         setDishlistsOpen(false);
+                        setDishlistsEditMode(false);
                       }}
-                      className="rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
+                      className="w-full rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
                     >
                       <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -1556,6 +1605,20 @@ export default function Profile() {
                         })}
                       </div>
                     </button>
+                    {dishlistsEditMode && dishlist.type === "custom" ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDishlistDeleteTarget(dishlist);
+                        }}
+                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white shadow-[0_10px_20px_rgba(213,106,106,0.24)]"
+                        aria-label={`Delete ${dishlist.name}`}
+                      >
+                        <Minus size={15} />
+                      </button>
+                    ) : null}
+                    </div>
                   );
                 })}
                 <button
@@ -1756,6 +1819,66 @@ export default function Profile() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {dishlistDeleteTarget ? (
+          <motion.div
+            className="fixed inset-0 z-[91] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDishlistDeleteTarget(null)}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
+                    Delete Dishlist
+                  </p>
+                  <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
+                    Delete {dishlistDeleteTarget.name}?
+                  </h3>
+                  <p className="mt-1 text-sm text-black/55">
+                    This removes the dishlist itself, but keeps the dishes in your profile.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDishlistDeleteTarget(null)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/60"
+                  aria-label="Close delete dishlist dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDishlistDeleteTarget(null)}
+                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteDishlist}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#C93A3A] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,58,58,0.25)]"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
       <StoryViewerModal
         open={storiesOpen}

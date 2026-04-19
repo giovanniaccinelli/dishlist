@@ -717,6 +717,24 @@ export async function removeDishFromCustomDishlist(userId, dishlistId, dishId) {
   }
 }
 
+export async function deleteCustomDishlist(userId, dishlistId) {
+  if (!userId || !dishlistId) return false;
+  try {
+    const itemsSnap = await getDocs(customDishlistItemsCollection(userId, dishlistId));
+    const batch = writeBatch(db);
+    itemsSnap.docs.forEach((itemDoc) => {
+      batch.delete(itemDoc.ref);
+    });
+    batch.delete(customDishlistDoc(userId, dishlistId));
+    await batch.commit();
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to delete custom dishlist:", err);
+    return false;
+  }
+}
+
 export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   if (!userId || !dishData?.id || !dishlistId) return false;
   if (dishlistId === "uploaded") return true;

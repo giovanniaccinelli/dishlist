@@ -142,16 +142,17 @@ function DrumstickIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path
-        d="M9.4 7.1c2.4-1.8 5.8-1.5 7.9.6 2.2 2.2 2.4 5.7.3 8.1-2.1 2.4-5.6 2.8-8.1 1l-2.2-1.7c-.9-.7-.9-2 0-2.8l2.1-1.8Z"
+        d="M10.2 6.8c2.4-1.5 5.7-1.2 7.8.8 2.2 2.2 2.3 5.7.2 8-2 2.2-5.3 2.7-7.9 1.2l-2.4-1.5c-.9-.5-1-1.8-.2-2.5l2.5-2.1Z"
         fill="currentColor"
         fillOpacity="0.12"
         stroke="currentColor"
         strokeWidth="1.95"
         strokeLinejoin="round"
       />
-      <path d="M7.3 15.3 5.6 17" stroke="currentColor" strokeWidth="1.95" strokeLinecap="round" />
-      <circle cx="4.7" cy="17.8" r="1.2" stroke="currentColor" strokeWidth="1.85" />
-      <circle cx="6.5" cy="19.5" r="1.2" stroke="currentColor" strokeWidth="1.85" />
+      <path d="M7.8 15.4 5.9 17.3" stroke="currentColor" strokeWidth="1.95" strokeLinecap="round" />
+      <circle cx="5" cy="18.2" r="1.15" stroke="currentColor" strokeWidth="1.85" />
+      <circle cx="6.9" cy="20" r="1.15" stroke="currentColor" strokeWidth="1.85" />
+      <path d="M15 8.6c1.9 1.5 2.5 4.2 1.1 6.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" opacity="0.9" />
     </svg>
   );
 }

@@ -8,10 +8,15 @@ export default function AppBackButton({
   label = "Back",
   className = "",
   preferFallback = false,
+  forceFallback = false,
 }) {
   const router = useRouter();
 
   const goBack = () => {
+    if (forceFallback) {
+      router.push(fallback);
+      return;
+    }
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;

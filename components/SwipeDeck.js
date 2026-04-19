@@ -783,6 +783,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.stopPropagation();
                             e.preventDefault();
                           }}
+                          onPointerUp={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setRecipePanelModal("ingredients");
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
@@ -820,6 +825,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                           onPointerDown={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
+                          }}
+                          onPointerUp={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setRecipePanelModal("method");
                           }}
                           onClick={(e) => {
                             e.stopPropagation();

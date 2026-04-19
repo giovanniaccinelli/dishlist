@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -32,29 +32,83 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
+const TAP_MOVE_THRESHOLD = 10;
+
+function SafeDishOpenButton({ href, label }) {
+  const router = useRouter();
+  const pointerStartRef = useRef(null);
+  const movedRef = useRef(false);
+
+  const resetPointer = () => {
+    pointerStartRef.current = null;
+    movedRef.current = false;
+  };
+
+  const handlePointerDown = (event) => {
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    movedRef.current = false;
+  };
+
+  const handlePointerMove = (event) => {
+    if (!pointerStartRef.current || movedRef.current) return;
+    const dx = event.clientX - pointerStartRef.current.x;
+    const dy = event.clientY - pointerStartRef.current.y;
+    if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD) {
+      movedRef.current = true;
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!movedRef.current) {
+      router.push(href);
+    }
+    resetPointer();
+  };
+
+  return (
+    <button
+      type="button"
+      className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+      aria-label={label}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={resetPointer}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          router.push(href);
+        }
+      }}
+    />
+  );
+}
+
 function PlateIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <circle cx="12" cy="12" r="4.25" />
-      <circle cx="12" cy="12" r="7.2" />
-      <path d="M3.5 4.5v4.2" />
-      <path d="M2.2 4.5v2.3" />
-      <path d="M4.8 4.5v2.3" />
-      <path d="M3.5 8.7v10.8" />
-      <path d="M20.3 4.5c-2.4 1.1-3.6 3-3.6 5.5v1.6" />
-      <path d="M20.3 4.5v15" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <ellipse cx="12" cy="12" rx="8.4" ry="6.5" />
+      <ellipse cx="12" cy="12" rx="5.3" ry="3.9" />
+      <path d="M6.8 18.9h10.4" />
     </svg>
   );
 }
 
-function FriesIcon({ className = "" }) {
+function PizzaSliceIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M8 4.9v6.8" />
-      <path d="M11.2 4.2v7.5" />
-      <path d="M14.4 4.7v7" />
-      <path d="M17.2 5.3v6.4" />
-      <path d="M6 9.4h12l-1.3 8.6H7.3L6 9.4Z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M11.9 20.1 4.4 6.2c4.8-2 10.2-2 15 0l-7.5 13.9Z"
+        fill="currentColor"
+        fillOpacity="0.12"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+      <path d="M6.3 8c3.7-1.3 7.7-1.3 11.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="11.9" cy="11.3" r="1.15" fill="currentColor" />
+      <circle cx="9.2" cy="14.1" r="1.15" fill="currentColor" />
+      <circle cx="14.5" cy="14.4" r="1.15" fill="currentColor" />
     </svg>
   );
 }
@@ -71,11 +125,18 @@ function WalletIcon({ className = "" }) {
 
 function DrumstickIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M8.1 8.3c2.2-2 5.6-2.2 7.9-.5 2.8 2.1 3.2 6.1 1 8.9-2 2.5-5.6 3.1-8.3 1.4l-1.5-1.1" />
-      <path d="M7 16.9 5.2 18.7" />
-      <path d="M4.7 16.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
-      <path d="M7.2 19.1a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M9.4 7.1c2.4-1.8 5.8-1.5 7.9.6 2.2 2.2 2.4 5.7.3 8.1-2.1 2.4-5.6 2.8-8.1 1l-2.2-1.7c-.9-.7-.9-2 0-2.8l2.1-1.8Z"
+        fill="currentColor"
+        fillOpacity="0.12"
+        stroke="currentColor"
+        strokeWidth="1.95"
+        strokeLinejoin="round"
+      />
+      <path d="M7.3 15.3 5.6 17" stroke="currentColor" strokeWidth="1.95" strokeLinecap="round" />
+      <circle cx="4.7" cy="17.8" r="1.2" stroke="currentColor" strokeWidth="1.85" />
+      <circle cx="6.5" cy="19.5" r="1.2" stroke="currentColor" strokeWidth="1.85" />
     </svg>
   );
 }
@@ -84,18 +145,6 @@ function HeartIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
       <path d="M12 19.4 5.8 13.2a4.3 4.3 0 0 1 0-6.1 4.2 4.2 0 0 1 6 0l.2.2.2-.2a4.2 4.2 0 0 1 6 0 4.3 4.3 0 0 1 0 6.1L12 19.4Z" />
-    </svg>
-  );
-}
-
-function SaladIcon({ className = "" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M5.1 15.1c1.5-3.3 4-4.9 6.9-4.9s5.4 1.6 6.9 4.9" />
-      <path d="M4.8 15.1h14.4l-1.2 3.6H6l-1.2-3.6Z" />
-      <path d="M8.8 11c.2-1.1 1-1.9 2-2.1" />
-      <path d="M12.1 10.2c.3-1 1.1-1.8 2.1-1.9" />
-      <path d="M15.2 11.1c.2-.8.9-1.4 1.7-1.5" />
     </svg>
   );
 }
@@ -130,11 +179,17 @@ function CoinStackIcon({ className = "" }) {
 
 function ChiliIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M5.8 16.8c.6-4.1 3.6-6.9 7.3-6.9 1.6 0 3.2.5 4.7 1.6" />
-      <path d="M5.8 16.8c.3 2.2 1.8 3.7 3.9 3.7 4.5 0 8.1-2.8 9-6.9" />
-      <path d="M15 9.4c-.1-1.8.4-3.2 1.7-4.7" />
-      <path d="M16.8 4.2c.9.2 1.8.7 2.3 1.5" />
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M6.2 15.9c0-4.5 3.1-7.4 7.5-7.4 1.3 0 2.5.3 3.6.9-.2 5.4-3.8 9.3-8.8 9.3-1.5 0-2.3-1.1-2.3-2.8Z"
+        fill="currentColor"
+        fillOpacity="0.12"
+        stroke="currentColor"
+        strokeWidth="1.95"
+        strokeLinejoin="round"
+      />
+      <path d="M15.5 8.5c-.2-1.6.3-2.9 1.4-4.1" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M15.8 8.5c1-.3 1.9-.2 2.8.3" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -144,7 +199,7 @@ const TAG_DECOR = {
   comfort: { icon: HeartIcon, iconClass: "text-[#C96A1B]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
   "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
   quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
-  cheat: { icon: FriesIcon, iconClass: "text-[#C6582C]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
+  cheat: { icon: PizzaSliceIcon, iconClass: "text-[#C6582C]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
   easy: { icon: Clock3, iconClass: "text-[#6366F1]", pillClass: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
   fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
   premium: { icon: CoinStackIcon, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
@@ -153,7 +208,7 @@ const TAG_DECOR = {
   budget: { icon: WalletIcon, iconClass: "text-[#9B6A4A]", pillClass: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
   winter: { icon: Snowflake, iconClass: "text-[#3C89C9]", pillClass: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
   "late night": { icon: MoonStar, iconClass: "text-[#5E54C7]", pillClass: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },
-  light: { icon: SaladIcon, iconClass: "text-[#7C8796]", pillClass: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
+  light: { icon: PlateIcon, iconClass: "text-[#7C8796]", pillClass: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
   vegan: { icon: Sprout, iconClass: "text-[#2E9E57]", pillClass: "bg-[#E0F7E9] text-[#1F6A3D] border-[#A7E2BE]" },
   "low carb": { icon: NoWheatIcon, iconClass: "text-[#C53A4A]", pillClass: "bg-[#FFE3E0] text-[#8A1F2D] border-[#F3A0A9]" },
   spicy: { icon: ChiliIcon, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
@@ -192,9 +247,7 @@ function SearchBar({ value, onChange, placeholder }) {
 function DishPreview({ dish, title }) {
   return (
     <div className="pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer">
-      <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
-        <span className="sr-only">Open dish card</span>
-      </Link>
+      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -303,9 +356,7 @@ function ExpandedCategoryModal({ row, onClose }) {
         <div className="grid grid-cols-3 gap-3">
           {row.dishes.map((dish) => (
             <div key={`${row.key}-${dish.id}`} className="relative bg-white rounded-2xl overflow-hidden shadow-md">
-              <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
-                <span className="sr-only">Open dish card</span>
-              </Link>
+              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
               <img
                 src={getDishImageUrl(dish, "thumb")}
                 alt={dish.name}

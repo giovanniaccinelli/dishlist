@@ -24,7 +24,7 @@ import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CircleUserRound, Plus, Send } from "lucide-react";
+import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (

@@ -735,6 +735,26 @@ export async function deleteCustomDishlist(userId, dishlistId) {
   }
 }
 
+export async function updateCustomDishlistName(userId, dishlistId, name) {
+  const cleanedName = normalizeDishlistName(name);
+  if (!userId || !dishlistId || !cleanedName) return false;
+  try {
+    await setDoc(
+      customDishlistDoc(userId, dishlistId),
+      {
+        name: cleanedName,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to rename custom dishlist:", err);
+    return false;
+  }
+}
+
 export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   if (!userId || !dishData?.id || !dishlistId) return false;
   if (dishlistId === "uploaded") return true;

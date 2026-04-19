@@ -443,10 +443,10 @@ export default function PublicProfile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+              className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 active
-                  ? "border-black bg-black text-white"
-                  : "border-black/18 bg-white/92 text-black"
+                  ? "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
+                  : "border-black/30 bg-white text-black"
               }`}
             >
               {item.label}

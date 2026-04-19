@@ -28,6 +28,7 @@ import {
   removeSavedDishFromUser,
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
+  updateCustomDishlistName,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -81,6 +82,8 @@ export default function Profile() {
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
+  const [dishlistRenameTarget, setDishlistRenameTarget] = useState(null);
+  const [dishlistRenameValue, setDishlistRenameValue] = useState("");
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -750,6 +753,23 @@ export default function Profile() {
     setTimeout(() => setToast(""), 1200);
   };
 
+  const handleRenameDishlist = async () => {
+    if (!user?.uid || !dishlistRenameTarget?.id || !dishlistRenameValue.trim()) return;
+    const renamed = await updateCustomDishlistName(user.uid, dishlistRenameTarget.id, dishlistRenameValue);
+    if (!renamed) {
+      setToastVariant("error");
+      setToast("Dishlist rename failed");
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    await refreshCustomDishlists(user.uid);
+    setDishlistRenameTarget(null);
+    setDishlistRenameValue("");
+    setToastVariant("success");
+    setToast("Dishlist renamed");
+    setTimeout(() => setToast(""), 1200);
+  };
+
   const renderDishCounters = (dish) => (
     <div className="flex items-center gap-2 text-[10px] text-white/80">
       <div className="inline-flex items-center gap-1">
@@ -1027,10 +1047,10 @@ export default function Profile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+              className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 active
-                  ? "border-black bg-black text-white"
-                  : "border-black/18 bg-white/92 text-black"
+                  ? "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
+                  : "border-black/30 bg-white text-black"
               }`}
             >
               {item.label}
@@ -1535,7 +1555,7 @@ export default function Profile() {
                   setDishlistsOpen(false);
                   setDishlistsEditMode(false);
                 }}
-                className="fixed right-5 top-6 z-[89] flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                className="fixed right-5 top-[calc(env(safe-area-inset-top,0px)+2.9rem)] z-[89] flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
                 aria-label="Close dishlists"
               >
                 <X size={18} />
@@ -1606,17 +1626,31 @@ export default function Profile() {
                       </div>
                     </button>
                     {dishlistsEditMode && dishlist.type === "custom" ? (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDishlistDeleteTarget(dishlist);
-                        }}
-                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white shadow-[0_10px_20px_rgba(213,106,106,0.24)]"
-                        aria-label={`Delete ${dishlist.name}`}
-                      >
-                        <Minus size={15} />
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDishlistRenameTarget(dishlist);
+                            setDishlistRenameValue(dishlist.name || "");
+                          }}
+                          className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#111111] bg-white text-black shadow-[0_10px_20px_rgba(0,0,0,0.12)]"
+                          aria-label={`Rename ${dishlist.name}`}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDishlistDeleteTarget(dishlist);
+                          }}
+                          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white shadow-[0_10px_20px_rgba(213,106,106,0.24)]"
+                          aria-label={`Delete ${dishlist.name}`}
+                        >
+                          <Minus size={15} />
+                        </button>
+                      </>
                     ) : null}
                     </div>
                   );
@@ -1874,6 +1908,79 @@ export default function Profile() {
                 >
                   <Trash2 size={16} />
                   Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <AnimatePresence>
+        {dishlistRenameTarget ? (
+          <motion.div
+            className="fixed inset-0 z-[91] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setDishlistRenameTarget(null);
+              setDishlistRenameValue("");
+            }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
+                    Rename Dishlist
+                  </p>
+                  <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
+                    Edit the list name
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDishlistRenameTarget(null);
+                    setDishlistRenameValue("");
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/60"
+                  aria-label="Close rename dishlist dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={dishlistRenameValue}
+                onChange={(event) => setDishlistRenameValue(event.target.value)}
+                placeholder="Dishlist name"
+                className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDishlistRenameTarget(null);
+                    setDishlistRenameValue("");
+                  }}
+                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRenameDishlist}
+                  className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                >
+                  <Pencil size={15} />
+                  Save
                 </button>
               </div>
             </motion.div>

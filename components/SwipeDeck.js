@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -838,7 +838,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 aria-label="Secondary action"
                 disabled={disabled}
               >
-                {resolvedSecondaryActionLabel}
+                {resolvedSecondaryActionLabel === "Edit" ? <Pencil size={18} strokeWidth={2.1} /> : resolvedSecondaryActionLabel}
               </button>
             </div>
           )}

@@ -374,10 +374,10 @@ export default function Dishlists() {
                 <div
                   key={u.id}
                   className="bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer"
-                  style={{ contentVisibility: "auto", containIntrinsicSize: "214px" }}
+                  style={{ contentVisibility: "auto", containIntrinsicSize: "226px" }}
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
-                  <div className="mb-2.5 flex items-center gap-2.5">
+                  <div className="mb-3 flex items-start gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -407,9 +407,9 @@ export default function Dishlists() {
                         </div>
                       </div>
                     </button>
-                    <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 pt-0.5">
                       <div className="min-w-0 text-sm font-semibold leading-tight">
-                        <div className="truncate">{u.displayName || "User"}</div>
+                        <div className="line-clamp-2">{u.displayName || "User"}</div>
                       </div>
                       {!isMe && (
                         <button
@@ -418,7 +418,7 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold border transition ${
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold border transition ${
                             alreadyFollowing
                               ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"

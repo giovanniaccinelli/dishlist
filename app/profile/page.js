@@ -1790,7 +1790,7 @@ export default function Profile() {
                         value={createDishSearch}
                         onChange={(e) => setCreateDishSearch(e.target.value)}
                         placeholder="Search your dishes"
-                        className="min-w-0 flex-1 bg-transparent text-sm text-black placeholder:text-black/35 focus:outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-base text-black placeholder:text-black/35 focus:outline-none"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

@@ -25,6 +25,21 @@ import { getActiveStoriesForUser, getAllDishesFromFirestore, markStoryViewed } f
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Send } from "lucide-react";
 
+function StoryPromptIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.05" />
+      <circle cx="12" cy="12" r="6.8" />
+      <path d="M1.35 3.55V8.7" />
+      <path d="M0.2 3.55V6.2" />
+      <path d="M2.5 3.55V6.2" />
+      <path d="M1.35 8.7V19" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" />
+      <path d="M23.6 3.55V19" />
+    </svg>
+  );
+}
+
 const INITIAL_USERS_LIMIT = 10;
 
 const getProfileDishCount = (user) => Number(user.profileDishCount ?? 0);
@@ -310,9 +325,27 @@ export default function Dishlists() {
           className="w-full pl-4 pr-4 py-3.5 rounded-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] border border-black/10 text-black shadow-[0_12px_30px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-black/15 placeholder:text-black/38"
         />
       </div>
-      {visibleStoryGroups.length > 0 ? (
+      {(visibleStoryGroups.length > 0 || user) ? (
         <div className="mb-6">
           <div className="flex gap-3 overflow-x-auto pb-1">
+            {user ? (
+              <button
+                type="button"
+                onClick={() => router.push("/upload?story=1")}
+                className="shrink-0 flex flex-col items-center gap-2"
+              >
+                <div className="w-16 h-16 rounded-full p-[3px] bg-[#2BD36B]">
+                  <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                    <div className="w-full h-full rounded-full bg-black/6 overflow-hidden flex items-center justify-center text-[#2BD36B]">
+                      <StoryPromptIcon className="h-7 w-7" />
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-medium text-black/75 max-w-16 text-center leading-[1.1]">
+                  What are you eating?
+                </span>
+              </button>
+            ) : null}
             {visibleStoryGroups.map((group, idx) => {
               const viewedAll = user?.uid
                 ? group.stories.every((story) => (story.viewedBy || []).includes(user.uid))

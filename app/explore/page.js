@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChefHat,
+  Check,
   ChevronRight,
   CircleUserRound,
-  Clock3,
   Dumbbell,
   Flame,
   Leaf,
@@ -90,6 +90,21 @@ function PlateIcon({ className = "" }) {
       <ellipse cx="12" cy="12" rx="8.4" ry="6.5" />
       <ellipse cx="12" cy="12" rx="5.3" ry="3.9" />
       <path d="M6.8 18.9h10.4" />
+    </svg>
+  );
+}
+
+function FancyPlateIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.25" />
+      <circle cx="12" cy="12" r="7.2" />
+      <path d="M3.5 4.5v4.2" />
+      <path d="M2.2 4.5v2.3" />
+      <path d="M4.8 4.5v2.3" />
+      <path d="M3.5 8.7v10.8" />
+      <path d="M20.3 4.5c-2.4 1.1-3.6 3-3.6 5.5v1.6" />
+      <path d="M20.3 4.5v15" />
     </svg>
   );
 }
@@ -200,11 +215,11 @@ const TAG_DECOR = {
   "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
   quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
   cheat: { icon: PizzaSliceIcon, iconClass: "text-[#C6582C]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
-  easy: { icon: Clock3, iconClass: "text-[#6366F1]", pillClass: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
+  easy: { icon: Check, iconClass: "text-[#6366F1]", pillClass: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
   fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
   premium: { icon: CoinStackIcon, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
   veg: { icon: Leaf, iconClass: "text-[#33A047]", pillClass: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
-  fancy: { icon: PlateIcon, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
+  fancy: { icon: FancyPlateIcon, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
   budget: { icon: WalletIcon, iconClass: "text-[#9B6A4A]", pillClass: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
   winter: { icon: Snowflake, iconClass: "text-[#3C89C9]", pillClass: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
   "late night": { icon: MoonStar, iconClass: "text-[#5E54C7]", pillClass: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },

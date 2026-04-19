@@ -14,6 +14,27 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
+const TAG_DECOR = {
+  "high protein": { icon: "🥩", className: "bg-[#FDE6D8] text-[#7C2D12] border-[#F2B38D]" },
+  comfort: { icon: "🤤", className: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
+  "carb heavy": { icon: "🌾", className: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
+  quick: { icon: "⏱️", className: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
+  cheat: { icon: "🍔", className: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
+  easy: { icon: "✨", className: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
+  fit: { icon: "🏋️", className: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
+  premium: { icon: "🪙", className: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
+  veg: { icon: "🍃", className: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
+  fancy: { icon: "🍽️", className: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
+  budget: { icon: "👛", className: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
+  winter: { icon: "❄️", className: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
+  "late night": { icon: "🌙", className: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },
+  light: { icon: "🪶", className: "bg-[#F5F6F8] text-[#505A68] border-[#D5DBE3]" },
+  vegan: { icon: "🌱", className: "bg-[#E0F7E9] text-[#1F6A3D] border-[#A7E2BE]" },
+  "low carb": { icon: "🚫🌾", className: "bg-[#FFE3E0] text-[#8A1F2D] border-[#F3A0A9]" },
+  spicy: { icon: "🌶️", className: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
+  gourmet: { icon: "👨‍🍳", className: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
+  summer: { icon: "☀️", className: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
+};
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
   return (
@@ -73,8 +94,8 @@ function CategoryTitle({ row }) {
   if (row.key === "most-saved") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.05rem] font-semibold tracking-tight text-black/88">{row.title}</span>
-        <Trophy size={15} className="text-[#D7B443]" />
+        <span className="text-[1.18rem] font-semibold tracking-tight text-black/88">{row.title}</span>
+        <Trophy size={19} className="text-[#D7B443]" />
       </div>
     );
   }
@@ -82,15 +103,21 @@ function CategoryTitle({ row }) {
   if (row.key === "trending") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.05rem] font-semibold tracking-tight text-black/88">{row.title}</span>
-        <Flame size={15} className="text-[#F26A21]" />
+        <span className="text-[1.18rem] font-semibold tracking-tight text-black/88">{row.title}</span>
+        <Flame size={19} className="text-[#F26A21]" />
       </div>
     );
   }
 
+  const decor = TAG_DECOR[String(row.rawTag || "").toLowerCase()] || {
+    icon: "•",
+    className: getTagChipClass(row.rawTag || row.title, true),
+  };
+
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[12px] font-semibold ${getTagChipClass(row.rawTag || row.title)}`}>
-      {row.title}
+    <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.className}`}>
+      <span className="text-[1.15rem] leading-none" aria-hidden="true">{decor.icon}</span>
+      <span>{row.title}</span>
     </span>
   );
 }

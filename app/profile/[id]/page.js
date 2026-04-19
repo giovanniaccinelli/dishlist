@@ -328,8 +328,8 @@ export default function PublicProfile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
-        <AppBackButton fallback="/dishlists" />
         <div className="flex items-center gap-2">
+          <AppBackButton fallback="/dishlists" />
           {user?.uid !== id ? (
             <button
               onClick={handleFollow}
@@ -342,6 +342,8 @@ export default function PublicProfile() {
               {isFollowing ? "Unfollow" : "Follow"}
             </button>
           ) : null}
+        </div>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={async () => {

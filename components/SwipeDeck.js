@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -67,6 +67,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
+  const [recipePanelModal, setRecipePanelModal] = useState(null);
+  const [recipePanelOverflow, setRecipePanelOverflow] = useState({
+    ingredients: false,
+    method: false,
+  });
   const [tagsHeight, setTagsHeight] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -76,6 +81,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [replyTo, setReplyTo] = useState(null);
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
   const tagsRef = useRef(null);
+  const ingredientsPanelRef = useRef(null);
+  const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
@@ -116,9 +123,36 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
+    setRecipePanelModal(null);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
   }, [currentCard?._key]);
+
+  useEffect(() => {
+    if (!showRecipe) {
+      setRecipePanelOverflow({ ingredients: false, method: false });
+      return;
+    }
+
+    const measureOverflow = () => {
+      const ingredientsNode = ingredientsPanelRef.current;
+      const methodNode = methodPanelRef.current;
+      setRecipePanelOverflow({
+        ingredients: Boolean(
+          ingredientsNode && ingredientsNode.scrollHeight - ingredientsNode.clientHeight > 8
+        ),
+        method: Boolean(methodNode && methodNode.scrollHeight - methodNode.clientHeight > 8),
+      });
+    };
+
+    measureOverflow();
+
+    const nodes = [ingredientsPanelRef.current, methodPanelRef.current].filter(Boolean);
+    if (!nodes.length || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measureOverflow);
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [showRecipe, currentCard?._key]);
 
   useEffect(() => {
     if (!currentCard?.id) return;
@@ -511,10 +545,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive || showRecipe ? false : "x"}
+          drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "pan-y" : "none" }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
@@ -737,8 +771,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   <div
+                    ref={ingredientsPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll relative"
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onPointerCancelCapture={releaseRecipePanelInteraction}
@@ -747,14 +782,32 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     onTouchCancelCapture={releaseRecipePanelInteraction}
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
                   >
-                    <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Ingredients</h3>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Ingredients</h3>
+                      {recipePanelOverflow.ingredients ? (
+                        <button
+                          type="button"
+                          data-no-drag="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setRecipePanelModal("ingredients");
+                          }}
+                          className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          aria-label="Open ingredients full screen"
+                        >
+                          <Maximize2 size={14} />
+                        </button>
+                      ) : null}
+                    </div>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                       {currentCard.recipeIngredients || "No ingredients provided."}
                     </p>
                   </div>
                   <div
+                    ref={methodPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll relative"
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onPointerCancelCapture={releaseRecipePanelInteraction}
@@ -763,7 +816,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     onTouchCancelCapture={releaseRecipePanelInteraction}
                     style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
                   >
-                    <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45 mb-2">Method</h3>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Method</h3>
+                      {recipePanelOverflow.method ? (
+                        <button
+                          type="button"
+                          data-no-drag="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setRecipePanelModal("method");
+                          }}
+                          className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          aria-label="Open method full screen"
+                        >
+                          <Maximize2 size={14} />
+                        </button>
+                      ) : null}
+                    </div>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
                       {currentCard.recipeMethod || "No method provided."}
                     </p>
@@ -1032,6 +1102,46 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           history={currentStoryPushHistory}
         />
       ) : null}
+
+      <AnimatePresence>
+        {recipePanelModal ? (
+          <motion.div
+            className="fixed inset-0 z-[140] bg-[#F7F2E8]/96 backdrop-blur-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex h-full flex-col px-5 pb-6 pt-1 text-black">
+              <div className="app-top-nav -mx-5 mb-4 px-5 flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
+                    Recipe
+                  </div>
+                  <h3 className="mt-1 text-[1.6rem] font-bold leading-none">
+                    {recipePanelModal === "ingredients" ? "Ingredients" : "Method"}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRecipePanelModal(null)}
+                  className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center"
+                  aria-label="Close full screen recipe panel"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto rounded-[1.7rem] border border-black/8 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
+                <div className="mb-4 text-xl font-bold leading-tight">{currentCard?.name}</div>
+                <p className="text-sm leading-7 text-black/80 whitespace-pre-wrap">
+                  {recipePanelModal === "ingredients"
+                    ? currentCard?.recipeIngredients || "No ingredients provided."
+                    : currentCard?.recipeMethod || "No method provided."}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <AppToast message={toast} variant={toastVariant} />
     </div>

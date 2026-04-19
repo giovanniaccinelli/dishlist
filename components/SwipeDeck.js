@@ -161,6 +161,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       : secondaryActionClassName;
   const resolvedSecondaryActionToast =
     typeof secondaryActionToast === "function" ? secondaryActionToast(currentCard) : secondaryActionToast;
+  const hasBottomActionRow =
+    Boolean(resolvedSecondaryActionLabel) &&
+    Boolean(tertiaryActionLabel) &&
+    Boolean(actionLabel) &&
+    typeof onSharePress === "function";
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -588,7 +593,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <span>{currentStoryPushCount}</span>
             </button>
           ) : null}
-          {typeof onSharePress === "function" && (
+          {typeof onSharePress === "function" && !hasBottomActionRow && (
             <button
               type="button"
               data-no-drag="true"
@@ -604,7 +609,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <CornerUpRight size={24} strokeWidth={2.1} />
             </button>
           )}
-          {tertiaryActionLabel ? (
+          {tertiaryActionLabel && !hasBottomActionRow ? (
             <button
               type="button"
               data-no-drag="true"
@@ -757,7 +762,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           </motion.div>
 
-          {actionLabel ? (
+          {actionLabel && !hasBottomActionRow ? (
             <div className="absolute right-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
@@ -800,7 +805,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
 
-          {resolvedSecondaryActionLabel && (
+          {resolvedSecondaryActionLabel && !hasBottomActionRow && (
             <div className="absolute left-4 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
@@ -842,6 +847,103 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </button>
             </div>
           )}
+
+          {hasBottomActionRow ? (
+            <div className="absolute left-4 right-4 z-30 grid grid-cols-4 gap-3" style={{ bottom: actionBottom }}>
+              <button
+                data-no-drag="true"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {}
+                }}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                  } catch {}
+                  handleSecondaryActionPress(e);
+                }}
+                className={resolvedSecondaryActionClassName || "add-action-btn h-14 w-full"}
+                aria-label="Secondary action"
+                disabled={disabled}
+              >
+                {resolvedSecondaryActionLabel === "Edit" ? <Pencil size={18} strokeWidth={2.1} /> : resolvedSecondaryActionLabel}
+              </button>
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={handleTertiaryActionPress}
+                className={tertiaryActionClassName || "add-action-btn h-14 w-full"}
+                aria-label="Additional action"
+              >
+                {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
+              </button>
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onSharePress(currentCard);
+                }}
+                className="add-action-btn h-14 w-full"
+                aria-label="Share dish"
+              >
+                <CornerUpRight size={24} strokeWidth={2.1} />
+              </button>
+              <button
+                data-no-drag="true"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {}
+                }}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                  } catch {}
+                  handleActionPress(e);
+                }}
+                className={actionClassName || "add-action-btn h-14 w-full text-[36px]"}
+                aria-label="Action"
+                disabled={disabled}
+              >
+                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+              </button>
+            </div>
+          ) : null}
 
           <div
             ref={tagsRef}

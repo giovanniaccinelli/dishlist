@@ -402,11 +402,21 @@ export default function PublicProfile() {
               </div>
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">dishes</div>
+                <button
+                  onClick={() => selectDishlist("all_dishes")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  dishes
+                </button>
               </div>
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
-                <div className="mt-1 text-[10px] leading-[1.1] text-black/50">uploaded</div>
+                <button
+                  onClick={() => selectDishlist("uploaded")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  uploaded
+                </button>
               </div>
             </div>
           </div>
@@ -445,7 +455,9 @@ export default function PublicProfile() {
               onClick={() => selectDishlist(item.id)}
               className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 active
-                  ? "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
+                  ? item.id === "all_dishes"
+                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#7A5A00] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
+                    : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                   : "border-black/30 bg-white text-black"
               }`}
             >

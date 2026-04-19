@@ -16,6 +16,7 @@ import {
   getAllDishlistsForUser,
   getCustomDishlistsForUser,
   getDishesFromFirestore,
+  getConversationId,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getOrCreateConversation,
@@ -351,7 +352,14 @@ export default function PublicProfile() {
                 setShowAuthPrompt(true);
                 return;
               }
-              const conversationId = await getOrCreateConversation(user, profileUser);
+              const targetUser = {
+                id,
+                uid: id,
+                displayName: profileUser?.displayName || "",
+                photoURL: profileUser?.photoURL || "",
+              };
+              const conversationId =
+                (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, id);
               if (conversationId) {
                 router.push(`/directs/${conversationId}`);
               }

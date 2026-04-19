@@ -750,15 +750,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-hidden"
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
-              <button
-                type="button"
-                className="absolute inset-x-0 top-0 h-32 z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowRecipe((prev) => !prev);
-                }}
-                aria-label="Toggle dish and recipe view"
-              />
               <div
                 className="absolute left-6 right-6 top-16 min-h-0 flex flex-col"
                 style={{ bottom: `${recipeContentBottom}px` }}
@@ -788,12 +779,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         <button
                           type="button"
                           data-no-drag="true"
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
                             setRecipePanelModal("ingredients");
                           }}
-                          className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className="pointer-events-auto relative z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
                           aria-label="Open ingredients full screen"
                         >
                           <Maximize2 size={14} />
@@ -822,12 +817,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         <button
                           type="button"
                           data-no-drag="true"
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
                             setRecipePanelModal("method");
                           }}
-                          className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className="pointer-events-auto relative z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
                           aria-label="Open method full screen"
                         >
                           <Maximize2 size={14} />

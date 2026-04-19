@@ -235,10 +235,10 @@ export default function PublicProfile() {
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
     if (customDishlist) {
-      window.location.href = `/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${id}`;
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${id}`);
       return;
     }
-    window.location.href = `/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}`;
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}`);
   };
 
   const handleOpenSavers = async (dish) => {
@@ -353,7 +353,7 @@ export default function PublicProfile() {
               }
               const conversationId = await getOrCreateConversation(user, profileUser);
               if (conversationId) {
-                window.location.href = `/directs/${conversationId}`;
+                router.push(`/directs/${conversationId}`);
               }
             }}
             className="top-action-btn relative"

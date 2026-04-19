@@ -511,10 +511,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
+          drag={disabled || isEjecting || scrollPanelActive || showRecipe ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
+          style={{ x: dragX, rotate: cardRotate, touchAction: showRecipe ? "pan-y" : "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
@@ -738,7 +738,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   <div
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onPointerCancelCapture={releaseRecipePanelInteraction}
@@ -754,7 +754,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   </div>
                   <div
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll"
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-auto"
                     onPointerDownCapture={stopRecipePanelInteraction}
                     onPointerUpCapture={releaseRecipePanelInteraction}
                     onPointerCancelCapture={releaseRecipePanelInteraction}

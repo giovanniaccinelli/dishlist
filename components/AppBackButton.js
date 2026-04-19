@@ -12,12 +12,12 @@ export default function AppBackButton({
   const router = useRouter();
 
   const goBack = () => {
-    if (preferFallback) {
-      router.push(fallback);
-      return;
-    }
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
+      return;
+    }
+    if (preferFallback) {
+      router.push(fallback);
       return;
     }
     router.push(fallback);

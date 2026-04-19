@@ -53,6 +53,18 @@ export default function UploadPage() {
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "saved"]);
   const [targetDishlistId, setTargetDishlistId] = useState("saved");
 
+  const navigateBackToOrigin = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    const params = new URLSearchParams();
+    if (targetDishlistId && targetDishlistId !== "saved") {
+      params.set("list", targetDishlistId);
+    }
+    router.replace(`/profile${params.toString() ? `?${params.toString()}` : ""}`);
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -126,7 +138,7 @@ export default function UploadPage() {
         if (!ok) throw new Error("Failed to publish story.");
         setToastVariant("success");
         setToast("Story published");
-        setTimeout(() => router.replace("/profile"), 1200);
+        setTimeout(() => navigateBackToOrigin(), 1200);
       } else {
         const dishPayload = {
           name: dishName.trim(),
@@ -151,7 +163,7 @@ export default function UploadPage() {
         }
         setToastVariant("success");
         setToast("Dish uploaded");
-        setTimeout(() => router.replace("/profile"), 1200);
+        setTimeout(() => navigateBackToOrigin(), 1200);
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);

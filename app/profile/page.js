@@ -924,7 +924,7 @@ export default function Profile() {
             type="button"
             onClick={() => {
               if (!user) return;
-              window.location.href = "/directs";
+              router.push("/directs");
             }}
             className="top-action-btn relative"
             aria-label="Directs"

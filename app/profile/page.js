@@ -90,6 +90,7 @@ export default function Profile() {
   const [popularDishlistNames, setPopularDishlistNames] = useState([]);
   const [selectedDishIds, setSelectedDishIds] = useState([]);
   const [createSourceDishlistId, setCreateSourceDishlistId] = useState("saved");
+  const [createDishSearch, setCreateDishSearch] = useState("");
   const [creatingDishlist, setCreatingDishlist] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -630,30 +631,35 @@ export default function Profile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+  const sortDishlistDishes = (dishesList) =>
+    [...(dishesList || [])].sort(
+      (a, b) =>
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0)
+    );
+
+  const allDishesCollection = Array.from(
+    new Map(
+      [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
+        .filter((dish) => dish?.id)
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
 
   const allDishlists = [
-    { id: "saved", name: "Top picks", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "saved", name: "Top picks", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
-      dishes: Array.from(
-        new Map(
-          [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
-            .filter((dish) => dish?.id)
-            .map((dish) => [dish.id, dish])
-        ).values()
-      ),
-      count: Array.from(
-        new Set(
-          [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
-            .map((dish) => dish?.id)
-            .filter(Boolean)
-        )
-      ).length,
+      dishes: sortDishlistDishes(allDishesCollection),
+      count: allDishesCollection.length,
     },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
-    ...customDishlists,
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: uploadedDishes.length },
+    ...customDishlists.map((dishlist) => ({
+      ...dishlist,
+      dishes: sortDishlistDishes(dishlist.dishes || []),
+    })),
   ];
 
   const activeDishlist =
@@ -670,6 +676,12 @@ export default function Profile() {
   );
   const createSourceDishlist =
     allDishlists.find((dishlist) => dishlist.id === createSourceDishlistId) || allDishlists[0] || null;
+  const createDishSearchTerm = createDishSearch.trim().toLowerCase();
+  const createDishSearchPool =
+    allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
+  const visibleCreateDishes = createDishSearchTerm
+    ? createDishSearchPool.filter((dish) => (dish?.name || "").toLowerCase().includes(createDishSearchTerm))
+    : createSourceDishlist?.dishes || [];
 
   const toggleDishSelection = (dish) => {
     if (!dish?.id) return;
@@ -685,6 +697,7 @@ export default function Profile() {
     setNewDishlistName("");
     setSelectedDishIds([]);
     setCreateSourceDishlistId(allDishlists[0]?.id || "saved");
+    setCreateDishSearch("");
     setCreateDishlistOpen(true);
   };
 
@@ -1060,7 +1073,7 @@ export default function Profile() {
               className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 active
                   ? item.id === "all_dishes"
-                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#7A5A00] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
+                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
                     : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                   : "border-black/30 bg-white text-black"
               }`}
@@ -1770,6 +1783,16 @@ export default function Profile() {
               ) : (
                 <>
                   <div className="max-h-[58vh] overflow-y-auto pr-1">
+                    <div className="mb-4 flex items-center gap-2 rounded-[1.15rem] border border-black/10 bg-white px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)]">
+                      <Search size={16} className="shrink-0 text-black/40" />
+                      <input
+                        type="text"
+                        value={createDishSearch}
+                        onChange={(e) => setCreateDishSearch(e.target.value)}
+                        placeholder="Search your dishes"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-black placeholder:text-black/35 focus:outline-none"
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {allDishlists.map((dishlist) => {
                         const preview = [...(dishlist.dishes || [])].sort(() => Math.random() - 0.5).slice(0, 4);
@@ -1813,9 +1836,11 @@ export default function Profile() {
                     </div>
                     {createSourceDishlist ? (
                       <div className="mt-5">
-                        <div className="mb-2 text-sm font-semibold text-black">{createSourceDishlist.name}</div>
+                        <div className="mb-2 text-sm font-semibold text-black">
+                          {createDishSearchTerm ? "Search results" : createSourceDishlist.name}
+                        </div>
                         <div className="grid grid-cols-3 gap-2">
-                          {(createSourceDishlist.dishes || []).map((dish) => {
+                          {visibleCreateDishes.map((dish) => {
                             const selected = selectedDishIds.includes(dish.id);
                             return (
                               <button
@@ -1843,6 +1868,11 @@ export default function Profile() {
                             );
                           })}
                         </div>
+                        {visibleCreateDishes.length === 0 ? (
+                          <div className="mt-2 rounded-[1rem] border border-dashed border-black/10 bg-white/70 px-4 py-5 text-center text-sm text-black/50">
+                            No matching dishes.
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

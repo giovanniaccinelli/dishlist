@@ -265,30 +265,35 @@ export default function PublicProfile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+  const sortDishlistDishes = (dishesList) =>
+    [...(dishesList || [])].sort(
+      (a, b) =>
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0)
+    );
+
+  const allDishesCollection = Array.from(
+    new Map(
+      [...dishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
+        .filter((dish) => dish?.id)
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
 
   const allDishlists = [
-    { id: "saved", name: "Top picks", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "saved", name: "Top picks", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
-      dishes: Array.from(
-        new Map(
-          [...dishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
-            .filter((dish) => dish?.id)
-            .map((dish) => [dish.id, dish])
-        ).values()
-      ),
-      count: Array.from(
-        new Set(
-          [...dishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
-            .map((dish) => dish?.id)
-            .filter(Boolean)
-        )
-      ).length,
+      dishes: sortDishlistDishes(allDishesCollection),
+      count: allDishesCollection.length,
     },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
-    ...customDishlists,
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: dishes.length },
+    ...customDishlists.map((dishlist) => ({
+      ...dishlist,
+      dishes: sortDishlistDishes(dishlist.dishes || []),
+    })),
   ];
 
   const activeDishlist =
@@ -456,7 +461,7 @@ export default function PublicProfile() {
               className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 active
                   ? item.id === "all_dishes"
-                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#7A5A00] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
+                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
                     : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                   : "border-black/30 bg-white text-black"
               }`}

@@ -11,7 +11,7 @@ import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
-import { ArrowLeft, Plus, SendHorizonal, Trash2, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, X } from "lucide-react";
 
 export default function DirectChat() {
   const { id } = useParams();
@@ -25,6 +25,7 @@ export default function DirectChat() {
   const [confirmDish, setConfirmDish] = useState(null);
   const [pickerDishlists, setPickerDishlists] = useState([]);
   const [pickerDishlistId, setPickerDishlistId] = useState("saved");
+  const [pickerSearch, setPickerSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
@@ -82,6 +83,12 @@ export default function DirectChat() {
 
   const activePickerDishlist =
     pickerDishlists.find((dishlist) => dishlist.id === pickerDishlistId) || pickerDishlists[0] || null;
+  const pickerSearchTerm = pickerSearch.trim().toLowerCase();
+  const pickerSearchPool =
+    pickerDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
+  const visiblePickerDishes = pickerSearchTerm
+    ? pickerSearchPool.filter((dish) => (dish?.name || "").toLowerCase().includes(pickerSearchTerm))
+    : activePickerDishlist?.dishes || [];
 
   const sendText = async () => {
     if (!input.trim() || !user?.uid) return;
@@ -104,6 +111,7 @@ export default function DirectChat() {
     if (!ok) return;
     setConfirmDish(null);
     setPickerOpen(false);
+    setPickerSearch("");
   };
 
   const clearLongPressTimer = () => {
@@ -242,6 +250,7 @@ export default function DirectChat() {
               onClick={() => {
                 setPickerOpen(true);
                 setConfirmDish(null);
+                setPickerSearch("");
               }}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] border border-black/10 bg-white text-black shadow-[0_8px_20px_rgba(0,0,0,0.07)]"
               aria-label="Share a dish"
@@ -271,6 +280,7 @@ export default function DirectChat() {
           onClick={() => {
             setPickerOpen(false);
             setConfirmDish(null);
+            setPickerSearch("");
           }}
         >
           <div
@@ -287,12 +297,25 @@ export default function DirectChat() {
                 onClick={() => {
                   setPickerOpen(false);
                   setConfirmDish(null);
+                  setPickerSearch("");
                 }}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/70"
                 aria-label="Close dish picker"
               >
                 <X size={18} />
               </button>
+            </div>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 rounded-[1.15rem] border border-black/10 bg-white px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)]">
+                <Search size={16} className="shrink-0 text-black/40" />
+                <input
+                  type="text"
+                  value={pickerSearch}
+                  onChange={(e) => setPickerSearch(e.target.value)}
+                  placeholder="Search your dishes"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-black placeholder:text-black/35 focus:outline-none"
+                />
+              </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -338,10 +361,12 @@ export default function DirectChat() {
                 <div className="mt-5">
                   <div className="mb-3 flex items-center gap-2">
                     <ArrowLeft size={16} className="text-black/35 rotate-180" />
-                    <div className="text-sm font-semibold text-black">{activePickerDishlist.name}</div>
+                    <div className="text-sm font-semibold text-black">
+                      {pickerSearchTerm ? "Search results" : activePickerDishlist.name}
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3 content-start">
-                    {(activePickerDishlist.dishes || []).map((dish) => {
+                    {visiblePickerDishes.map((dish) => {
                       const imageSrc = getDishImageUrl(dish, "thumb");
                       return (
                         <button
@@ -365,6 +390,11 @@ export default function DirectChat() {
                       );
                     })}
                   </div>
+                  {visiblePickerDishes.length === 0 ? (
+                    <div className="mt-3 rounded-[1.2rem] border border-dashed border-black/10 bg-white/70 px-4 py-6 text-center text-sm text-black/50">
+                      No matching dishes.
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

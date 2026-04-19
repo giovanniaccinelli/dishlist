@@ -365,7 +365,7 @@ export default function Dishlists() {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
@@ -373,11 +373,11 @@ export default function Dishlists() {
               return (
                 <div
                   key={u.id}
-                  className="bg-white rounded-2xl p-3 shadow-md relative overflow-hidden cursor-pointer"
-                  style={{ contentVisibility: "auto", containIntrinsicSize: "240px" }}
+                  className="bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer"
+                  style={{ contentVisibility: "auto", containIntrinsicSize: "214px" }}
                   onClick={() => router.push(`/profile/${u.id}`)}
                 >
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="mb-2.5 flex items-center gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -407,14 +407,30 @@ export default function Dishlists() {
                         </div>
                       </div>
                     </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold leading-tight max-h-9 overflow-hidden">
-                        {u.displayName || "User"}
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                      <div className="min-w-0 text-sm font-semibold leading-tight">
+                        <div className="truncate">{u.displayName || "User"}</div>
                       </div>
+                      {!isMe && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleFollow(u.id, alreadyFollowing);
+                          }}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold border transition ${
+                            alreadyFollowing
+                              ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                              : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                          }`}
+                        >
+                          {alreadyFollowing ? "Unfollow" : "Follow"}
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 mb-3">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {previewCells.map((imageSrc, idx) => (
                       <div
                         key={`${u.id}-preview-${idx}`}
@@ -438,24 +454,6 @@ export default function Dishlists() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-end">
-                    {!isMe && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleFollow(u.id, alreadyFollowing);
-                        }}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                          alreadyFollowing
-                            ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                            : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-                        }`}
-                      >
-                        {alreadyFollowing ? "Unfollow" : "Follow"}
-                      </button>
-                    )}
-                  </div>
                 </div>
               );
             })}

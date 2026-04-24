@@ -332,7 +332,20 @@ export default function PublicProfile() {
         <div className="flex min-w-[74px] items-center gap-2">
           <AppBackButton fallback="/dishlists" />
         </div>
-        <div className="flex-1" />
+        <div className="flex flex-1 items-center justify-start">
+          {user?.uid !== id ? (
+            <button
+              onClick={handleFollow}
+              className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
+                isFollowing
+                  ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                  : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+              }`}
+            >
+              {isFollowing ? "Unfollow" : "Follow"}
+            </button>
+          ) : null}
+        </div>
         <div className="flex min-w-[74px] items-center justify-end gap-2">
           <button
             type="button"
@@ -398,20 +411,6 @@ export default function PublicProfile() {
           </div>
 
           <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
-            <div className="flex min-h-[2rem] items-center">
-              {user?.uid !== id ? (
-                <button
-                  onClick={handleFollow}
-                  className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                    isFollowing
-                      ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                      : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-                  }`}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </button>
-              ) : null}
-            </div>
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
             <div className="grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[52px] flex-col items-center justify-end text-center">

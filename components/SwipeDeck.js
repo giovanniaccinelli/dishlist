@@ -91,6 +91,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
   const rightCueScale = useTransform(dragX, [0, 50, 160], [0.7, 0.9, 1.1]);
   const leftCueScale = useTransform(dragX, [0, -50, -160], [0.7, 0.9, 1.1]);
+  const normalizedDishLink = useMemo(() => {
+    const rawLink = deck[currentIndex]?.dishLink?.trim();
+    if (!rawLink) return "";
+    return /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+  }, [deck, currentIndex]);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -737,10 +742,32 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   >
                     {currentCard.name}
                   </button>
-                  {currentCard.description ? (
-                    <p className="text-sm text-white/80 line-clamp-2">
-                      {currentCard.description}
-                    </p>
+                  {currentCard.description || normalizedDishLink ? (
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
+                      {currentCard.description ? (
+                        <p className="min-w-0 flex-1 line-clamp-2">
+                          {currentCard.description}
+                        </p>
+                      ) : null}
+                      {normalizedDishLink ? (
+                        <a
+                          href={normalizedDishLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          data-no-drag="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]"
+                        >
+                          <span>Link</span>
+                          <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                        </a>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
               ) : null}

@@ -1066,9 +1066,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments();
                   }}
-                  className="text-xs text-white/90 underline-offset-2 hover:underline"
+                  className="w-full rounded-[0.95rem] border border-white/14 bg-black/22 px-3 py-2 text-left shadow-[0_8px_18px_rgba(0,0,0,0.12)] backdrop-blur-[6px]"
                 >
-                  {previewComment.userName || "User"}: {previewComment.text}
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.1em] text-white/62">
+                    <span className="font-semibold">{previewComment.userName || "User"}</span>
+                    <span className="h-1 w-1 rounded-full bg-white/38" />
+                    <span>comment</span>
+                  </div>
+                  <div className="mt-1 truncate text-[12px] leading-5 text-white/92">
+                    {previewComment.text}
+                  </div>
                 </button>
               ) : (
                 <button
@@ -1079,7 +1086,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments();
                   }}
-                  className="text-xs text-white/70"
+                  className="rounded-full border border-white/14 bg-black/18 px-3 py-2 text-[11px] font-medium text-white/74 shadow-[0_8px_18px_rgba(0,0,0,0.1)] backdrop-blur-[6px]"
                 >
                   Be the first to comment
                 </button>

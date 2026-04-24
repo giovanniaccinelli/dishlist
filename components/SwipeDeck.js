@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, MessageCircle, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -56,8 +56,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   showStoryHistoryCounter = false,
 }, ref) {
   const router = useRouter();
-  const SWIPE_EJECT_THRESHOLD = 110;
-  const SWIPE_VELOCITY_THRESHOLD = 700;
+  const SWIPE_EJECT_THRESHOLD = 70;
 
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -86,12 +85,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
   const dragX = useMotionValue(0);
-  const cardRotate = useTransform(dragX, [-260, 0, 260], [-16, 0, 16]);
+  const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
-  const rightCueOpacity = useTransform(dragX, [0, 70, 180], [0, 0.22, 0.82]);
-  const leftCueOpacity = useTransform(dragX, [0, -70, -180], [0, 0.22, 0.82]);
-  const rightCueScale = useTransform(dragX, [0, 70, 180], [0.64, 0.88, 1.12]);
-  const leftCueScale = useTransform(dragX, [0, -70, -180], [0.64, 0.88, 1.12]);
+  const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
+  const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
+  const rightCueScale = useTransform(dragX, [0, 50, 160], [0.7, 0.9, 1.1]);
+  const leftCueScale = useTransform(dragX, [0, -50, -160], [0.7, 0.9, 1.1]);
 
   useEffect(() => {
     const formatted = dishes.map((d, i) => ({
@@ -202,7 +201,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel) &&
     typeof onSharePress === "function";
-  const nextCardScale = useTransform(dragX, [-180, -24, 0, 24, 180], [1, 0.975, 0.952, 0.975, 1]);
+  const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [0.99, 0.965, 0.95, 0.965, 0.99]);
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -420,19 +419,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
-    const horizontalOffset = Number(info.offset.x || 0);
-    const horizontalVelocity = Number(info.velocity.x || 0);
-    const swipeCommitted =
-      Math.abs(horizontalOffset) >= SWIPE_EJECT_THRESHOLD ||
-      Math.abs(horizontalVelocity) >= SWIPE_VELOCITY_THRESHOLD;
-
-    if (swipeCommitted) {
-      const direction = horizontalOffset === 0 ? (horizontalVelocity >= 0 ? 1 : -1) : horizontalOffset > 0 ? 1 : -1;
+    if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
+      const direction = info.offset.x > 0 ? 1 : -1;
       setIsEjecting(true);
-      if (swipeAddEnabled && actionOnRightSwipe && direction > 0) {
+      if (swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
         runAction(dish);
       }
-      if (direction > 0 && typeof onRightSwipe === "function") {
+      if (info.offset.x > 0 && typeof onRightSwipe === "function") {
         Promise.resolve(onRightSwipe(dish))
           .then((result) => {
             if (result === false) {
@@ -459,9 +452,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       try {
         await animate(dragX, targetX, {
           type: "spring",
-          stiffness: 340,
-          damping: 24,
-          mass: 0.45,
+          stiffness: 280,
+          damping: 28,
+          mass: 0.6,
         }).finished;
       } catch {}
       advanceCard();
@@ -471,9 +464,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
     animate(dragX, 0, {
       type: "spring",
-      stiffness: 480,
-      damping: 30,
-      mass: 0.5,
+      stiffness: 420,
+      damping: 34,
+      mass: 0.55,
     });
   };
 
@@ -554,8 +547,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.18}
-          dragMomentum={false}
+          dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
@@ -1074,27 +1066,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments();
                   }}
-                  className="w-full rounded-[1.1rem] border border-white/18 bg-black/38 px-3 py-2.5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.16)] backdrop-blur-[8px]"
+                  className="text-xs text-white/90 underline-offset-2 hover:underline"
                 >
-                  <div className="flex items-start gap-2.5">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/16 text-[11px] font-bold text-white">
-                      {(previewComment.userName || "U").slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-white/72">
-                          {previewComment.userName || "User"}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2 py-0.5 text-[10px] font-semibold text-white/78">
-                          <MessageCircle size={10} />
-                          comment
-                        </span>
-                      </div>
-                      <div className="mt-1 line-clamp-2 text-[12px] leading-5 text-white/92">
-                        {previewComment.text}
-                      </div>
-                    </div>
-                  </div>
+                  {previewComment.userName || "User"}: {previewComment.text}
                 </button>
               ) : (
                 <button
@@ -1105,9 +1079,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments();
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-black/32 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/76 shadow-[0_10px_24px_rgba(0,0,0,0.14)] backdrop-blur-[8px]"
+                  className="text-xs text-white/70"
                 >
-                  <MessageCircle size={12} />
                   Be the first to comment
                 </button>
               )}

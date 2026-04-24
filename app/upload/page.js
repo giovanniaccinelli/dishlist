@@ -34,6 +34,7 @@ export default function UploadPage() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
+  const [dishLink, setDishLink] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [dishTags, setDishTags] = useState([]);
@@ -52,6 +53,7 @@ export default function UploadPage() {
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "saved"]);
   const [targetDishlistId, setTargetDishlistId] = useState("saved");
+  const [showLinkField, setShowLinkField] = useState(false);
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -103,6 +105,13 @@ export default function UploadPage() {
     if (file && file.type.startsWith("image/")) handleImageChange(file);
   };
 
+  const getNormalizedDishLink = () => {
+    const trimmed = dishLink.trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
   const handlePost = async () => {
     if (!user) {
       setShowAuthPrompt(true);
@@ -128,6 +137,7 @@ export default function UploadPage() {
           dishId: storyId,
           name: dishName.trim(),
           description: dishDescription.trim(),
+          dishLink: getNormalizedDishLink(),
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
@@ -143,6 +153,7 @@ export default function UploadPage() {
         const dishPayload = {
           name: dishName.trim(),
           description: dishDescription.trim(),
+          dishLink: getNormalizedDishLink(),
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
@@ -364,6 +375,28 @@ export default function UploadPage() {
                   rows={4}
                   disabled={loadingUpload}
                 />
+                <div className="mb-5">
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkField((prev) => !prev)}
+                    className="inline-flex items-center rounded-full border border-[#D8C090] bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55"
+                  >
+                    {showLinkField || dishLink ? "Dish link" : "Add link"}
+                  </button>
+                  {showLinkField || dishLink ? (
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={dishLink}
+                      onChange={(e) => setDishLink(e.target.value)}
+                      className="mt-3 w-full rounded-full border border-[#D8C090] bg-white/90 px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                      disabled={loadingUpload}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                  ) : null}
+                </div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>
@@ -436,6 +469,11 @@ export default function UploadPage() {
                       <div className="text-lg font-semibold truncate">{dishName || "Untitled dish"}</div>
                       {dishDescription ? (
                         <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
+                      ) : null}
+                      {dishLink ? (
+                        <div className="mt-2 inline-flex max-w-full items-center rounded-full border border-[#D8C090] bg-white/72 px-3 py-1 text-[11px] font-medium text-black/62">
+                          <span className="truncate">{getNormalizedDishLink()}</span>
+                        </div>
                       ) : null}
                       {dishTags.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">

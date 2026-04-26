@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -86,6 +86,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
+  const deckPlaybackShouldTryAudioRef = useRef(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -174,11 +175,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     })();
   }, [currentCard?.id, onCardViewed]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const video = currentVideoRef.current;
     if (!video || showRecipe || !isDishVideo(currentCard)) return;
     video.currentTime = 0;
-    kickDeckVideoPlayback(video);
+    kickDeckVideoPlayback(video, { allowAudio: deckPlaybackShouldTryAudioRef.current });
+    deckPlaybackShouldTryAudioRef.current = false;
     return () => {
       try {
         video.pause?.();
@@ -186,7 +188,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     };
   }, [currentCard?._key, showRecipe, currentIndex]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const video = nextVideoRef.current;
     const upcomingCard = deck[currentIndex + 1] || null;
     if (!video || !isDishVideo(upcomingCard)) return;
@@ -260,12 +262,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setRecipePanelModal(null);
   };
 
-  const kickDeckVideoPlayback = (video) => {
+  const kickDeckVideoPlayback = (video, { allowAudio = false } = {}) => {
     if (!video) return;
     video.autoplay = true;
     video.loop = true;
     video.playsInline = true;
     video.controls = false;
+    video.preload = "auto";
+    if (allowAudio) {
+      video.muted = false;
+      video.defaultMuted = false;
+      const playWithAudio = video.play?.();
+      if (playWithAudio?.catch) {
+        playWithAudio.catch(() => {
+          video.muted = true;
+          video.defaultMuted = true;
+          const mutedPlay = video.play?.();
+          if (mutedPlay?.catch) mutedPlay.catch(() => {});
+        });
+      }
+      return;
+    }
     video.muted = true;
     video.defaultMuted = true;
     const playPromise = video.play?.();
@@ -491,6 +508,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
+      deckPlaybackShouldTryAudioRef.current = true;
       try {
         await animate(dragX, targetX, {
           type: "spring",
@@ -528,8 +546,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           controls={false}
           disablePictureInPicture
           controlsList="nodownload noplaybackrate noremoteplayback"
-          onLoadedData={(e) => kickDeckVideoPlayback(e.currentTarget)}
-          onCanPlay={(e) => kickDeckVideoPlayback(e.currentTarget)}
+          onLoadedData={(e) =>
+            kickDeckVideoPlayback(e.currentTarget, { allowAudio: active && deckPlaybackShouldTryAudioRef.current })
+          }
+          onCanPlay={(e) =>
+            kickDeckVideoPlayback(e.currentTarget, { allowAudio: active && deckPlaybackShouldTryAudioRef.current })
+          }
         />
       );
     }
@@ -610,6 +632,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
+          onDrag={(_, info) => {
+            if (Math.abs(info.offset.x) > 8 && nextVideoRef.current) {
+              deckPlaybackShouldTryAudioRef.current = true;
+              kickDeckVideoPlayback(nextVideoRef.current, { allowAudio: true });
+            }
+          }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >

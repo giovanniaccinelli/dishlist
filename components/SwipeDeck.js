@@ -84,6 +84,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
+  const currentVideoRef = useRef(null);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -173,6 +174,31 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentCard?.id, onCardViewed]);
 
   useEffect(() => {
+    const video = currentVideoRef.current;
+    if (!video || showRecipe || !isDishVideo(currentCard)) return;
+    video.currentTime = 0;
+    video.loop = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.muted = false;
+    video.defaultMuted = false;
+    const withAudio = video.play?.();
+    if (withAudio?.catch) {
+      withAudio.catch(() => {
+        video.muted = true;
+        video.defaultMuted = true;
+        const mutedPlay = video.play?.();
+        if (mutedPlay?.catch) mutedPlay.catch(() => {});
+      });
+    }
+    return () => {
+      try {
+        video.pause?.();
+      } catch {}
+    };
+  }, [currentCard?._key, showRecipe, currentIndex]);
+
+  useEffect(() => {
     if (!tagsRef.current) return;
     const el = tagsRef.current;
     const updateHeight = () => {
@@ -232,16 +258,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setScrollPanelActive(false);
     setRecipePanelModal(null);
   };
-
-  const forceVideoPlayback = useCallback((node) => {
-    if (!node) return;
-    node.muted = true;
-    node.defaultMuted = true;
-    const playPromise = node.play?.();
-    if (playPromise?.catch) {
-      playPromise.catch(() => {});
-    }
-  }, []);
 
   const loadComments = async () => {
     if (!currentCard?.id) return;
@@ -483,21 +499,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     });
   };
 
-  const renderImage = (dish) => {
+  const renderImage = (dish, { active = false } = {}) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
         <video
-          ref={forceVideoPlayback}
+          ref={active ? currentVideoRef : null}
           src={imageSrc}
           className="w-full h-full object-cover"
           autoPlay
-          muted
+          muted={!active}
           loop
           playsInline
           preload="auto"
           controls={false}
           disablePictureInPicture
+          controlsList="nodownload noplaybackrate noremoteplayback"
         />
       );
     }
@@ -728,7 +745,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-label="Open recipe view"
                 />
               ) : null}
-              {renderImage(currentCard)}
+              {renderImage(currentCard, { active: !showRecipe })}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
@@ -817,7 +834,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 aria-label="Close recipe view"
               />
               <div
-                className="absolute left-6 right-6 top-16 z-20 min-h-0 flex flex-col"
+                className="pointer-events-none absolute left-6 right-6 top-16 z-20 min-h-0 flex flex-col"
                 style={{ bottom: `${recipeContentBottom}px` }}
               >
                 <div className="mb-5 shrink-0">

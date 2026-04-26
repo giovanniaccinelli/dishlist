@@ -54,6 +54,7 @@ export default function StoryViewerModal({
   const suppressTapUntilRef = useRef(0);
   const videoRef = useRef(null);
   const [storyDurationMs, setStoryDurationMs] = useState(STORY_DURATION_MS);
+  const rafProgressRef = useRef(0);
   useEffect(() => {
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
@@ -116,8 +117,8 @@ export default function StoryViewerModal({
     video.loop = false;
     video.playsInline = true;
     video.controls = false;
-    video.muted = true;
-    video.defaultMuted = true;
+    video.muted = false;
+    video.defaultMuted = false;
 
     const syncDuration = () => {
       if (Number.isFinite(video.duration) && video.duration > 0) {
@@ -127,6 +128,18 @@ export default function StoryViewerModal({
 
     const syncProgress = () => {
       setProgressMs(video.currentTime * 1000);
+    };
+
+    const tickProgress = () => {
+      setProgressMs(video.currentTime * 1000);
+      if (!video.paused && !video.ended) {
+        rafProgressRef.current = window.requestAnimationFrame(tickProgress);
+      }
+    };
+
+    const startProgressLoop = () => {
+      window.cancelAnimationFrame(rafProgressRef.current);
+      rafProgressRef.current = window.requestAnimationFrame(tickProgress);
     };
 
     const handleEnded = () => {
@@ -139,20 +152,30 @@ export default function StoryViewerModal({
     video.addEventListener("loadedmetadata", syncDuration);
     video.addEventListener("durationchange", syncDuration);
     video.addEventListener("timeupdate", syncProgress);
-    video.addEventListener("play", syncProgress);
+    video.addEventListener("play", startProgressLoop);
+    video.addEventListener("pause", syncProgress);
     video.addEventListener("ended", handleEnded);
     syncDuration();
     syncProgress();
 
-    const playPromise = video.play?.();
-    if (playPromise?.catch) playPromise.catch(() => {});
+    const withAudio = video.play?.();
+    if (withAudio?.catch) {
+      withAudio.catch(() => {
+        video.muted = true;
+        video.defaultMuted = true;
+        const mutedPlay = video.play?.();
+        if (mutedPlay?.catch) mutedPlay.catch(() => {});
+      });
+    }
 
     return () => {
       video.removeEventListener("loadedmetadata", syncDuration);
       video.removeEventListener("durationchange", syncDuration);
       video.removeEventListener("timeupdate", syncProgress);
-      video.removeEventListener("play", syncProgress);
+      video.removeEventListener("play", startProgressLoop);
+      video.removeEventListener("pause", syncProgress);
       video.removeEventListener("ended", handleEnded);
+      window.cancelAnimationFrame(rafProgressRef.current);
       try {
         video.pause?.();
       } catch {}
@@ -168,8 +191,15 @@ export default function StoryViewerModal({
       } catch {}
       return;
     }
-    const playPromise = video.play?.();
-    if (playPromise?.catch) playPromise.catch(() => {});
+    const withAudio = video.play?.();
+    if (withAudio?.catch) {
+      withAudio.catch(() => {
+        video.muted = true;
+        video.defaultMuted = true;
+        const mutedPlay = video.play?.();
+        if (mutedPlay?.catch) mutedPlay.catch(() => {});
+      });
+    }
   }, [isPaused, currentStoryIsVideo, currentStory?.id]);
 
   const goNext = () => {

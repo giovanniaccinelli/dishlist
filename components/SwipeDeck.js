@@ -178,13 +178,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const video = currentVideoRef.current;
     if (!video || showRecipe || !isDishVideo(currentCard)) return;
     video.currentTime = 0;
-    video.loop = true;
-    video.playsInline = true;
-    video.controls = false;
-    video.muted = true;
-    video.defaultMuted = true;
-    const playPromise = video.play?.();
-    if (playPromise?.catch) playPromise.catch(() => {});
+    kickDeckVideoPlayback(video);
     return () => {
       try {
         video.pause?.();
@@ -197,15 +191,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const upcomingCard = deck[currentIndex + 1] || null;
     if (!video || !isDishVideo(upcomingCard)) return;
     video.currentTime = 0;
-    video.loop = true;
-    video.playsInline = true;
-    video.controls = false;
-    video.muted = true;
-    video.defaultMuted = true;
-    const playPromise = video.play?.();
-    if (playPromise?.catch) {
-      playPromise.catch(() => {});
-    }
+    kickDeckVideoPlayback(video);
     return () => {
       try {
         video.pause?.();
@@ -272,6 +258,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     scrollPanelActiveRef.current = false;
     setScrollPanelActive(false);
     setRecipePanelModal(null);
+  };
+
+  const kickDeckVideoPlayback = (video) => {
+    if (!video) return;
+    video.autoplay = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.muted = true;
+    video.defaultMuted = true;
+    const playPromise = video.play?.();
+    if (playPromise?.catch) playPromise.catch(() => {});
   };
 
   const loadComments = async () => {
@@ -521,7 +519,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         <video
           ref={active ? currentVideoRef : preview ? nextVideoRef : null}
           src={imageSrc}
-          className="w-full h-full object-cover"
+          className="pointer-events-none w-full h-full object-cover"
           autoPlay
           muted
           loop
@@ -530,6 +528,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           controls={false}
           disablePictureInPicture
           controlsList="nodownload noplaybackrate noremoteplayback"
+          onLoadedData={(e) => kickDeckVideoPlayback(e.currentTarget)}
+          onCanPlay={(e) => kickDeckVideoPlayback(e.currentTarget)}
         />
       );
     }

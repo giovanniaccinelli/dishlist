@@ -85,6 +85,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
+  const nextVideoRef = useRef(null);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -197,6 +198,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       } catch {}
     };
   }, [currentCard?._key, showRecipe, currentIndex]);
+
+  useEffect(() => {
+    const video = nextVideoRef.current;
+    if (!video || !isDishVideo(nextCard)) return;
+    video.currentTime = 0;
+    video.loop = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.muted = true;
+    video.defaultMuted = true;
+    const playPromise = video.play?.();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {});
+    }
+    return () => {
+      try {
+        video.pause?.();
+      } catch {}
+    };
+  }, [nextCard?._key]);
 
   useEffect(() => {
     if (!tagsRef.current) return;
@@ -499,16 +520,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     });
   };
 
-  const renderImage = (dish, { active = false } = {}) => {
+  const renderImage = (dish, { active = false, preview = false } = {}) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
         <video
-          ref={active ? currentVideoRef : null}
+          ref={active ? currentVideoRef : preview ? nextVideoRef : null}
           src={imageSrc}
           className="w-full h-full object-cover"
           autoPlay
-          muted={!active}
+          muted={preview || !active}
           loop
           playsInline
           preload="auto"
@@ -585,7 +606,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale }}
           >
-            {renderImage(nextCard)}
+            {renderImage(nextCard, { preview: true })}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </motion.div>
         ) : null}

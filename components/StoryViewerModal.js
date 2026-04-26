@@ -52,6 +52,8 @@ export default function StoryViewerModal({
   const didAdvanceRef = useRef(false);
   const pressStartedAtRef = useRef(0);
   const suppressTapUntilRef = useRef(0);
+  const videoRef = useRef(null);
+  const [storyDurationMs, setStoryDurationMs] = useState(STORY_DURATION_MS);
   useEffect(() => {
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
@@ -74,6 +76,7 @@ export default function StoryViewerModal({
     setProgressMs(0);
     setIsPaused(false);
     didAdvanceRef.current = false;
+    setStoryDurationMs(STORY_DURATION_MS);
   }, [open, currentStory?.id, groupIndex, storyIndex]);
 
   useEffect(() => {
@@ -86,8 +89,8 @@ export default function StoryViewerModal({
       previousTime = now;
 
       setProgressMs((prev) => {
-        const next = Math.min(prev + delta, STORY_DURATION_MS);
-        if (next >= STORY_DURATION_MS && !didAdvanceRef.current) {
+        const next = Math.min(prev + delta, storyDurationMs);
+        if (next >= storyDurationMs && !didAdvanceRef.current) {
           didAdvanceRef.current = true;
           window.setTimeout(() => {
             goNext();
@@ -103,7 +106,55 @@ export default function StoryViewerModal({
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!open || !video || !isDishVideo(currentStory)) return;
+    video.currentTime = 0;
+    video.loop = false;
+    video.playsInline = true;
+    video.controls = false;
+    video.muted = false;
+    video.defaultMuted = false;
+
+    const syncDuration = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        setStoryDurationMs(video.duration * 1000);
+      }
+    };
+
+    const handleEnded = () => {
+      if (!didAdvanceRef.current) {
+        didAdvanceRef.current = true;
+        goNext();
+      }
+    };
+
+    video.addEventListener("loadedmetadata", syncDuration);
+    video.addEventListener("durationchange", syncDuration);
+    video.addEventListener("ended", handleEnded);
+    syncDuration();
+
+    const withAudio = video.play?.();
+    if (withAudio?.catch) {
+      withAudio.catch(() => {
+        video.muted = true;
+        video.defaultMuted = true;
+        const mutedPlay = video.play?.();
+        if (mutedPlay?.catch) mutedPlay.catch(() => {});
+      });
+    }
+
+    return () => {
+      video.removeEventListener("loadedmetadata", syncDuration);
+      video.removeEventListener("durationchange", syncDuration);
+      video.removeEventListener("ended", handleEnded);
+      try {
+        video.pause?.();
+      } catch {}
+    };
+  }, [open, currentStory?.id, groupIndex, storyIndex]);
 
   const goNext = () => {
     if (Date.now() < suppressTapUntilRef.current) return;
@@ -165,7 +216,7 @@ export default function StoryViewerModal({
 
   if (!open || !currentStory) return null;
 
-  const progressWidth = `${Math.min((progressMs / STORY_DURATION_MS) * 100, 100)}%`;
+  const progressWidth = `${Math.min((progressMs / storyDurationMs) * 100, 100)}%`;
 
   const handlePressStart = (event) => {
     if (event.target.closest("[data-no-story-pause='true']")) return;
@@ -240,13 +291,15 @@ export default function StoryViewerModal({
           >
             {isDishVideo(currentStory) ? (
               <video
+                ref={videoRef}
                 src={getDishImageUrl(currentStory)}
                 className="w-full h-full object-cover"
                 autoPlay
-                muted
-                loop
+                muted={false}
                 playsInline
-                preload="metadata"
+                preload="auto"
+                controls={false}
+                disablePictureInPicture
               />
             ) : (
               <img

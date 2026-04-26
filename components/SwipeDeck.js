@@ -181,17 +181,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     video.loop = true;
     video.playsInline = true;
     video.controls = false;
-    video.muted = false;
-    video.defaultMuted = false;
-    const withAudio = video.play?.();
-    if (withAudio?.catch) {
-      withAudio.catch(() => {
-        video.muted = true;
-        video.defaultMuted = true;
-        const mutedPlay = video.play?.();
-        if (mutedPlay?.catch) mutedPlay.catch(() => {});
-      });
-    }
+    video.muted = true;
+    video.defaultMuted = true;
+    const playPromise = video.play?.();
+    if (playPromise?.catch) playPromise.catch(() => {});
     return () => {
       try {
         video.pause?.();
@@ -530,7 +523,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           src={imageSrc}
           className="w-full h-full object-cover"
           autoPlay
-          muted={preview || !active}
+          muted
           loop
           playsInline
           preload="auto"

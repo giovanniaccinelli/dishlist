@@ -1102,7 +1102,7 @@ export default function Profile() {
         title={activeDishlist?.name || "Top picks"}
         dishes={activeDishlist?.dishes || []}
         allowDelete={false}
-        source={activeDishlist?.type === "custom" ? "dishlist" : activeDishlist?.id || "saved"}
+        source={activeDishlist?.id || "saved"}
         onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
       />
 

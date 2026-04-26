@@ -65,6 +65,7 @@ export default function StoryViewerModal({
   const currentGroup = groups[groupIndex] || null;
   const currentStories = currentGroup?.stories || [];
   const currentStory = currentStories[storyIndex] || null;
+  const currentStoryIsVideo = isDishVideo(currentStory);
 
   useEffect(() => {
     if (!open || !currentStory?.id) return;
@@ -80,7 +81,7 @@ export default function StoryViewerModal({
   }, [open, currentStory?.id, groupIndex, storyIndex]);
 
   useEffect(() => {
-    if (!open || !currentStory?.id || isPaused) return;
+    if (!open || !currentStory?.id || isPaused || currentStoryIsVideo) return;
     let frameId = 0;
     let previousTime = performance.now();
 
@@ -106,22 +107,26 @@ export default function StoryViewerModal({
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs, currentStoryIsVideo]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!open || !video || !isDishVideo(currentStory)) return;
+    if (!open || !video || !currentStoryIsVideo) return;
     video.currentTime = 0;
     video.loop = false;
     video.playsInline = true;
     video.controls = false;
-    video.muted = false;
-    video.defaultMuted = false;
+    video.muted = true;
+    video.defaultMuted = true;
 
     const syncDuration = () => {
       if (Number.isFinite(video.duration) && video.duration > 0) {
         setStoryDurationMs(video.duration * 1000);
       }
+    };
+
+    const syncProgress = () => {
+      setProgressMs(video.currentTime * 1000);
     };
 
     const handleEnded = () => {
@@ -133,28 +138,39 @@ export default function StoryViewerModal({
 
     video.addEventListener("loadedmetadata", syncDuration);
     video.addEventListener("durationchange", syncDuration);
+    video.addEventListener("timeupdate", syncProgress);
+    video.addEventListener("play", syncProgress);
     video.addEventListener("ended", handleEnded);
     syncDuration();
+    syncProgress();
 
-    const withAudio = video.play?.();
-    if (withAudio?.catch) {
-      withAudio.catch(() => {
-        video.muted = true;
-        video.defaultMuted = true;
-        const mutedPlay = video.play?.();
-        if (mutedPlay?.catch) mutedPlay.catch(() => {});
-      });
-    }
+    const playPromise = video.play?.();
+    if (playPromise?.catch) playPromise.catch(() => {});
 
     return () => {
       video.removeEventListener("loadedmetadata", syncDuration);
       video.removeEventListener("durationchange", syncDuration);
+      video.removeEventListener("timeupdate", syncProgress);
+      video.removeEventListener("play", syncProgress);
       video.removeEventListener("ended", handleEnded);
       try {
         video.pause?.();
       } catch {}
     };
-  }, [open, currentStory?.id, groupIndex, storyIndex]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, currentStoryIsVideo]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentStoryIsVideo) return;
+    if (isPaused) {
+      try {
+        video.pause?.();
+      } catch {}
+      return;
+    }
+    const playPromise = video.play?.();
+    if (playPromise?.catch) playPromise.catch(() => {});
+  }, [isPaused, currentStoryIsVideo, currentStory?.id]);
 
   const goNext = () => {
     if (Date.now() < suppressTapUntilRef.current) return;

@@ -565,7 +565,7 @@ export default function DishDetail() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
-        <AppBackButton fallback={backFallback} forceFallback />
+        <AppBackButton fallback={backFallback} />
         <div className="w-[74px]" />
       </div>
 

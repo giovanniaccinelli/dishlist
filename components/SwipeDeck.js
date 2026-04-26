@@ -182,6 +182,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     kickDeckVideoPlayback(video, { allowAudio: deckPlaybackShouldTryAudioRef.current });
     deckPlaybackShouldTryAudioRef.current = false;
     return () => {
+      if (video.__deckPlaybackRetry) {
+        window.clearTimeout(video.__deckPlaybackRetry);
+        video.__deckPlaybackRetry = null;
+      }
       try {
         video.pause?.();
       } catch {}
@@ -195,6 +199,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     video.currentTime = 0;
     kickDeckVideoPlayback(video);
     return () => {
+      if (video.__deckPlaybackRetry) {
+        window.clearTimeout(video.__deckPlaybackRetry);
+        video.__deckPlaybackRetry = null;
+      }
       try {
         video.pause?.();
       } catch {}
@@ -264,29 +272,49 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const kickDeckVideoPlayback = (video, { allowAudio = false } = {}) => {
     if (!video) return;
+    if (video.__deckPlaybackRetry) {
+      window.clearTimeout(video.__deckPlaybackRetry);
+      video.__deckPlaybackRetry = null;
+    }
     video.autoplay = true;
     video.loop = true;
     video.playsInline = true;
     video.controls = false;
     video.preload = "auto";
-    if (allowAudio) {
-      video.muted = false;
-      video.defaultMuted = false;
-      const playWithAudio = video.play?.();
-      if (playWithAudio?.catch) {
-        playWithAudio.catch(() => {
-          video.muted = true;
-          video.defaultMuted = true;
-          const mutedPlay = video.play?.();
-          if (mutedPlay?.catch) mutedPlay.catch(() => {});
-        });
+    const attemptPlayback = (retriesLeft, tryAudio) => {
+      if (!video.isConnected) return;
+      if (video.readyState === 0) {
+        try {
+          video.load();
+        } catch {}
       }
-      return;
-    }
-    video.muted = true;
-    video.defaultMuted = true;
-    const playPromise = video.play?.();
-    if (playPromise?.catch) playPromise.catch(() => {});
+      video.muted = !tryAudio;
+      video.defaultMuted = !tryAudio;
+      const playPromise = video.play?.();
+      if (playPromise?.catch) {
+        playPromise
+          .then(() => {
+            if (video.__deckPlaybackRetry) {
+              window.clearTimeout(video.__deckPlaybackRetry);
+              video.__deckPlaybackRetry = null;
+            }
+          })
+          .catch(() => {
+            if (retriesLeft <= 0) return;
+            video.__deckPlaybackRetry = window.setTimeout(() => {
+              attemptPlayback(retriesLeft - 1, false);
+            }, 120);
+          });
+        return;
+      }
+      if (video.paused && retriesLeft > 0) {
+        video.__deckPlaybackRetry = window.setTimeout(() => {
+          attemptPlayback(retriesLeft - 1, false);
+        }, 120);
+      }
+    };
+
+    attemptPlayback(8, allowAudio);
   };
 
   const loadComments = async () => {

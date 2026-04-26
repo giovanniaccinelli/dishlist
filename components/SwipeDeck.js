@@ -201,7 +201,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     const video = nextVideoRef.current;
-    if (!video || !isDishVideo(nextCard)) return;
+    const upcomingCard = deck[currentIndex + 1] || null;
+    if (!video || !isDishVideo(upcomingCard)) return;
     video.currentTime = 0;
     video.loop = true;
     video.playsInline = true;
@@ -217,7 +218,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         video.pause?.();
       } catch {}
     };
-  }, [nextCard?._key]);
+  }, [deck, currentIndex]);
 
   useEffect(() => {
     if (!tagsRef.current) return;

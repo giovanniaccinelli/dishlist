@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -221,11 +221,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     </svg>
   );
 
-  const isRecipeExpandTrigger = (target) =>
-    typeof Element !== "undefined" &&
-    target instanceof Element &&
-    target.closest('[data-expand-panel="true"]');
-
   const openRecipePanelModal = (panel) => {
     scrollPanelActiveRef.current = true;
     setScrollPanelActive(true);
@@ -238,25 +233,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setRecipePanelModal(null);
   };
 
-  const stopRecipePanelInteraction = (e) => {
-    if (isRecipeExpandTrigger(e.target)) {
-      return;
+  const forceVideoPlayback = useCallback((node) => {
+    if (!node) return;
+    node.muted = true;
+    node.defaultMuted = true;
+    const playPromise = node.play?.();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {});
     }
-    e.stopPropagation();
-    e.nativeEvent?.stopImmediatePropagation?.();
-    scrollPanelActiveRef.current = true;
-    setScrollPanelActive(true);
-  };
-
-  const releaseRecipePanelInteraction = (e) => {
-    if (isRecipeExpandTrigger(e.target)) {
-      return;
-    }
-    e.stopPropagation();
-    e.nativeEvent?.stopImmediatePropagation?.();
-    scrollPanelActiveRef.current = false;
-    setScrollPanelActive(false);
-  };
+  }, []);
 
   const loadComments = async () => {
     if (!currentCard?.id) return;
@@ -503,13 +488,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (isDishVideo(dish)) {
       return (
         <video
+          ref={forceVideoPlayback}
           src={imageSrc}
           className="w-full h-full object-cover"
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          controls={false}
+          disablePictureInPicture
         />
       );
     }
@@ -842,14 +830,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={ingredientsPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll relative"
-                    onPointerDownCapture={stopRecipePanelInteraction}
-                    onPointerUpCapture={releaseRecipePanelInteraction}
-                    onPointerCancelCapture={releaseRecipePanelInteraction}
-                    onTouchStartCapture={stopRecipePanelInteraction}
-                    onTouchEndCapture={releaseRecipePanelInteraction}
-                    onTouchCancelCapture={releaseRecipePanelInteraction}
-                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative"
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Ingredients</h3>
@@ -889,14 +870,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={methodPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-y-scroll relative"
-                    onPointerDownCapture={stopRecipePanelInteraction}
-                    onPointerUpCapture={releaseRecipePanelInteraction}
-                    onPointerCancelCapture={releaseRecipePanelInteraction}
-                    onTouchStartCapture={stopRecipePanelInteraction}
-                    onTouchEndCapture={releaseRecipePanelInteraction}
-                    onTouchCancelCapture={releaseRecipePanelInteraction}
-                    style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative"
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Method</h3>
@@ -1201,13 +1175,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <AnimatePresence>
         {recipePanelModal ? (
           <motion.div
-            className="fixed inset-0 z-[140] bg-[#F7F2E8]/96 backdrop-blur-md"
+            className="fixed inset-0 z-[140] bg-black/28 backdrop-blur-[3px] flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={closeRecipePanelModal}
           >
-            <div className="flex h-full flex-col px-5 pb-6 pt-1 text-black">
-              <div className="app-top-nav -mx-5 mb-4 px-5 flex items-center justify-between">
+            <motion.div
+              className={`relative w-full max-w-md overflow-hidden rounded-[30px] border border-black/10 bg-[linear-gradient(180deg,#FCFAF4_0%,#F7F2E8_100%)] text-black shadow-[0_30px_80px_rgba(0,0,0,0.24)] ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <div className="flex h-full min-h-0 flex-col px-5 pb-5 pt-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
                     Recipe
@@ -1225,7 +1210,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <X size={18} />
                 </button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto rounded-[1.7rem] border border-black/8 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
+              <div className="min-h-0 flex-1 overflow-y-auto rounded-[1.7rem] border border-black/8 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.08)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <div className="mb-4 text-xl font-bold leading-tight">{currentCard?.name}</div>
                 <p className="text-sm leading-7 text-black/80 whitespace-pre-wrap">
                   {recipePanelModal === "ingredients"
@@ -1234,6 +1219,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </p>
               </div>
             </div>
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

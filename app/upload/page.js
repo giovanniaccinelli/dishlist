@@ -102,7 +102,7 @@ export default function UploadPage() {
     e.preventDefault();
     setDragActive(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) handleImageChange(file);
+    if (file && (file.type.startsWith("image/") || file.type.startsWith("video/"))) handleImageChange(file);
   };
 
   const getNormalizedDishLink = () => {
@@ -126,7 +126,7 @@ export default function UploadPage() {
     setDishlistPickerOpen(false);
     setLoadingUpload(true);
     try {
-      let imageFields = { imageURL: "", cardURL: "", thumbURL: "" };
+      let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
       if (dishImage) {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
       }
@@ -337,19 +337,31 @@ export default function UploadPage() {
                 >
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={(e) => handleImageChange(e.target.files?.[0])}
                     className="absolute opacity-0 w-full h-full cursor-pointer"
                     disabled={loadingUpload}
                   />
                   {preview ? (
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[1.65rem]" />
+                    dishImage?.type?.startsWith("video/") ? (
+                      <video
+                        src={preview}
+                        className="w-full h-full object-cover rounded-[1.65rem]"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        controls={false}
+                      />
+                    ) : (
+                      <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-[1.65rem]" />
+                    )
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)] text-white flex items-center justify-center shadow-lg">
                         <Camera size={28} />
                       </div>
-                      <div className="text-sm font-medium">Add a photo</div>
+                      <div className="text-sm font-medium">Add a photo or video</div>
                       <div className="text-xs text-black/40">Optional</div>
                     </div>
                   )}
@@ -458,7 +470,19 @@ export default function UploadPage() {
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
                       {preview ? (
-                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                        dishImage?.type?.startsWith("video/") ? (
+                          <video
+                            src={preview}
+                            className="w-full h-full object-cover"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            controls={false}
+                          />
+                        ) : (
+                          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                        )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-black/30">
                           <Camera size={24} />

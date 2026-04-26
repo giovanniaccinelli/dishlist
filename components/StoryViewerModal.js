@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
-import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 
 const STORY_DURATION_MS = 4500;
 
@@ -238,14 +238,26 @@ export default function StoryViewerModal({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
           >
-            <img
-              src={getDishImageUrl(currentStory)}
-              alt={currentStory.name || "Story"}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = DEFAULT_DISH_IMAGE;
-              }}
-            />
+            {isDishVideo(currentStory) ? (
+              <video
+                src={getDishImageUrl(currentStory)}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <img
+                src={getDishImageUrl(currentStory)}
+                alt={currentStory.name || "Story"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
           </motion.div>
 

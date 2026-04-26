@@ -15,7 +15,7 @@ import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
-import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 
 const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
@@ -500,6 +500,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const renderImage = (dish) => {
     const imageSrc = getDishImageUrl(dish);
+    if (isDishVideo(dish)) {
+      return (
+        <video
+          src={imageSrc}
+          className="w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+      );
+    }
     return (
       <img
         src={imageSrc}
@@ -712,16 +725,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             animate={{ rotateY: showRecipe ? 180 : 0 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
           >
-            <div className="absolute inset-0" style={{ backfaceVisibility: "hidden" }}>
-              <button
-                type="button"
-                className="absolute inset-0 z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowRecipe((prev) => !prev);
-                }}
-                aria-label="Toggle dish and recipe view"
-              />
+            <div
+              className={`absolute inset-0 ${showRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              {!showRecipe ? (
+                <button
+                  type="button"
+                  className="absolute inset-0 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowRecipe(true);
+                  }}
+                  aria-label="Open recipe view"
+                />
+              ) : null}
               {renderImage(currentCard)}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
@@ -797,11 +815,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
 
             <div
-              className="absolute inset-0 bg-white text-black p-6 pt-16 overflow-hidden"
+              className={`absolute inset-0 bg-white text-black p-6 pt-16 overflow-hidden ${showRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
+              <button
+                type="button"
+                className="absolute inset-0 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowRecipe(false);
+                }}
+                aria-label="Close recipe view"
+              />
               <div
-                className="absolute left-6 right-6 top-16 min-h-0 flex flex-col"
+                className="absolute left-6 right-6 top-16 z-20 min-h-0 flex flex-col"
                 style={{ bottom: `${recipeContentBottom}px` }}
               >
                 <div className="mb-5 shrink-0">

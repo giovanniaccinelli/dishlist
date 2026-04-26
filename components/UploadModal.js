@@ -33,7 +33,7 @@ export default function UploadModal({ onClose, onDishAdded }) {
     setLoading(true);
     try {
       // Upload image
-      let imageFields = { imageURL: '', cardURL: '', thumbURL: '' };
+      let imageFields = { imageURL: '', cardURL: '', thumbURL: '', mediaType: 'image', mediaMimeType: '' };
       if (dishImage) {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
         if (!imageFields.imageURL) throw new Error('Image upload failed');
@@ -92,14 +92,25 @@ export default function UploadModal({ onClose, onDishAdded }) {
           onChange={handleImageUpload}
           className="w-full mb-4 text-white"
           disabled={loading}
-          accept="image/*"
+          accept="image/*,video/*"
         />
         {preview && (
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-full h-48 object-cover rounded-xl mb-4"
-          />
+          dishImage?.type?.startsWith("video/") ? (
+            <video
+              src={preview}
+              className="w-full h-48 object-cover rounded-xl mb-4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-full h-48 object-cover rounded-xl mb-4"
+            />
+          )
         )}
         <div className="flex gap-4">
           <button

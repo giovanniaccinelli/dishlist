@@ -325,7 +325,7 @@ export default function Profile() {
     }
     setLoadingUpload(true);
     try {
-      let imageFields = { imageURL: "", cardURL: "", thumbURL: "" };
+      let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
       if (dishImage) {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
         if (!imageFields.imageURL) throw new Error("Failed to upload image.");

@@ -12,7 +12,7 @@ import BottomNav from "../../../components/BottomNav";
 import { FullScreenLoading } from "../../../components/AppLoadingState";
 import AppToast from "../../../components/AppToast";
 import AppBackButton from "../../../components/AppBackButton";
-import { getDishImageUrl } from "../../lib/dishImage";
+import { getDishImageUrl, isDishVideo } from "../../lib/dishImage";
 import {
   addDishToToTryList,
   deleteDishAndImage,
@@ -390,6 +390,10 @@ export default function DishDetail() {
         editingDish.imageURL || editingDish.imageUrl || editingDish.image_url || editingDish.image || "";
       let nextCardURL = editingDish.cardURL || "";
       let nextThumbURL = editingDish.thumbURL || editingDish.thumbnailURL || "";
+      let nextMediaType =
+        editingDish.mediaType ||
+        (editingDish.mediaMimeType?.startsWith("video/") ? "video" : "image");
+      let nextMediaMimeType = editingDish.mediaMimeType || "";
       if (editImageFile) {
         const uploaded = await uploadDishImageVariants(editImageFile, userId);
         if (uploaded.imageURL) {
@@ -399,6 +403,8 @@ export default function DishDetail() {
           nextImageURL = uploaded.imageURL;
           nextCardURL = uploaded.cardURL;
           nextThumbURL = uploaded.thumbURL;
+          nextMediaType = uploaded.mediaType || nextMediaType;
+          nextMediaMimeType = uploaded.mediaMimeType || nextMediaMimeType;
         }
       }
 
@@ -412,6 +418,8 @@ export default function DishDetail() {
         imageURL: nextImageURL || "",
         cardURL: nextCardURL || nextImageURL || "",
         thumbURL: nextThumbURL || nextCardURL || nextImageURL || "",
+        mediaType: nextMediaType,
+        mediaMimeType: nextMediaMimeType,
       };
 
       await updateDishAndSavedCopies(editingDish.id, updates);
@@ -678,7 +686,7 @@ export default function DishDetail() {
                 <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null;
                       setEditImageFile(file);
@@ -688,7 +696,18 @@ export default function DishDetail() {
                     disabled={savingEdit}
                   />
                   {editPreview ? (
-                    <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
+                    editImageFile?.type?.startsWith("video/") ? (
+                      <video
+                        src={editPreview}
+                        className="w-full h-full object-cover rounded-[2rem]"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      />
+                    ) : (
+                      <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
+                    )
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)] text-white flex items-center justify-center shadow-lg">
@@ -777,11 +796,22 @@ export default function DishDetail() {
                 <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)] border border-[#D8C090] p-4 mb-5">
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
-                      <img
-                        src={editPreview || getDishImageUrl(editingDish)}
-                        alt={editName || "Dish preview"}
-                        className="w-full h-full object-cover"
-                      />
+                      {editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish) ? (
+                        <video
+                          src={editPreview || getDishImageUrl(editingDish)}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={editPreview || getDishImageUrl(editingDish)}
+                          alt={editName || "Dish preview"}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-lg font-semibold leading-tight">{editName || "Untitled dish"}</h3>

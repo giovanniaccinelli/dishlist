@@ -77,6 +77,8 @@ function buildDishPayload(dishId, dishData = null) {
         name: dishData.name || "",
         description: dishData.description || "",
         dishLink: dishData.dishLink || "",
+        mediaType: dishData.mediaType || (dishData.mediaMimeType?.startsWith("video/") ? "video" : "image"),
+        mediaMimeType: dishData.mediaMimeType || "",
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
         tags: normalizeTags(dishData.tags),
@@ -104,6 +106,13 @@ async function hydrateDishPayload(dishId, payload) {
       name: data.name || payload?.name || "",
       description: data.description || payload?.description || "",
       dishLink: data.dishLink || payload?.dishLink || "",
+      mediaType:
+        data.mediaType ||
+        payload?.mediaType ||
+        (data.mediaMimeType?.startsWith("video/") || payload?.mediaMimeType?.startsWith("video/")
+          ? "video"
+          : "image"),
+      mediaMimeType: data.mediaMimeType || payload?.mediaMimeType || "",
       recipeIngredients: data.recipeIngredients || payload?.recipeIngredients || "",
       recipeMethod: data.recipeMethod || payload?.recipeMethod || "",
       tags: normalizeTags(data.tags || payload?.tags),
@@ -238,6 +247,16 @@ export async function uploadDishImageVariants(file, userId) {
   if (!file || !userId) {
     throw new Error("Missing file or userId for upload.");
   }
+  if (file.type?.startsWith("video/")) {
+    const videoURL = await uploadImage(file, userId);
+    return {
+      imageURL: videoURL,
+      cardURL: videoURL,
+      thumbURL: videoURL,
+      mediaType: "video",
+      mediaMimeType: file.type || "",
+    };
+  }
   const [cardFile, thumbFile] = await Promise.all([
     resizeImageFile(file, 1400, 0.82),
     resizeImageFile(file, 420, 0.72),
@@ -250,6 +269,8 @@ export async function uploadDishImageVariants(file, userId) {
     imageURL: cardURL,
     cardURL,
     thumbURL,
+    mediaType: "image",
+    mediaMimeType: file.type || "",
   };
 }
 
@@ -839,6 +860,8 @@ function buildStoryPayload(userId, story) {
     ownerPhotoURL: story.ownerPhotoURL || "",
     name: story.name || "",
     description: story.description || "",
+    mediaType: story.mediaType || (story.mediaMimeType?.startsWith("video/") ? "video" : "image"),
+    mediaMimeType: story.mediaMimeType || "",
     recipeIngredients: story.recipeIngredients || "",
     recipeMethod: story.recipeMethod || "",
     tags: normalizeTags(story.tags),
@@ -1212,6 +1235,13 @@ export async function getSavedDishesFromFirestore(userId) {
       ...dish,
       name: canonical.name || dish.name || "",
       description: canonical.description || dish.description || "",
+      mediaType:
+        canonical.mediaType ||
+        dish.mediaType ||
+        (canonical.mediaMimeType?.startsWith("video/") || dish.mediaMimeType?.startsWith("video/")
+          ? "video"
+          : "image"),
+      mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       tags: normalizeTags(canonical.tags || dish.tags),

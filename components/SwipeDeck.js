@@ -206,7 +206,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel) &&
     typeof onSharePress === "function";
-  const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [0.99, 0.965, 0.95, 0.965, 0.99]);
+  const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -221,7 +221,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     </svg>
   );
 
+  const isRecipeExpandTrigger = (target) =>
+    typeof Element !== "undefined" &&
+    target instanceof Element &&
+    target.closest('[data-expand-panel="true"]');
+
+  const openRecipePanelModal = (panel) => {
+    scrollPanelActiveRef.current = true;
+    setScrollPanelActive(true);
+    setRecipePanelModal(panel);
+  };
+
+  const closeRecipePanelModal = () => {
+    scrollPanelActiveRef.current = false;
+    setScrollPanelActive(false);
+    setRecipePanelModal(null);
+  };
+
   const stopRecipePanelInteraction = (e) => {
+    if (isRecipeExpandTrigger(e.target)) {
+      return;
+    }
     e.stopPropagation();
     e.nativeEvent?.stopImmediatePropagation?.();
     scrollPanelActiveRef.current = true;
@@ -229,6 +249,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const releaseRecipePanelInteraction = (e) => {
+    if (isRecipeExpandTrigger(e.target)) {
+      return;
+    }
     e.stopPropagation();
     e.nativeEvent?.stopImmediatePropagation?.();
     scrollPanelActiveRef.current = false;
@@ -806,21 +829,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         <button
                           type="button"
                           data-no-drag="true"
+                          data-expand-panel="true"
                           onPointerDown={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
+                            scrollPanelActiveRef.current = true;
+                            setScrollPanelActive(true);
                           }}
                           onPointerUp={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            setRecipePanelModal("ingredients");
+                            openRecipePanelModal("ingredients");
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            setRecipePanelModal("ingredients");
+                            openRecipePanelModal("ingredients");
                           }}
-                          className="pointer-events-auto relative z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className="pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          style={{ touchAction: "manipulation" }}
                           aria-label="Open ingredients full screen"
                         >
                           <Maximize2 size={14} />
@@ -849,21 +876,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         <button
                           type="button"
                           data-no-drag="true"
+                          data-expand-panel="true"
                           onPointerDown={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
+                            scrollPanelActiveRef.current = true;
+                            setScrollPanelActive(true);
                           }}
                           onPointerUp={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            setRecipePanelModal("method");
+                            openRecipePanelModal("method");
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            setRecipePanelModal("method");
+                            openRecipePanelModal("method");
                           }}
-                          className="pointer-events-auto relative z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className="pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          style={{ touchAction: "manipulation" }}
                           aria-label="Open method full screen"
                         >
                           <Maximize2 size={14} />
@@ -1159,7 +1190,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setRecipePanelModal(null)}
+                  onClick={closeRecipePanelModal}
                   className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center"
                   aria-label="Close full screen recipe panel"
                 >

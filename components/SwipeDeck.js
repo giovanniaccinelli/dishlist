@@ -17,7 +17,15 @@ import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 
-function DeckAutoplayVideo({ src, tryAudio = false, className = "", onVideoRef = null }) {
+function DeckAutoplayVideo({
+  src,
+  tryAudio = false,
+  className = "",
+  onVideoRef = null,
+  playSignal = 0,
+  gesturePrimed = false,
+  unlocked = false,
+}) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -122,6 +130,32 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "", onVideoRef =
     return () => onVideoRef(null);
   }, [onVideoRef, src]);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || (!playSignal && !gesturePrimed && !unlocked)) return;
+    let cancelled = false;
+
+    const kick = async () => {
+      try {
+        video.muted = !tryAudio;
+        video.defaultMuted = !tryAudio;
+        await video.play?.();
+      } catch {
+        if (cancelled) return;
+        try {
+          video.muted = true;
+          video.defaultMuted = true;
+          await video.play?.();
+        } catch {}
+      }
+    };
+
+    kick();
+    return () => {
+      cancelled = true;
+    };
+  }, [playSignal, gesturePrimed, unlocked, tryAudio]);
+
   return (
     <video
       ref={videoRef}
@@ -210,6 +244,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextVideoRef = useRef(null);
   const gesturePlayedCurrentKeyRef = useRef(null);
   const gesturePlayedNextKeyRef = useRef(null);
+  const [currentVideoPlaySignal, setCurrentVideoPlaySignal] = useState(0);
+  const [nextVideoPlaySignal, setNextVideoPlaySignal] = useState(0);
+  const [currentVideoGesturePrimed, setCurrentVideoGesturePrimed] = useState(false);
+  const [nextVideoGesturePrimed, setNextVideoGesturePrimed] = useState(false);
+  const [mediaUnlocked, setMediaUnlocked] = useState(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -259,6 +298,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     scrollPanelActiveRef.current = false;
     gesturePlayedCurrentKeyRef.current = null;
     gesturePlayedNextKeyRef.current = null;
+    setCurrentVideoGesturePrimed(false);
+    setNextVideoGesturePrimed(false);
+    setCurrentVideoPlaySignal((value) => value + 1);
   }, [currentCard?._key]);
 
   useEffect(() => {
@@ -367,13 +409,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, []);
 
   const handleDragStart = useCallback(() => {
+    setMediaUnlocked(true);
     if (currentCard && isDishVideo(currentCard)) {
+      setCurrentVideoGesturePrimed(true);
       gesturePlayedCurrentKeyRef.current = currentCard._key;
       forcePlayVideoNode(currentVideoRef.current, true);
     }
 
     if (nextCard && isDishVideo(nextCard)) {
+      setNextVideoGesturePrimed(true);
       gesturePlayedNextKeyRef.current = nextCard._key;
+      setNextVideoPlaySignal((value) => value + 1);
       forcePlayVideoNode(nextVideoRef.current, true);
     }
   }, [currentCard, nextCard, forcePlayVideoNode]);
@@ -383,32 +429,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (offsetX < 8) return;
 
     if (currentCard && isDishVideo(currentCard) && gesturePlayedCurrentKeyRef.current !== currentCard._key) {
+      setCurrentVideoGesturePrimed(true);
       gesturePlayedCurrentKeyRef.current = currentCard._key;
       forcePlayVideoNode(currentVideoRef.current, true);
     }
 
     if (nextCard && isDishVideo(nextCard) && gesturePlayedNextKeyRef.current !== nextCard._key) {
+      setNextVideoGesturePrimed(true);
       gesturePlayedNextKeyRef.current = nextCard._key;
+      setNextVideoPlaySignal((value) => value + 1);
       forcePlayVideoNode(nextVideoRef.current, true);
     }
   }, [currentCard, nextCard, forcePlayVideoNode]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) return;
-      try {
-        currentVideoRef.current?.pause?.();
-      } catch {}
-      try {
-        nextVideoRef.current?.pause?.();
-      } catch {}
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -675,7 +707,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     });
   };
 
-  const renderImage = (dish, { active = false, preview = false, onVideoRef = null } = {}) => {
+  const renderImage = (dish, { active = false, preview = false, onVideoRef = null, playSignal = 0 } = {}) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
@@ -683,6 +715,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           src={imageSrc}
           tryAudio={active}
           onVideoRef={onVideoRef}
+          playSignal={playSignal}
+          gesturePrimed={active ? currentVideoGesturePrimed : nextVideoGesturePrimed}
+          unlocked={mediaUnlocked}
           className="pointer-events-none w-full h-full object-cover"
         />
       );
@@ -759,6 +794,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onVideoRef: (node) => {
                 nextVideoRef.current = node;
               },
+              playSignal: nextVideoPlaySignal,
             })}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </motion.div>
@@ -768,6 +804,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
+          onPointerDownCapture={() => {
+            setMediaUnlocked(true);
+          }}
           onDragStart={handleDragStart}
           onDrag={(e, info) => handleDragMove(info)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
@@ -925,6 +964,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },
+                playSignal: currentVideoPlaySignal,
               })}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (

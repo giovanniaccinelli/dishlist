@@ -828,7 +828,7 @@ export default function Profile() {
             No dishes here.
           </div>
         ) : (
-          <AnimatePresence initial={false}>
+          <>
             {dishes.map((dish, index) => (
               <div
                 key={`${dish.id}-${index}`}
@@ -883,7 +883,7 @@ export default function Profile() {
                 )}
               </div>
             ))}
-          </AnimatePresence>
+          </>
         )}
       </div>
     </>

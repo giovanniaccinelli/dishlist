@@ -529,7 +529,7 @@ export default function PublicProfile() {
             No dishes here.
           </div>
         ) : (
-          <AnimatePresence initial={false}>
+          <>
             {(activeDishlist?.dishes || []).map((dish, index) => (
               <div
                 key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
@@ -574,7 +574,7 @@ export default function PublicProfile() {
                 </button>
               </div>
             ))}
-          </AnimatePresence>
+          </>
         )}
       </div>
 

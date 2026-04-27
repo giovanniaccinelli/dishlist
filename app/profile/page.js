@@ -830,7 +830,7 @@ export default function Profile() {
         ) : (
           <AnimatePresence initial={false}>
             {dishes.map((dish, index) => (
-              <motion.div
+              <div
                 key={`${dish.id}-${index}`}
                 className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group"
               >
@@ -881,7 +881,7 @@ export default function Profile() {
                     Remove
                   </button>
                 )}
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
         )}

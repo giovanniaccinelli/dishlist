@@ -178,3 +178,10 @@
 input, textarea, select {
   font-size: 16px;
 }
+
+.deck-video::-webkit-media-controls,
+.deck-video::-webkit-media-controls-start-playback-button,
+.deck-video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}

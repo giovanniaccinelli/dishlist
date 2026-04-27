@@ -531,7 +531,7 @@ export default function PublicProfile() {
         ) : (
           <AnimatePresence initial={false}>
             {(activeDishlist?.dishes || []).map((dish, index) => (
-              <div
+              <motion.div
                 key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
                 className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
               >
@@ -572,7 +572,7 @@ export default function PublicProfile() {
                 >
                   <Plus size={16} strokeWidth={2.1} />
                 </button>
-              </div>
+              </motion.div>
             ))}
           </AnimatePresence>
         )}

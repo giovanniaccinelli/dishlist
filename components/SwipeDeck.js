@@ -24,7 +24,6 @@ function DeckAutoplayVideo({
   onVideoRef = null,
   playSignal = 0,
   gesturePrimed = false,
-  unlocked = false,
 }) {
   const videoRef = useRef(null);
 
@@ -132,7 +131,7 @@ function DeckAutoplayVideo({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || (!playSignal && !gesturePrimed && !unlocked)) return;
+    if (!video || (!playSignal && !gesturePrimed)) return;
     let cancelled = false;
 
     const kick = async () => {
@@ -154,7 +153,7 @@ function DeckAutoplayVideo({
     return () => {
       cancelled = true;
     };
-  }, [playSignal, gesturePrimed, unlocked, tryAudio]);
+  }, [playSignal, gesturePrimed, tryAudio]);
 
   return (
     <video
@@ -248,7 +247,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [nextVideoPlaySignal, setNextVideoPlaySignal] = useState(0);
   const [currentVideoGesturePrimed, setCurrentVideoGesturePrimed] = useState(false);
   const [nextVideoGesturePrimed, setNextVideoGesturePrimed] = useState(false);
-  const [mediaUnlocked, setMediaUnlocked] = useState(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -409,7 +407,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, []);
 
   const handleDragStart = useCallback(() => {
-    setMediaUnlocked(true);
     if (currentCard && isDishVideo(currentCard)) {
       setCurrentVideoGesturePrimed(true);
       gesturePlayedCurrentKeyRef.current = currentCard._key;
@@ -717,7 +714,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onVideoRef={onVideoRef}
           playSignal={playSignal}
           gesturePrimed={active ? currentVideoGesturePrimed : nextVideoGesturePrimed}
-          unlocked={mediaUnlocked}
           className="pointer-events-none w-full h-full object-cover"
         />
       );
@@ -800,13 +796,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
         ) : null}
         <motion.div
+          key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
-          onPointerDownCapture={() => {
-            setMediaUnlocked(true);
-          }}
           onDragStart={handleDragStart}
           onDrag={(e, info) => handleDragMove(info)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}

@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, Play, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -429,6 +429,28 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleDeckMediaUnlock = useCallback(() => {
     void unlockDeckMedia();
   }, [unlockDeckMedia]);
+
+  const handleVideoPlayPress = useCallback(async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const video = currentVideoRef.current;
+    if (!video) return;
+
+    try {
+      video.muted = false;
+      video.defaultMuted = false;
+      video.volume = 1;
+      await video.play?.();
+      mediaUnlockedRef.current = true;
+    } catch {
+      try {
+        video.muted = true;
+        video.defaultMuted = true;
+        await video.play?.();
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     const video = currentVideoRef.current;
@@ -974,6 +996,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   }}
                   aria-label="Open recipe view"
                 />
+              ) : null}
+              {!showRecipe && isDishVideo(currentCard) ? (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  className="absolute left-1/2 top-1/2 z-40 inline-flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-black/45 text-white backdrop-blur-sm"
+                  aria-label="Play video"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onClick={handleVideoPlayPress}
+                >
+                  <Play size={24} className="translate-x-[1px]" fill="currentColor" strokeWidth={1.8} />
+                </button>
               ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,

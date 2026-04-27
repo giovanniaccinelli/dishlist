@@ -39,8 +39,7 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
       }
     };
 
-    const attemptPlayback = (allowAudio, retriesLeft = 10) => {
-      if (cancelled || !video.isConnected) return;
+    const syncPlaybackAttributes = (allowAudio) => {
       video.autoplay = true;
       video.loop = true;
       video.playsInline = true;
@@ -48,6 +47,11 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
       video.preload = "auto";
       video.muted = !allowAudio;
       video.defaultMuted = !allowAudio;
+    };
+
+    const attemptPlayback = (allowAudio, retriesLeft = 10) => {
+      if (cancelled || !video.isConnected) return;
+      syncPlaybackAttributes(allowAudio);
 
       if (video.readyState === 0) {
         try {
@@ -77,16 +81,22 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
       }
     };
 
-    const handleReady = () => {
+    const kickPlayback = () => {
       attemptPlayback(tryAudio);
       if (!video.paused) return;
       rafId = window.requestAnimationFrame(() => attemptPlayback(tryAudio));
+    };
+
+    const handleReady = () => {
+      kickPlayback();
     };
 
     video.addEventListener("loadedmetadata", handleReady);
     video.addEventListener("loadeddata", handleReady);
     video.addEventListener("canplay", handleReady);
     video.addEventListener("canplaythrough", handleReady);
+    video.addEventListener("play", clearRetry);
+    video.addEventListener("pause", kickPlayback);
 
     handleReady();
 
@@ -96,6 +106,8 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
       video.removeEventListener("loadeddata", handleReady);
       video.removeEventListener("canplay", handleReady);
       video.removeEventListener("canplaythrough", handleReady);
+      video.removeEventListener("play", clearRetry);
+      video.removeEventListener("pause", kickPlayback);
       clearRetry();
       try {
         video.pause?.();

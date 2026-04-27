@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, Play, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, Volume2, VolumeX, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -176,8 +176,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   fitHeight = false,
   storyPushStatsByDish = {},
   showStoryHistoryCounter = false,
-  preferImmediateVideoAudio = false,
-  showManualVideoPlayButton = true,
 }, ref) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
@@ -189,7 +187,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
-  const [showVideoPlayButton, setShowVideoPlayButton] = useState(false);
+  const [deckAudioEnabled, setDeckAudioEnabled] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -257,13 +255,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
-    setShowVideoPlayButton(
-      Boolean(currentCard && isDishVideo(currentCard) && showManualVideoPlayButton && !preferImmediateVideoAudio)
-    );
     setRecipePanelModal(null);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-  }, [currentCard?._key, preferImmediateVideoAudio, showManualVideoPlayButton]);
+  }, [currentCard?._key]);
 
   useEffect(() => {
     if (!showRecipe) {
@@ -436,12 +431,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     void unlockDeckMedia();
   }, [unlockDeckMedia]);
 
-  const handleVideoPlayPress = useCallback(async (event) => {
+  const handleVideoAudioToggle = useCallback(async (event) => {
     event.stopPropagation();
     event.preventDefault();
 
     const video = currentVideoRef.current;
     if (!video) return;
+
+    if (deckAudioEnabled) {
+      video.muted = true;
+      video.defaultMuted = true;
+      setDeckAudioEnabled(false);
+      return;
+    }
 
     try {
       video.muted = false;
@@ -449,46 +451,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       video.volume = 1;
       await video.play?.();
       mediaUnlockedRef.current = true;
-      setShowVideoPlayButton(false);
+      setDeckAudioEnabled(true);
     } catch {
       try {
         video.muted = true;
         video.defaultMuted = true;
         await video.play?.();
-        setShowVideoPlayButton(false);
       } catch {}
     }
-  }, []);
-
-  useEffect(() => {
-    const video = currentVideoRef.current;
-    if (!video || !currentCard || !isDishVideo(currentCard) || showRecipe || !showManualVideoPlayButton) return;
-
-    const handlePlay = () => {
-      setShowVideoPlayButton(false);
-    };
-
-    video.addEventListener("play", handlePlay);
-
-    if (!video.paused && !video.ended) {
-      setShowVideoPlayButton(false);
-    }
-
-    return () => {
-      video.removeEventListener("play", handlePlay);
-    };
-  }, [currentCard?._key, showRecipe, showManualVideoPlayButton]);
+  }, [deckAudioEnabled]);
 
   useEffect(() => {
     const video = currentVideoRef.current;
     if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
     const frame = window.requestAnimationFrame(() => {
-      startCardVideo(video, preferImmediateVideoAudio || mediaUnlockedRef.current);
+      startCardVideo(video, mediaUnlockedRef.current && deckAudioEnabled);
     });
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [currentCard?._key, preferImmediateVideoAudio, showRecipe, startCardVideo]);
+  }, [currentCard?._key, deckAudioEnabled, showRecipe, startCardVideo]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -1024,29 +1006,33 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-label="Open recipe view"
                 />
               ) : null}
-              {!showRecipe && isDishVideo(currentCard) && showManualVideoPlayButton && showVideoPlayButton ? (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  className="absolute left-1/2 top-1/2 z-40 inline-flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-black/45 text-white backdrop-blur-sm"
-                  aria-label="Play video"
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                  onClick={handleVideoPlayPress}
-                >
-                  <Play size={24} fill="currentColor" strokeWidth={1.8} />
-                </button>
-              ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,
-                allowAudio: !showRecipe && (preferImmediateVideoAudio || mediaUnlockedRef.current),
+                allowAudio: !showRecipe && mediaUnlockedRef.current && deckAudioEnabled,
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },
               })}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              {!showRecipe && isDishVideo(currentCard) ? (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  className="absolute bottom-24 right-5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/42 text-white shadow-[0_12px_30px_rgba(0,0,0,0.24)] backdrop-blur-md"
+                  aria-label={deckAudioEnabled ? "Mute video" : "Unmute video"}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onClick={handleVideoAudioToggle}
+                >
+                  {deckAudioEnabled ? (
+                    <Volume2 size={18} strokeWidth={2.1} />
+                  ) : (
+                    <VolumeX size={18} strokeWidth={2.1} />
+                  )}
+                </button>
+              ) : null}
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   <div className="flex items-center gap-2 mb-1">

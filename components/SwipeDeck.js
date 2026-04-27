@@ -19,18 +19,16 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dis
 
 function DeckAutoplayVideo({
   src,
-  tryAudio = false,
   className = "",
   onVideoRef = null,
 }) {
   const videoRef = useRef(null);
 
-  const startVideoPlayback = useCallback((video, allowAudio) => {
+  const startVideoPlayback = useCallback((video) => {
     if (!video) return () => {};
     console.info("[SwipeDeckVideo] play attempt init", {
       mounted: Boolean(video),
       src: video.currentSrc || video.src || src || null,
-      allowAudio,
       readyState: video.readyState,
     });
 
@@ -49,7 +47,7 @@ function DeckAutoplayVideo({
       }
     };
 
-    const attemptPlayback = (preferAudio, retriesLeft = 10) => {
+    const attemptPlayback = (retriesLeft = 10) => {
       if (cancelled || !video.isConnected) return;
       video.autoplay = true;
       video.loop = true;
@@ -60,14 +58,11 @@ function DeckAutoplayVideo({
       video.setAttribute("webkit-playsinline", "true");
       video.setAttribute("x-webkit-airplay", "deny");
       video.preload = "auto";
-      video.muted = !preferAudio;
-      video.defaultMuted = !preferAudio;
+      video.defaultMuted = false;
       console.info("[SwipeDeckVideo] play() call", {
         src: video.currentSrc || video.src || src || null,
-        preferAudio,
         retriesLeft,
         readyState: video.readyState,
-        muted: video.muted,
       });
 
       const playPromise = video.play?.();
@@ -76,22 +71,18 @@ function DeckAutoplayVideo({
           .then(() => {
             console.info("[SwipeDeckVideo] play() resolved", {
               src: video.currentSrc || video.src || src || null,
-              preferAudio,
-              muted: video.muted,
             });
             clearPending();
           })
           .catch((error) => {
             console.error("[SwipeDeckVideo] play() rejected", {
               src: video.currentSrc || video.src || src || null,
-              preferAudio,
-              muted: video.muted,
               name: error?.name || null,
               message: error?.message || null,
             });
             if (cancelled || retriesLeft <= 0) return;
             retryTimer = window.setTimeout(() => {
-              attemptPlayback(false, retriesLeft - 1);
+              attemptPlayback(retriesLeft - 1);
             }, 120);
           });
         return;
@@ -99,15 +90,15 @@ function DeckAutoplayVideo({
 
       if (video.paused && retriesLeft > 0 && !cancelled) {
         retryTimer = window.setTimeout(() => {
-          attemptPlayback(false, retriesLeft - 1);
+          attemptPlayback(retriesLeft - 1);
         }, 120);
       }
     };
 
     const run = () => {
-      attemptPlayback(allowAudio);
+      attemptPlayback();
       if (!video.paused) return;
-      rafId = window.requestAnimationFrame(() => attemptPlayback(allowAudio));
+      rafId = window.requestAnimationFrame(() => attemptPlayback());
     };
 
     if (video.readyState >= 2) {
@@ -141,10 +132,9 @@ function DeckAutoplayVideo({
     console.info("[SwipeDeckVideo] mounted", {
       mounted: Boolean(video),
       src,
-      tryAudio,
       readyState: video.readyState,
     });
-    const stopPlaybackAttempt = startVideoPlayback(video, tryAudio);
+    const stopPlaybackAttempt = startVideoPlayback(video);
 
     const handleLoadedData = () => {
       console.info("[SwipeDeckVideo] loadeddata", {
@@ -171,7 +161,7 @@ function DeckAutoplayVideo({
         video.pause?.();
       } catch {}
     };
-  }, [src, tryAudio, startVideoPlayback]);
+  }, [src, startVideoPlayback]);
 
   useEffect(() => {
     if (typeof onVideoRef !== "function") return undefined;
@@ -186,7 +176,6 @@ function DeckAutoplayVideo({
       src={src}
       className={`deck-video ${className}`}
       autoPlay
-      muted={!tryAudio}
       loop
       playsInline
       preload="auto"
@@ -393,12 +382,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     typeof onSharePress === "function";
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
 
-  const startCardVideo = useCallback((video, preferAudio = true) => {
+  const startCardVideo = useCallback((video) => {
     if (!video) return () => {};
 
     let cancelled = false;
 
-    const run = async (allowAudio) => {
+    const run = async () => {
       if (cancelled || !video.isConnected) return;
       try {
         video.autoplay = true;
@@ -406,27 +395,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         video.playsInline = true;
         video.controls = false;
         video.preload = "auto";
-        video.muted = !allowAudio;
-        video.defaultMuted = !allowAudio;
+        video.defaultMuted = false;
         await video.play?.();
       } catch {
-        if (cancelled || !allowAudio) return;
-        try {
-          video.muted = true;
-          video.defaultMuted = true;
-          await video.play?.();
-        } catch {}
+        if (cancelled) return;
       }
     };
 
     const handleReady = () => {
       video.removeEventListener("loadeddata", handleReady);
       video.removeEventListener("canplay", handleReady);
-      run(preferAudio);
+      run();
     };
 
     if (video.readyState >= 2) {
-      run(preferAudio);
+      run();
     } else {
       video.addEventListener("loadeddata", handleReady, { once: true });
       video.addEventListener("canplay", handleReady, { once: true });
@@ -461,7 +444,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       video.playsInline = true;
       video.controls = false;
       video.preload = "auto";
-      video.muted = false;
       video.defaultMuted = false;
       video.volume = 1;
       if (video.readyState === 0) {
@@ -493,7 +475,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const video = currentVideoRef.current;
     if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
     const frame = window.requestAnimationFrame(() => {
-      startCardVideo(video, true);
+      startCardVideo(video);
     });
     return () => {
       window.cancelAnimationFrame(frame);
@@ -784,14 +766,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const renderImage = (
     dish,
-    { active = false, preview = false, onVideoRef = null, allowAudio = false } = {}
+    { active = false, preview = false, onVideoRef = null } = {}
   ) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
         <DeckAutoplayVideo
           src={imageSrc}
-          tryAudio={allowAudio}
           onVideoRef={onVideoRef}
           className="pointer-events-none w-full h-full object-cover"
         />
@@ -1036,7 +1017,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,
-                allowAudio: !showRecipe,
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },

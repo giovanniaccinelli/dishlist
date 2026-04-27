@@ -187,6 +187,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
+  const [showVideoPlayButton, setShowVideoPlayButton] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -254,6 +255,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
+    setShowVideoPlayButton(Boolean(currentCard && isDishVideo(currentCard)));
     setRecipePanelModal(null);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
@@ -443,14 +445,43 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       video.volume = 1;
       await video.play?.();
       mediaUnlockedRef.current = true;
+      setShowVideoPlayButton(false);
     } catch {
       try {
         video.muted = true;
         video.defaultMuted = true;
         await video.play?.();
+        setShowVideoPlayButton(false);
       } catch {}
     }
   }, []);
+
+  useEffect(() => {
+    const video = currentVideoRef.current;
+    if (!video || !currentCard || !isDishVideo(currentCard) || showRecipe) return;
+
+    const handlePlay = () => {
+      setShowVideoPlayButton(false);
+    };
+
+    const handlePause = () => {
+      if (video.currentTime <= 0.05) {
+        setShowVideoPlayButton(true);
+      }
+    };
+
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+
+    if (!video.paused && !video.ended) {
+      setShowVideoPlayButton(false);
+    }
+
+    return () => {
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+    };
+  }, [currentCard?._key, showRecipe]);
 
   useEffect(() => {
     const video = currentVideoRef.current;
@@ -997,7 +1028,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-label="Open recipe view"
                 />
               ) : null}
-              {!showRecipe && isDishVideo(currentCard) ? (
+              {!showRecipe && isDishVideo(currentCard) && showVideoPlayButton ? (
                 <button
                   type="button"
                   data-no-drag="true"
@@ -1009,7 +1040,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   }}
                   onClick={handleVideoPlayPress}
                 >
-                  <Play size={24} className="translate-x-[1px]" fill="currentColor" strokeWidth={1.8} />
+                  <Play size={24} fill="currentColor" strokeWidth={1.8} />
                 </button>
               ) : null}
               {renderImage(currentCard, {

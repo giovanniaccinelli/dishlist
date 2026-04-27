@@ -378,7 +378,7 @@ function ExpandedCategoryModal({ row, onClose }) {
             <X size={18} />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish) => (
             <div key={`${row.key}-${dish.id}`} className="relative bg-white rounded-2xl overflow-hidden shadow-md">
               <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
@@ -387,7 +387,7 @@ function ExpandedCategoryModal({ row, onClose }) {
                 alt={dish.name}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-28 object-cover"
+                className="w-full h-40 object-cover"
                 onError={(e) => {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}

@@ -472,7 +472,7 @@ export default function DirectChat() {
                       {pickerSearchTerm ? "Search results" : activePickerDishlist.name}
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 content-start">
+                  <div className="grid grid-cols-2 gap-3 content-start">
                     {visiblePickerDishes.map((dish) => {
                       const imageSrc = getDishImageUrl(dish, "thumb");
                       return (

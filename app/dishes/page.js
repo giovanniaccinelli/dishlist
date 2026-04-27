@@ -667,7 +667,7 @@ export default function Dishes() {
           No dishes found.
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {visibleDishes.map((dish) => {
             const imageSrc = getDishImageUrl(dish, "thumb");
             return (
@@ -681,7 +681,7 @@ export default function Dishes() {
                 <img
                   src={imageSrc}
                   alt={dish.name}
-                  className="w-full h-28 object-cover"
+                  className="w-full h-40 object-cover"
                   loading="lazy"
                   onError={(e) => {
                     e.currentTarget.src = DEFAULT_DISH_IMAGE;

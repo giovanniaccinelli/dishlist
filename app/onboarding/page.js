@@ -279,7 +279,7 @@ export default function Onboarding() {
 
               <div className="mt-4">
                 <p className="text-sm font-semibold text-black/70 mb-3">Some ideas</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {ideaDishes.map((dish) => (
                     <button
                       key={dish.id}

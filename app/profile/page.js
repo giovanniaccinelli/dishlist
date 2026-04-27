@@ -837,9 +837,9 @@ export default function Profile() {
           </button>
         </div>
       ) : null}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {dishes.length === 0 ? (
-          <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+          <div className="col-span-2 bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
             No dishes here.
           </div>
         ) : (
@@ -871,7 +871,7 @@ export default function Profile() {
                       alt={dish.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-28 object-cover"
+                      className="w-full h-40 object-cover"
                       onError={(e) => {
                         e.currentTarget.src = DEFAULT_DISH_IMAGE;
                       }}
@@ -1845,7 +1845,7 @@ export default function Profile() {
                         <div className="mb-2 text-sm font-semibold text-black">
                           {createDishSearchTerm ? "Search results" : createSourceDishlist.name}
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                           {visibleCreateDishes.map((dish) => {
                             const selected = selectedDishIds.includes(dish.id);
                             return (
@@ -1860,7 +1860,7 @@ export default function Profile() {
                                 <img
                                   src={getDishImageUrl(dish, "thumb")}
                                   alt={dish.name}
-                                  className="h-20 w-full object-cover"
+                                  className="h-28 w-full object-cover"
                                   loading="lazy"
                                   decoding="async"
                                   onError={(event) => {

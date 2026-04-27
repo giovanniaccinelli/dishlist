@@ -503,9 +503,9 @@ export default function PublicProfile() {
           Shuffle
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {(activeDishlist?.dishes || []).length === 0 ? (
-          <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+          <div className="col-span-2 bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
             No dishes here.
           </div>
         ) : (
@@ -534,7 +534,7 @@ export default function PublicProfile() {
                   alt={dish.name}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-28 object-cover"
+                  className="w-full h-40 object-cover"
                   onError={(event) => {
                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}

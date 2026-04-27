@@ -128,9 +128,9 @@ export function DishGridLoading({ label = "Loading dishes" }) {
   return (
     <div>
       <div className="mb-3 text-sm font-medium text-black/45">{label}...</div>
-      <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: 9 }).map((_, idx) => (
-          <PulseBlock key={idx} className="h-28 rounded-2xl" />
+      <div className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <PulseBlock key={idx} className="h-40 rounded-2xl" />
         ))}
       </div>
     </div>
@@ -139,9 +139,9 @@ export function DishGridLoading({ label = "Loading dishes" }) {
 
 export function DishInlineLoading() {
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {Array.from({ length: 3 }).map((_, idx) => (
-        <PulseBlock key={idx} className="h-28 rounded-2xl" />
+    <div className="grid grid-cols-2 gap-3">
+      {Array.from({ length: 2 }).map((_, idx) => (
+        <PulseBlock key={idx} className="h-40 rounded-2xl" />
       ))}
     </div>
   );

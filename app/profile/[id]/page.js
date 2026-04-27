@@ -158,6 +158,10 @@ export default function PublicProfile() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  const buildProfileReturnTo = () => {
+    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "saved")}`;
+  };
+
   // Follow/Unfollow handler
   const handleFollow = async () => {
     if (!user) {
@@ -255,11 +259,12 @@ export default function PublicProfile() {
       return;
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    const returnTo = encodeURIComponent(buildProfileReturnTo());
     if (customDishlist) {
-      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${id}`);
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${id}&returnTo=${returnTo}`);
       return;
     }
-    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}`);
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}&returnTo=${returnTo}`);
   };
 
   const handleOpenSavers = async (dish) => {
@@ -538,8 +543,8 @@ export default function PublicProfile() {
                 <Link
                   href={
                     activeDishlist?.type === "custom"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${id}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${id}`
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                   }
                   className="absolute inset-0 z-10"
                 >

@@ -268,6 +268,10 @@ export default function Profile() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  const buildProfileReturnTo = () => {
+    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "saved")}`;
+  };
+
   const getProfileAddTargetListId = () => {
     if (!activeDishlist?.id) return "saved";
     if (activeDishlist.id === "all_dishes") return "saved";
@@ -493,11 +497,12 @@ export default function Profile() {
       return;
     }
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    const returnTo = encodeURIComponent(buildProfileReturnTo());
     if (customDishlist) {
-      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle`);
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&returnTo=${returnTo}`);
       return;
     }
-    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle`);
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&returnTo=${returnTo}`);
   };
 
   const removeDishFromProfileOnly = async (dish) => {
@@ -837,8 +842,8 @@ export default function Profile() {
                 <Link
                   href={
                     source === "dishlist"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single`
-                      : `/dish/${dish.id}?source=${source}&mode=single`
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                      : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                   }
                   className="absolute inset-0 z-10"
                 >

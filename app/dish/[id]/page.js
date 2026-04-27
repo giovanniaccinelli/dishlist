@@ -69,6 +69,7 @@ export default function DishDetail() {
   const mode = searchParams.get("mode") || "single";
   const profileId = searchParams.get("profileId");
   const listId = searchParams.get("listId");
+  const returnTo = searchParams.get("returnTo");
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const listOwnerId = profileId || userId;
@@ -327,6 +328,9 @@ export default function DishDetail() {
     return undefined;
   };
   const backFallback = (() => {
+    if (returnTo) {
+      return returnTo;
+    }
     const params = new URLSearchParams();
     if (source === "dishlist" && listId) {
       params.set("list", listId);
@@ -565,7 +569,7 @@ export default function DishDetail() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
-        <AppBackButton fallback={backFallback} />
+        <AppBackButton fallback={backFallback} forceFallback={Boolean(returnTo)} />
         <div className="w-[74px]" />
       </div>
 

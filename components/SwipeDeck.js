@@ -176,6 +176,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   fitHeight = false,
   storyPushStatsByDish = {},
   showStoryHistoryCounter = false,
+  preferImmediateVideoAudio = false,
+  showManualVideoPlayButton = true,
 }, ref) {
   const router = useRouter();
   const SWIPE_EJECT_THRESHOLD = 70;
@@ -255,11 +257,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     setShowRecipe(false);
-    setShowVideoPlayButton(Boolean(currentCard && isDishVideo(currentCard)));
+    setShowVideoPlayButton(
+      Boolean(currentCard && isDishVideo(currentCard) && showManualVideoPlayButton && !preferImmediateVideoAudio)
+    );
     setRecipePanelModal(null);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-  }, [currentCard?._key]);
+  }, [currentCard?._key, preferImmediateVideoAudio, showManualVideoPlayButton]);
 
   useEffect(() => {
     if (!showRecipe) {
@@ -458,20 +462,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     const video = currentVideoRef.current;
-    if (!video || !currentCard || !isDishVideo(currentCard) || showRecipe) return;
+    if (!video || !currentCard || !isDishVideo(currentCard) || showRecipe || !showManualVideoPlayButton) return;
 
     const handlePlay = () => {
       setShowVideoPlayButton(false);
     };
 
-    const handlePause = () => {
-      if (video.currentTime <= 0.05) {
-        setShowVideoPlayButton(true);
-      }
-    };
-
     video.addEventListener("play", handlePlay);
-    video.addEventListener("pause", handlePause);
 
     if (!video.paused && !video.ended) {
       setShowVideoPlayButton(false);
@@ -479,20 +476,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
     return () => {
       video.removeEventListener("play", handlePlay);
-      video.removeEventListener("pause", handlePause);
     };
-  }, [currentCard?._key, showRecipe]);
+  }, [currentCard?._key, showRecipe, showManualVideoPlayButton]);
 
   useEffect(() => {
     const video = currentVideoRef.current;
     if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
     const frame = window.requestAnimationFrame(() => {
-      startCardVideo(video, mediaUnlockedRef.current);
+      startCardVideo(video, preferImmediateVideoAudio || mediaUnlockedRef.current);
     });
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [currentCard?._key, showRecipe, startCardVideo]);
+  }, [currentCard?._key, preferImmediateVideoAudio, showRecipe, startCardVideo]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -1028,7 +1024,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-label="Open recipe view"
                 />
               ) : null}
-              {!showRecipe && isDishVideo(currentCard) && showVideoPlayButton ? (
+              {!showRecipe && isDishVideo(currentCard) && showManualVideoPlayButton && showVideoPlayButton ? (
                 <button
                   type="button"
                   data-no-drag="true"
@@ -1045,7 +1041,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,
-                allowAudio: !showRecipe && mediaUnlockedRef.current,
+                allowAudio: !showRecipe && (preferImmediateVideoAudio || mediaUnlockedRef.current),
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },

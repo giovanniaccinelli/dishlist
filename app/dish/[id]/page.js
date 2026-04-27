@@ -623,6 +623,8 @@ export default function DishDetail() {
             onResetFeed={handleResetDeck}
             storyPushStatsByDish={storyPushStats}
             showStoryHistoryCounter={!isPublicSource}
+            preferImmediateVideoAudio
+            showManualVideoPlayButton={false}
           />
         </div>
       </div>

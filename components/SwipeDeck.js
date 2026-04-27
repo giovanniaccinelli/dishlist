@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, Volume2, VolumeX, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -246,7 +246,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
-  const [deckAudioEnabled, setDeckAudioEnabled] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -490,46 +489,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     void unlockDeckMedia();
   }, [unlockDeckMedia]);
 
-  const handleVideoAudioToggle = useCallback(async (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    const video = currentVideoRef.current;
-    if (!video) return;
-
-    if (deckAudioEnabled) {
-      video.muted = true;
-      video.defaultMuted = true;
-      setDeckAudioEnabled(false);
-      return;
-    }
-
-    try {
-      video.muted = false;
-      video.defaultMuted = false;
-      video.volume = 1;
-      await video.play?.();
-      mediaUnlockedRef.current = true;
-      setDeckAudioEnabled(true);
-    } catch {
-      try {
-        video.muted = true;
-        video.defaultMuted = true;
-        await video.play?.();
-      } catch {}
-    }
-  }, [deckAudioEnabled]);
-
   useEffect(() => {
     const video = currentVideoRef.current;
     if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
     const frame = window.requestAnimationFrame(() => {
-      startCardVideo(video, mediaUnlockedRef.current && deckAudioEnabled);
+      startCardVideo(video, true);
     });
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [currentCard?._key, deckAudioEnabled, showRecipe, startCardVideo]);
+  }, [currentCard?._key, showRecipe, startCardVideo]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -1067,7 +1036,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,
-                allowAudio: !showRecipe && mediaUnlockedRef.current && deckAudioEnabled,
+                allowAudio: !showRecipe,
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },
@@ -1088,25 +1057,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              {!showRecipe && isDishVideo(currentCard) ? (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  className="absolute bottom-24 right-5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/42 text-white shadow-[0_12px_30px_rgba(0,0,0,0.24)] backdrop-blur-md"
-                  aria-label={deckAudioEnabled ? "Mute video" : "Unmute video"}
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                  onClick={handleVideoAudioToggle}
-                >
-                  {deckAudioEnabled ? (
-                    <Volume2 size={18} strokeWidth={2.1} />
-                  ) : (
-                    <VolumeX size={18} strokeWidth={2.1} />
-                  )}
-                </button>
-              ) : null}
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   <div className="flex items-center gap-2 mb-1">

@@ -17,6 +17,109 @@ import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 
+function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+
+    let cancelled = false;
+    let retryTimer = null;
+    let rafId = 0;
+
+    const clearRetry = () => {
+      if (retryTimer) {
+        window.clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    };
+
+    const attemptPlayback = (allowAudio, retriesLeft = 10) => {
+      if (cancelled || !video.isConnected) return;
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.controls = false;
+      video.preload = "auto";
+      video.muted = !allowAudio;
+      video.defaultMuted = !allowAudio;
+
+      if (video.readyState === 0) {
+        try {
+          video.load();
+        } catch {}
+      }
+
+      const playPromise = video.play?.();
+      if (playPromise?.catch) {
+        playPromise
+          .then(() => {
+            clearRetry();
+          })
+          .catch(() => {
+            if (retriesLeft <= 0 || cancelled) return;
+            retryTimer = window.setTimeout(() => {
+              attemptPlayback(false, retriesLeft - 1);
+            }, 120);
+          });
+        return;
+      }
+
+      if (video.paused && retriesLeft > 0 && !cancelled) {
+        retryTimer = window.setTimeout(() => {
+          attemptPlayback(false, retriesLeft - 1);
+        }, 120);
+      }
+    };
+
+    const handleReady = () => {
+      attemptPlayback(tryAudio);
+      if (!video.paused) return;
+      rafId = window.requestAnimationFrame(() => attemptPlayback(tryAudio));
+    };
+
+    video.addEventListener("loadedmetadata", handleReady);
+    video.addEventListener("loadeddata", handleReady);
+    video.addEventListener("canplay", handleReady);
+    video.addEventListener("canplaythrough", handleReady);
+
+    handleReady();
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener("loadedmetadata", handleReady);
+      video.removeEventListener("loadeddata", handleReady);
+      video.removeEventListener("canplay", handleReady);
+      video.removeEventListener("canplaythrough", handleReady);
+      clearRetry();
+      try {
+        video.pause?.();
+      } catch {}
+    };
+  }, [src, tryAudio]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      className={className}
+      autoPlay
+      muted={!tryAudio}
+      loop
+      playsInline
+      preload="auto"
+      controls={false}
+      disablePictureInPicture
+      controlsList="nodownload noplaybackrate noremoteplayback"
+    />
+  );
+}
+
 const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
   onSwiped,
@@ -84,9 +187,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
-  const currentVideoRef = useRef(null);
-  const nextVideoRef = useRef(null);
-  const deckPlaybackShouldTryAudioRef = useRef(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -175,40 +275,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     })();
   }, [currentCard?.id, onCardViewed]);
 
-  useLayoutEffect(() => {
-    const video = currentVideoRef.current;
-    if (!video || showRecipe || !isDishVideo(currentCard)) return;
-    video.currentTime = 0;
-    kickDeckVideoPlayback(video, { allowAudio: deckPlaybackShouldTryAudioRef.current });
-    deckPlaybackShouldTryAudioRef.current = false;
-    return () => {
-      if (video.__deckPlaybackRetry) {
-        window.clearTimeout(video.__deckPlaybackRetry);
-        video.__deckPlaybackRetry = null;
-      }
-      try {
-        video.pause?.();
-      } catch {}
-    };
-  }, [currentCard?._key, showRecipe, currentIndex]);
-
-  useLayoutEffect(() => {
-    const video = nextVideoRef.current;
-    const upcomingCard = deck[currentIndex + 1] || null;
-    if (!video || !isDishVideo(upcomingCard)) return;
-    video.currentTime = 0;
-    kickDeckVideoPlayback(video);
-    return () => {
-      if (video.__deckPlaybackRetry) {
-        window.clearTimeout(video.__deckPlaybackRetry);
-        video.__deckPlaybackRetry = null;
-      }
-      try {
-        video.pause?.();
-      } catch {}
-    };
-  }, [deck, currentIndex]);
-
   useEffect(() => {
     if (!tagsRef.current) return;
     const el = tagsRef.current;
@@ -268,53 +334,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     scrollPanelActiveRef.current = false;
     setScrollPanelActive(false);
     setRecipePanelModal(null);
-  };
-
-  const kickDeckVideoPlayback = (video, { allowAudio = false } = {}) => {
-    if (!video) return;
-    if (video.__deckPlaybackRetry) {
-      window.clearTimeout(video.__deckPlaybackRetry);
-      video.__deckPlaybackRetry = null;
-    }
-    video.autoplay = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.controls = false;
-    video.preload = "auto";
-    const attemptPlayback = (retriesLeft, tryAudio) => {
-      if (!video.isConnected) return;
-      if (video.readyState === 0) {
-        try {
-          video.load();
-        } catch {}
-      }
-      video.muted = !tryAudio;
-      video.defaultMuted = !tryAudio;
-      const playPromise = video.play?.();
-      if (playPromise?.catch) {
-        playPromise
-          .then(() => {
-            if (video.__deckPlaybackRetry) {
-              window.clearTimeout(video.__deckPlaybackRetry);
-              video.__deckPlaybackRetry = null;
-            }
-          })
-          .catch(() => {
-            if (retriesLeft <= 0) return;
-            video.__deckPlaybackRetry = window.setTimeout(() => {
-              attemptPlayback(retriesLeft - 1, false);
-            }, 120);
-          });
-        return;
-      }
-      if (video.paused && retriesLeft > 0) {
-        video.__deckPlaybackRetry = window.setTimeout(() => {
-          attemptPlayback(retriesLeft - 1, false);
-        }, 120);
-      }
-    };
-
-    attemptPlayback(8, allowAudio);
   };
 
   const loadComments = async () => {
@@ -536,7 +555,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
-      deckPlaybackShouldTryAudioRef.current = true;
       try {
         await animate(dragX, targetX, {
           type: "spring",
@@ -562,24 +580,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
-        <video
-          ref={active ? currentVideoRef : preview ? nextVideoRef : null}
+        <DeckAutoplayVideo
           src={imageSrc}
+          tryAudio={active}
           className="pointer-events-none w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          controls={false}
-          disablePictureInPicture
-          controlsList="nodownload noplaybackrate noremoteplayback"
-          onLoadedData={(e) =>
-            kickDeckVideoPlayback(e.currentTarget, { allowAudio: active && deckPlaybackShouldTryAudioRef.current })
-          }
-          onCanPlay={(e) =>
-            kickDeckVideoPlayback(e.currentTarget, { allowAudio: active && deckPlaybackShouldTryAudioRef.current })
-          }
         />
       );
     }
@@ -660,12 +664,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
-          onDrag={(_, info) => {
-            if (Math.abs(info.offset.x) > 8 && nextVideoRef.current) {
-              deckPlaybackShouldTryAudioRef.current = true;
-              kickDeckVideoPlayback(nextVideoRef.current, { allowAudio: true });
-            }
-          }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >

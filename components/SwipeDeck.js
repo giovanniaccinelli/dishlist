@@ -208,6 +208,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
+  const mediaUnlockedRef = useRef(false);
+  const mediaUnlockInFlightRef = useRef(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -381,11 +383,58 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     };
   }, []);
 
+  const unlockDeckMedia = useCallback(async () => {
+    if (mediaUnlockedRef.current || mediaUnlockInFlightRef.current) return;
+
+    const currentDeckVideo =
+      !showRecipe && currentCard && isDishVideo(currentCard) ? currentVideoRef.current : null;
+    const nextDeckVideo = nextCard && isDishVideo(nextCard) ? nextVideoRef.current : null;
+    const video = currentDeckVideo || nextDeckVideo;
+
+    if (!video) return;
+
+    mediaUnlockInFlightRef.current = true;
+    const shouldResetAfterUnlock = video !== currentDeckVideo;
+
+    try {
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.controls = false;
+      video.preload = "auto";
+      video.muted = false;
+      video.defaultMuted = false;
+      video.volume = 1;
+      if (video.readyState === 0) {
+        try {
+          video.load();
+        } catch {}
+      }
+      await video.play?.();
+      mediaUnlockedRef.current = true;
+
+      if (shouldResetAfterUnlock) {
+        video.pause?.();
+        try {
+          video.currentTime = 0;
+        } catch {}
+      }
+    } catch {
+      startCardVideo(video, false);
+    } finally {
+      mediaUnlockInFlightRef.current = false;
+    }
+  }, [currentCard, nextCard, showRecipe, startCardVideo]);
+
+  const handleDeckMediaUnlock = useCallback(() => {
+    void unlockDeckMedia();
+  }, [unlockDeckMedia]);
+
   useEffect(() => {
     const video = currentVideoRef.current;
     if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
     const frame = window.requestAnimationFrame(() => {
-      startCardVideo(video, true);
+      startCardVideo(video, mediaUnlockedRef.current);
     });
     return () => {
       window.cancelAnimationFrame(frame);
@@ -674,13 +723,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     });
   };
 
-  const renderImage = (dish, { active = false, preview = false, onVideoRef = null } = {}) => {
+  const renderImage = (
+    dish,
+    { active = false, preview = false, onVideoRef = null, allowAudio = false } = {}
+  ) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
         <DeckAutoplayVideo
           src={imageSrc}
-          tryAudio={active}
+          tryAudio={allowAudio}
           onVideoRef={onVideoRef}
           className="pointer-events-none w-full h-full object-cover"
         />
@@ -747,7 +799,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
-      <div className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}>
+      <div
+        className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
+        onPointerDownCapture={handleDeckMediaUnlock}
+        onTouchStartCapture={handleDeckMediaUnlock}
+        onClickCapture={handleDeckMediaUnlock}
+      >
         {nextCard ? (
           <motion.div
             className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${fitHeight ? "h-full" : "h-[74vh]"}`}
@@ -920,6 +977,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {renderImage(currentCard, {
                 active: !showRecipe,
+                allowAudio: !showRecipe && mediaUnlockedRef.current,
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },

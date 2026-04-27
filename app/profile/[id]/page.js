@@ -84,32 +84,52 @@ export default function PublicProfile() {
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
 
-  // Fetch profile data
-  const fetchProfileData = async () => {
-    const userDoc = await getDoc(doc(db, "users", id));
-    if (userDoc.exists()) {
-      setProfileUser({ id: userDoc.id, ...userDoc.data() });
-      setIsFollowing(userDoc.data().followers?.includes(user?.uid) || false);
-    }
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
 
-    const fetchedDishes = await getDishesFromFirestore(id);
-    setDishes(fetchedDishes);
+    (async () => {
+      const [
+        userDoc,
+        fetchedDishes,
+        fetchedSavedDishes,
+        fetchedToTryDishes,
+        fetchedCustomDishlists,
+        fetchedStories,
+        fetchedStoryPushStats,
+      ] = await Promise.all([
+        getDoc(doc(db, "users", id)),
+        getDishesFromFirestore(id),
+        getSavedDishesFromFirestore(id),
+        getToTryDishesFromFirestore(id),
+        getCustomDishlistsForUser(id),
+        getActiveStoriesForUser(id),
+        getStoryPushStatsForUser(id),
+      ]);
 
-    const fetchedSavedDishes = await getSavedDishesFromFirestore(id);
-    setSavedDishes(fetchedSavedDishes);
-    const fetchedToTryDishes = await getToTryDishesFromFirestore(id);
-    setToTryDishes(fetchedToTryDishes);
-    const fetchedCustomDishlists = await getCustomDishlistsForUser(id);
-    setCustomDishlists(fetchedCustomDishlists);
-    const fetchedStories = await getActiveStoriesForUser(id);
-    setActiveStories(fetchedStories);
-    const fetchedStoryPushStats = await getStoryPushStatsForUser(id);
-    setStoryPushStats(fetchedStoryPushStats);
-  };
+      if (cancelled) return;
+
+      if (userDoc.exists()) {
+        setProfileUser({ id: userDoc.id, ...userDoc.data() });
+      } else {
+        setProfileUser(null);
+      }
+      setDishes(fetchedDishes);
+      setSavedDishes(fetchedSavedDishes);
+      setToTryDishes(fetchedToTryDishes);
+      setCustomDishlists(fetchedCustomDishlists);
+      setActiveStories(fetchedStories);
+      setStoryPushStats(fetchedStoryPushStats);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
-    if (id) fetchProfileData();
-  }, [id, user]);
+    setIsFollowing(Boolean(profileUser?.followers?.includes(user?.uid)));
+  }, [profileUser?.followers, user?.uid]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

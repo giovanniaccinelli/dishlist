@@ -147,27 +147,12 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       (async () => {
-        const uploaded = await getDishesFromFirestore(user.uid);
-        const toTry = await getToTryDishesFromFirestore(user.uid);
-        const userSnap = await getDoc(doc(db, "users", user.uid));
-        const stories = await getActiveStoriesForUser(user.uid);
-        const pushStats = await getStoryPushStatsForUser(user.uid);
-        const custom = await getCustomDishlistsForUser(user.uid);
+        const [uploaded, custom] = await Promise.all([
+          getDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
+        ]);
         setUploadedDishes(uploaded);
-        setToTryDishes(toTry);
-        setActiveStories(stories);
-        setStoryPushStats(pushStats);
         setCustomDishlists(custom);
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          setProfileMeta({
-            followers: data.followers || [],
-            following: data.following || [],
-            savedDishes: data.savedDishes || [],
-            photoURL: data.photoURL || "",
-            bio: data.bio || "",
-          });
-        }
       })();
     }
   }, [user]);

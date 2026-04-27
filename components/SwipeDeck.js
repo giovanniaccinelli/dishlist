@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, Play, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -19,6 +19,8 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dis
 
 function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
   const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -37,6 +39,10 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
         window.cancelAnimationFrame(rafId);
         rafId = 0;
       }
+    };
+
+    const syncPlayingState = () => {
+      setIsPlaying(!video.paused && !video.ended);
     };
 
     const attemptPlayback = (allowAudio, retriesLeft = 10) => {
@@ -60,6 +66,7 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
         playPromise
           .then(() => {
             clearRetry();
+            syncPlayingState();
           })
           .catch(() => {
             if (retriesLeft <= 0 || cancelled) return;
@@ -74,6 +81,8 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
         retryTimer = window.setTimeout(() => {
           attemptPlayback(false, retriesLeft - 1);
         }, 120);
+      } else {
+        syncPlayingState();
       }
     };
 
@@ -87,8 +96,12 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
     video.addEventListener("loadeddata", handleReady);
     video.addEventListener("canplay", handleReady);
     video.addEventListener("canplaythrough", handleReady);
+    video.addEventListener("play", syncPlayingState);
+    video.addEventListener("pause", syncPlayingState);
+    video.addEventListener("ended", syncPlayingState);
 
     handleReady();
+    syncPlayingState();
 
     return () => {
       cancelled = true;
@@ -96,6 +109,9 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
       video.removeEventListener("loadeddata", handleReady);
       video.removeEventListener("canplay", handleReady);
       video.removeEventListener("canplaythrough", handleReady);
+      video.removeEventListener("play", syncPlayingState);
+      video.removeEventListener("pause", syncPlayingState);
+      video.removeEventListener("ended", syncPlayingState);
       clearRetry();
       try {
         video.pause?.();
@@ -103,20 +119,86 @@ function DeckAutoplayVideo({ src, tryAudio = false, className = "" }) {
     };
   }, [src, tryAudio]);
 
+  const handlePlayClick = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const video = videoRef.current;
+    if (!video) return;
+    setHasInteracted(true);
+    video.muted = false;
+    video.defaultMuted = false;
+    const playPromise = video.play?.();
+    if (playPromise?.catch) {
+      playPromise
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          video.muted = true;
+          video.defaultMuted = true;
+          const mutedPlay = video.play?.();
+          if (mutedPlay?.then) mutedPlay.then(() => setIsPlaying(true));
+          if (mutedPlay?.catch) mutedPlay.catch(() => {});
+        });
+      return;
+    }
+    setIsPlaying(true);
+  };
+
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      className={className}
-      autoPlay
-      muted={!tryAudio}
-      loop
-      playsInline
-      preload="auto"
-      controls={false}
-      disablePictureInPicture
-      controlsList="nodownload noplaybackrate noremoteplayback"
-    />
+    <div className="pointer-events-none relative h-full w-full">
+      <video
+        ref={videoRef}
+        src={src}
+        className={className}
+        autoPlay
+        muted={!tryAudio && !hasInteracted}
+        loop
+        playsInline
+        preload="auto"
+        controls={false}
+        disablePictureInPicture
+        controlsList="nodownload noplaybackrate noremoteplayback"
+      />
+      {!isPlaying ? (
+        <button
+          type="button"
+          data-no-drag="true"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {}
+          }}
+          onPointerMove={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            try {
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            } catch {}
+            handlePlayClick(e);
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onClick={handlePlayClick}
+          className="pointer-events-auto absolute left-1/2 top-1/2 z-40 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/75 bg-black/35 text-white shadow-[0_14px_36px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+          aria-label="Play video"
+        >
+          <Play size={24} className="translate-x-[1px]" fill="currentColor" />
+        </button>
+      ) : null}
+    </div>
   );
 }
 

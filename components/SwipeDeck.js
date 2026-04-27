@@ -22,20 +22,17 @@ function DeckAutoplayVideo({
   tryAudio = false,
   className = "",
   onVideoRef = null,
-  playSignal = 0,
-  gesturePrimed = false,
 }) {
   const videoRef = useRef(null);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !src) return;
+  const startVideoPlayback = useCallback((video, allowAudio) => {
+    if (!video) return () => {};
 
     let cancelled = false;
     let retryTimer = null;
     let rafId = 0;
 
-    const clearRetry = () => {
+    const clearPending = () => {
       if (retryTimer) {
         window.clearTimeout(retryTimer);
         retryTimer = null;
@@ -46,34 +43,24 @@ function DeckAutoplayVideo({
       }
     };
 
-    const syncPlaybackAttributes = (allowAudio) => {
+    const attemptPlayback = (preferAudio, retriesLeft = 10) => {
+      if (cancelled || !video.isConnected) return;
       video.autoplay = true;
       video.loop = true;
       video.playsInline = true;
       video.controls = false;
       video.preload = "auto";
-      video.muted = !allowAudio;
-      video.defaultMuted = !allowAudio;
-    };
-
-    const attemptPlayback = (allowAudio, retriesLeft = 10) => {
-      if (cancelled || !video.isConnected) return;
-      syncPlaybackAttributes(allowAudio);
-
-      if (video.readyState === 0) {
-        try {
-          video.load();
-        } catch {}
-      }
+      video.muted = !preferAudio;
+      video.defaultMuted = !preferAudio;
 
       const playPromise = video.play?.();
       if (playPromise?.catch) {
         playPromise
           .then(() => {
-            clearRetry();
+            clearPending();
           })
           .catch(() => {
-            if (retriesLeft <= 0 || cancelled) return;
+            if (cancelled || retriesLeft <= 0) return;
             retryTimer = window.setTimeout(() => {
               attemptPlayback(false, retriesLeft - 1);
             }, 120);
@@ -88,39 +75,45 @@ function DeckAutoplayVideo({
       }
     };
 
-    const kickPlayback = () => {
-      attemptPlayback(tryAudio);
+    const run = () => {
+      attemptPlayback(allowAudio);
       if (!video.paused) return;
-      rafId = window.requestAnimationFrame(() => attemptPlayback(tryAudio));
+      rafId = window.requestAnimationFrame(() => attemptPlayback(allowAudio));
     };
 
-    const handleReady = () => {
-      kickPlayback();
-    };
-
-    video.addEventListener("loadedmetadata", handleReady);
-    video.addEventListener("loadeddata", handleReady);
-    video.addEventListener("canplay", handleReady);
-    video.addEventListener("canplaythrough", handleReady);
-    video.addEventListener("play", clearRetry);
-    video.addEventListener("pause", kickPlayback);
-
-    handleReady();
+    if (video.readyState >= 2) {
+      run();
+    } else {
+      const handleReady = () => {
+        video.removeEventListener("loadeddata", handleReady);
+        video.removeEventListener("canplay", handleReady);
+        run();
+      };
+      video.addEventListener("loadeddata", handleReady, { once: true });
+      video.addEventListener("canplay", handleReady, { once: true });
+      try {
+        video.load();
+      } catch {}
+    }
 
     return () => {
       cancelled = true;
-      video.removeEventListener("loadedmetadata", handleReady);
-      video.removeEventListener("loadeddata", handleReady);
-      video.removeEventListener("canplay", handleReady);
-      video.removeEventListener("canplaythrough", handleReady);
-      video.removeEventListener("play", clearRetry);
-      video.removeEventListener("pause", kickPlayback);
-      clearRetry();
+      clearPending();
+    };
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+    const stopPlaybackAttempt = startVideoPlayback(video, tryAudio);
+
+    return () => {
+      stopPlaybackAttempt();
       try {
         video.pause?.();
       } catch {}
     };
-  }, [src, tryAudio]);
+  }, [src, tryAudio, startVideoPlayback]);
 
   useEffect(() => {
     if (typeof onVideoRef !== "function") return undefined;
@@ -128,32 +121,6 @@ function DeckAutoplayVideo({
     onVideoRef(node);
     return () => onVideoRef(null);
   }, [onVideoRef, src]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || (!playSignal && !gesturePrimed)) return;
-    let cancelled = false;
-
-    const kick = async () => {
-      try {
-        video.muted = !tryAudio;
-        video.defaultMuted = !tryAudio;
-        await video.play?.();
-      } catch {
-        if (cancelled) return;
-        try {
-          video.muted = true;
-          video.defaultMuted = true;
-          await video.play?.();
-        } catch {}
-      }
-    };
-
-    kick();
-    return () => {
-      cancelled = true;
-    };
-  }, [playSignal, gesturePrimed, tryAudio]);
 
   return (
     <video
@@ -241,12 +208,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
-  const gesturePlayedCurrentKeyRef = useRef(null);
-  const gesturePlayedNextKeyRef = useRef(null);
-  const [currentVideoPlaySignal, setCurrentVideoPlaySignal] = useState(0);
-  const [nextVideoPlaySignal, setNextVideoPlaySignal] = useState(0);
-  const [currentVideoGesturePrimed, setCurrentVideoGesturePrimed] = useState(false);
-  const [nextVideoGesturePrimed, setNextVideoGesturePrimed] = useState(false);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -294,11 +255,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setRecipePanelModal(null);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-    gesturePlayedCurrentKeyRef.current = null;
-    gesturePlayedNextKeyRef.current = null;
-    setCurrentVideoGesturePrimed(false);
-    setNextVideoGesturePrimed(false);
-    setCurrentVideoPlaySignal((value) => value + 1);
   }, [currentCard?._key]);
 
   useEffect(() => {
@@ -376,68 +332,82 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     typeof onSharePress === "function";
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
 
-  const forcePlayVideoNode = useCallback(async (video, allowAudio = false) => {
-    if (!video) return false;
-    try {
-      video.autoplay = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.controls = false;
-      video.preload = "auto";
-      video.muted = !allowAudio;
-      video.defaultMuted = !allowAudio;
-      if (video.readyState === 0) {
-        try {
-          video.load();
-        } catch {}
-      }
-      await video.play?.();
-      return true;
-    } catch {
-      if (allowAudio) {
+  const startCardVideo = useCallback((video, preferAudio = true) => {
+    if (!video) return () => {};
+
+    let cancelled = false;
+
+    const run = async (allowAudio) => {
+      if (cancelled || !video.isConnected) return;
+      try {
+        video.autoplay = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.controls = false;
+        video.preload = "auto";
+        video.muted = !allowAudio;
+        video.defaultMuted = !allowAudio;
+        await video.play?.();
+      } catch {
+        if (cancelled || !allowAudio) return;
         try {
           video.muted = true;
           video.defaultMuted = true;
           await video.play?.();
-          return true;
         } catch {}
       }
-      return false;
+    };
+
+    const handleReady = () => {
+      video.removeEventListener("loadeddata", handleReady);
+      video.removeEventListener("canplay", handleReady);
+      run(preferAudio);
+    };
+
+    if (video.readyState >= 2) {
+      run(preferAudio);
+    } else {
+      video.addEventListener("loadeddata", handleReady, { once: true });
+      video.addEventListener("canplay", handleReady, { once: true });
+      try {
+        video.load();
+      } catch {}
     }
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener("loadeddata", handleReady);
+      video.removeEventListener("canplay", handleReady);
+    };
   }, []);
 
-  const handleDragStart = useCallback(() => {
-    if (currentCard && isDishVideo(currentCard)) {
-      setCurrentVideoGesturePrimed(true);
-      gesturePlayedCurrentKeyRef.current = currentCard._key;
-      forcePlayVideoNode(currentVideoRef.current, true);
-    }
+  useEffect(() => {
+    const video = currentVideoRef.current;
+    if (!video || showRecipe || !currentCard || !isDishVideo(currentCard)) return;
+    const frame = window.requestAnimationFrame(() => {
+      startCardVideo(video, true);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [currentCard?._key, showRecipe, startCardVideo]);
 
-    if (nextCard && isDishVideo(nextCard)) {
-      setNextVideoGesturePrimed(true);
-      gesturePlayedNextKeyRef.current = nextCard._key;
-      setNextVideoPlaySignal((value) => value + 1);
-      forcePlayVideoNode(nextVideoRef.current, true);
-    }
-  }, [currentCard, nextCard, forcePlayVideoNode]);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) return;
+      try {
+        currentVideoRef.current?.pause?.();
+      } catch {}
+      try {
+        nextVideoRef.current?.pause?.();
+      } catch {}
+    };
 
-  const handleDragMove = useCallback((info) => {
-    const offsetX = Math.abs(info?.offset?.x || 0);
-    if (offsetX < 8) return;
-
-    if (currentCard && isDishVideo(currentCard) && gesturePlayedCurrentKeyRef.current !== currentCard._key) {
-      setCurrentVideoGesturePrimed(true);
-      gesturePlayedCurrentKeyRef.current = currentCard._key;
-      forcePlayVideoNode(currentVideoRef.current, true);
-    }
-
-    if (nextCard && isDishVideo(nextCard) && gesturePlayedNextKeyRef.current !== nextCard._key) {
-      setNextVideoGesturePrimed(true);
-      gesturePlayedNextKeyRef.current = nextCard._key;
-      setNextVideoPlaySignal((value) => value + 1);
-      forcePlayVideoNode(nextVideoRef.current, true);
-    }
-  }, [currentCard, nextCard, forcePlayVideoNode]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const StoryStatIcon = ({ size = 10 }) => (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -704,7 +674,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     });
   };
 
-  const renderImage = (dish, { active = false, preview = false, onVideoRef = null, playSignal = 0 } = {}) => {
+  const renderImage = (dish, { active = false, preview = false, onVideoRef = null } = {}) => {
     const imageSrc = getDishImageUrl(dish);
     if (isDishVideo(dish)) {
       return (
@@ -712,8 +682,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           src={imageSrc}
           tryAudio={active}
           onVideoRef={onVideoRef}
-          playSignal={playSignal}
-          gesturePrimed={active ? currentVideoGesturePrimed : nextVideoGesturePrimed}
           className="pointer-events-none w-full h-full object-cover"
         />
       );
@@ -790,7 +758,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onVideoRef: (node) => {
                 nextVideoRef.current = node;
               },
-              playSignal: nextVideoPlaySignal,
             })}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </motion.div>
@@ -801,8 +768,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
-          onDragStart={handleDragStart}
-          onDrag={(e, info) => handleDragMove(info)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
@@ -958,7 +923,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },
-                playSignal: currentVideoPlaySignal,
               })}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (

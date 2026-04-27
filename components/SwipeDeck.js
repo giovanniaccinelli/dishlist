@@ -27,6 +27,12 @@ function DeckAutoplayVideo({
 
   const startVideoPlayback = useCallback((video, allowAudio) => {
     if (!video) return () => {};
+    console.info("[SwipeDeckVideo] play attempt init", {
+      mounted: Boolean(video),
+      src: video.currentSrc || video.src || src || null,
+      allowAudio,
+      readyState: video.readyState,
+    });
 
     let cancelled = false;
     let retryTimer = null;
@@ -49,17 +55,40 @@ function DeckAutoplayVideo({
       video.loop = true;
       video.playsInline = true;
       video.controls = false;
+      video.removeAttribute("controls");
+      video.setAttribute("playsinline", "true");
+      video.setAttribute("webkit-playsinline", "true");
+      video.setAttribute("x-webkit-airplay", "deny");
       video.preload = "auto";
       video.muted = !preferAudio;
       video.defaultMuted = !preferAudio;
+      console.info("[SwipeDeckVideo] play() call", {
+        src: video.currentSrc || video.src || src || null,
+        preferAudio,
+        retriesLeft,
+        readyState: video.readyState,
+        muted: video.muted,
+      });
 
       const playPromise = video.play?.();
       if (playPromise?.catch) {
         playPromise
           .then(() => {
+            console.info("[SwipeDeckVideo] play() resolved", {
+              src: video.currentSrc || video.src || src || null,
+              preferAudio,
+              muted: video.muted,
+            });
             clearPending();
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error("[SwipeDeckVideo] play() rejected", {
+              src: video.currentSrc || video.src || src || null,
+              preferAudio,
+              muted: video.muted,
+              name: error?.name || null,
+              message: error?.message || null,
+            });
             if (cancelled || retriesLeft <= 0) return;
             retryTimer = window.setTimeout(() => {
               attemptPlayback(false, retriesLeft - 1);
@@ -87,6 +116,10 @@ function DeckAutoplayVideo({
       const handleReady = () => {
         video.removeEventListener("loadeddata", handleReady);
         video.removeEventListener("canplay", handleReady);
+        console.info("[SwipeDeckVideo] readiness event", {
+          src: video.currentSrc || video.src || src || null,
+          readyState: video.readyState,
+        });
         run();
       };
       video.addEventListener("loadeddata", handleReady, { once: true });
@@ -105,9 +138,34 @@ function DeckAutoplayVideo({
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
+    console.info("[SwipeDeckVideo] mounted", {
+      mounted: Boolean(video),
+      src,
+      tryAudio,
+      readyState: video.readyState,
+    });
     const stopPlaybackAttempt = startVideoPlayback(video, tryAudio);
 
+    const handleLoadedData = () => {
+      console.info("[SwipeDeckVideo] loadeddata", {
+        src: video.currentSrc || video.src || src || null,
+        readyState: video.readyState,
+      });
+    };
+
+    const handleCanPlay = () => {
+      console.info("[SwipeDeckVideo] canplay", {
+        src: video.currentSrc || video.src || src || null,
+        readyState: video.readyState,
+      });
+    };
+
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("canplay", handleCanPlay);
+
     return () => {
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("canplay", handleCanPlay);
       stopPlaybackAttempt();
       try {
         video.pause?.();
@@ -133,6 +191,7 @@ function DeckAutoplayVideo({
       playsInline
       preload="auto"
       controls={false}
+      disableRemotePlayback
       disablePictureInPicture
       controlsList="nodownload noplaybackrate noremoteplayback"
     />
@@ -1013,6 +1072,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   currentVideoRef.current = node;
                 },
               })}
+              {!showRecipe && isDishVideo(currentCard) ? (
+                <div
+                  data-no-drag="true"
+                  className="absolute inset-0 z-[11]"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  aria-hidden="true"
+                />
+              ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe && isDishVideo(currentCard) ? (
                 <button

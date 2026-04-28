@@ -26,6 +26,8 @@
     --app-top-nav-gap: 2.85rem;
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
+    --app-accent-border: #e4b43f;
+    --app-accent-border-strong: #cf9a17;
   }
 
   h1, h2, h3, h4 {
@@ -99,7 +101,7 @@
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 0.95rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--app-accent-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 244, 236, 0.96) 100%);
   color: #111;
   box-shadow: 0 7px 18px rgba(0, 0, 0, 0.07);
@@ -119,7 +121,7 @@
   height: var(--app-bottom-nav-height);
   padding-top: 0.45rem;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.55rem);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 3px solid var(--app-accent-border-strong);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(18px);
@@ -136,6 +138,27 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding-top: 0.2rem;
+}
+
+.bottom-nav-item > div {
+  border: 2px solid var(--app-accent-border);
+}
+
+:where(button, a, input, textarea, select, label, span, div)[class*="rounded"][class*="bg"],
+:where(button, a, input, textarea, select, label, span, div)[class*="rounded"][class*="border"],
+:where(button, a, input, textarea, select)[class*="rounded"],
+.pressable-card,
+.add-action-btn {
+  border-color: var(--app-accent-border) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+:where(button, a, input, textarea, select, label, span, div)[class*="rounded-full"][class*="bg"],
+:where(button, a, input, textarea, select, label, span, div)[class*="rounded-full"][class*="border"],
+.top-action-btn,
+.bottom-nav-item > div {
+  border-color: var(--app-accent-border-strong) !important;
 }
 
 .bottom-nav-spacer {

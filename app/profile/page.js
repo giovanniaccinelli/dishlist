@@ -1555,8 +1555,7 @@ export default function Profile() {
           <motion.div
             className="fixed inset-0 z-[88] overflow-y-auto"
             style={{
-              background:
-                "repeating-linear-gradient(90deg, rgba(255,255,255,0.38) 0, rgba(255,255,255,0.18) 1rem, rgba(255,255,255,0.04) 2.2rem, rgba(210,170,82,0.14) 3.6rem, rgba(255,255,255,0.3) 5.1rem), linear-gradient(180deg, #FFF8E6 0%, #F6E7BF 46%, #E9CA84 100%)",
+              background: "#FCFCF8",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

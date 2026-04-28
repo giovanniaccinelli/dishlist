@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[#FAF7EE]" />
+          <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.12)_34%,rgba(255,255,255,0)_52%),linear-gradient(165deg,#FFF8E6_0%,#F6E7BF_44%,#E9CA84_100%)]" />
         </div>
         <div className="relative z-10 min-h-[100dvh]">
           <AuthProvider>

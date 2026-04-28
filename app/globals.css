@@ -15,7 +15,9 @@
       radial-gradient(circle at 50% 100%, rgba(255, 122, 89, 0.14) 0, transparent 24rem),
       #F6F6F2;
     */
-    background: #FAF7EE;
+    background:
+      linear-gradient(140deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.12) 34%, rgba(255, 255, 255, 0) 52%),
+      linear-gradient(165deg, #FFF8E6 0%, #F6E7BF 44%, #E9CA84 100%);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;
     @apply text-black antialiased;
     overscroll-behavior: none;

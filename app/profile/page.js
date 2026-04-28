@@ -1556,7 +1556,7 @@ export default function Profile() {
             className="fixed inset-0 z-[88] overflow-y-auto"
             style={{
               background:
-                "linear-gradient(140deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.12) 34%, rgba(255,255,255,0) 52%), linear-gradient(165deg, #FFF8E6 0%, #F6E7BF 44%, #E9CA84 100%)",
+                "repeating-linear-gradient(90deg, rgba(255,255,255,0.22) 0, rgba(255,255,255,0.22) 1.2rem, rgba(255,255,255,0) 3.1rem, rgba(255,255,255,0) 5.4rem), linear-gradient(180deg, #FFF8E6 0%, #F6E7BF 46%, #E9CA84 100%)",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

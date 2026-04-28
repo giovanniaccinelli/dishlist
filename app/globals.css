@@ -8,11 +8,18 @@
     height: 100%;
     min-height: 100%;
     overflow: hidden;
+    /* Original background kept here for easy rollback:
     background:
       radial-gradient(circle at 0% -8%, rgba(255, 177, 94, 0.34) 0, rgba(255, 177, 94, 0.18) 16rem, transparent 29rem),
       radial-gradient(circle at 104% 16%, rgba(122, 217, 87, 0.2) 0, rgba(122, 217, 87, 0.11) 15rem, transparent 31rem),
       radial-gradient(circle at 50% 100%, rgba(255, 122, 89, 0.14) 0, transparent 24rem),
       #F6F6F2;
+    */
+    background:
+      radial-gradient(circle at -2% -10%, rgba(255, 181, 62, 0.44) 0, rgba(255, 181, 62, 0.26) 17rem, transparent 30rem),
+      radial-gradient(circle at 102% 12%, rgba(255, 215, 102, 0.34) 0, rgba(255, 215, 102, 0.18) 16rem, transparent 30rem),
+      radial-gradient(circle at 52% 102%, rgba(255, 143, 58, 0.22) 0, rgba(255, 143, 58, 0.1) 18rem, transparent 28rem),
+      linear-gradient(180deg, #FFF6D8 0%, #FFF1C8 42%, #FFE7B0 100%);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;
     @apply text-black antialiased;
     overscroll-behavior: none;

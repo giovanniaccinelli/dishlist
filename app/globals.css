@@ -18,10 +18,11 @@
     background:
       repeating-linear-gradient(
         90deg,
-        rgba(255, 255, 255, 0.22) 0,
-        rgba(255, 255, 255, 0.22) 1.2rem,
-        rgba(255, 255, 255, 0) 3.1rem,
-        rgba(255, 255, 255, 0) 5.4rem
+        rgba(255, 255, 255, 0.38) 0,
+        rgba(255, 255, 255, 0.18) 1rem,
+        rgba(255, 255, 255, 0.04) 2.2rem,
+        rgba(210, 170, 82, 0.14) 3.6rem,
+        rgba(255, 255, 255, 0.3) 5.1rem
       ),
       linear-gradient(180deg, #FFF8E6 0%, #F6E7BF 46%, #E9CA84 100%);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;

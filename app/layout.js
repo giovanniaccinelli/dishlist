@@ -37,10 +37,10 @@ export default function RootLayout({ children }) {
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[#F6F6F2]" />
-          <div className="absolute -top-20 -left-16 h-56 w-56 rounded-full bg-[#FFB15E]/35 blur-3xl" />
-          <div className="absolute right-[-4rem] top-20 h-64 w-64 rounded-full bg-[#7AD957]/20 blur-3xl" />
-          <div className="absolute bottom-24 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full bg-[#FF7A59]/15 blur-3xl" />
+          <div className="absolute inset-0 bg-[#FFB129]" />
+          <div className="absolute -top-20 -left-16 h-56 w-56 rounded-full bg-[#FFF0A8]/55 blur-3xl" />
+          <div className="absolute right-[-4rem] top-16 h-64 w-64 rounded-full bg-[#FFD36A]/38 blur-3xl" />
+          <div className="absolute bottom-12 left-1/2 h-56 w-80 -translate-x-1/2 rounded-full bg-[#FF7E26]/28 blur-3xl" />
         </div>
         <div className="relative z-10 min-h-[100dvh]">
           <AuthProvider>

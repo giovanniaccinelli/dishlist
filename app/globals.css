@@ -15,7 +15,7 @@
       radial-gradient(circle at 50% 100%, rgba(255, 122, 89, 0.14) 0, transparent 24rem),
       #F6F6F2;
     */
-    background: #FCFCF8;
+    background: #FFF9F0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;
     @apply text-black antialiased;
     overscroll-behavior: none;
@@ -121,7 +121,7 @@
   height: var(--app-bottom-nav-height);
   padding-top: 0.45rem;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.55rem);
-  border-top: 3px solid var(--app-accent-border-strong);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(18px);
@@ -140,25 +140,15 @@
   padding-top: 0.2rem;
 }
 
-.bottom-nav-item > div {
+.pressable-card,
+.card {
   border: 2px solid var(--app-accent-border);
 }
 
-:where(button, a, input, textarea, select, label, span, div)[class*="rounded"][class*="bg"],
-:where(button, a, input, textarea, select, label, span, div)[class*="rounded"][class*="border"],
-:where(button, a, input, textarea, select)[class*="rounded"],
-.pressable-card,
-.add-action-btn {
-  border-color: var(--app-accent-border) !important;
-  border-width: 2px !important;
-  border-style: solid !important;
-}
-
-:where(button, a, input, textarea, select, label, span, div)[class*="rounded-full"][class*="bg"],
-:where(button, a, input, textarea, select, label, span, div)[class*="rounded-full"][class*="border"],
-.top-action-btn,
-.bottom-nav-item > div {
-  border-color: var(--app-accent-border-strong) !important;
+input,
+textarea,
+select {
+  border-color: var(--app-accent-border);
 }
 
 .bottom-nav-spacer {

@@ -1555,7 +1555,9 @@ export default function Profile() {
           <motion.div
             className="fixed inset-0 z-[88] overflow-y-auto"
             style={{
-              background: "#E7C67A",
+              background: "rgba(248, 228, 178, 0.72)",
+              backdropFilter: "blur(2px)",
+              WebkitBackdropFilter: "blur(2px)",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

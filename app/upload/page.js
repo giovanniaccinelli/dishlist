@@ -287,7 +287,7 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${
+                    className={`no-accent-border h-1.5 rounded-full transition-all ${
                       step <= uploadStep
                         ? step === 0
                           ? "w-10 bg-[#F59E0B]"

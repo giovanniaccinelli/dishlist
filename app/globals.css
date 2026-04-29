@@ -15,7 +15,7 @@
       radial-gradient(circle at 50% 100%, rgba(255, 122, 89, 0.14) 0, transparent 24rem),
       #F6F6F2;
     */
-    background: #FFF9F0;
+    background: #FFF8EF;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Circular Std", sans-serif;
     @apply text-black antialiased;
     overscroll-behavior: none;
@@ -140,15 +140,32 @@
   padding-top: 0.2rem;
 }
 
-.pressable-card,
-.card {
-  border: 2px solid var(--app-accent-border);
+:where(
+  .pressable-card,
+  .card,
+  button[class*="rounded"],
+  a[class*="rounded"],
+  input[class*="rounded"],
+  textarea[class*="rounded"],
+  select[class*="rounded"],
+  div[class*="rounded"][class*="bg"],
+  div[class*="rounded"][class*="border"],
+  span[class*="rounded"][class*="bg"],
+  span[class*="rounded"][class*="border"]
+):not(.no-accent-border) {
+  border-color: var(--app-accent-border) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
 }
 
-input,
-textarea,
-select {
-  border-color: var(--app-accent-border);
+.accent-avatar-photo {
+  border: 2px solid var(--app-accent-border-strong) !important;
+}
+
+.no-accent-border {
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
 }
 
 .bottom-nav-spacer {

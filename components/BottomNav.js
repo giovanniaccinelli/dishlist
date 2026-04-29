@@ -43,10 +43,10 @@ export default function BottomNav() {
           const wrapperClass = "bottom-nav-item";
           const accentClass = getAccent(item.label);
           const iconClass = item.prominent
-            ? `w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
+            ? `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
                 active ? "scale-105" : ""
               }`
-            : `w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
+            : `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-black/[0.05] text-black" : "bg-transparent text-black/45"
               }`;
           const labelClass = `${active ? "text-black" : "text-black/45"}`;
@@ -62,8 +62,8 @@ export default function BottomNav() {
                 <div
                   className={
                     item.prominent
-                      ? "w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                      : "w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                      ? "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                      : "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
                   }
                 >
                   <Icon size={item.prominent ? 26 : 22} />

@@ -336,9 +336,9 @@ export default function Dishlists() {
                 onClick={() => setStoryActionOpen(true)}
                 className="shrink-0 flex flex-col items-center gap-2"
               >
-                <div className="w-16 h-16 rounded-full p-[3px] bg-[#2BD36B]">
-                  <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                    <div className="w-full h-full rounded-full bg-black/6 overflow-hidden flex items-center justify-center text-[#2BD36B]">
+                <div className="no-accent-border w-16 h-16 rounded-full p-[3px] bg-[#2BD36B]">
+                  <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                    <div className="no-accent-border w-full h-full rounded-full bg-black/6 overflow-hidden flex items-center justify-center text-[#2BD36B]">
                       <StoryStatIcon size={28} className="shrink-0" />
                     </div>
                   </div>
@@ -424,17 +424,17 @@ export default function Dishlists() {
                         setStoryGroupIndex(Math.max(nextIndex, 0));
                         setStoriesOpen(true);
                       }}
-                      className={`h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
+                      className={`no-accent-border h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >
-                      <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                        <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
+                      <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                        <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
                           {u.photoURL ? (
                             <img
                               src={u.photoURL}
                               alt="Profile"
                               loading="lazy"
                               decoding="async"
-                              className="h-full w-full rounded-full object-cover"
+                              className="accent-avatar-photo h-full w-full rounded-full object-cover"
                             />
                           ) : (
                             u.displayName?.[0] || "U"

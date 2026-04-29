@@ -180,7 +180,7 @@ export default function Onboarding() {
                       <div className="grid grid-cols-3 gap-2.5">
                         {ONBOARDING_STEP_PREVIEW.map((step) => (
                           <div key={step.label}>
-                            <div className="mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="no-accent-border mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
                             <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
                           </div>
                         ))}

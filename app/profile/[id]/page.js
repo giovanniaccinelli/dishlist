@@ -408,7 +408,7 @@ export default function PublicProfile() {
               onClick={() => {
                 if (activeStories.length > 0) setStoriesOpen(true);
               }}
-              className={`w-24 h-24 rounded-full p-[4px] ${
+              className={`no-accent-border w-24 h-24 rounded-full p-[4px] ${
                 activeStories.length > 0
                   ? viewedAllStories
                     ? "bg-[#C6C6BF]"
@@ -417,15 +417,15 @@ export default function PublicProfile() {
               }`}
               aria-label="Open stories"
             >
-              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+              <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
+                <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
                   {profileUser.photoURL ? (
                     <img
                       src={profileUser.photoURL}
                       alt="Profile"
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full rounded-full object-cover"
+                      className="accent-avatar-photo w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     profileUser.displayName?.[0] || "U"

@@ -974,18 +974,18 @@ export default function Profile() {
               onClick={() => {
                 if (hasStories) setStoriesOpen(true);
               }}
-              className={`w-24 h-24 rounded-full p-[4px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
+              className={`no-accent-border w-24 h-24 rounded-full p-[4px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
               aria-label="Open your stories"
             >
-              <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+              <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
+                <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
                   {effectiveProfilePhotoURL ? (
                     <img
                       src={effectiveProfilePhotoURL}
                       alt="Profile"
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full rounded-full object-cover"
+                      className="accent-avatar-photo w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     user.displayName?.[0] || "U"
@@ -996,7 +996,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => setStoryActionOpen(true)}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-black text-white border-2 border-[#F6F6F2] flex items-center justify-center shadow-md"
+              className="no-accent-border absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-black text-white border-2 border-[#F6F6F2] flex items-center justify-center shadow-md"
               aria-label="Add story"
             >
               <Plus size={17} />
@@ -1555,7 +1555,7 @@ export default function Profile() {
           <motion.div
             className="fixed inset-0 z-[88] overflow-y-auto"
             style={{
-              background: "#FFF9F0",
+              background: "#FFF8EF",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -2164,7 +2164,7 @@ export default function Profile() {
                       <div className="grid grid-cols-4 gap-3">
                         {STORY_CHOOSER_STEPS.map((step) => (
                           <div key={step.label}>
-                            <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="no-accent-border mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
                             <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
                           </div>
                         ))}

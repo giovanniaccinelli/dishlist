@@ -716,7 +716,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
-      const direction = advanceOnAnySwipe ? 1 : info.offset.x > 0 ? 1 : -1;
+      const direction = info.offset.x > 0 ? 1 : -1;
       setIsEjecting(true);
       if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
         runAction(dish);

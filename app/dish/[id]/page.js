@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
@@ -103,6 +103,8 @@ export default function DishDetail() {
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
   const [lockedDishlistIds, setLockedDishlistIds] = useState([]);
+  const [initialDeckIndex, setInitialDeckIndex] = useState(0);
+  const activeDeckRef = useRef(null);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -151,9 +153,16 @@ export default function DishDetail() {
           const stats = await getStoryPushStatsForUser(listOwnerId);
           setStoryPushStats(stats);
         }
+        const foundIndex = Math.max(
+          items.findIndex((entry) => entry.id === dishId),
+          0
+        );
+        setInitialDeckIndex(foundIndex);
         if (mode === "shuffle") {
           const others = items.filter((d) => d.id !== dishId);
           setDeckList([found, ...shuffleArray(others)]);
+        } else if (Boolean(returnTo) && source !== "public") {
+          setDeckList(items);
         } else {
           setDeckList([found]);
         }
@@ -163,6 +172,7 @@ export default function DishDetail() {
       const snap = await getDoc(doc(db, "dishes", dishId));
       const fallbackDish = snap.exists() ? { id: snap.id, ...snap.data() } : null;
       setDish(fallbackDish);
+      setInitialDeckIndex(0);
       setDeckList(fallbackDish ? [fallbackDish] : []);
       if (listOwnerId) {
         const stats = await getStoryPushStatsForUser(listOwnerId);
@@ -170,13 +180,13 @@ export default function DishDetail() {
       }
       setLoadingDish(false);
     })();
-  }, [dishId, listOwnerId, source, mode, listId]);
+  }, [dishId, listOwnerId, source, mode, listId, returnTo]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
-    const base = mode === "single" ? [dish] : deckList;
+    const base = mode === "single" ? (Boolean(returnTo) && source !== "public" ? deckList : [dish]) : deckList;
     return base.filter((d) => !removedDishIds.has(d.id));
-  }, [dish, deckList, mode, removedDishIds]);
+  }, [dish, deckList, mode, removedDishIds, returnTo, source]);
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return false;
@@ -300,6 +310,7 @@ export default function DishDetail() {
   };
 
   const isPublicSource = source === "public";
+  const enableProfileDeckNavigation = Boolean(returnTo) && !isPublicSource && mode === "single";
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
   const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist" || source === "custom";
@@ -569,14 +580,39 @@ export default function DishDetail() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
       <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
-        <AppBackButton fallback={backFallback} forceFallback={Boolean(returnTo)} />
-        <div className="w-[74px]" />
+        {enableProfileDeckNavigation ? (
+          <>
+            <button
+              type="button"
+              onClick={() => activeDeckRef.current?.previous?.()}
+              className="flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+              aria-label="Previous dish"
+            >
+              <ArrowLeft size={20} strokeWidth={2.6} />
+            </button>
+            <button
+              type="button"
+              onClick={() => activeDeckRef.current?.next?.()}
+              className="flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+              aria-label="Next dish"
+            >
+              <ArrowRight size={20} strokeWidth={2.6} />
+            </button>
+          </>
+        ) : (
+          <>
+            <AppBackButton fallback={backFallback} forceFallback={Boolean(returnTo)} />
+            <div className="w-[74px]" />
+          </>
+        )}
       </div>
 
       <div className={`screen-between-navs-center px-5 ${editOpen ? "pointer-events-none" : ""}`}>
         <div className="w-full">
           <SwipeDeck
+            ref={activeDeckRef}
             dishes={orderedList}
+            initialIndex={initialDeckIndex}
             preserveContinuity
             disabled={editOpen}
             currentUser={user}
@@ -594,10 +630,11 @@ export default function DishDetail() {
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
             onTertiaryAction={!isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
-            onRightSwipe={shouldUsePublicActions ? handleRightSwipeToTry : undefined}
-            actionOnRightSwipe={!shouldUsePublicActions}
+            onRightSwipe={enableProfileDeckNavigation ? undefined : shouldUsePublicActions ? handleRightSwipeToTry : undefined}
+            actionOnRightSwipe={enableProfileDeckNavigation ? false : !shouldUsePublicActions}
             dismissOnAction={shouldUsePublicActions ? false : isPublicSource}
             dismissOnSecondaryAction={false}
+            advanceOnAnySwipe={enableProfileDeckNavigation}
             onAuthRequired={() => alert("Please sign in to comment.")}
             actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
             secondaryActionLabel={getSecondaryActionLabel}

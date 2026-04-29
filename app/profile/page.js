@@ -780,9 +780,9 @@ export default function Profile() {
   };
 
   const renderDishCounters = (dish) => (
-    <div className="flex items-center gap-2 text-[10px] text-white/80">
+    <div className="flex items-center gap-2.5 text-[11px] text-white/90">
       <div className="inline-flex items-center gap-1">
-        <StoryStatIcon />
+        <StoryStatIcon size={11} />
         <span>: {getStoryPushCount(dish)}</span>
       </div>
       <button
@@ -864,8 +864,8 @@ export default function Profile() {
                     />
                   );
                 })()}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                  <div className="text-[11px] font-semibold leading-tight truncate">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/72 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                  <div className="text-[13px] font-semibold leading-tight truncate">
                     {dish.name || "Untitled dish"}
                   </div>
                   {renderDishCounters(dish)}
@@ -2123,7 +2123,7 @@ export default function Profile() {
             onClick={() => setStoryActionOpen(false)}
           >
             <motion.div
-              className="my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
+              className="no-accent-border my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}

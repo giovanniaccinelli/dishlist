@@ -409,7 +409,7 @@ export default function StoryViewerModal({
                     e.preventDefault();
                     handleDelete();
                   }}
-                  className="relative z-50 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+                  className="relative z-50 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center"
                   aria-label="Delete story"
                 >
                   <Trash2 size={17} />

@@ -218,6 +218,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   trackSwipes = true,
   onAuthRequired,
   preserveContinuity = true,
+  initialIndex = 0,
+  advanceOnAnySwipe = false,
   disabled = false,
   currentUser = null,
   onCardViewed,
@@ -280,7 +282,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!deckInitialized) {
       if (formatted.length > 0) {
         setDeck(formatted);
-        setCurrentIndex(0);
+        setCurrentIndex(Math.max(0, Math.min(initialIndex, formatted.length - 1)));
         setDeckInitialized(true);
         setDeckEmpty(false);
       } else {
@@ -296,7 +298,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         return appended.length > 0 ? [...prev, ...appended] : prev;
       });
     }
-  }, [dishes, deckInitialized, preserveContinuity]);
+  }, [dishes, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
 
@@ -714,12 +716,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
-      const direction = info.offset.x > 0 ? 1 : -1;
+      const direction = advanceOnAnySwipe ? 1 : info.offset.x > 0 ? 1 : -1;
       setIsEjecting(true);
-      if (swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
+      if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
         runAction(dish);
       }
-      if (info.offset.x > 0 && typeof onRightSwipe === "function") {
+      if (!advanceOnAnySwipe && info.offset.x > 0 && typeof onRightSwipe === "function") {
         Promise.resolve(onRightSwipe(dish))
           .then((result) => {
             if (result === false) {

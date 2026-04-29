@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { getActiveStoriesForUser, getAllDishesFromFirestore, markStoryViewed } from "../lib/firebaseHelpers";
+import { getActiveStoriesForUser, getAllDishesFromFirestore, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 
@@ -74,7 +74,7 @@ export default function Dishlists() {
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const peopleLoadMoreRef = useRef(null);
 
-  const attachPreviewData = (usersList, allDishes) => {
+  const attachPreviewData = (usersList, allDishes, storyStatsByUser = new Map()) => {
     const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
     const uploadedByOwner = new Map();
 
@@ -89,6 +89,7 @@ export default function Dishlists() {
       const savedDishIds = Array.isArray(u.savedDishes) ? u.savedDishes : [];
       const toTryDishIds = Array.isArray(u.toTryDishes) ? u.toTryDishes : [];
       const uploadedDishes = uploadedByOwner.get(u.id) || [];
+      const storyStats = storyStatsByUser.get(u.id) || {};
       const previewImages = [];
       const seen = new Set();
 
@@ -98,6 +99,10 @@ export default function Dishlists() {
         seen.add(imageUrl);
         previewImages.push(imageUrl);
       };
+
+      Object.entries(storyStats)
+        .sort(([, a], [, b]) => Number(b?.count || 0) - Number(a?.count || 0))
+        .forEach(([dishId]) => pushImage(dishById.get(dishId)));
 
       savedDishIds.forEach((dishId) => pushImage(dishById.get(dishId)));
       uploadedDishes.forEach((dish) => pushImage(dish));
@@ -141,7 +146,11 @@ export default function Dishlists() {
         id: docSnap.id,
         ...docSnap.data(),
       }));
-      const withPreview = attachPreviewData(usersList, allDishes);
+      const storyStatsEntries = await Promise.all(
+        usersList.map(async (userItem) => [userItem.id, await getStoryPushStatsForUser(userItem.id)])
+      );
+      const storyStatsByUser = new Map(storyStatsEntries);
+      const withPreview = attachPreviewData(usersList, allDishes, storyStatsByUser);
       const sortedUsers = sortUsersByProfileDishes(withPreview);
       setUsers(sortedUsers);
       setAllUsersPool(sortedUsers);
@@ -307,7 +316,7 @@ export default function Dishlists() {
             aria-label="Open directs"
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
           <Link
             href={user ? "/profile" : "/?auth=1"}
@@ -509,6 +518,7 @@ export default function Dishlists() {
         storyGroups={storyGroups}
         initialGroupIndex={storyGroupIndex}
         onViewed={handleStoryViewed}
+        currentUser={user}
       />
       <AnimatePresence>
         {storyActionOpen && (

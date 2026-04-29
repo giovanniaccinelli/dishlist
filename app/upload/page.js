@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send, X } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -229,6 +229,11 @@ export default function UploadPage() {
     setUploadStep((prev) => Math.max(prev - 1, 0));
   };
 
+  const closeUploadFlow = () => {
+    setShowUploadForm(false);
+    setUploadStep(0);
+  };
+
   if (loading) {
     return <FullScreenLoading title="Loading upload" />;
   }
@@ -247,7 +252,7 @@ export default function UploadPage() {
             aria-label="Directs"
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </button>
           <button
             type="button"
@@ -263,26 +268,12 @@ export default function UploadPage() {
       <div className="screen-between-navs-center px-4">
         {showUploadForm ? (
           <motion.div
-            className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-[#E3CFA7] my-0"
+            className="bg-white p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-black/10 my-0"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="flex items-center justify-between mb-5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (uploadStep > 0) {
-                    goToPreviousStep();
-                    return;
-                  }
-                  setShowUploadForm(false);
-                  setUploadStep(0);
-                }}
-                className="h-11 w-11 rounded-full border border-black/10 bg-white/82 text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-[6px] flex items-center justify-center"
-                aria-label="Back"
-              >
-                <ArrowLeft size={18} />
-              </button>
+              <div className="h-11 w-11" />
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
                   <span
@@ -301,18 +292,20 @@ export default function UploadPage() {
                   />
                 ))}
               </div>
-              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
-                {uploadStep === 0 ? "Basics" : uploadStep === 1 ? "Details" : uploadStep === 2 ? "Recipe" : "Upload"}
-              </div>
+              <button
+                type="button"
+                onClick={closeUploadFlow}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {uploadStep === 0 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Step 1
-                  </div>
-                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
                     {storyMode ? "Story title and cover" : "Name and cover"}
                   </h2>
                 </div>
@@ -321,7 +314,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
-                    className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/25 text-base"
+                    className="w-full p-4 rounded-full bg-white text-black mb-4 border-[2px] border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:outline-none focus:ring-2 focus:ring-[#E5C15A]/30 text-base"
                   disabled={loadingUpload}
                 />
                 <div
@@ -372,10 +365,7 @@ export default function UploadPage() {
             {uploadStep === 1 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Step 2
-                  </div>
-                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
                     {storyMode ? "Story details and tags" : "Description and tags"}
                   </h2>
                 </div>
@@ -383,7 +373,7 @@ export default function UploadPage() {
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                  className="w-full p-4 rounded-[1.5rem] bg-white text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -401,7 +391,7 @@ export default function UploadPage() {
                       placeholder="https://..."
                       value={dishLink}
                       onChange={(e) => setDishLink(e.target.value)}
-                      className="mt-3 w-full rounded-full border border-[#D8C090] bg-white/90 px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                      className="mt-3 w-full rounded-full border border-[#D8C090] bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
                       disabled={loadingUpload}
                       autoCapitalize="none"
                       autoCorrect="off"
@@ -459,10 +449,7 @@ export default function UploadPage() {
             {uploadStep === 3 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Final Step
-                  </div>
-                  <h2 className="text-[1.75rem] leading-none font-semibold mt-3 text-black">
+                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
                     {storyMode ? "Review and publish" : "Review and upload"}
                   </h2>
                 </div>

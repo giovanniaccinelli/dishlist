@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
+import CommentsModal from "./CommentsModal";
+import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 
 const STORY_DURATION_MS = 4500;
@@ -19,6 +21,7 @@ export default function StoryViewerModal({
   canDelete = false,
   onDelete,
   initialGroupIndex = 0,
+  currentUser = null,
 }) {
   const router = useRouter();
   const groups = useMemo(() => {
@@ -54,6 +57,13 @@ export default function StoryViewerModal({
   const suppressTapUntilRef = useRef(0);
   const videoRef = useRef(null);
   const [storyDurationMs, setStoryDurationMs] = useState(STORY_DURATION_MS);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [previewComment, setPreviewComment] = useState(null);
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
   const rafProgressRef = useRef(0);
   useEffect(() => {
     if (!open) return;
@@ -80,6 +90,28 @@ export default function StoryViewerModal({
     didAdvanceRef.current = false;
     setStoryDurationMs(STORY_DURATION_MS);
   }, [open, currentStory?.id, groupIndex, storyIndex]);
+
+  useEffect(() => {
+    if (!open || !currentStory) return;
+    setComments([]);
+    setPreviewComment(null);
+    setNewComment("");
+    setReplyTo(null);
+    setCommentsOpen(false);
+
+    const storyDishId = currentStory.dishId || currentStory.id;
+    if (!storyDishId) return;
+
+    let cancelled = false;
+    (async () => {
+      const top = await getCommentsForDish(storyDishId, 1);
+      if (!cancelled) setPreviewComment(top?.[0] || null);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, currentStory?.id]);
 
   useEffect(() => {
     if (!open || !currentStory?.id || isPaused || currentStoryIsVideo) return;
@@ -285,6 +317,61 @@ export default function StoryViewerModal({
     router.push(`/dish/${storyDishId}?source=public&mode=single`);
   };
 
+  const currentStoryDishId = currentStory?.dishId || currentStory?.id || null;
+
+  const loadComments = async () => {
+    if (!currentStoryDishId) return;
+    setCommentsLoading(true);
+    try {
+      const items = await getCommentsForDish(currentStoryDishId, 30);
+      setComments(items);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const openComments = async (event) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    setCommentsOpen(true);
+    await loadComments();
+  };
+
+  const submitComment = async () => {
+    if (!currentStoryDishId || !currentUser?.uid || commentSubmitting) return;
+    const text = newComment.trim();
+    if (!text) return;
+    setCommentSubmitting(true);
+    try {
+      const ok = await addCommentToDish(currentStoryDishId, {
+        userId: currentUser.uid,
+        userName: currentUser.displayName || "User",
+        userPhotoURL: currentUser.photoURL || "",
+        text,
+        parentId: replyTo?.id || null,
+      });
+      if (!ok) return;
+      setNewComment("");
+      setReplyTo(null);
+      await loadComments();
+      const top = await getCommentsForDish(currentStoryDishId, 1);
+      setPreviewComment(top?.[0] || null);
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (comment) => {
+    if (!currentStoryDishId || !comment?.id || comment.userId !== currentUser?.uid) return;
+    const ok = await deleteCommentThread(currentStoryDishId, comment.id);
+    if (!ok) return;
+    await loadComments();
+    const top = await getCommentsForDish(currentStoryDishId, 1);
+    setPreviewComment(top?.[0] || null);
+  };
+
   const publishedAtLabel = (() => {
     const raw = currentStory.createdAt;
     let date = null;
@@ -456,6 +543,33 @@ export default function StoryViewerModal({
                 {currentStory.description}
               </p>
             ) : null}
+            <div className="mt-2">
+              {previewComment ? (
+                <button
+                  type="button"
+                  data-no-story-pause="true"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={openComments}
+                  className="text-left text-xs text-white/88 underline-offset-2 hover:underline"
+                >
+                  {previewComment.userName || "User"}: {previewComment.text}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-no-story-pause="true"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={openComments}
+                  className="text-left text-xs text-white/72"
+                >
+                  Be the first to comment
+                </button>
+              )}
+            </div>
             <div className="mt-4 flex justify-end">
               <button
                 type="button"
@@ -476,6 +590,20 @@ export default function StoryViewerModal({
           </div>
         </motion.div>
       </motion.div>
+      <CommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        comments={comments}
+        loading={commentsLoading}
+        onDelete={handleDeleteComment}
+        newComment={newComment}
+        setNewComment={setNewComment}
+        disabled={commentSubmitting}
+        onSubmit={submitComment}
+        currentUser={currentUser}
+        replyTo={replyTo}
+        setReplyTo={setReplyTo}
+      />
     </AnimatePresence>
   );
 }

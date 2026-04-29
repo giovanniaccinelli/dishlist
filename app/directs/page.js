@@ -112,7 +112,7 @@ export default function Directs() {
                 </div>
               </div>
               {unreadConversationIds.includes(c.id) ? (
-                <span className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-[#E64646]" />
+                <span className="no-accent-border ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-[#E64646]" />
               ) : null}
             </Link>
           ))}

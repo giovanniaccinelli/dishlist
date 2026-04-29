@@ -400,7 +400,7 @@ export default function PublicProfile() {
             aria-label="Directs"
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </button>
         </div>
       </div>
@@ -462,21 +462,21 @@ export default function PublicProfile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
-                <button
-                  onClick={() => selectDishlist("all_dishes")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
-                >
-                  dishes
-                </button>
-              </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   uploaded
+                </button>
+              </div>
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
+                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
+                <button
+                  onClick={() => selectDishlist("all_dishes")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  dishes
                 </button>
               </div>
             </div>
@@ -489,9 +489,10 @@ export default function PublicProfile() {
 
       </div>
 
-      <div className="mb-5 flex items-center justify-center gap-2">
+      <div className="mb-3 flex items-center justify-center gap-2">
         {[
           { id: "saved", label: "Top picks" },
+          { id: "uploaded", label: "Uploaded" },
           { id: "all_dishes", label: "All dishes" },
         ].map((item) => {
           const active = activeDishlistId === item.id;
@@ -500,11 +501,13 @@ export default function PublicProfile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
+              className={`rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
                 active
-                  ? item.id === "all_dishes"
-                    ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
-                    : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
+                  ? item.id === "saved"
+                    ? "border-[#D94A4A] bg-[linear-gradient(180deg,#FFE4E4_0%,#FFC4C4_100%)] text-[#7E1717] shadow-[0_10px_22px_rgba(217,74,74,0.18)]"
+                    : item.id === "uploaded"
+                      ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
+                      : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                   : "border-black/30 bg-white text-black"
               }`}
             >
@@ -522,7 +525,7 @@ export default function PublicProfile() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xl font-semibold">{activeDishlist?.name || "Top picks"}</h2>
         <button
           onClick={() => openShuffleDeck(activeDishlist?.id || "saved")}
@@ -767,6 +770,7 @@ export default function PublicProfile() {
         ownerName={profileUser.displayName || "User"}
         ownerPhotoURL={profileUser.photoURL || ""}
         onViewed={handleStoryViewed}
+        currentUser={user}
       />
     </div>
   );

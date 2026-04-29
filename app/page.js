@@ -525,7 +525,7 @@ export default function Feed() {
             aria-label="Open directs"
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
           <Link
             href={userId ? "/profile" : "/?auth=1"}
@@ -562,7 +562,7 @@ export default function Feed() {
           >
             Following
             {followingHasUpdate ? (
-              <span className="absolute -top-0.5 -right-3 w-2.5 h-2.5 rounded-full bg-[#E64646]" />
+              <span className="no-accent-border absolute -top-0.5 -right-3 w-2.5 h-2.5 rounded-full bg-[#E64646]" />
             ) : null}
             {activeFeed === "following" ? (
               <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />

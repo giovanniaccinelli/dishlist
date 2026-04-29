@@ -240,7 +240,7 @@ function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
       aria-label={label}
     >
       <Icon size={18} className="text-black" />
-      {highlighted ? <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+      {highlighted ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
     </Link>
   );
 }

@@ -27,11 +27,11 @@ export default function BottomNav() {
   };
 
   const getAccent = (label) => {
-    if (label === "feed") return "bg-[#FF7A59]";
-    if (label === "people") return "bg-[#FFCC33]";
-    if (label === "explore") return "bg-[#7AD957]";
-    if (label === "profile") return "bg-black";
-    return "bg-black";
+    if (label === "feed") return "bg-[#E64646]";
+    if (label === "people") return "bg-[#E64646]";
+    if (label === "explore") return "bg-[#E64646]";
+    if (label === "profile") return "bg-[#E64646]";
+    return "bg-[#E64646]";
   };
 
   return (
@@ -47,9 +47,9 @@ export default function BottomNav() {
                 active ? "scale-105" : ""
               }`
             : `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
-                active ? "bg-black/[0.05] text-black" : "bg-transparent text-black/45"
+                active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/45"
               }`;
-          const labelClass = `${active ? "text-black" : "text-black/45"}`;
+          const labelClass = `${active ? "text-[#E64646]" : "text-black/45"}`;
 
           if (item.requiresAuth && !user) {
             return (

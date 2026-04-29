@@ -810,13 +810,13 @@ export default function Feed() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-5 pb-10 pt-[max(1.25rem,env(safe-area-inset-top))]">
-              <div className="mb-6 flex items-center justify-between">
+            <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-5 pb-8 pt-[max(1.25rem,env(safe-area-inset-top))]">
+              <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img src="/logo-real.png" alt="DishList logo" className="h-10 w-10 rounded-full object-cover" />
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">DishList guide</div>
-                    <h2 className="mt-1 text-[1.8rem] font-bold leading-none">How the app works</h2>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">Inside DishList</div>
+                    <h2 className="mt-1 text-[1.6rem] font-bold leading-none">Food, organized by taste</h2>
                   </div>
                 </div>
                 <button
@@ -829,49 +829,46 @@ export default function Feed() {
                 </button>
               </div>
 
-              <div className="space-y-4 overflow-y-auto pr-1">
-                <div className="rounded-[1.7rem] bg-white/8 p-5">
-                  <div className="text-[1.35rem] font-semibold text-[#F7D36A]">DishList is for building your own food universe.</div>
-                  <p className="mt-3 text-sm leading-6 text-white/78">
-                    Save dishes, sort them into lists, post them to stories, send them in chat, and use profiles as taste maps instead of just galleries.
+              <div className="space-y-3 overflow-y-auto pr-1">
+                <div className="rounded-[1.5rem] bg-white/8 p-4">
+                  <div className="text-[1.1rem] font-semibold text-[#F7D36A]">Save, sort, share.</div>
+                  <p className="mt-2 text-sm leading-6 text-white/76">
+                    Swipe dishes, collect them into your own lists, post them to stories, and send them in chat.
                   </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[1.6rem] bg-[#E64646]/16 p-5">
+                <div className="grid gap-3">
+                  <div className="rounded-[1.45rem] bg-[#E64646]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#FF8D8D]">Feed</div>
-                    <p className="text-sm leading-6 text-white/76">
-                      Swipe through dishes, save the ones you want, and track new uploads from people you follow.
+                    <p className="text-sm leading-5 text-white/76">
+                      Find dishes fast and keep up with the people you follow.
                     </p>
                   </div>
-                  <div className="rounded-[1.6rem] bg-[#F0A623]/16 p-5">
+                  <div className="rounded-[1.45rem] bg-[#F0A623]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#FFD07B]">DishLists</div>
-                    <p className="text-sm leading-6 text-white/76">
-                      Organize dishes into Top picks, Uploaded, All dishes, or any custom list you want to curate.
+                    <p className="text-sm leading-5 text-white/76">
+                      Build Top picks, Uploaded, All dishes, or your own custom collections.
                     </p>
                   </div>
-                  <div className="rounded-[1.6rem] bg-[#2BD36B]/16 p-5">
+                  <div className="rounded-[1.45rem] bg-[#2BD36B]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#85F0A9]">Stories</div>
-                    <p className="text-sm leading-6 text-white/76">
-                      Share what you&apos;re eating right now, comment on stories, and tag someone directly in the story itself.
+                    <p className="text-sm leading-5 text-white/76">
+                      Share what you&apos;re eating now, comment on stories, and tag someone in them.
                     </p>
                   </div>
-                  <div className="rounded-[1.6rem] bg-white/8 p-5">
+                  <div className="rounded-[1.45rem] bg-white/8 p-4">
                     <div className="mb-2 text-sm font-semibold text-white/92">Directs</div>
-                    <p className="text-sm leading-6 text-white/76">
-                      Send dishes privately so recommendations stay tied to real people and real conversations.
+                    <p className="text-sm leading-5 text-white/76">
+                      Send dishes privately when a recommendation belongs in a real conversation.
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
-                  <div className="mb-3 text-sm font-semibold text-[#F0A623]">The basic loop</div>
-                  <ul className="space-y-2 text-sm leading-6 text-white/78">
-                    <li>1. Swipe and save dishes that look right.</li>
-                    <li>2. Open profiles to browse someone&apos;s strongest picks.</li>
-                    <li>3. Upload your own dishes with photos, videos, links, and recipe text.</li>
-                    <li>4. Push the best ones to stories or send them straight in chat.</li>
-                  </ul>
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4">
+                  <div className="text-sm font-semibold text-[#F0A623]">The loop</div>
+                  <p className="mt-2 text-sm leading-6 text-white/76">
+                    Swipe. Save. Curate. Upload. Story. Repeat.
+                  </p>
                 </div>
               </div>
             </div>

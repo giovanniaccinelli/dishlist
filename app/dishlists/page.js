@@ -145,20 +145,41 @@ export default function Dishlists() {
         id: docSnap.id,
         ...docSnap.data(),
       }));
-      const storyStatsEntries = await Promise.all(
-        usersList.map(async (userItem) => [userItem.id, await getStoryPushStatsForUser(userItem.id)])
-      );
-      const storyStatsByUser = new Map(storyStatsEntries);
-      const withPreview = attachPreviewData(usersList, allDishes, storyStatsByUser);
-      const sortedUsers = sortUsersByProfileDishes(withPreview);
-      setUsers(sortedUsers);
-      setAllUsersPool(sortedUsers);
+      const fastPreviewUsers = attachPreviewData(usersList, allDishes);
+      const fastSortedUsers = sortUsersByProfileDishes(fastPreviewUsers);
+      setUsers(fastSortedUsers);
+      setAllUsersPool(fastSortedUsers);
       setVisibleUsersLimit(INITIAL_USERS_LIMIT);
-      setHasMoreUsers(sortedUsers.length > INITIAL_USERS_LIMIT);
-      void enrichUsersWithStories(sortedUsers).then((usersWithStories) => {
-        const sortedWithStories = sortUsersByProfileDishes(usersWithStories);
-        setUsers(sortedWithStories);
-        setAllUsersPool(sortedWithStories);
+      setHasMoreUsers(fastSortedUsers.length > INITIAL_USERS_LIMIT);
+
+      void Promise.all(
+        usersList.map(async (userItem) => [userItem.id, await getStoryPushStatsForUser(userItem.id)])
+      ).then((storyStatsEntries) => {
+        const storyStatsByUser = new Map(storyStatsEntries);
+        const withStoryPreview = attachPreviewData(usersList, allDishes, storyStatsByUser);
+        const sortedWithStoryPreview = sortUsersByProfileDishes(withStoryPreview);
+        setUsers(sortedWithStoryPreview);
+        setAllUsersPool(sortedWithStoryPreview);
+      });
+
+      void enrichUsersWithStories(fastSortedUsers).then((usersWithStories) => {
+        const storiesById = new Map(usersWithStories.map((userItem) => [userItem.id, userItem.activeStories || []]));
+        setUsers((prev) =>
+          sortUsersByProfileDishes(
+            prev.map((userItem) => ({
+              ...userItem,
+              activeStories: storiesById.get(userItem.id) || userItem.activeStories || [],
+            }))
+          )
+        );
+        setAllUsersPool((prev) =>
+          sortUsersByProfileDishes(
+            (prev || []).map((userItem) => ({
+              ...userItem,
+              activeStories: storiesById.get(userItem.id) || userItem.activeStories || [],
+            }))
+          )
+        );
       });
     } finally {
       setLoadingUsers(false);

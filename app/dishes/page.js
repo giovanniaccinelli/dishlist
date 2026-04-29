@@ -687,7 +687,7 @@ export default function Dishes() {
                     e.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}
                 />
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -695,21 +695,21 @@ export default function Dishes() {
                       e.preventDefault();
                       handleDishNameSearch(dish.name || "");
                     }}
-                    className="pointer-events-auto text-left text-[11px] font-semibold leading-tight truncate hover:underline"
+                    className="pointer-events-auto text-left text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] hover:underline"
                   >
                     {dish.name || "Untitled dish"}
                   </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleOpenSavers(dish);
-                  }}
-                  className="text-[10px] text-white/80 pointer-events-auto text-left self-start"
-                >
-                  saves: {Number(dish.saves || 0)}
-                </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleOpenSavers(dish);
+                    }}
+                    className="pointer-events-auto text-left self-start text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+                  >
+                    saves: {Number(dish.saves || 0)}
+                  </button>
                 </div>
                 <button
                   onClick={(e) => {

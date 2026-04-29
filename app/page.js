@@ -38,7 +38,6 @@ const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
-const LAST_APP_OPEN_KEY = "feed:lastAppOpenAt";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
@@ -349,20 +348,13 @@ export default function Feed() {
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const previousOpen = Number(localStorage.getItem(LAST_APP_OPEN_KEY) || 0);
-    localStorage.setItem(LAST_APP_OPEN_KEY, String(Date.now()));
-    if (!userId || !orderedFollowing.length) {
-      if (!userId) setFollowingHasUpdate(false);
+    if (!userId || !followingDeck.length) {
+      setFollowingHasUpdate(false);
       return;
     }
     const viewed = new Set(viewedDishIds);
-    const hasUnviewed = orderedFollowing.some((dish) => !viewed.has(dish.id));
-    const hasRecent = previousOpen
-      ? orderedFollowing.some((dish) => ((dish?.createdAt?.seconds || 0) * 1000) > previousOpen)
-      : hasUnviewed;
-    setFollowingHasUpdate(hasUnviewed || hasRecent);
-  }, [userId, orderedFollowing, viewedDishIds]);
+    setFollowingHasUpdate(followingDeck.some((dish) => !viewed.has(dish.id)));
+  }, [userId, followingDeck, viewedDishIds]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);

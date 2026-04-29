@@ -1607,71 +1607,82 @@ export default function Profile() {
                     .sort(() => Math.random() - 0.5)
                     .slice(0, 4);
                   return (
-                    <div
-                      key={dishlist.id}
-                      className="relative"
-                    >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        selectDishlist(dishlist.id);
-                        setDishlistsOpen(false);
-                        setDishlistsEditMode(false);
-                      }}
-                      className="w-full rounded-[1.5rem] border border-black/10 bg-white p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
-                    >
-                      <div className="mb-2 truncate text-[1rem] font-bold text-black">{dishlist.name}</div>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {Array.from({ length: 4 }).map((_, index) => {
-                          const dish = preview[index];
-                          return dish ? (
-                            <img
-                              key={`${dishlist.id}-${dish.id}-${index}`}
-                              src={getDishImageUrl(dish, "thumb")}
-                              alt={dish.name || dishlist.name}
-                              className="aspect-square w-full rounded-[0.85rem] object-cover"
-                              loading="lazy"
-                              decoding="async"
-                              onError={(event) => {
-                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    <div key={dishlist.id} className="rounded-[1.5rem] border border-black/10 bg-white p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            selectDishlist(dishlist.id);
+                            setDishlistsOpen(false);
+                            setDishlistsEditMode(false);
+                          }}
+                          className="min-w-0 flex-1 text-left"
+                        >
+                          <div className="truncate pr-1 text-[1rem] font-bold text-black">{dishlist.name}</div>
+                        </button>
+                        {dishlistsEditMode && dishlist.type === "custom" ? (
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setDishlistRenameTarget(dishlist);
+                                setDishlistRenameValue(dishlist.name || "");
                               }}
-                            />
-                          ) : (
-                            <div
-                              key={`${dishlist.id}-empty-${index}`}
-                              className="aspect-square w-full rounded-[0.85rem] bg-black/6"
-                            />
-                          );
-                        })}
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#111111] bg-white text-black shadow-[0_10px_20px_rgba(0,0,0,0.12)]"
+                              aria-label={`Rename ${dishlist.name}`}
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setDishlistDeleteTarget(dishlist);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white shadow-[0_10px_20px_rgba(213,106,106,0.24)]"
+                              aria-label={`Delete ${dishlist.name}`}
+                            >
+                              <Minus size={15} />
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
-                    </button>
-                    {dishlistsEditMode && dishlist.type === "custom" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setDishlistRenameTarget(dishlist);
-                            setDishlistRenameValue(dishlist.name || "");
-                          }}
-                          className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#111111] bg-white text-black shadow-[0_10px_20px_rgba(0,0,0,0.12)]"
-                          aria-label={`Rename ${dishlist.name}`}
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setDishlistDeleteTarget(dishlist);
-                          }}
-                          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-[#D56A6A] bg-[#D56A6A] text-white shadow-[0_10px_20px_rgba(213,106,106,0.24)]"
-                          aria-label={`Delete ${dishlist.name}`}
-                        >
-                          <Minus size={15} />
-                        </button>
-                      </>
-                    ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          selectDishlist(dishlist.id);
+                          setDishlistsOpen(false);
+                          setDishlistsEditMode(false);
+                        }}
+                        className="block w-full"
+                      >
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {Array.from({ length: 4 }).map((_, index) => {
+                            const dish = preview[index];
+                            return dish ? (
+                              <img
+                                key={`${dishlist.id}-${dish.id}-${index}`}
+                                src={getDishImageUrl(dish, "thumb")}
+                                alt={dish.name || dishlist.name}
+                                className="aspect-square w-full rounded-[0.85rem] object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                onError={(event) => {
+                                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                }}
+                              />
+                            ) : (
+                              <div
+                                key={`${dishlist.id}-empty-${index}`}
+                                className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                              />
+                            );
+                          })}
+                        </div>
+                      </button>
                     </div>
                   );
                 })}

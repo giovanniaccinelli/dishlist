@@ -64,8 +64,8 @@ export function PeopleGridLoading({ searching = false }) {
                 <PulseBlock className="mb-2 h-3.5 w-24 rounded-full" />
               </div>
             </div>
-            <div className="mb-3 grid grid-cols-3 gap-1.5">
-              {Array.from({ length: 9 }).map((_, imageIdx) => (
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              {Array.from({ length: 4 }).map((_, imageIdx) => (
                 <PulseBlock key={imageIdx} className="aspect-square rounded-lg" />
               ))}
             </div>
@@ -90,8 +90,8 @@ export function PeopleInlineLoading() {
               <PulseBlock className="mb-2 h-3.5 w-24 rounded-full" />
             </div>
           </div>
-          <div className="mb-3 grid grid-cols-3 gap-1.5">
-            {Array.from({ length: 9 }).map((_, imageIdx) => (
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            {Array.from({ length: 4 }).map((_, imageIdx) => (
               <PulseBlock key={imageIdx} className="aspect-square rounded-lg" />
             ))}
           </div>

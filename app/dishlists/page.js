@@ -94,7 +94,7 @@ export default function Dishlists() {
 
       const pushImage = (dishData) => {
         const imageUrl = getDishImageUrl(dishData, "thumb");
-        if (!imageUrl || seen.has(imageUrl) || previewImages.length >= 9) return;
+        if (!imageUrl || seen.has(imageUrl) || previewImages.length >= 4) return;
         seen.add(imageUrl);
         previewImages.push(imageUrl);
       };
@@ -404,7 +404,7 @@ export default function Dishlists() {
             {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
-              const previewCells = Array.from({ length: 9 }, (_, idx) => u.previewImages?.[idx] || "");
+              const previewCells = Array.from({ length: 4 }, (_, idx) => u.previewImages?.[idx] || "");
               return (
                 <div
                   key={u.id}
@@ -465,7 +465,7 @@ export default function Dishlists() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-2">
                     {previewCells.map((imageSrc, idx) => (
                       <div
                         key={`${u.id}-preview-${idx}`}

@@ -369,6 +369,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const nextCard = deck[currentIndex + 1] || null;
+  const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
+  const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
+  const hasAnyRecipeText = hasIngredientsText || hasMethodText;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -1136,6 +1139,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
+                  {!hasAnyRecipeText ? (
+                    <div className="flex min-h-0 flex-1 items-center justify-center rounded-[1.6rem] border border-black/8 bg-[linear-gradient(180deg,#FFFDFC_0%,#F7F2E8_100%)] px-6 py-8 text-center shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+                      <div>
+                        <div className="text-[1.35rem] font-bold text-black">No recipe provided</div>
+                        <div className="mt-2 text-sm leading-6 text-black/55">
+                          This dish doesn&apos;t have ingredients or method written yet.
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                  {hasIngredientsText ? (
                   <div
                     ref={ingredientsPanelRef}
                     data-no-drag="true"
@@ -1173,9 +1187,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       ) : null}
                     </div>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
-                      {currentCard.recipeIngredients || "No ingredients provided."}
+                      {currentCard.recipeIngredients}
                     </p>
                   </div>
+                  ) : null}
+                  {hasMethodText ? (
                   <div
                     ref={methodPanelRef}
                     data-no-drag="true"
@@ -1213,9 +1229,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       ) : null}
                     </div>
                     <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
-                      {currentCard.recipeMethod || "No method provided."}
+                      {currentCard.recipeMethod}
                     </p>
                   </div>
+                  ) : null}
                 </div>
               </div>
             </div>

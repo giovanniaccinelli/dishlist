@@ -579,13 +579,13 @@ export default function DishDetail() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
-      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
+      <div className="app-top-nav px-4 pb-1 flex items-center justify-between shrink-0">
         {enableProfileDeckNavigation ? (
           <>
             <button
               type="button"
               onClick={() => activeDeckRef.current?.previous?.()}
-              className="flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+              className="mt-3 flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
               aria-label="Previous dish"
             >
               <ArrowLeft size={20} strokeWidth={2.6} />
@@ -593,7 +593,7 @@ export default function DishDetail() {
             <button
               type="button"
               onClick={() => activeDeckRef.current?.next?.()}
-              className="flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+              className="mt-3 flex h-10 w-11 items-center justify-center rounded-[1rem] border-2 border-black/35 bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
               aria-label="Next dish"
             >
               <ArrowRight size={20} strokeWidth={2.6} />

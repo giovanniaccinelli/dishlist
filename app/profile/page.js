@@ -966,15 +966,15 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mb-5">
-        <div className="flex items-stretch gap-4">
+      <div className="mb-4">
+        <div className="flex items-start gap-4">
           <div className="relative shrink-0">
             <button
               type="button"
               onClick={() => {
                 if (hasStories) setStoriesOpen(true);
               }}
-              className={`no-accent-border w-24 h-24 rounded-full p-[4px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
+              className={`no-accent-border h-20 w-20 rounded-full p-[4px] ${hasStories ? "bg-[#2BD36B]" : "bg-transparent"}`}
               aria-label="Open your stories"
             >
               <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
@@ -1003,10 +1003,10 @@ export default function Profile() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
+          <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
-            <div className="grid grid-cols-4 gap-1.5">
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+            <div className="mt-2 grid grid-cols-4 gap-1.5">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileMeta.followers.length}</div>
                 <button
                   onClick={() => openConnections("followers")}
@@ -1015,7 +1015,7 @@ export default function Profile() {
                   followers
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileMeta.following.length}</div>
                 <button
                   onClick={() => openConnections("following")}
@@ -1024,7 +1024,7 @@ export default function Profile() {
                   following
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
                 <button
                   onClick={() => selectDishlist("all_dishes")}
@@ -1033,7 +1033,7 @@ export default function Profile() {
                   dishes
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{uploadedDishes.length}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
@@ -1051,7 +1051,7 @@ export default function Profile() {
         ) : null}
       </div>
 
-      <div className="mb-6 flex items-center justify-center gap-2">
+      <div className="mb-5 flex items-center justify-center gap-2">
         {[
           { id: "saved", label: "Top picks" },
           { id: "all_dishes", label: "All dishes" },

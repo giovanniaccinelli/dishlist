@@ -80,6 +80,7 @@ export default function PublicProfile() {
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const viewedAllStories =
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
@@ -89,15 +90,8 @@ export default function PublicProfile() {
     let cancelled = false;
 
     (async () => {
-      const [
-        userDoc,
-        fetchedDishes,
-        fetchedSavedDishes,
-        fetchedToTryDishes,
-        fetchedCustomDishlists,
-        fetchedStories,
-        fetchedStoryPushStats,
-      ] = await Promise.all([
+      setProfileLoadFailed(false);
+      const results = await Promise.allSettled([
         getDoc(doc(db, "users", id)),
         getDishesFromFirestore(id),
         getSavedDishesFromFirestore(id),
@@ -109,17 +103,21 @@ export default function PublicProfile() {
 
       if (cancelled) return;
 
-      if (userDoc.exists()) {
+      const [userDocRes, dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+      const userDoc = userDocRes.status === "fulfilled" ? userDocRes.value : null;
+
+      if (userDoc?.exists()) {
         setProfileUser({ id: userDoc.id, ...userDoc.data() });
       } else {
         setProfileUser(null);
+        setProfileLoadFailed(true);
       }
-      setDishes(fetchedDishes);
-      setSavedDishes(fetchedSavedDishes);
-      setToTryDishes(fetchedToTryDishes);
-      setCustomDishlists(fetchedCustomDishlists);
-      setActiveStories(fetchedStories);
-      setStoryPushStats(fetchedStoryPushStats);
+      setDishes(dishesRes.status === "fulfilled" ? dishesRes.value : []);
+      setSavedDishes(savedRes.status === "fulfilled" ? savedRes.value : []);
+      setToTryDishes(toTryRes.status === "fulfilled" ? toTryRes.value : []);
+      setCustomDishlists(customRes.status === "fulfilled" ? customRes.value : []);
+      setActiveStories(storiesRes.status === "fulfilled" ? storiesRes.value : []);
+      setStoryPushStats(statsRes.status === "fulfilled" ? statsRes.value : {});
     })();
 
     return () => {
@@ -347,8 +345,15 @@ export default function PublicProfile() {
   );
 
 
-  if (!profileUser) {
+  if (!profileUser && !profileLoadFailed) {
     return <FullScreenLoading title="Loading profile" />;
+  }
+  if (!profileUser && profileLoadFailed) {
+    return (
+      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
+        This profile couldn&apos;t be loaded.
+      </div>
+    );
   }
 
   return (
@@ -400,15 +405,15 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      <div className="mb-5">
-        <div className="flex items-stretch gap-4">
+      <div className="mb-4">
+        <div className="flex items-start gap-4">
           <div className="relative shrink-0">
             <button
               type="button"
               onClick={() => {
                 if (activeStories.length > 0) setStoriesOpen(true);
               }}
-              className={`no-accent-border w-24 h-24 rounded-full p-[4px] ${
+              className={`no-accent-border h-20 w-20 rounded-full p-[4px] ${
                 activeStories.length > 0
                   ? viewedAllStories
                     ? "bg-[#C6C6BF]"
@@ -435,10 +440,10 @@ export default function PublicProfile() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-24 flex flex-col justify-between py-0.5">
+          <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
-            <div className="grid grid-cols-4 gap-1.5">
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+            <div className="mt-2 grid grid-cols-4 gap-1.5">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileUser.followers?.length || 0}</div>
                 <button
                   onClick={() => openConnections("followers")}
@@ -447,7 +452,7 @@ export default function PublicProfile() {
                   followers
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileUser.following?.length || 0}</div>
                 <button
                   onClick={() => openConnections("following")}
@@ -456,7 +461,7 @@ export default function PublicProfile() {
                   following
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
                 <button
                   onClick={() => selectDishlist("all_dishes")}
@@ -465,7 +470,7 @@ export default function PublicProfile() {
                   dishes
                 </button>
               </div>
-              <div className="flex min-h-[52px] flex-col items-center justify-end text-center">
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
@@ -484,7 +489,7 @@ export default function PublicProfile() {
 
       </div>
 
-      <div className="mb-6 flex items-center justify-center gap-2">
+      <div className="mb-5 flex items-center justify-center gap-2">
         {[
           { id: "saved", label: "Top picks" },
           { id: "all_dishes", label: "All dishes" },

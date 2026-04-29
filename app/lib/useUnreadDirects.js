@@ -71,7 +71,7 @@ export function useUnreadDirects(userId) {
         if (!lastSenderId || lastSenderId === userId) return false;
         const updatedAtMs = readTimestamp(conversation?.updatedAt || conversation?.lastMessage?.createdAt);
         const localReadAt = Number(readMarks?.[conversation.id] || 0);
-        return updatedAtMs > localReadAt;
+        return localReadAt === 0 || updatedAtMs >= localReadAt;
       })
       .map((conversation) => conversation.id);
     return {

@@ -14,6 +14,8 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, X } from "lucide-react";
 
+const readMarksKey = (userId) => `directs:readMarks:${userId}`;
+
 const toDate = (value) => {
   if (!value) return null;
   if (typeof value?.toDate === "function") return value.toDate();
@@ -86,6 +88,13 @@ export default function DirectChat() {
     const unsubMsgs = onSnapshot(q, (snap) => {
       setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
       markConversationAsRead(id, user.uid);
+      if (typeof window !== "undefined") {
+        try {
+          const current = JSON.parse(localStorage.getItem(readMarksKey(user.uid)) || "{}");
+          const next = { ...(current && typeof current === "object" ? current : {}), [id]: Date.now() };
+          localStorage.setItem(readMarksKey(user.uid), JSON.stringify(next));
+        } catch {}
+      }
     });
     return () => {
       unsubConvo();

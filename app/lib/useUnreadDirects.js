@@ -4,8 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "./firebase";
 
+const readMarksKey = (userId) => `directs:readMarks:${userId}`;
+
+const readTimestamp = (value) => {
+  if (!value) return 0;
+  if (typeof value?.toDate === "function") return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value?.seconds === "number") return value.seconds * 1000;
+  return 0;
+};
+
 export function useUnreadDirects(userId) {
   const [conversations, setConversations] = useState([]);
+  const [readMarks, setReadMarks] = useState({});
 
   useEffect(() => {
     if (!userId) {
@@ -22,14 +33,46 @@ export function useUnreadDirects(userId) {
     return () => unsub();
   }, [userId]);
 
+  useEffect(() => {
+    if (!userId || typeof window === "undefined") {
+      setReadMarks({});
+      return;
+    }
+    try {
+      const parsed = JSON.parse(localStorage.getItem(readMarksKey(userId)) || "{}");
+      setReadMarks(parsed && typeof parsed === "object" ? parsed : {});
+    } catch {
+      setReadMarks({});
+    }
+
+    const syncMarks = () => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(readMarksKey(userId)) || "{}");
+        setReadMarks(parsed && typeof parsed === "object" ? parsed : {});
+      } catch {
+        setReadMarks({});
+      }
+    };
+
+    window.addEventListener("storage", syncMarks);
+    window.addEventListener("focus", syncMarks);
+    return () => {
+      window.removeEventListener("storage", syncMarks);
+      window.removeEventListener("focus", syncMarks);
+    };
+  }, [userId]);
+
   return useMemo(() => {
     const unreadConversationIds = conversations
       .filter((conversation) => {
         const lastSenderId = conversation?.lastMessage?.senderId;
-        if (!lastSenderId || lastSenderId === userId) return false;
         const unreadBy = Array.isArray(conversation.unreadBy) ? conversation.unreadBy : [];
         const readBy = Array.isArray(conversation.readBy) ? conversation.readBy : [];
         if (unreadBy.includes(userId)) return true;
+        if (!lastSenderId || lastSenderId === userId) return false;
+        const updatedAtMs = readTimestamp(conversation?.updatedAt || conversation?.lastMessage?.createdAt);
+        const localReadAt = Number(readMarks?.[conversation.id] || 0);
+        if (updatedAtMs && updatedAtMs > localReadAt) return true;
         return !readBy.includes(userId);
       })
       .map((conversation) => conversation.id);
@@ -38,5 +81,5 @@ export function useUnreadDirects(userId) {
       unreadConversationIds,
       conversations,
     };
-  }, [conversations, userId]);
+  }, [conversations, userId, readMarks]);
 }

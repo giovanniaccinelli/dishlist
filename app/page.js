@@ -619,7 +619,7 @@ export default function Feed() {
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
             onResetFeed={() => handleResetFeed("for_you")}
-            onCardViewed={handleDishViewed}
+            onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
           />
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
@@ -671,7 +671,7 @@ export default function Feed() {
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}
               onResetFeed={() => handleResetFeed("following")}
-              onCardViewed={handleDishViewed}
+              onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
             />
           )}
         </div>

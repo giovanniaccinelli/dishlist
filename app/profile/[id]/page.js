@@ -327,9 +327,9 @@ export default function PublicProfile() {
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
 
   const renderDishCounters = (dish) => (
-    <div className="flex items-center gap-2.5 text-[11px] text-white/90">
-      <div className="inline-flex items-center gap-1">
-        <StoryStatIcon size={11} />
+    <div className="flex items-center gap-3 text-[12px] font-semibold text-white">
+      <div className="inline-flex items-center gap-1.5">
+        <StoryStatIcon size={12} />
         <span>: {getStoryPushCount(dish)}</span>
       </div>
       <button
@@ -560,8 +560,8 @@ export default function PublicProfile() {
                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}
                 />
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/72 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                  <div className="text-[13px] font-semibold leading-tight truncate">
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/92 via-black/58 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                  <div className="text-[15px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                     {dish.name || "Untitled dish"}
                   </div>
                   {renderDishCounters(dish)}

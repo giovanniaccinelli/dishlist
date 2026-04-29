@@ -87,6 +87,18 @@
   @apply rounded-full border-2 border-white bg-black/20 text-white font-black leading-none flex items-center justify-center backdrop-blur-sm shadow-lg;
 }
 
+.action-btn-white-ring {
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+.preserve-blue-border {
+  border-color: #5FA8F2 !important;
+}
+
+.preserve-green-border {
+  border-color: #1EA956 !important;
+}
+
 .app-top-nav {
   position: sticky;
   top: 0;

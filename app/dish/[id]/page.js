@@ -302,7 +302,7 @@ export default function DishDetail() {
   const isPublicSource = source === "public";
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
-  const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist";
+  const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist" || source === "custom";
   const canManageOwnDish = Boolean(userId && orderedList.some((item) => item?.owner === userId));
   const isForeignProfileContext = Boolean(profileId && profileId !== userId);
   const shouldUsePublicActions = isPublicSource || isForeignProfileContext;

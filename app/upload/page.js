@@ -573,7 +573,7 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="w-full min-h-[13rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-6 py-6 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                className="preserve-blue-border w-full min-h-[13rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-6 py-6 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
               >
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
@@ -593,7 +593,7 @@ export default function UploadPage() {
                       {UPLOAD_STEP_PREVIEW.map((step) => (
                         <div key={step.label}>
                           <div
-                            className="mb-2 h-1.5 rounded-full"
+                            className="no-accent-border mb-2 h-1.5 rounded-full"
                             style={{ backgroundColor: step.color }}
                           />
                           <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
@@ -610,7 +610,7 @@ export default function UploadPage() {
                   if (targetDishlistId) params.set("targetList", targetDishlistId);
                   router.push(`/dishes?${params.toString()}`);
                 }}
-                className="w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-6 py-6 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                className="preserve-green-border w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-6 py-6 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
               >
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">

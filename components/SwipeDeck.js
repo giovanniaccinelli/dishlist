@@ -908,7 +908,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onPointerMoveCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
-            <div className="bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
+            <div className="no-accent-border bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
               <button
                 data-no-drag="true"
                 onClick={(e) => {
@@ -916,7 +916,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setShowRecipe(false);
                 }}
-                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                className={`no-accent-border px-4 py-1 rounded-full text-sm font-semibold ${
                   !showRecipe ? "bg-white text-black" : "text-white/80"
                 }`}
               >
@@ -929,7 +929,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setShowRecipe(true);
                 }}
-                className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                className={`no-accent-border px-4 py-1 rounded-full text-sm font-semibold ${
                   showRecipe ? "bg-white text-black" : "text-white/80"
                 }`}
               >

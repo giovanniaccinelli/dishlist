@@ -94,7 +94,7 @@ export default function BottomNav() {
               ) : (
                 <div className="mt-1 flex flex-col items-center">
                   <span className={labelClass}>{item.label}</span>
-                  <span className={`mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
+                  <span className={`no-accent-border mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
                 </div>
               )}
             </Link>

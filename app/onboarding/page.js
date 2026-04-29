@@ -159,7 +159,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(66,143,223,0.12)] border-[2px] border-[#5FA8F2] backdrop-blur-[6px]"
+                  className="preserve-blue-border w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(66,143,223,0.12)] border-[2px] border-[#5FA8F2] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-5">
                     <div>
@@ -192,7 +192,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
+                  className="preserve-green-border w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-5">
                     <div>

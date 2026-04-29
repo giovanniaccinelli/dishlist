@@ -21,9 +21,9 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 
 const UPLOAD_STEP_PREVIEW = [
-  { label: "Name", color: "#5FA8F2" },
-  { label: "Details", color: "#23C268" },
-  { label: "Recipe", color: "#D7B443" },
+  { label: "Name", color: "#E64646" },
+  { label: "Details", color: "#F59E0B" },
+  { label: "Recipe", color: "#23C268" },
   { label: "Upload", color: "#111111" },
 ];
 
@@ -278,15 +278,15 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`no-accent-border h-1.5 rounded-full transition-all ${
+                    className={`h-1.5 rounded-full transition-all ${
                       step <= uploadStep
                         ? step === 0
-                          ? "w-10 bg-[#F59E0B]"
+                          ? "w-10 bg-[#E64646]"
                           : step === 1
-                            ? "w-10 bg-[#2BD36B]"
+                            ? "w-10 bg-[#F59E0B]"
                             : step === 2
-                              ? "w-10 bg-[#67C587]"
-                              : "w-10 bg-[#E85D75]"
+                              ? "w-10 bg-[#23C268]"
+                              : "w-10 bg-[#111111]"
                         : "w-7 bg-black/10"
                     }`}
                   />
@@ -568,7 +568,7 @@ export default function UploadPage() {
                       <p className="text-[1.9rem] font-semibold leading-[0.95]">Create dish</p>
                       <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
                     </div>
-                    <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
+                    <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                       <Plus size={32} />
                     </div>
                   </div>
@@ -580,7 +580,7 @@ export default function UploadPage() {
                       {UPLOAD_STEP_PREVIEW.map((step) => (
                         <div key={step.label}>
                           <div
-                            className="no-accent-border mb-2 h-1.5 rounded-full"
+                            className="mb-2 h-1.5 rounded-full"
                             style={{ backgroundColor: step.color }}
                           />
                           <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
@@ -605,7 +605,7 @@ export default function UploadPage() {
                       <p className="text-[1.9rem] font-semibold leading-none text-black">Find dish</p>
                       <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
                     </div>
-                    <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center border-[2px] border-[#1EA956]/55 shadow-md shrink-0 aspect-square">
+                    <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">
                       <Search size={30} />
                     </div>
                   </div>

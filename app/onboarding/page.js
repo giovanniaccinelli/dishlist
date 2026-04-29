@@ -15,9 +15,9 @@ const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const ONBOARDING_STEP_PREVIEW = [
-  { label: "Dish 1", color: "#5FA8F2" },
-  { label: "Dish 2", color: "#23C268" },
-  { label: "Dish 3", color: "#D7B443" },
+  { label: "Dish 1", color: "#E64646" },
+  { label: "Dish 2", color: "#F59E0B" },
+  { label: "Dish 3", color: "#23C268" },
 ];
 
 export default function Onboarding() {
@@ -159,13 +159,13 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="preserve-blue-border w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(66,143,223,0.12)] border-[2px] border-[#5FA8F2] backdrop-blur-[6px]"
+                  className="preserve-blue-border w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(230,70,70,0.12)] border-[2px] border-[#E64646] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-5">
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-[1.65rem] font-semibold leading-[0.96]">Got a few in mind?</p>
-                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(95,168,242,0.24)] shrink-0">
+                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#E64646] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(230,70,70,0.24)] shrink-0">
                           <PenLine size={18} />
                         </div>
                       </div>
@@ -180,7 +180,7 @@ export default function Onboarding() {
                       <div className="grid grid-cols-3 gap-2.5">
                         {ONBOARDING_STEP_PREVIEW.map((step) => (
                           <div key={step.label}>
-                            <div className="no-accent-border mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                            <div className="mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
                             <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
                           </div>
                         ))}
@@ -192,13 +192,13 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="preserve-green-border w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(23,130,67,0.12)] backdrop-blur-[6px]"
+                  className="preserve-green-border w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(240,166,35,0.12)] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-5">
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-[1.65rem] font-semibold leading-none">Swipe on the feed</p>
-                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#1EA956] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(30,169,86,0.24)] shrink-0">
+                        <div className="h-10 w-10 rounded-[0.95rem] bg-[#F0A623] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(240,166,35,0.24)] shrink-0">
                           <Hand size={18} />
                         </div>
                       </div>

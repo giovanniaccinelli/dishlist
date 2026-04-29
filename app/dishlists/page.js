@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -72,7 +72,6 @@ export default function Dishlists() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
-  const peopleLoadMoreRef = useRef(null);
 
   const attachPreviewData = (usersList, allDishes, storyStatsByUser = new Map()) => {
     const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
@@ -104,7 +103,7 @@ export default function Dishlists() {
         .sort(([, a], [, b]) => Number(b?.count || 0) - Number(a?.count || 0))
         .forEach(([dishId]) => pushImage(dishById.get(dishId)));
 
-      savedDishIds.forEach((dishId) => pushImage(dishById.get(dishId)));
+      [...savedDishIds, ...toTryDishIds].forEach((dishId) => pushImage(dishById.get(dishId)));
       uploadedDishes.forEach((dish) => pushImage(dish));
 
       return {
@@ -215,25 +214,6 @@ export default function Dishlists() {
     }
     setHasMoreUsers(visibleUsersLimit < filteredUsers.length);
   }, [filteredUsers.length, search, visibleUsersLimit]);
-
-  useEffect(() => {
-    if (search.trim() || !hasMoreUsers || loadingMoreUsers || loadingUsers) return;
-
-    const node = peopleLoadMoreRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadMoreUsers();
-        }
-      },
-      { rootMargin: "240px 0px" }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMoreUsers, loadingMoreUsers, loadingUsers, search, visibleUsers.length]);
 
   const visibleStoryGroups = useMemo(() => {
     const source = search.trim() ? filteredUsers : (allUsersPool || users);
@@ -504,8 +484,20 @@ export default function Dishlists() {
           </div>
 
           {!search.trim() && hasMoreUsers && (
-            <div ref={peopleLoadMoreRef} className="mt-6 mb-3">
-              {loadingMoreUsers ? <PeopleInlineLoading /> : <div className="h-10" aria-hidden="true" />}
+            <div className="mt-6 mb-3 flex justify-center">
+              {loadingMoreUsers ? (
+                <div className="w-full">
+                  <PeopleInlineLoading />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={loadMoreUsers}
+                  className="rounded-full border-2 border-[#D9B550] bg-[linear-gradient(180deg,#FFF2C9_0%,#F3D88C_100%)] px-5 py-3 text-sm font-semibold text-[#7A5400] shadow-[0_12px_26px_rgba(217,181,80,0.24)]"
+                >
+                  Load more
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -552,7 +544,7 @@ export default function Dishlists() {
                     setStoryActionOpen(false);
                     router.push("/upload?story=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(230,70,70,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#E64646] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
@@ -560,7 +552,7 @@ export default function Dishlists() {
                         <p className="text-[2.15rem] font-semibold leading-none">Create dish</p>
                         <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
                       </div>
-                      <div className="size-16 rounded-[1.4rem] bg-[#5FA8F2] text-white flex items-center justify-center shadow-md border-[2px] border-[#5FA8F2]/55 shrink-0 aspect-square">
+                      <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                         <Plus size={32} />
                       </div>
                     </div>
@@ -570,9 +562,9 @@ export default function Dishlists() {
                       </div>
                       <div className="grid grid-cols-4 gap-3">
                         {[
-                          { label: "Name", color: "#5FA8F2" },
-                          { label: "Details", color: "#23C268" },
-                          { label: "Recipe", color: "#D7B443" },
+                          { label: "Name", color: "#E64646" },
+                          { label: "Details", color: "#F59E0B" },
+                          { label: "Recipe", color: "#23C268" },
                           { label: "Story", color: "#111111" },
                         ].map((step) => (
                           <div key={step.label}>
@@ -590,7 +582,7 @@ export default function Dishlists() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(240,166,35,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
@@ -598,7 +590,7 @@ export default function Dishlists() {
                         <p className="text-[2.15rem] font-semibold leading-none text-black">Find dish</p>
                         <p className="mt-4 text-base text-black/78">Choose an existing dish to share.</p>
                       </div>
-                      <div className="size-16 rounded-[1.4rem] bg-[#1EA956] text-white flex items-center justify-center shadow-md border-[2px] border-[#1EA956]/55 shrink-0 aspect-square">
+                      <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center shadow-md border-[2px] border-[#F0A623]/55 shrink-0 aspect-square">
                         <Search size={28} />
                       </div>
                     </div>

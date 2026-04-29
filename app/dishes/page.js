@@ -160,6 +160,16 @@ export default function Dishes() {
   const scrollContainerRef = useRef(null);
   const dishesLoadMoreRef = useRef(null);
 
+  const buildSearchReturnTo = () => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("q", search.trim());
+    if (storyPicker) params.set("storyPicker", "1");
+    if (targetDishlistId) params.set("targetList", targetDishlistId);
+    if (selectedTagsApplied.length) params.set("tags", selectedTagsApplied.join(","));
+    const query = params.toString();
+    return query ? `/dishes?${query}` : "/dishes";
+  };
+
   const fetchDishes = async () => {
     setLoading(true);
     setLoadError("");
@@ -675,7 +685,10 @@ export default function Dishes() {
                 key={dish.id || `${dish.owner || "dish"}-${dish.name || "untitled"}`}
                 className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
               >
-                <Link href={`/dish/${dish.id}?source=public&mode=single`} className="absolute inset-0 z-10">
+                <Link
+                  href={`/dish/${dish.id}?source=public&mode=single&returnTo=${encodeURIComponent(buildSearchReturnTo())}&deckIds=${encodeURIComponent(visibleDishes.map((item) => item.id).filter(Boolean).join(","))}`}
+                  className="absolute inset-0 z-10"
+                >
                   <span className="sr-only">Open dish card</span>
                 </Link>
                 <img

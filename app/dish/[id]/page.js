@@ -70,6 +70,7 @@ export default function DishDetail() {
   const profileId = searchParams.get("profileId");
   const listId = searchParams.get("listId");
   const returnTo = searchParams.get("returnTo");
+  const deckIds = searchParams.get("deckIds") || "";
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const listOwnerId = profileId || userId;
@@ -126,7 +127,17 @@ export default function DishDetail() {
       let items = [];
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
-        items = all.filter((d) => d.isPublic !== false);
+        const publicItems = all.filter((d) => d.isPublic !== false);
+        const orderedDeckIds = deckIds
+          .split(",")
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+        if (orderedDeckIds.length) {
+          const byId = new Map(publicItems.map((entry) => [entry.id, entry]));
+          items = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
+        } else {
+          items = publicItems;
+        }
       } else if (source === "all_dishes") {
         const lists = await getAllDishlistsForUser(listOwnerId);
         items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
@@ -161,7 +172,7 @@ export default function DishDetail() {
         if (mode === "shuffle") {
           const others = items.filter((d) => d.id !== dishId);
           setDeckList([found, ...shuffleArray(others)]);
-        } else if (Boolean(returnTo) && source !== "public") {
+        } else if (Boolean(returnTo) && (source !== "public" || deckIds)) {
           setDeckList(items);
         } else {
           setDeckList([found]);
@@ -180,13 +191,18 @@ export default function DishDetail() {
       }
       setLoadingDish(false);
     })();
-  }, [dishId, listOwnerId, source, mode, listId, returnTo]);
+  }, [dishId, listOwnerId, source, mode, listId, returnTo, deckIds]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
-    const base = mode === "single" ? (Boolean(returnTo) && source !== "public" ? deckList : [dish]) : deckList;
+    const base =
+      mode === "single"
+        ? Boolean(returnTo) && (source !== "public" || deckIds)
+          ? deckList
+          : [dish]
+        : deckList;
     return base.filter((d) => !removedDishIds.has(d.id));
-  }, [dish, deckList, mode, removedDishIds, returnTo, source]);
+  }, [dish, deckList, mode, removedDishIds, returnTo, source, deckIds]);
 
   const handleRemove = async (dishToRemove) => {
     if (!userId) return false;
@@ -269,13 +285,27 @@ export default function DishDetail() {
   };
 
   const handleResetDeck = async () => {
+    if (returnTo && orderedList.length <= 1) {
+      router.push(returnTo);
+      return;
+    }
     setLoadingDish(true);
     setRemovedDishIds(new Set());
     try {
       let items = [];
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
-        items = all.filter((d) => d.isPublic !== false);
+        const publicItems = all.filter((d) => d.isPublic !== false);
+        const orderedDeckIds = deckIds
+          .split(",")
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+        if (orderedDeckIds.length) {
+          const byId = new Map(publicItems.map((entry) => [entry.id, entry]));
+          items = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
+        } else {
+          items = publicItems;
+        }
       } else if (source === "all_dishes") {
         const lists = await getAllDishlistsForUser(listOwnerId);
         items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
@@ -297,6 +327,8 @@ export default function DishDetail() {
         if (mode === "shuffle") {
           const others = items.filter((d) => d.id !== found.id);
           setDeckList([found, ...shuffleArray(others)]);
+        } else if (Boolean(returnTo) && (source !== "public" || deckIds)) {
+          setDeckList(items);
         } else {
           setDeckList([found]);
         }
@@ -310,7 +342,7 @@ export default function DishDetail() {
   };
 
   const isPublicSource = source === "public";
-  const enableProfileDeckNavigation = Boolean(returnTo) && !isPublicSource && mode === "single";
+  const enableProfileDeckNavigation = Boolean(returnTo) && mode === "single" && (!isPublicSource || Boolean(deckIds));
   const isToTrySource = source === "to_try";
   const isSavedSource = source === "saved";
   const isSavedListSource = source === "saved" || source === "all_dishes" || source === "dishlist" || source === "custom";
@@ -681,15 +713,15 @@ export default function DishDetail() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`no-accent-border h-1.5 rounded-full transition-all ${
+                    className={`h-1.5 rounded-full transition-all ${
                     step <= editStep
                       ? step === 0
-                        ? "w-10 bg-[#FF7A59]"
+                        ? "w-10 bg-[#E64646]"
                         : step === 1
-                          ? "w-10 bg-[#4AB7D8]"
+                          ? "w-10 bg-[#F59E0B]"
                           : step === 2
-                            ? "w-10 bg-[#67C587]"
-                            : "w-10 bg-[#FFC15A]"
+                            ? "w-10 bg-[#23C268]"
+                            : "w-10 bg-[#111111]"
                       : "w-7 bg-black/10"
                   }`}
                   />

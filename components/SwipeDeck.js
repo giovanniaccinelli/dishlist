@@ -240,6 +240,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
+  const [noRecipeNoticeOpen, setNoRecipeNoticeOpen] = useState(false);
   const [recipePanelOverflow, setRecipePanelOverflow] = useState({
     ingredients: false,
     method: false,
@@ -305,6 +306,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   useEffect(() => {
     setShowRecipe(false);
     setRecipePanelModal(null);
+    setNoRecipeNoticeOpen(false);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
   }, [currentCard?._key]);
@@ -852,7 +854,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       >
         {nextCard ? (
           <motion.div
-            className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border-2 border-[#E64646] ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale }}
           >
             {renderImage(nextCard, {
@@ -871,7 +873,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`pressable-card relative bg-white rounded-[28px] overflow-hidden w-full cursor-grab ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] border-2 border-[#E64646] bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div
@@ -908,39 +910,54 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
           <div
             data-no-drag="true"
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-30"
+            className="absolute top-4 left-1/2 z-30 -translate-x-1/2"
             onPointerDownCapture={(e) => e.stopPropagation()}
             onPointerMoveCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
-            <div className="no-accent-border bg-black/65 text-white rounded-full p-1 flex items-center gap-1">
+            {hasAnyRecipeText ? (
+              <div className="no-accent-border flex gap-1 rounded-full bg-black/65 p-1 text-white">
+                <button
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowRecipe(false);
+                  }}
+                  className={`no-accent-border rounded-full px-4 py-1 text-sm font-semibold ${
+                    !showRecipe ? "bg-white text-black" : "text-white/80"
+                  }`}
+                >
+                  dish
+                </button>
+                <button
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowRecipe(true);
+                  }}
+                  className={`no-accent-border rounded-full px-4 py-1 text-sm font-semibold ${
+                    showRecipe ? "bg-white text-black" : "text-white/80"
+                  }`}
+                >
+                  recipe
+                </button>
+              </div>
+            ) : (
               <button
+                type="button"
                 data-no-drag="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  setShowRecipe(false);
+                  setNoRecipeNoticeOpen(true);
                 }}
-                className={`no-accent-border px-4 py-1 rounded-full text-sm font-semibold ${
-                  !showRecipe ? "bg-white text-black" : "text-white/80"
-                }`}
+                className="no-accent-border rounded-full bg-black/65 px-4 py-2 text-sm font-semibold text-black"
               >
-                dish
+                <span className="rounded-full bg-white px-4 py-1">dish</span>
               </button>
-              <button
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setShowRecipe(true);
-                }}
-                className={`no-accent-border px-4 py-1 rounded-full text-sm font-semibold ${
-                  showRecipe ? "bg-white text-black" : "text-white/80"
-                }`}
-              >
-                recipe
-              </button>
-            </div>
+            )}
           </div>
           {showStoryHistoryCounter ? (
             <button
@@ -1009,7 +1026,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className={`absolute inset-0 ${showRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!showRecipe ? (
+              {!showRecipe && hasAnyRecipeText ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -1494,6 +1511,37 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           history={currentStoryPushHistory}
         />
       ) : null}
+      <AnimatePresence>
+        {noRecipeNoticeOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[141] flex items-center justify-center bg-black/22 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setNoRecipeNoticeOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-xs rounded-[1.6rem] border border-black/10 bg-white px-5 pb-5 pt-4 text-center shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 6 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNoRecipeNoticeOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-black/60"
+                  aria-label="Close message"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="text-[1.1rem] font-semibold text-black">This dish has no recipe.</div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <AnimatePresence>
         {recipePanelModal ? (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import { useUnreadDirects } from "../../lib/useUnreadDirects";
@@ -91,8 +91,19 @@ export default function PublicProfile() {
 
     (async () => {
       setProfileLoadFailed(false);
+      const loadUserDoc = async () => {
+        try {
+          const direct = await getDoc(doc(db, "users", id));
+          if (direct.exists()) return direct;
+        } catch (error) {
+          console.error("Direct profile fetch failed:", error);
+        }
+        const snapshot = await getDocs(collection(db, "users"));
+        return snapshot.docs.find((docSnap) => docSnap.id === id) || null;
+      };
+
       const results = await Promise.allSettled([
-        getDoc(doc(db, "users", id)),
+        loadUserDoc(),
         getDishesFromFirestore(id),
         getSavedDishesFromFirestore(id),
         getToTryDishesFromFirestore(id),
@@ -106,7 +117,7 @@ export default function PublicProfile() {
       const [userDocRes, dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
       const userDoc = userDocRes.status === "fulfilled" ? userDocRes.value : null;
 
-      if (userDoc?.exists()) {
+      if (userDoc?.exists?.()) {
         setProfileUser({ id: userDoc.id, ...userDoc.data() });
       } else {
         setProfileUser(null);

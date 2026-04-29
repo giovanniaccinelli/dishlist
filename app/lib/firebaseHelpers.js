@@ -864,6 +864,7 @@ function buildStoryPayload(userId, story) {
     mediaMimeType: story.mediaMimeType || "",
     recipeIngredients: story.recipeIngredients || "",
     recipeMethod: story.recipeMethod || "",
+    taggedUserName: story.taggedUserName || "",
     tags: normalizeTags(story.tags),
     cardURL: story.cardURL || story.imageURL || story.imageUrl || "",
     thumbURL: story.thumbURL || story.thumbnailURL || story.cardURL || story.imageURL || "",

@@ -37,6 +37,7 @@ export default function UploadPage() {
   const [dishLink, setDishLink] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
+  const [storyTaggedUser, setStoryTaggedUser] = useState("");
   const [dishTags, setDishTags] = useState([]);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
@@ -144,6 +145,7 @@ export default function UploadPage() {
           ...imageFields,
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
+          taggedUserName: storyTaggedUser.trim(),
         });
         if (!ok) throw new Error("Failed to publish story.");
         setToastVariant("success");
@@ -403,6 +405,16 @@ export default function UploadPage() {
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>
                 </div>
+                {storyMode ? (
+                  <input
+                    type="text"
+                    placeholder="Tag a user (optional)"
+                    value={storyTaggedUser}
+                    onChange={(e) => setStoryTaggedUser(e.target.value)}
+                    className="mb-4 w-full rounded-full border border-[#D8C090] bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                    disabled={loadingUpload}
+                  />
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
@@ -480,6 +492,11 @@ export default function UploadPage() {
                       <div className="text-lg font-semibold truncate">{dishName || "Untitled dish"}</div>
                       {dishDescription ? (
                         <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
+                      ) : null}
+                      {storyMode && storyTaggedUser.trim() ? (
+                        <div className="mt-2 inline-flex max-w-full items-center rounded-full border border-[#E2C7A5] bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]">
+                          @{storyTaggedUser.trim().replace(/^@+/, "")}
+                        </div>
                       ) : null}
                       {dishLink ? (
                         <div className="mt-2 inline-flex max-w-full items-center rounded-full border border-[#D8C090] bg-white/72 px-3 py-1 text-[11px] font-medium text-black/62">

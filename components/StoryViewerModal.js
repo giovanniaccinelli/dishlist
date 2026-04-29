@@ -114,7 +114,7 @@ export default function StoryViewerModal({
   }, [open, currentStory?.id]);
 
   useEffect(() => {
-    if (!open || !currentStory?.id || isPaused || currentStoryIsVideo) return;
+    if (!open || !currentStory?.id || isPaused || commentsOpen || currentStoryIsVideo) return;
     let frameId = 0;
     let previousTime = performance.now();
 
@@ -140,7 +140,7 @@ export default function StoryViewerModal({
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs, currentStoryIsVideo]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs, currentStoryIsVideo, commentsOpen]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -212,12 +212,12 @@ export default function StoryViewerModal({
         video.pause?.();
       } catch {}
     };
-  }, [open, currentStory?.id, groupIndex, storyIndex, currentStoryIsVideo]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, currentStoryIsVideo, commentsOpen]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !currentStoryIsVideo) return;
-    if (isPaused) {
+    if (isPaused || commentsOpen) {
       try {
         video.pause?.();
       } catch {}
@@ -232,7 +232,7 @@ export default function StoryViewerModal({
         if (mutedPlay?.catch) mutedPlay.catch(() => {});
       });
     }
-  }, [isPaused, currentStoryIsVideo, currentStory?.id]);
+  }, [isPaused, currentStoryIsVideo, currentStory?.id, commentsOpen]);
 
   const goNext = () => {
     if (Date.now() < suppressTapUntilRef.current) return;
@@ -538,6 +538,11 @@ export default function StoryViewerModal({
             <h2 className="text-2xl font-bold leading-tight">
               {currentStory.name || "Untitled dish"}
             </h2>
+            {currentStory.taggedUserName ? (
+              <div className="mt-2 inline-flex items-center rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm">
+                @{String(currentStory.taggedUserName).replace(/^@+/, "")}
+              </div>
+            ) : null}
             {currentStory.description ? (
               <p className="mt-2 text-sm text-white/80 line-clamp-3">
                 {currentStory.description}

@@ -4,28 +4,6 @@ function PulseBlock({ className = "" }) {
   return <div className={`animate-pulse rounded-[1rem] bg-black/[0.06] ${className}`} />;
 }
 
-function LogoGhost({ className = "" }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path
-        d="M9 18c0-3.3 2.7-6 6-6h12c2.5 0 4.7 1.6 5.5 4L34 20H15c-3.3 0-6-2.7-6-6Z"
-        fill="currentColor"
-      />
-      <rect x="20" y="16" width="34" height="8" rx="4" fill="currentColor" />
-      <path
-        d="M9 30c0-3.3 2.7-6 6-6h14c2.6 0 4.8 1.7 5.6 4.1L35 32H15c-3.3 0-6-2.7-6-6Z"
-        fill="currentColor"
-      />
-      <rect x="22" y="28" width="32" height="8" rx="4" fill="currentColor" />
-      <path
-        d="M9 42c0-3.3 2.7-6 6-6h16c2.7 0 5 1.8 5.7 4.3L37 44H15c-3.3 0-6-2.7-6-6Z"
-        fill="currentColor"
-      />
-      <rect x="24" y="40" width="30" height="8" rx="4" fill="currentColor" />
-    </svg>
-  );
-}
-
 export function FullScreenLoading({ title = "Loading" }) {
   return (
     <div className="min-h-screen bg-transparent px-4 pt-10 text-black">
@@ -66,12 +44,13 @@ export function FeedLoading() {
         </div>
         <PulseBlock className="h-11 w-11 rounded-full" />
       </div>
-      <div className="pt-3">
-        <div className="relative h-[68vh] w-full overflow-hidden rounded-[2rem] border-2 border-[#E64646] bg-white">
-          <PulseBlock className="h-full w-full rounded-[2rem]" />
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <LogoGhost className="h-28 w-28 text-[#E9B14B] opacity-45" />
-          </div>
+      <div className="flex h-[68vh] items-center justify-center pt-3">
+        <div className="animate-pulse">
+          <img
+            src="/logo-real.png"
+            alt="DishList"
+            className="h-28 w-28 rounded-full object-cover shadow-[0_16px_40px_rgba(240,166,35,0.22)]"
+          />
         </div>
       </div>
     </div>

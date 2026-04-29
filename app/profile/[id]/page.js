@@ -99,7 +99,19 @@ export default function PublicProfile() {
           console.error("Direct profile fetch failed:", error);
         }
         const snapshot = await getDocs(collection(db, "users"));
-        return snapshot.docs.find((docSnap) => docSnap.id === id) || null;
+        return (
+          snapshot.docs.find((docSnap) => {
+            const data = docSnap.data() || {};
+            return (
+              docSnap.id === id ||
+              data.uid === id ||
+              data.userId === id ||
+              data.appleUserId === id ||
+              data.appleSub === id ||
+              data.authUid === id
+            );
+          }) || null
+        );
       };
 
       const results = await Promise.allSettled([
@@ -643,7 +655,7 @@ export default function PublicProfile() {
                   {connectionsUsers.map((u) => (
                     <Link
                       key={u.id}
-                      href={user?.uid === u.id ? "/profile" : `/profile/${u.id}`}
+                      href={user?.uid === (u.uid || u.id) ? "/profile" : `/profile/${u.uid || u.id}`}
                       onClick={() => setConnectionsOpen(false)}
                       className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3"
                     >

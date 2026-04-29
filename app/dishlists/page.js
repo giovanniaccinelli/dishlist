@@ -399,7 +399,7 @@ export default function Dishlists() {
                   key={u.id}
                   className="bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer"
                   style={{ contentVisibility: "auto", containIntrinsicSize: "226px" }}
-                  onClick={() => router.push(`/profile/${u.id}`)}
+                  onClick={() => router.push(`/profile/${u.uid || u.id}`)}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button

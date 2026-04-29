@@ -953,9 +953,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setNoRecipeNoticeOpen(true);
                 }}
-                className="no-accent-border rounded-full bg-black/65 px-4 py-2 text-sm font-semibold text-black"
+                className="rounded-full bg-white px-4 py-1 text-sm font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
               >
-                <span className="rounded-full bg-white px-4 py-1">dish</span>
+                dish
               </button>
             )}
           </div>

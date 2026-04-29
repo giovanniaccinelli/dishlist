@@ -434,7 +434,7 @@ export default function Dishlists() {
                               alt="Profile"
                               loading="lazy"
                               decoding="async"
-                              className="accent-avatar-photo h-full w-full rounded-full object-cover"
+                              className="h-full w-full rounded-full object-cover"
                             />
                           ) : (
                             u.displayName?.[0] || "U"

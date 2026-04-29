@@ -985,7 +985,7 @@ export default function Profile() {
                       alt="Profile"
                       loading="lazy"
                       decoding="async"
-                      className="accent-avatar-photo w-full h-full rounded-full object-cover"
+                      className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     user.displayName?.[0] || "U"

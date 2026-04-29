@@ -425,7 +425,7 @@ export default function PublicProfile() {
                       alt="Profile"
                       loading="lazy"
                       decoding="async"
-                      className="accent-avatar-photo w-full h-full rounded-full object-cover"
+                      className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     profileUser.displayName?.[0] || "U"
@@ -544,7 +544,9 @@ export default function PublicProfile() {
                   href={
                     activeDishlist?.type === "custom"
                       ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                      : activeDishlist?.type === "custom"
+                        ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                        : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                   }
                   className="absolute inset-0 z-10"
                 >

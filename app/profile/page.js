@@ -841,7 +841,7 @@ export default function Profile() {
               >
                 <Link
                   href={
-                    source === "dishlist"
+                    source === "dishlist" || activeDishlist?.type === "custom"
                       ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                       : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                   }

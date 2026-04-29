@@ -1336,7 +1336,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleSecondaryActionPress(e);
                 }}
-                className="add-action-btn action-btn-white-ring no-accent-border h-14 w-14 shrink-0"
+                className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
                 aria-label="Secondary action"
                 disabled={disabled}
               >
@@ -1346,7 +1346,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 type="button"
                 data-no-drag="true"
                 onClick={handleTertiaryActionPress}
-                className="add-action-btn action-btn-white-ring no-accent-border h-14 w-14 shrink-0"
+                className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
                 aria-label="Additional action"
               >
                 {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
@@ -1359,7 +1359,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   onSharePress(currentCard);
                 }}
-                className="add-action-btn action-btn-white-ring no-accent-border h-14 w-14 shrink-0"
+                className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
                 aria-label="Share dish"
               >
                 <CornerUpRight size={24} strokeWidth={2.1} />
@@ -1393,7 +1393,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleActionPress(e);
                 }}
-                className={`add-action-btn action-btn-white-ring no-accent-border h-14 w-14 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[36px]"}`}
+                className={`add-action-btn action-btn-white-ring h-14 w-14 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[36px]"}`}
                 aria-label="Action"
                 disabled={disabled}
               >

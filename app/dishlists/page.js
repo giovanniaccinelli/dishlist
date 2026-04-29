@@ -363,9 +363,9 @@ export default function Dishlists() {
                   }}
                   className="shrink-0 flex flex-col items-center gap-2"
                 >
-                  <div className={`w-16 h-16 rounded-full p-[3px] ${viewedAll ? "bg-[#C6C6BF]" : "bg-[#2BD36B]"}`}>
-                    <div className="w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                      <div className="w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold">
+                  <div className={`no-accent-border w-16 h-16 rounded-full p-[3px] ${viewedAll ? "bg-[#C6C6BF]" : "bg-[#2BD36B]"}`}>
+                    <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
+                      <div className="no-accent-border w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold">
                         {group.ownerPhotoURL ? (
                           <img
                             src={group.ownerPhotoURL}

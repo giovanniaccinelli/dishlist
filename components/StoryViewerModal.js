@@ -365,13 +365,13 @@ export default function StoryViewerModal({
             style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 0.2rem)" }}
           >
             {currentStories.map((story, idx) => (
-              <div key={story.id || idx} className="h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
+              <div key={story.id || idx} className="no-accent-border h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
                 {idx < storyIndex ? (
-                  <div className="h-full w-full rounded-full bg-white" />
+                  <div className="no-accent-border h-full w-full rounded-full bg-white" />
                 ) : idx === storyIndex ? (
-                  <div className="h-full rounded-full bg-white" style={{ width: progressWidth }} />
+                  <div className="no-accent-border h-full rounded-full bg-white" style={{ width: progressWidth }} />
                 ) : (
-                  <div className="h-full w-0 rounded-full bg-transparent" />
+                  <div className="no-accent-border h-full w-0 rounded-full bg-transparent" />
                 )}
               </div>
             ))}

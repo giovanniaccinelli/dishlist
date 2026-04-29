@@ -216,7 +216,7 @@ export default function DirectChat() {
               <div key={m.id}>
                 {showDayDivider && dayLabel ? (
                   <div className="flex justify-center py-1">
-                    <div className="rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
+                    <div className="no-accent-border rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
                       {dayLabel}
                     </div>
                   </div>

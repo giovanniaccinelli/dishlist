@@ -47,9 +47,9 @@ export function FeedLoading() {
       <div className="flex h-[68vh] items-center justify-center pt-3">
         <div className="animate-pulse">
           <img
-            src="/logo-mark.svg"
+            src="/logo-real.png"
             alt="DishList"
-            className="h-40 w-40 object-contain drop-shadow-[0_18px_38px_rgba(240,166,35,0.24)]"
+            className="h-44 w-44 object-contain drop-shadow-[0_18px_38px_rgba(240,166,35,0.22)]"
           />
         </div>
       </div>

@@ -745,7 +745,7 @@ export default function PublicProfile() {
                               key={`${dishlist.id}-${dish.id}-${index}`}
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
-                              className="aspect-square w-full rounded-[0.85rem] object-cover"
+                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 object-cover"
                               loading="lazy"
                               decoding="async"
                               onError={(event) => {
@@ -755,7 +755,7 @@ export default function PublicProfile() {
                           ) : (
                             <div
                               key={`${dishlist.id}-empty-${index}`}
-                              className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 bg-black/6"
                             />
                           );
                         })}

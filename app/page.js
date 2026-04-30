@@ -805,18 +805,23 @@ export default function Feed() {
       <AnimatePresence>
         {aboutOpen ? (
           <motion.div
-            className="fixed inset-0 z-[140] bg-black text-white"
+            className="fixed inset-0 z-[140] bg-black/94 backdrop-blur-sm text-white flex items-center justify-center p-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setAboutOpen(false)}
           >
-            <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-5 pb-8 pt-[max(1.25rem,env(safe-area-inset-top))]">
-              <div className="mb-5 flex items-center justify-between">
+            <div
+              className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-black text-white shadow-[0_28px_80px_rgba(0,0,0,0.38)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex flex-col px-5 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img src="/logo-mark.svg" alt="DishList logo" className="h-10 w-10 object-contain" />
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">DishList</div>
-                    <h2 className="mt-1 text-[1.45rem] font-bold leading-none">Your food memory, in one place</h2>
+                    <h2 className="mt-1 text-[1.35rem] font-bold leading-none">Your playlist, for dishes</h2>
                   </div>
                 </div>
                 <button
@@ -829,15 +834,15 @@ export default function Feed() {
                 </button>
               </div>
 
-              <div className="space-y-3 overflow-y-auto pr-1">
+              <div className="space-y-3 overflow-y-auto pr-1 max-h-[calc(100dvh-9rem)]">
                 <div className="rounded-[1.5rem] bg-white/8 p-4">
                   <div className="text-[1.1rem] font-semibold text-[#F7D36A]">Save what you crave.</div>
-                  <p className="mt-2 text-sm leading-6 text-white/76">
+                  <p className="mt-2 text-sm leading-5 text-white/76">
                     Build a personal catalog of dishes you love, want to try, or want to remember when you have no idea what to eat.
                   </p>
                 </div>
 
-                <div className="grid gap-3">
+                <div className="grid gap-2.5">
                   <div className="rounded-[1.45rem] bg-[#E64646]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#FF8D8D]">Feed</div>
                     <p className="text-sm leading-5 text-white/76">
@@ -866,11 +871,12 @@ export default function Feed() {
 
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4">
                   <div className="text-sm font-semibold text-[#F0A623]">Why it works</div>
-                  <p className="mt-2 text-sm leading-6 text-white/76">
+                  <p className="mt-2 text-sm leading-5 text-white/76">
                     It turns your scattered food ideas into something you can actually come back to, use, and share.
                   </p>
                 </div>
               </div>
+            </div>
             </div>
           </motion.div>
         ) : null}

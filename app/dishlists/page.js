@@ -90,12 +90,13 @@ export default function Dishlists() {
       const uploadedDishes = uploadedByOwner.get(u.id) || [];
       const storyStats = storyStatsByUser.get(u.id) || {};
       const previewImages = [];
-      const seen = new Set();
+      const seenDishIds = new Set();
 
       const pushImage = (dishData) => {
         const imageUrl = getDishImageUrl(dishData, "thumb");
-        if (!imageUrl || seen.has(imageUrl) || previewImages.length >= 4) return;
-        seen.add(imageUrl);
+        const dishId = String(dishData?.id || "");
+        if (!imageUrl || !dishId || seenDishIds.has(dishId) || previewImages.length >= 4) return;
+        seenDishIds.add(dishId);
         previewImages.push(imageUrl);
       };
 

@@ -1676,22 +1676,22 @@ export default function Profile() {
                           {Array.from({ length: 4 }).map((_, index) => {
                             const dish = preview[index];
                             return dish ? (
-                              <img
-                                key={`${dishlist.id}-${dish.id}-${index}`}
-                                src={getDishImageUrl(dish, "thumb")}
-                                alt={dish.name || dishlist.name}
-                                className="aspect-square w-full rounded-[0.85rem] object-cover"
-                                loading="lazy"
-                                decoding="async"
-                                onError={(event) => {
+                            <img
+                              key={`${dishlist.id}-${dish.id}-${index}`}
+                              src={getDishImageUrl(dish, "thumb")}
+                              alt={dish.name || dishlist.name}
+                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              onError={(event) => {
                                   event.currentTarget.src = DEFAULT_DISH_IMAGE;
                                 }}
                               />
                             ) : (
-                              <div
-                                key={`${dishlist.id}-empty-${index}`}
-                                className="aspect-square w-full rounded-[0.85rem] bg-black/6"
-                              />
+                            <div
+                              key={`${dishlist.id}-empty-${index}`}
+                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 bg-black/6"
+                            />
                             );
                           })}
                         </div>

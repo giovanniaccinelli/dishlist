@@ -319,8 +319,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [dishes, deck, currentIndex, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
-  const currentCardBorderClass = currentCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
-  const nextCardBorderClass = nextCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
 
   useEffect(() => {
     setShowRecipe(false);
@@ -386,10 +384,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const commentBottom = tagsBottom + tagsHeight + 8;
   const textBottom = Math.max(120, commentBottom + 40);
   const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
+  const nextCard = deck[currentIndex + 1] || null;
+  const currentCardBorderClass = currentCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
+  const nextCardBorderClass = nextCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
-  const nextCard = deck[currentIndex + 1] || null;
   const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;

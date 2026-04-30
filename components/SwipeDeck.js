@@ -188,6 +188,10 @@ function DeckAutoplayVideo({
   );
 }
 
+function isRestaurantDish(dish) {
+  return String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
+}
+
 const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
   onSwiped,
@@ -385,8 +389,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const textBottom = Math.max(120, commentBottom + 40);
   const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
   const nextCard = deck[currentIndex + 1] || null;
-  const currentCardBorderClass = currentCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
-  const nextCardBorderClass = nextCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
+  const currentCardBorderClass = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
+  const nextCardBorderClass = isRestaurantDish(nextCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
@@ -889,7 +893,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.9}
+          dragElastic={advanceOnAnySwipe ? 0.22 : 0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] border-2 ${currentCardBorderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
@@ -935,7 +939,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
             {hasAnyRecipeText ? (
-              <div className="no-accent-border flex gap-1 rounded-full bg-black/65 p-1 text-white">
+              <div className="no-accent-border flex gap-0.5 rounded-full bg-black/65 p-0.5 text-white">
                 <button
                   data-no-drag="true"
                   onClick={(e) => {
@@ -943,7 +947,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setShowRecipe(false);
                   }}
-                  className={`no-accent-border rounded-full px-4 py-1 text-sm font-semibold ${
+                  className={`no-accent-border rounded-full px-3 py-1 text-sm font-semibold ${
                     !showRecipe ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -956,7 +960,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setShowRecipe(true);
                   }}
-                  className={`no-accent-border rounded-full px-4 py-1 text-sm font-semibold ${
+                  className={`no-accent-border rounded-full px-3 py-1 text-sm font-semibold ${
                     showRecipe ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -979,7 +983,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             )}
           </div>
           <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
-            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0" /> : null}
+            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0 self-center" /> : null}
             {showStoryHistoryCounter ? (
               <button
                 type="button"
@@ -989,7 +993,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setStoryHistoryOpen(true);
                 }}
-                className="inline-flex h-8 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white"
+                className="inline-flex h-8 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white self-center"
                 aria-label="Open story push history"
               >
                 <StoryStatIcon size={12} />

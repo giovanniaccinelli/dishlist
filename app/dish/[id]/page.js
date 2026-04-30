@@ -757,13 +757,13 @@ export default function DishDetail() {
     onClick={() => setEditDishMode(DISH_MODE_COOKING)}
     className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="flex items-center gap-2.5">
+    <div className="grid grid-cols-[3rem,1fr] items-center gap-2">
       <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-[#FFF1C9] text-[#F0A623]">
         <CookingHomeIcon className="h-6 w-6" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
         <div className="text-sm font-semibold text-black">Cooking</div>
-        <div className="text-[11px] leading-tight text-black/55">Cook at home</div>
+        <div className="text-[10px] leading-tight text-black/55">Recipe to cook at home</div>
       </div>
     </div>
   </button>
@@ -773,13 +773,13 @@ export default function DishDetail() {
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
     className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="flex items-center gap-2.5">
+    <div className="grid grid-cols-[3rem,1fr] items-center gap-2">
       <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-[#FFE2E2] text-[#E64646]">
         <RestaurantMapIcon className="h-6 w-6" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
         <div className="text-sm font-semibold text-black">Restaurant</div>
-        <div className="text-[11px] leading-tight text-black/55">Ate it out</div>
+        <div className="text-[10px] leading-tight text-black/55">Suggestion to eat out</div>
       </div>
     </div>
   </button>

@@ -24,7 +24,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { ChevronLeft, ChevronRight, CircleUserRound, Funnel, Send, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleUserRound, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../components/DishModeControls";
@@ -81,7 +81,7 @@ export default function Feed() {
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
-  const showDishModeFilterButton = false;
+  const showDishModeFilterButton = true;
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -518,21 +518,6 @@ export default function Feed() {
           <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         ) : null}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setDraftExcludedTags(excludedTags);
-              setFilterOpen(true);
-            }}
-            className={`w-[2.4rem] h-[2.4rem] rounded-[0.95rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center transition-transform hover:scale-[1.02] ${
-              excludedTags.length > 0
-                ? "border-[#D9BC48] bg-[linear-gradient(180deg,rgba(255,236,180,0.96)_0%,rgba(247,221,133,0.96)_100%)] text-black"
-                : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,244,236,0.96)_100%)] text-black"
-            }`}
-            aria-label="Filter feed tags"
-          >
-            <Funnel size={18} />
-          </button>
           <Link
             href={userId ? "/directs" : "/?auth=1"}
             className="top-action-btn relative"

@@ -122,6 +122,19 @@
   justify-content: center;
 }
 
+.dish-card-shell {
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+.dish-card-shell--default {
+  border-color: #e4b43f !important;
+}
+
+.dish-card-shell--restaurant {
+  border-color: #e64646 !important;
+}
+
 .bottom-nav-shell {
   position: fixed;
   left: 0;

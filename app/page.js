@@ -515,7 +515,11 @@ export default function Feed() {
           <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </button>
         {showDishModeFilterButton ? (
-          <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+          <DishModeFilterButton
+            value={selectedDishMode}
+            onClick={() => setDishModeFilterOpen(true)}
+            className="absolute left-[48.6%] top-1/2 -translate-x-1/2 -translate-y-1/2"
+          />
         ) : null}
         <div className="flex items-center gap-2">
           <Link

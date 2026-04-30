@@ -705,12 +705,12 @@ export default function DishDetail() {
 
       {editOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
           onPointerDown={(e) => e.stopPropagation()}
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E3CFA7] my-6">
+          <div className="bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border border-[#E3CFA7] my-auto">
             <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
@@ -755,15 +755,15 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_COOKING)}
-    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+    className={`rounded-[1.35rem] border-2 px-2.5 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid grid-cols-[3rem,1fr] items-center gap-2">
-      <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-[#FFF1C9] text-[#F0A623]">
-        <CookingHomeIcon className="h-6 w-6" strokeWidth={2.05} />
+    <div className="grid min-h-[4.6rem] grid-cols-[2.5rem,1fr] items-center gap-2">
+      <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[0.8rem] bg-[#FFF1C9] text-[#F0A623]">
+        <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
-      <div className="min-w-0">
-        <div className="text-sm font-semibold text-black">Cooking</div>
-        <div className="text-[10px] leading-tight text-black/55">Recipe to cook at home</div>
+      <div className="min-w-0 pr-1">
+        <div className="text-[13px] font-semibold leading-none text-black">Home</div>
+        <div className="mt-1 text-[9px] leading-[1.2] text-black/55">Recipe to cook at home</div>
       </div>
     </div>
   </button>
@@ -771,15 +771,15 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+    className={`rounded-[1.35rem] border-2 px-2.5 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid grid-cols-[3rem,1fr] items-center gap-2">
-      <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-[#FFE2E2] text-[#E64646]">
-        <RestaurantMapIcon className="h-6 w-6" strokeWidth={2.05} />
+    <div className="grid min-h-[4.6rem] grid-cols-[2.5rem,1fr] items-center gap-2">
+      <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[0.8rem] bg-[#FFE2E2] text-[#E64646]">
+        <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
-      <div className="min-w-0">
-        <div className="text-sm font-semibold text-black">Restaurant</div>
-        <div className="text-[10px] leading-tight text-black/55">Suggestion to eat out</div>
+      <div className="min-w-0 pr-1">
+        <div className="text-[13px] font-semibold leading-none text-black">Restaurant</div>
+        <div className="mt-1 text-[9px] leading-[1.2] text-black/55">Suggestion to eat out</div>
       </div>
     </div>
   </button>

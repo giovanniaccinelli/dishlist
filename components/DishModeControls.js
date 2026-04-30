@@ -7,15 +7,12 @@ export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
 export const DISH_MODE_RESTAURANT = "restaurant";
 
-export function TossingPanIcon({ className = "", strokeWidth = 1.9 }) {
+export function CookingHomeIcon({ className = "", strokeWidth = 1.95 }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M4.3 13.2c0-2.8 2.2-5 5-5h3.5c2.8 0 5 2.2 5 5v1.4H4.3v-1.4Z" />
-      <path d="M17.8 13.9h2.7c.9 0 1.6.7 1.6 1.6v.1" />
-      <path d="M8.4 7.1c.4-1 1.1-1.8 2-2.4" />
-      <path d="M12 5.6c.4-.8 1-1.5 1.8-2" />
-      <path d="M15.3 6.6c.8-.6 1.4-1.4 1.8-2.4" />
-      <path d="M7.2 16.2c.6 1.6 2.4 2.8 4.6 2.8s4-1.2 4.6-2.8" />
+      <path d="M4.7 10.9 12 4.8l7.3 6.1" />
+      <path d="M6.8 9.7v8.6c0 .6.5 1.1 1.1 1.1h8.2c.6 0 1.1-.5 1.1-1.1V9.7" />
+      <path d="M10.2 19.4v-4.7c0-.6.5-1.1 1.1-1.1h1.4c.6 0 1.1.5 1.1 1.1v4.7" />
     </svg>
   );
 }
@@ -40,7 +37,7 @@ export function DishModeBadge({ dishMode, className = "" }) {
   if (dishMode === DISH_MODE_COOKING) {
     return (
       <span className={`inline-flex items-center justify-center rounded-full bg-black/65 text-[#F0A623] ${className}`}>
-        <TossingPanIcon className="h-4 w-4" />
+        <CookingHomeIcon className="h-4 w-4" />
       </span>
     );
   }
@@ -59,13 +56,13 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className
     <button
       type="button"
       onClick={onClick}
-      className={`top-action-btn absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${className}`}
+      className={`top-action-btn absolute left-1/2 top-1/2 z-10 h-[2.42rem] w-[4.15rem] -translate-x-1/2 -translate-y-1/2 rounded-[1.05rem] ${className}`}
       aria-label="Filter dish mode"
     >
-      <span className="flex items-center gap-1 text-black">
-        <TossingPanIcon className={`h-[1rem] w-[1rem] ${value === DISH_MODE_RESTAURANT ? "text-black/45" : "text-[#F0A623]"}`} />
-        <span className="text-[12px] font-bold leading-none text-black/45">/</span>
-        <RestaurantMapIcon className={`h-[1rem] w-[1rem] ${value === DISH_MODE_COOKING ? "text-black/45" : "text-[#E64646]"}`} />
+      <span className="flex items-center gap-1.5 text-black">
+        <CookingHomeIcon className={`h-[1.18rem] w-[1.18rem] ${value === DISH_MODE_RESTAURANT ? "text-black/35" : "text-[#F0A623]"}`} strokeWidth={2.1} />
+        <span className="text-[14px] font-black leading-none text-black">/</span>
+        <RestaurantMapIcon className={`h-[1.18rem] w-[1.18rem] ${value === DISH_MODE_COOKING ? "text-black/35" : "text-[#E64646]"}`} strokeWidth={2.1} />
       </span>
     </button>
   );
@@ -109,7 +106,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 onClick={() => onSelect(DISH_MODE_COOKING)}
                 className={`rounded-[1.45rem] border-2 px-4 py-4 text-center ${value === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
               >
-                <TossingPanIcon className="mx-auto h-8 w-8 text-[#F0A623]" />
+                <CookingHomeIcon className="mx-auto h-8 w-8 text-[#F0A623]" />
                 <div className="mt-2 text-sm font-semibold text-black">Cooking</div>
               </button>
               <button

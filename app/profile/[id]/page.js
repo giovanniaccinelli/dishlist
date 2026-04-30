@@ -50,6 +50,61 @@ function StoryStatIcon({ size = 10 }) {
   );
 }
 
+function uniqueNonEmpty(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function getProfileIdCandidates(routeId, userDoc) {
+  const data = userDoc?.data?.() || userDoc || {};
+  const rawAppleSub = String(data.appleSub || "").trim();
+  const routeValue = String(routeId || "").trim();
+  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
+  return uniqueNonEmpty([
+    userDoc?.id,
+    routeValue,
+    data.uid,
+    data.userId,
+    data.appleUserId,
+    data.authUid,
+    rawAppleSub,
+    rawAppleSub ? `apple:${rawAppleSub}` : "",
+    routeAppleSub,
+  ]);
+}
+
+function mergeUniqueById(groups = []) {
+  return Array.from(
+    new Map(
+      groups
+        .flat()
+        .filter((item) => item?.id)
+        .map((item) => [item.id, item])
+    ).values()
+  );
+}
+
+function mergeStoryStats(groups = []) {
+  const merged = {};
+  groups.forEach((group) => {
+    Object.entries(group || {}).forEach(([dishId, data]) => {
+      const existing = merged[dishId] || { count: 0, history: [], updatedAt: null };
+      const nextHistory = Array.isArray(data?.history) ? data.history : [];
+      merged[dishId] = {
+        count: Math.max(existing.count || 0, Number(data?.count || 0)),
+        history: Array.from(new Set([...(existing.history || []), ...nextHistory])),
+        updatedAt: data?.updatedAt || existing.updatedAt || null,
+      };
+    });
+  });
+  return merged;
+}
+
 export default function PublicProfile() {
   const { id } = useParams();
   const router = useRouter();
@@ -89,6 +144,15 @@ export default function PublicProfile() {
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
   const avatarTone = getAvatarTone(profileUser?.displayName || "");
+  const profileIdCandidates = getProfileIdCandidates(id, profileUser);
+  const profileDocId = profileUser?.id || id;
+  const profileAuthUid =
+    profileUser?.uid ||
+    profileUser?.authUid ||
+    profileUser?.appleUserId ||
+    (profileUser?.appleSub ? `apple:${profileUser.appleSub}` : "") ||
+    profileDocId;
+  const isViewingOwnProfile = Boolean(user?.uid && profileIdCandidates.includes(user.uid));
 
   useEffect(() => {
     if (!id) return;
@@ -104,48 +168,40 @@ export default function PublicProfile() {
           console.error("Direct profile fetch failed:", error);
         }
         const snapshot = await getDocs(collection(db, "users"));
-        return (
-          snapshot.docs.find((docSnap) => {
-            const data = docSnap.data() || {};
-            return (
-              docSnap.id === id ||
-              data.uid === id ||
-              data.userId === id ||
-              data.appleUserId === id ||
-              data.appleSub === id ||
-              data.authUid === id
-            );
-          }) || null
-        );
+        return snapshot.docs.find((docSnap) => getProfileIdCandidates(id, docSnap).includes(String(id))) || null;
       };
 
+      const userDoc = await loadUserDoc();
+      if (cancelled) return;
+
+      if (!userDoc?.exists?.()) {
+        setProfileUser(null);
+        setProfileLoadFailed(true);
+        return;
+      }
+
+      const nextProfileUser = { id: userDoc.id, ...userDoc.data() };
+      const candidateIds = getProfileIdCandidates(id, userDoc);
+
       const results = await Promise.allSettled([
-        loadUserDoc(),
-        getDishesFromFirestore(id),
-        getSavedDishesFromFirestore(id),
-        getToTryDishesFromFirestore(id),
-        getCustomDishlistsForUser(id),
-        getActiveStoriesForUser(id),
-        getStoryPushStatsForUser(id),
+        Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
+        Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
+        Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
+        Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
+        Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
+        Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
       ]);
 
       if (cancelled) return;
 
-      const [userDocRes, dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
-      const userDoc = userDocRes.status === "fulfilled" ? userDocRes.value : null;
-
-      if (userDoc?.exists?.()) {
-        setProfileUser({ id: userDoc.id, ...userDoc.data() });
-      } else {
-        setProfileUser(null);
-        setProfileLoadFailed(true);
-      }
-      setDishes(dishesRes.status === "fulfilled" ? dishesRes.value : []);
-      setSavedDishes(savedRes.status === "fulfilled" ? savedRes.value : []);
-      setToTryDishes(toTryRes.status === "fulfilled" ? toTryRes.value : []);
-      setCustomDishlists(customRes.status === "fulfilled" ? customRes.value : []);
-      setActiveStories(storiesRes.status === "fulfilled" ? storiesRes.value : []);
-      setStoryPushStats(statsRes.status === "fulfilled" ? statsRes.value : {});
+      const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+      setProfileUser(nextProfileUser);
+      setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById(dishesRes.value) : []);
+      setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
+      setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
+      setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
+      setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
+      setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
     })();
 
     return () => {
@@ -194,7 +250,7 @@ export default function PublicProfile() {
       setShowAuthPrompt(true);
       return;
     }
-    const userRef = doc(db, "users", id);
+    const userRef = doc(db, "users", profileDocId);
     const currentUserRef = doc(db, "users", user.uid);
     const currentFollowers = profileUser.followers || [];
     const newFollowers = isFollowing
@@ -202,7 +258,7 @@ export default function PublicProfile() {
       : [...currentFollowers, user.uid];
     await updateDoc(userRef, { followers: newFollowers });
     await updateDoc(currentUserRef, {
-      following: isFollowing ? arrayRemove(id) : arrayUnion(id),
+      following: isFollowing ? arrayRemove(profileDocId) : arrayUnion(profileDocId),
     });
     setIsFollowing(!isFollowing);
   };
@@ -306,7 +362,7 @@ export default function PublicProfile() {
 
   const handleStoryViewed = async (story) => {
     if (!user?.uid || !story?.id) return;
-    await markStoryViewed(id, story.id, user.uid);
+    await markStoryViewed(profileDocId, story.id, user.uid);
     setActiveStories((prev) =>
       prev.map((item) =>
         item.id === story.id
@@ -398,7 +454,7 @@ export default function PublicProfile() {
         </div>
         <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex flex-1 items-center justify-start">
-          {user?.uid !== id ? (
+          {!isViewingOwnProfile ? (
             <button
               onClick={handleFollow}
               className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
@@ -420,13 +476,13 @@ export default function PublicProfile() {
                 return;
               }
               const targetUser = {
-                id,
-                uid: id,
+                id: profileAuthUid,
+                uid: profileAuthUid,
                 displayName: profileUser?.displayName || "",
                 photoURL: profileUser?.photoURL || "",
               };
               const conversationId =
-                (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, id);
+                (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, profileAuthUid);
               if (conversationId) {
                 router.push(`/directs/${conversationId}`);
               }
@@ -670,7 +726,7 @@ export default function PublicProfile() {
                   {connectionsUsers.map((u) => (
                     <Link
                       key={u.id}
-                      href={user?.uid === (u.uid || u.id) ? "/profile" : `/profile/${u.uid || u.id}`}
+                      href={user?.uid === u.id ? "/profile" : `/profile/${u.id}`}
                       onClick={() => setConnectionsOpen(false)}
                       className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3"
                     >

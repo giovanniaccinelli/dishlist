@@ -9,7 +9,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
-import { DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon, TossingPanIcon } from "../../components/DishModeControls";
+import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../components/DishModeControls";
 import { useAuth } from "../lib/auth";
 import {
   getAllDishlistsForUser,
@@ -322,12 +322,12 @@ export default function UploadPage() {
                       className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF1C9] text-[#F0A623]">
-                          <TossingPanIcon className="h-5 w-5" />
+                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1rem] bg-[#FFF1C9] text-[#F0A623]">
+                          <CookingHomeIcon className="h-7 w-7" strokeWidth={2.05} />
                         </span>
                         <div>
                           <div className="text-sm font-semibold text-black">Cooking</div>
-                          <div className="text-xs text-black/55">Homemade or recipe-driven</div>
+                          <div className="text-xs text-black/55">Made it</div>
                         </div>
                       </div>
                     </button>
@@ -337,12 +337,12 @@ export default function UploadPage() {
                       className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#FFE2E2] text-[#E64646]">
-                          <RestaurantMapIcon className="h-5 w-5" />
+                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1rem] bg-[#FFE2E2] text-[#E64646]">
+                          <RestaurantMapIcon className="h-7 w-7" strokeWidth={2.05} />
                         </span>
                         <div>
                           <div className="text-sm font-semibold text-black">Restaurant</div>
-                          <div className="text-xs text-black/55">A place you ate or recommend</div>
+                          <div className="text-xs text-black/55">Ate it out</div>
                         </div>
                       </div>
                     </button>

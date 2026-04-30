@@ -427,7 +427,7 @@ export default function Dishlists() {
                   key={u.id}
                   className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
                   style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
-                  onClick={() => router.push(`/profile/${u.uid || u.id}`)}
+                  onClick={() => router.push(`/profile/${u.id}`)}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button

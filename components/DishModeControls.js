@@ -56,17 +56,17 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex h-[2.5rem] w-[4.55rem] min-w-[4.55rem] items-center justify-center overflow-hidden rounded-full border border-black/14 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${className}`}
+      className={`top-action-btn relative !h-[2.5rem] !w-[4.55rem] !min-w-[4.55rem] overflow-hidden rounded-[1rem] border border-black/14 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${className}`}
       aria-label="Filter dish mode"
     >
-      <span className="absolute inset-[2px] flex overflow-hidden rounded-full">
-        <span className={`${value === DISH_MODE_RESTAURANT ? "bg-white" : "bg-[#F8D873]"} flex-1`} />
+      <span className="absolute inset-[2px] flex overflow-hidden rounded-[calc(1rem-2px)]">
+        <span className="flex-1 bg-white" />
         <span className="w-px bg-black/18" />
-        <span className={`${value === DISH_MODE_COOKING ? "bg-white" : "bg-[#F38C8C]"} flex-1`} />
+        <span className="flex-1 bg-white" />
       </span>
-      <span className="relative z-[1] flex h-full w-full overflow-hidden rounded-full">
+      <span className="relative z-[1] flex h-full w-full overflow-hidden rounded-[calc(1rem-2px)]">
         <span className={`flex flex-1 items-center justify-center ${value === DISH_MODE_RESTAURANT ? "text-black/35" : "text-[#D48A00]"}`}>
-          <CookingHomeIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.2} />
+        <CookingHomeIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.2} />
         </span>
         <span className={`flex flex-1 items-center justify-center ${value === DISH_MODE_COOKING ? "text-black/35" : "text-[#D53333]"}`}>
           <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.2} />

@@ -192,6 +192,14 @@ function isRestaurantDish(dish) {
   return String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
 }
 
+function getSafeRestaurantLabel(dish) {
+  return typeof dish?.restaurant?.name === "string" ? dish.restaurant.name.trim() : "";
+}
+
+function getSafeRestaurantPlaceId(dish) {
+  return typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
+}
+
 const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
   onSwiped,
@@ -394,6 +402,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
+  const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
+  const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
   const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
@@ -1008,19 +1018,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </button>
               ) : null}
             </div>
-            {isRestaurantMode(currentCard) && currentCard?.restaurant?.placeId && currentCard?.restaurant?.name ? (
+            {isRestaurantDish(currentCard) && currentRestaurantPlaceId && currentRestaurantLabel ? (
               <button
                 type="button"
                 data-no-drag="true"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  router.push(`/map?placeId=${encodeURIComponent(currentCard.restaurant.placeId)}`);
+                  router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
                 className="max-w-full truncate rounded-full bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white"
-                aria-label={`Open ${currentCard.restaurant.name} on map`}
+                aria-label={`Open ${currentRestaurantLabel} on map`}
               >
-                {currentCard.restaurant.name}
+                {currentRestaurantLabel}
               </button>
             ) : null}
           </div>

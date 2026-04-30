@@ -1083,7 +1083,7 @@ export default function Profile() {
         ) : null}
       </div>
 
-      <div className="mb-3 flex items-center justify-center gap-2">
+      <div className="mb-2 flex items-center justify-center gap-2">
         {[
           { id: "saved", label: "Top picks" },
           { id: "uploaded", label: "Uploaded" },
@@ -1109,15 +1109,7 @@ export default function Profile() {
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={() => setProfileMapOpen(true)}
-          className="flex h-[46px] items-center justify-center gap-2 rounded-full border-2 border-black/30 bg-white px-3 text-black shadow-[0_12px_26px_rgba(0,0,0,0.10)]"
-          aria-label="Open profile map"
-        >
-          <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
-          <span className="text-[13px] font-semibold">Map</span>
-        </button>
+        
         <button
           type="button"
           onClick={() => setDishlistsOpen(true)}
@@ -1127,6 +1119,17 @@ export default function Profile() {
           <MoreHorizontal size={18} />
         </button>
       </div>
+      <div className="mb-4 flex justify-center">
+  <button
+    type="button"
+    onClick={() => setProfileMapOpen(true)}
+    className="flex h-[46px] items-center justify-center gap-2 rounded-full border-2 border-black/30 bg-white px-4 text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+    aria-label="Open profile map"
+  >
+    <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
+    <span className="text-[13px] font-semibold">Map</span>
+  </button>
+</div>
 
       <DishGrid
         title={activeDishlist?.name || "Top picks"}

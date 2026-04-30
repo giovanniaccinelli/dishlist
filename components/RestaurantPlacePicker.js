@@ -173,7 +173,7 @@ export default function RestaurantPlacePicker({
               }
             }}
             placeholder={placeholder}
-            className="w-full bg-transparent text-sm text-black placeholder:text-black/35 focus:outline-none"
+            className="w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none"
           />
           {query ? (
             <button

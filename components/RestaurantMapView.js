@@ -144,7 +144,7 @@ export default function RestaurantMapView({
 
   return (
     <div className={`rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_50px_rgba(0,0,0,0.10)] overflow-hidden ${className}`}>
-      <div className="relative h-[68vh] min-h-[30rem] overflow-hidden bg-[#F4EFE6]">
+      <div className="relative h-[46vh] min-h-[18rem] overflow-hidden bg-[#F4EFE6]">
         {mapState === "ready" && groups.length > 0 ? (
           <div ref={mapNodeRef} className="h-full w-full" />
         ) : (
@@ -161,7 +161,7 @@ export default function RestaurantMapView({
         )}
 
         {selectedGroup && mapState === "ready" ? (
-          <div className="absolute inset-x-4 bottom-4 z-10 max-h-[28%] overflow-y-auto rounded-[1.4rem] border border-black/10 bg-white/95 p-3 shadow-[0_14px_30px_rgba(0,0,0,0.12)] backdrop-blur-md">
+          <div className="absolute inset-x-4 bottom-4 z-10 max-h-[24%] overflow-y-auto rounded-[1.4rem] border border-black/10 bg-white/95 p-3 shadow-[0_14px_30px_rgba(0,0,0,0.12)] backdrop-blur-md">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

@@ -85,7 +85,7 @@ export default function MapPage() {
         groups={groups}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
-        className="mb-5"
+        className="mb-5 mx-auto max-w-[25rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
       />
 

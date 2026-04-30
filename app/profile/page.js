@@ -2284,14 +2284,14 @@ export default function Profile() {
       <AnimatePresence>
         {profileMapOpen ? (
           <motion.div
-            className="fixed inset-0 z-[88] bg-black/45 backdrop-blur-sm p-3"
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="mx-auto flex h-full w-full max-w-3xl flex-col rounded-[2rem] bg-[#F6F6F2] p-4 shadow-2xl"
+              className="mx-auto flex w-full max-w-[24rem] max-h-[62dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
@@ -2317,7 +2317,7 @@ export default function Profile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
-                className="flex-1"
+                className="h-[44vh] min-h-[20rem] max-h-[28rem]"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile?list=uploaded")}`}

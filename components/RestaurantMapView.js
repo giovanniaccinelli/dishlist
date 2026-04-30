@@ -143,7 +143,7 @@ export default function RestaurantMapView({
   };
 
   return (
-    <div className={`rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_50px_rgba(0,0,0,0.10)] overflow-hidden ${className}`}>
+    <div className={`h-[68vh] min-h-[28rem] rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_50px_rgba(0,0,0,0.10)] overflow-hidden ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden bg-[#F4EFE6]">
         {mapState === "ready" && groups.length > 0 ? (
           <div ref={mapNodeRef} className="h-full w-full" />

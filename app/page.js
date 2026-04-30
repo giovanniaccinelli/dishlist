@@ -813,10 +813,10 @@ export default function Feed() {
             <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-5 pb-8 pt-[max(1.25rem,env(safe-area-inset-top))]">
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src="/logo-real.png" alt="DishList logo" className="h-10 w-10 rounded-full object-cover" />
+                  <img src="/logo-mark.svg" alt="DishList logo" className="h-10 w-10 object-contain" />
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">Inside DishList</div>
-                    <h2 className="mt-1 text-[1.6rem] font-bold leading-none">Food, organized by taste</h2>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">DishList</div>
+                    <h2 className="mt-1 text-[1.45rem] font-bold leading-none">Your food memory, in one place</h2>
                   </div>
                 </div>
                 <button
@@ -831,9 +831,9 @@ export default function Feed() {
 
               <div className="space-y-3 overflow-y-auto pr-1">
                 <div className="rounded-[1.5rem] bg-white/8 p-4">
-                  <div className="text-[1.1rem] font-semibold text-[#F7D36A]">Save, sort, share.</div>
+                  <div className="text-[1.1rem] font-semibold text-[#F7D36A]">Save what you crave.</div>
                   <p className="mt-2 text-sm leading-6 text-white/76">
-                    Swipe dishes, collect them into your own lists, post them to stories, and send them in chat.
+                    Build a personal catalog of dishes you love, want to try, or want to remember when you have no idea what to eat.
                   </p>
                 </div>
 
@@ -841,33 +841,33 @@ export default function Feed() {
                   <div className="rounded-[1.45rem] bg-[#E64646]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#FF8D8D]">Feed</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Find dishes fast and keep up with the people you follow.
+                      Scroll ideas, discover dishes, and keep up with the people whose taste you trust.
                     </p>
                   </div>
                   <div className="rounded-[1.45rem] bg-[#F0A623]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#FFD07B]">DishLists</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Build Top picks, Uploaded, All dishes, or your own custom collections.
+                      Organize your food brain into Top picks, Uploaded, All dishes, or your own custom lists.
                     </p>
                   </div>
                   <div className="rounded-[1.45rem] bg-[#2BD36B]/16 p-4">
                     <div className="mb-2 text-sm font-semibold text-[#85F0A9]">Stories</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Share what you&apos;re eating now, comment on stories, and tag someone in them.
+                      Share what you&apos;re into right now and give people a quick read on your taste.
                     </p>
                   </div>
                   <div className="rounded-[1.45rem] bg-white/8 p-4">
                     <div className="mb-2 text-sm font-semibold text-white/92">Directs</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Send dishes privately when a recommendation belongs in a real conversation.
+                      Pass dishes around privately when a recommendation belongs to one specific person.
                     </p>
                   </div>
                 </div>
 
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4">
-                  <div className="text-sm font-semibold text-[#F0A623]">The loop</div>
+                  <div className="text-sm font-semibold text-[#F0A623]">Why it works</div>
                   <p className="mt-2 text-sm leading-6 text-white/76">
-                    Swipe. Save. Curate. Upload. Story. Repeat.
+                    It turns your scattered food ideas into something you can actually come back to, use, and share.
                   </p>
                 </div>
               </div>

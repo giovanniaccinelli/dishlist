@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
+import { isDisplayNameTaken } from "../app/lib/firebaseHelpers";
 
 export default function AuthPromptModal({ open, onClose, title = "Log in required" }) {
   const { signInWithApple, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
@@ -134,6 +135,10 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   return;
                 }
                 try {
+                  if (await isDisplayNameTaken(displayName.trim())) {
+                    setAuthError("That display name is already taken.");
+                    return;
+                  }
                   await signUpWithEmail(email, password, displayName);
                   onClose?.();
                 } catch (err) {

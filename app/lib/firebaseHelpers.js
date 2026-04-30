@@ -141,6 +141,39 @@ function normalizeDishlistNameKey(name) {
   return normalizeDishlistName(name).toLowerCase();
 }
 
+function normalizeDisplayNameKey(name) {
+  return String(name || "").trim().toLowerCase();
+}
+
+export async function isDisplayNameTaken(displayName, excludeUid = "") {
+  const normalized = normalizeDisplayNameKey(displayName);
+  if (!normalized) return false;
+  const snapshot = await getDocs(collection(db, "users"));
+  return snapshot.docs.some((userDoc) => {
+    if (excludeUid && userDoc.id === excludeUid) return false;
+    const data = userDoc.data() || {};
+    const existing =
+      data.displayNameLower ||
+      normalizeDisplayNameKey(data.displayName);
+    return existing === normalized;
+  });
+}
+
+export function getAvatarTone(name = "") {
+  const tones = [
+    { bg: "#FDE4D2", text: "#A34710" },
+    { bg: "#FFE8B8", text: "#8D5A00" },
+    { bg: "#F7E1A7", text: "#7A5A00" },
+    { bg: "#DDF4DA", text: "#1F6B34" },
+    { bg: "#DCEEFF", text: "#1F5F9C" },
+    { bg: "#E7E1FF", text: "#5A3EA6" },
+    { bg: "#FFDCE8", text: "#9C275C" },
+  ];
+  const source = String(name || "").trim().toUpperCase() || "U";
+  const hash = Array.from(source).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+  return tones[hash % tones.length];
+}
+
 function customDishlistsCollection(userId) {
   return collection(db, "users", userId, "dishlists");
 }

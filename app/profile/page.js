@@ -29,6 +29,8 @@ import {
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   updateCustomDishlistName,
+  getAvatarTone,
+  isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -131,6 +133,7 @@ export default function Profile() {
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
+  const avatarTone = getAvatarTone(user?.displayName || "");
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -395,6 +398,9 @@ export default function Profile() {
     const cleanedBio = newBio.trim();
     setSavingProfile(true);
     try {
+      if (await isDisplayNameTaken(cleanedName, user.uid)) {
+        throw new Error("That display name is already taken.");
+      }
       const currentPhotoURL = profileMeta.photoURL || user?.photoURL || "";
       let nextPhotoURL = currentPhotoURL;
 
@@ -418,6 +424,7 @@ export default function Profile() {
         doc(db, "users", user.uid),
         {
           displayName: cleanedName,
+          displayNameLower: cleanedName.toLowerCase(),
           photoURL: nextPhotoURL || "",
           bio: cleanedBio,
           email: currentAuthUser.email || user.email || "",
@@ -451,7 +458,7 @@ export default function Profile() {
     } catch (err) {
       console.error("Failed to update profile:", err);
       setToastVariant("error");
-      setToast("Profile update failed");
+      setToast(err?.message || "Profile update failed");
       setTimeout(() => setToast(""), 1400);
     } finally {
       setSavingProfile(false);
@@ -978,7 +985,10 @@ export default function Profile() {
               aria-label="Open your stories"
             >
               <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+                <div
+                  className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden"
+                  style={effectiveProfilePhotoURL ? undefined : { backgroundColor: avatarTone.bg }}
+                >
                   {effectiveProfilePhotoURL ? (
                     <img
                       src={effectiveProfilePhotoURL}
@@ -988,7 +998,7 @@ export default function Profile() {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    user.displayName?.[0] || "U"
+                    <span style={{ color: avatarTone.text }}>{user.displayName?.[0] || "U"}</span>
                   )}
                 </div>
               </div>

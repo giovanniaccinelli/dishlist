@@ -25,6 +25,7 @@ import {
   markStoryViewed,
   saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
+  getAvatarTone,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { MoreHorizontal, Plus, Send, Shuffle } from "lucide-react";
@@ -84,6 +85,7 @@ export default function PublicProfile() {
   const viewedAllStories =
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
+  const avatarTone = getAvatarTone(profileUser?.displayName || "");
 
   useEffect(() => {
     if (!id) return;
@@ -446,7 +448,10 @@ export default function PublicProfile() {
               aria-label="Open stories"
             >
               <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
-                <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden">
+                <div
+                  className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden"
+                  style={profileUser.photoURL ? undefined : { backgroundColor: avatarTone.bg }}
+                >
                   {profileUser.photoURL ? (
                     <img
                       src={profileUser.photoURL}
@@ -456,7 +461,7 @@ export default function PublicProfile() {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    profileUser.displayName?.[0] || "U"
+                    <span style={{ color: avatarTone.text }}>{profileUser.displayName?.[0] || "U"}</span>
                   )}
                 </div>
               </div>

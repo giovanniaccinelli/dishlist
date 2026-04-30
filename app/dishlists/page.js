@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { getActiveStoriesForUser, getAllDishesFromFirestore, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { getActiveStoriesForUser, getAllDishesFromFirestore, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 
@@ -362,6 +362,7 @@ export default function Dishlists() {
               const viewedAll = user?.uid
                 ? group.stories.every((story) => (story.viewedBy || []).includes(user.uid))
                 : false;
+              const ownerTone = getAvatarTone(group.ownerName || "");
               return (
                 <button
                   key={`story-${group.ownerId}`}
@@ -375,7 +376,10 @@ export default function Dishlists() {
                 >
                   <div className={`no-accent-border w-16 h-16 rounded-full p-[3px] ${viewedAll ? "bg-[#C6C6BF]" : "bg-[#2BD36B]"}`}>
                     <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                      <div className="no-accent-border w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold">
+                        <div
+                          className="no-accent-border w-full h-full rounded-full bg-black/10 overflow-hidden flex items-center justify-center text-lg font-bold"
+                          style={group.ownerPhotoURL ? undefined : { backgroundColor: ownerTone.bg }}
+                        >
                         {group.ownerPhotoURL ? (
                           <img
                             src={group.ownerPhotoURL}
@@ -385,7 +389,7 @@ export default function Dishlists() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          (group.ownerName?.[0] || "U").toUpperCase()
+                          <span style={{ color: ownerTone.text }}>{(group.ownerName?.[0] || "U").toUpperCase()}</span>
                         )}
                       </div>
                     </div>
@@ -415,11 +419,13 @@ export default function Dishlists() {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
               const previewCells = Array.from({ length: 4 }, (_, idx) => u.previewImages?.[idx] || "");
+              const hasAnyDishes = (u.profileDishCount || 0) > 0;
+              const avatarTone = getAvatarTone(u.displayName || "");
               return (
                 <div
                   key={u.id}
-                  className="bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer"
-                  style={{ contentVisibility: "auto", containIntrinsicSize: "226px" }}
+                  className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
+                  style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
                   onClick={() => router.push(`/profile/${u.uid || u.id}`)}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
@@ -437,7 +443,10 @@ export default function Dishlists() {
                       className={`no-accent-border h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >
                       <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                        <div className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden">
+                        <div
+                          className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden"
+                          style={u.photoURL ? undefined : { backgroundColor: avatarTone.bg }}
+                        >
                           {u.photoURL ? (
                             <img
                               src={u.photoURL}
@@ -447,7 +456,7 @@ export default function Dishlists() {
                               className="h-full w-full rounded-full object-cover"
                             />
                           ) : (
-                            u.displayName?.[0] || "U"
+                            <span style={{ color: avatarTone.text }}>{u.displayName?.[0] || "U"}</span>
                           )}
                         </div>
                       </div>
@@ -475,29 +484,31 @@ export default function Dishlists() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    {previewCells.map((imageSrc, idx) => (
-                      <div
-                        key={`${u.id}-preview-${idx}`}
-                        className="aspect-square rounded-lg bg-neutral-100 overflow-hidden"
-                      >
-                        {imageSrc ? (
-                          <img
-                            src={imageSrc}
-                            alt="Dish preview"
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover"
+                  {hasAnyDishes ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {previewCells.map((imageSrc, idx) => (
+                        <div
+                          key={`${u.id}-preview-${idx}`}
+                          className="aspect-square rounded-lg bg-neutral-100 overflow-hidden"
+                        >
+                          {imageSrc ? (
+                            <img
+                              src={imageSrc}
+                              alt="Dish preview"
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.src = DEFAULT_DISH_IMAGE;
                               }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-white" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-white" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
 
                 </div>
               );

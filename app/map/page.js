@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CircleUserRound } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
@@ -11,7 +11,7 @@ import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 
-export default function MapPage() {
+function MapPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -94,5 +94,13 @@ export default function MapPage() {
 
       <BottomNav />
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<FullScreenLoading title="Loading map" />}>
+      <MapPageContent />
+    </Suspense>
   );
 }

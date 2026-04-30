@@ -24,6 +24,7 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
+const APPLE_WEB_CLIENT_ID = "com.giovanniaccinelli.dishlist.web";
 const randomNonce = (length = 32) => {
   const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
   const randomValues = new Uint8Array(length);
@@ -46,6 +47,58 @@ const shouldUseRedirectForWebApple = () => {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 };
 
+const openAppleWebPopup = () => {
+  const redirectUri = `${window.location.origin}/api/auth/apple-web/callback`;
+  const params = new URLSearchParams({
+    client_id: APPLE_WEB_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: "code id_token",
+    response_mode: "form_post",
+    scope: "name email",
+    state: randomNonce(16),
+  });
+  const width = 460;
+  const height = 680;
+  const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
+  const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+  const popup = window.open(
+    `https://appleid.apple.com/auth/authorize?${params.toString()}`,
+    "dishlistAppleSignIn",
+    `width=${width},height=${height},left=${left},top=${top}`
+  );
+  if (!popup) throw new Error("Apple sign-in popup was blocked.");
+
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Apple sign in timed out."));
+    }, 120000);
+
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener("message", handleMessage);
+      interval && window.clearInterval(interval);
+    };
+
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.source !== "dishlist-apple-auth") return;
+      cleanup();
+      if (event.data.ok) resolve(event.data);
+      else reject(new Error(event.data.error || "Apple sign in failed."));
+    };
+
+    const interval = window.setInterval(() => {
+      if (popup.closed) {
+        cleanup();
+        reject(new Error("Apple sign in was cancelled."));
+      }
+    }, 500);
+
+    window.addEventListener("message", handleMessage);
+  });
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,11 +107,12 @@ export function AuthProvider({ children }) {
     if (!userData) return;
     const userRef = doc(db, "users", userData.uid);
     const existing = await getDoc(userRef);
+    const cleanedDisplayName = String(userData.displayName || "Unnamed").trim() || "Unnamed";
     if (!existing.exists()) {
       await setDoc(
         userRef,
         {
-          displayName: userData.displayName || "Unnamed",
+          displayName: cleanedDisplayName,
           photoURL: userData.photoURL || "",
           email: userData.email,
           followers: [],
@@ -73,7 +127,7 @@ export function AuthProvider({ children }) {
     await setDoc(
       userRef,
       {
-        displayName: userData.displayName || "Unnamed",
+        displayName: cleanedDisplayName,
         photoURL: userData.photoURL || "",
         email: userData.email,
       },
@@ -152,30 +206,30 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const provider = new OAuthProvider("apple.com");
-    provider.addScope("email");
-    provider.addScope("name");
-
     if (shouldUseRedirectForWebApple()) {
-      await signInWithRedirect(auth, provider);
+      const redirectUri = `${window.location.origin}/api/auth/apple-web/callback`;
+      const params = new URLSearchParams({
+        client_id: APPLE_WEB_CLIENT_ID,
+        redirect_uri: redirectUri,
+        response_type: "code id_token",
+        response_mode: "form_post",
+        scope: "name email",
+        state: randomNonce(16),
+      });
+      window.location.assign(`https://appleid.apple.com/auth/authorize?${params.toString()}`);
       return;
     }
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      await saveUserDoc(result.user);
-    } catch (error) {
-      if (
-        error?.code === "auth/popup-blocked" ||
-        error?.code === "auth/popup-closed-by-user" ||
-        error?.code === "auth/cancelled-popup-request" ||
-        error?.code === "auth/operation-not-supported-in-this-environment"
-      ) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      throw error;
+    const data = await openAppleWebPopup();
+    const result = await signInWithCustomToken(auth, data.customToken);
+    if (data.displayName && !result.user.displayName) {
+      await firebaseUpdateProfile(result.user, { displayName: data.displayName });
     }
+    await saveUserDoc({
+      ...result.user,
+      displayName: data.displayName || result.user.displayName,
+      email: data.email || result.user.email,
+    });
   };
 
   const signInWithEmail = async (email, password) => {
@@ -186,8 +240,8 @@ export function AuthProvider({ children }) {
 
   const signUpWithEmail = async (email, password, displayName = "") => {
     if (!email || !password) throw new Error("Email and password are required");
-    const result = await createUserWithEmailAndPassword(auth, email, password);
     const cleanedName = displayName.trim();
+    const result = await createUserWithEmailAndPassword(auth, email, password);
     if (cleanedName) {
       await firebaseUpdateProfile(result.user, { displayName: cleanedName });
     }

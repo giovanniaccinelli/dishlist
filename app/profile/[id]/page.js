@@ -452,7 +452,7 @@ export default function PublicProfile() {
         <div className="flex min-w-[74px] items-center gap-2">
           <AppBackButton fallback="/dishlists" />
         </div>
-        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+         
         <div className="flex flex-1 items-center justify-start">
           {!isViewingOwnProfile ? (
             <button
@@ -468,6 +468,7 @@ export default function PublicProfile() {
           ) : null}
         </div>
         <div className="flex min-w-[74px] items-center justify-end gap-2">
+          <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
           <button
             type="button"
             onClick={async () => {

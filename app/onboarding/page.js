@@ -135,9 +135,9 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto bg-transparent text-black px-4 py-4">
+    <div className="h-[100dvh] overflow-y-auto bg-transparent text-black px-4 pt-8 pb-4">
       <div className="max-w-xl mx-auto flex flex-col">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-3 mt-2">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
           <h1 className="text-[1.8rem] font-bold leading-none">DishList</h1>
         </div>
@@ -149,19 +149,19 @@ export default function Onboarding() {
         >
           {step === 0 ? (
             <>
-              <div className="mb-4">
+              <div className="mb-3">
                 <h2 className="text-[1.85rem] leading-[0.96] font-semibold text-black">
                   Save your first 3 dishes
                 </h2>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="preserve-blue-border w-full min-h-[12.25rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-5 text-left shadow-[0_16px_34px_rgba(230,70,70,0.12)] border-[2px] border-[#E64646] backdrop-blur-[6px]"
+                  className="preserve-blue-border w-full min-h-[11rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-4 text-left shadow-[0_16px_34px_rgba(230,70,70,0.12)] border-[2px] border-[#E64646] backdrop-blur-[6px]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-5">
+                  <div className="flex h-full flex-col justify-between gap-4">
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-[1.65rem] font-semibold leading-[0.96]">Got a few in mind?</p>
@@ -192,9 +192,9 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="preserve-green-border w-full min-h-[12.25rem] rounded-[1.6rem] border-[2px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-5 py-5 text-left shadow-[0_16px_34px_rgba(240,166,35,0.12)] backdrop-blur-[6px]"
+                  className="preserve-green-border w-full min-h-[11rem] rounded-[1.6rem] border-[2px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-5 py-4 text-left shadow-[0_16px_34px_rgba(240,166,35,0.12)] backdrop-blur-[6px]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-5">
+                  <div className="flex h-full flex-col justify-between gap-4">
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-[1.65rem] font-semibold leading-none">Swipe on the feed</p>
@@ -227,7 +227,7 @@ export default function Onboarding() {
 
               <button
                 onClick={handleSkip}
-                className="mt-4 w-full rounded-[1.25rem] border border-black/12 bg-white px-5 py-3 text-[0.95rem] font-semibold text-black/72 hover:text-black shadow-sm"
+                className="mt-3 w-full rounded-[1.25rem] border border-black/12 bg-white px-5 py-3 text-[0.95rem] font-semibold text-black/72 hover:text-black shadow-sm"
               >
                 Skip for now
               </button>

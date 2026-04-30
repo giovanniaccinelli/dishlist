@@ -27,6 +27,7 @@ import SaversModal from "../components/SaversModal";
 import { ChevronLeft, ChevronRight, CircleUserRound, Funnel, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
+import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../components/DishModeControls";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
@@ -76,6 +77,8 @@ export default function Feed() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterVersion, setFilterVersion] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
 
@@ -271,6 +274,7 @@ export default function Feed() {
           await createDishForUser({
             name,
             description: "",
+            dishMode: DISH_MODE_COOKING,
             recipeIngredients: "",
             recipeMethod: "",
             tags: [],
@@ -339,13 +343,13 @@ export default function Feed() {
   };
 
   const orderedForYou = useMemo(
-    () => forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d)),
-    [forYouDeck, addedDishIds, excludedTagSet]
+    () => forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode)),
+    [forYouDeck, addedDishIds, excludedTagSet, selectedDishMode]
   );
 
   const orderedFollowing = useMemo(
-    () => followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d)),
-    [followingDeck, addedDishIds, excludedTagSet]
+    () => followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode)),
+    [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]
   );
 
   useEffect(() => {
@@ -499,7 +503,7 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0">
+      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0 relative">
         <button
           type="button"
           onClick={() => setAboutOpen(true)}
@@ -509,6 +513,7 @@ export default function Feed() {
           <img src="/logo-real.png" alt="DishList logo" className="w-8 h-8 rounded-full object-cover" />
           <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </button>
+        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -767,6 +772,15 @@ export default function Feed() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+      <DishModeFilterModal
+        open={dishModeFilterOpen}
+        value={selectedDishMode}
+        onClose={() => setDishModeFilterOpen(false)}
+        onSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setDishModeFilterOpen(false);
+        }}
+      />
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
       <SaversModal
         open={saversOpen}
@@ -812,16 +826,16 @@ export default function Feed() {
             onClick={() => setAboutOpen(false)}
           >
             <div
-              className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-black text-white shadow-[0_28px_80px_rgba(0,0,0,0.38)]"
+              className="w-full max-w-sm max-h-[calc(100dvh-2.5rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-black text-white shadow-[0_28px_80px_rgba(0,0,0,0.38)]"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex flex-col px-5 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="flex flex-col px-4 pb-4 pt-[max(0.9rem,env(safe-area-inset-top))]">
+              <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img src="/logo-mark.svg" alt="DishList logo" className="h-10 w-10 object-contain" />
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F0A623]">DishList</div>
-                    <h2 className="mt-1 text-[1.35rem] font-bold leading-none">Your playlist, for dishes</h2>
+                    <h2 className="mt-1 text-[1.25rem] font-bold leading-none">Your playlist, for dishes</h2>
                   </div>
                 </div>
                 <button
@@ -834,42 +848,36 @@ export default function Feed() {
                 </button>
               </div>
 
-              <div className="space-y-3 overflow-y-auto pr-1 max-h-[calc(100dvh-9rem)]">
-                <div className="rounded-[1.5rem] bg-white/8 p-4">
-                  <div className="text-[1.1rem] font-semibold text-[#F7D36A]">Save what you crave.</div>
-                  <p className="mt-2 text-sm leading-5 text-white/76">
+              <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[calc(100dvh-10rem)]">
+                <div className="rounded-[1.45rem] bg-white/8 p-3.5">
+                  <div className="text-[1rem] font-semibold text-[#F7D36A]">Save what you crave.</div>
+                  <p className="mt-1.5 text-sm leading-5 text-white/76">
                     Build a personal catalog of dishes you love, want to try, or want to remember when you have no idea what to eat.
                   </p>
                 </div>
 
                 <div className="grid gap-2.5">
-                  <div className="rounded-[1.45rem] bg-[#E64646]/16 p-4">
+                  <div className="rounded-[1.35rem] bg-[#E64646]/16 p-3.5">
                     <div className="mb-2 text-sm font-semibold text-[#FF8D8D]">Feed</div>
                     <p className="text-sm leading-5 text-white/76">
                       Scroll ideas, discover dishes, and keep up with the people whose taste you trust.
                     </p>
                   </div>
-                  <div className="rounded-[1.45rem] bg-[#F0A623]/16 p-4">
+                  <div className="rounded-[1.35rem] bg-[#F0A623]/16 p-3.5">
                     <div className="mb-2 text-sm font-semibold text-[#FFD07B]">DishLists</div>
                     <p className="text-sm leading-5 text-white/76">
                       Organize your food brain into Top picks, Uploaded, All dishes, or your own custom lists.
                     </p>
                   </div>
-                  <div className="rounded-[1.45rem] bg-[#2BD36B]/16 p-4">
+                  <div className="rounded-[1.35rem] bg-[#2BD36B]/16 p-3.5">
                     <div className="mb-2 text-sm font-semibold text-[#85F0A9]">Stories</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Share what you&apos;re into right now and give people a quick read on your taste.
-                    </p>
-                  </div>
-                  <div className="rounded-[1.45rem] bg-white/8 p-4">
-                    <div className="mb-2 text-sm font-semibold text-white/92">Directs</div>
-                    <p className="text-sm leading-5 text-white/76">
-                      Pass dishes around privately when a recommendation belongs to one specific person.
+                      Share what you&apos;re eating right now and give people a quick read on your taste.
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4">
+                <div className="rounded-[1.45rem] border border-white/10 bg-white/6 p-3.5">
                   <div className="text-sm font-semibold text-[#F0A623]">Why it works</div>
                   <p className="mt-2 text-sm leading-5 text-white/76">
                     It turns your scattered food ideas into something you can actually come back to, use, and share.

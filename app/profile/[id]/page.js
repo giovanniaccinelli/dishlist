@@ -33,6 +33,7 @@ import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../../components/DishModeControls";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -82,6 +83,8 @@ export default function PublicProfile() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
+  const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const viewedAllStories =
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
@@ -345,8 +348,14 @@ export default function PublicProfile() {
     })),
   ];
 
-  const activeDishlist =
+  const unfilteredActiveDishlist =
     allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+  const activeDishlist = unfilteredActiveDishlist
+    ? {
+        ...unfilteredActiveDishlist,
+        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+      }
+    : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
 
   const renderDishCounters = (dish) => (
@@ -383,10 +392,11 @@ export default function PublicProfile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between gap-3 relative">
         <div className="flex min-w-[74px] items-center gap-2">
           <AppBackButton fallback="/dishlists" />
         </div>
+        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex flex-1 items-center justify-start">
           {user?.uid !== id ? (
             <button
@@ -799,6 +809,15 @@ export default function PublicProfile() {
         ownerPhotoURL={profileUser.photoURL || ""}
         onViewed={handleStoryViewed}
         currentUser={user}
+      />
+      <DishModeFilterModal
+        open={dishModeFilterOpen}
+        value={selectedDishMode}
+        onClose={() => setDishModeFilterOpen(false)}
+        onSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setDishModeFilterOpen(false);
+        }}
       />
     </div>
   );

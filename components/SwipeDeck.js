@@ -16,6 +16,7 @@ import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import { DishModeBadge } from "./DishModeControls";
 
 function DeckAutoplayVideo({
   src,
@@ -959,23 +960,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </button>
             )}
           </div>
-          {showStoryHistoryCounter ? (
-            <button
-              type="button"
-              data-no-drag="true"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setStoryHistoryOpen(true);
-              }}
-              className="absolute top-4 left-4 z-30 inline-flex items-center gap-1 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white"
-              aria-label="Open story push history"
-            >
-              <StoryStatIcon size={12} />
-              <span>:</span>
-              <span>{currentStoryPushCount}</span>
-            </button>
-          ) : null}
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
+            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8" /> : null}
+            {showStoryHistoryCounter ? (
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setStoryHistoryOpen(true);
+                }}
+                className="inline-flex items-center gap-1 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white"
+                aria-label="Open story push history"
+              >
+                <StoryStatIcon size={12} />
+                <span>:</span>
+                <span>{currentStoryPushCount}</span>
+              </button>
+            ) : null}
+          </div>
           {typeof onSharePress === "function" && !hasBottomActionRow && (
             <button
               type="button"

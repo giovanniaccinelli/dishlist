@@ -44,6 +44,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
+import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -129,6 +130,8 @@ export default function Profile() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
   const [removePreviewTarget, setRemovePreviewTarget] = useState(null);
+  const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
@@ -325,6 +328,7 @@ export default function Profile() {
       await saveDishToFirestore({
         name: dishName,
         description: dishDescription || "",
+        dishMode: DISH_MODE_COOKING,
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
         tags: dishTags,
@@ -665,8 +669,14 @@ export default function Profile() {
     })),
   ];
 
-  const activeDishlist =
+  const unfilteredActiveDishlist =
     allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+  const activeDishlist = unfilteredActiveDishlist
+    ? {
+        ...unfilteredActiveDishlist,
+        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+      }
+    : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
 
   const selectedCreateDishes = Array.from(
@@ -911,7 +921,8 @@ export default function Profile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end relative">
+        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div ref={profileOptionsRef} className="relative flex items-center gap-2">
           <button
             type="button"
@@ -2237,6 +2248,16 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DishModeFilterModal
+        open={dishModeFilterOpen}
+        value={selectedDishMode}
+        onClose={() => setDishModeFilterOpen(false)}
+        onSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setDishModeFilterOpen(false);
+        }}
+      />
 
       <BottomNav />
     </div>

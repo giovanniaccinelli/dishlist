@@ -77,6 +77,7 @@ function buildDishPayload(dishId, dishData = null) {
         name: dishData.name || "",
         description: dishData.description || "",
         dishLink: dishData.dishLink || "",
+        dishMode: dishData.dishMode || "",
         mediaType: dishData.mediaType || (dishData.mediaMimeType?.startsWith("video/") ? "video" : "image"),
         mediaMimeType: dishData.mediaMimeType || "",
         recipeIngredients: dishData.recipeIngredients || "",
@@ -106,6 +107,7 @@ async function hydrateDishPayload(dishId, payload) {
       name: data.name || payload?.name || "",
       description: data.description || payload?.description || "",
       dishLink: data.dishLink || payload?.dishLink || "",
+      dishMode: data.dishMode || payload?.dishMode || "",
       mediaType:
         data.mediaType ||
         payload?.mediaType ||
@@ -1275,6 +1277,7 @@ export async function getSavedDishesFromFirestore(userId) {
         (canonical.mediaMimeType?.startsWith("video/") || dish.mediaMimeType?.startsWith("video/")
           ? "video"
           : "image"),
+      dishMode: canonical.dishMode || dish.dishMode || "",
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",

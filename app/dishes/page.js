@@ -23,6 +23,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
 
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
@@ -157,6 +158,8 @@ export default function Dishes() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
+  const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const scrollContainerRef = useRef(null);
   const dishesLoadMoreRef = useRef(null);
 
@@ -352,6 +355,7 @@ export default function Dishes() {
       ? tagFiltered.filter((dish) => matchesFlexibleDishSearch(dish, term))
       : tagFiltered;
     return searchFiltered
+      .filter((dish) => dishModeMatches(dish, selectedDishMode))
       .slice()
       .sort((leftDish, rightDish) => {
         const savesDelta = Number(rightDish?.saves || 0) - Number(leftDish?.saves || 0);
@@ -361,7 +365,7 @@ export default function Dishes() {
         if (recencyDelta !== 0) return recencyDelta;
         return String(leftDish?.name || "").localeCompare(String(rightDish?.name || ""));
       });
-  }, [allDishesPool, dishes, search, selectedTagsApplied, usingGlobalFilter]);
+  }, [allDishesPool, dishes, search, selectedDishMode, selectedTagsApplied, usingGlobalFilter]);
 
   const visibleDishes = filtered.slice(0, visibleLimit);
   const hasMoreVisibleDishes = filtered.length > visibleDishes.length;
@@ -543,8 +547,9 @@ export default function Dishes() {
       ref={scrollContainerRef}
       className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative"
     >
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
         <h1 className="text-2xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
+        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}
@@ -791,6 +796,15 @@ export default function Dishes() {
         onConfirm={handleDishlistSelect}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
+      />
+      <DishModeFilterModal
+        open={dishModeFilterOpen}
+        value={selectedDishMode}
+        onClose={() => setDishModeFilterOpen(false)}
+        onSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setDishModeFilterOpen(false);
+        }}
       />
       <AppToast message={toast} variant={toastVariant} />
     </div>

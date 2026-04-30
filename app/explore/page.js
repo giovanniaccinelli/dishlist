@@ -29,6 +29,7 @@ import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
@@ -418,6 +419,8 @@ export default function Explore() {
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
 
   useEffect(() => {
     (async () => {
@@ -468,12 +471,13 @@ export default function Explore() {
             const dishTags = dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
             return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
           });
+    const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     const rows = [];
     rows.push({
       key: "most-saved",
       title: "Most Saved",
-      dishes: [...basePool].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
+      dishes: [...modePool].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
     });
 
     const trendingPool = term
@@ -483,14 +487,15 @@ export default function Explore() {
           return name.includes(term) || tags.some((tag) => tag.includes(term));
         })
       : trendingDishes;
+    const filteredTrendingPool = trendingPool.filter((dish) => dishModeMatches(dish, selectedDishMode));
     rows.push({
       key: "trending",
       title: "Trending Now",
-      dishes: trendingPool.slice(0, BASE_LIMIT),
+      dishes: filteredTrendingPool.slice(0, BASE_LIMIT),
     });
 
     const tagRows = TAG_OPTIONS.map((tag) => {
-      const tagged = basePool.filter(
+      const tagged = modePool.filter(
         (dish) =>
           Array.isArray(dish.tags) &&
           dish.tags.some((dishTag) => String(dishTag).toLowerCase() === String(tag).toLowerCase())
@@ -509,7 +514,7 @@ export default function Explore() {
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, search, selectedTagsApplied, trendingDishes]);
+  }, [allDishes, search, selectedDishMode, selectedTagsApplied, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -534,8 +539,9 @@ export default function Explore() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
         <h1 className="text-2xl font-bold">Explore</h1>
+        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex items-center gap-2">
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
           <TopActionButton href={user ? "/profile" : "/?auth=1"} icon={CircleUserRound} label="Open profile" />
@@ -640,6 +646,15 @@ export default function Explore() {
       )}
 
       <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} />
+      <DishModeFilterModal
+        open={dishModeFilterOpen}
+        value={selectedDishMode}
+        onClose={() => setDishModeFilterOpen(false)}
+        onSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setDishModeFilterOpen(false);
+        }}
+      />
       <BottomNav />
     </div>
   );

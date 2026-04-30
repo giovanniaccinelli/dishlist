@@ -177,7 +177,7 @@
   div[class*="rounded"][class*="border"],
   span[class*="rounded"][class*="bg"],
   span[class*="rounded"][class*="border"]
-):not(.no-accent-border) {
+):not(.no-accent-border):not(.dish-card-shell) {
   border-color: var(--app-accent-border) !important;
   border-width: 2px !important;
   border-style: solid !important;

@@ -878,7 +878,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         {nextCard ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
-            style={{ scale: nextCardScale }}
+            style={{ scale: nextCardScale, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {renderImage(nextCard, {
               preview: true,
@@ -894,7 +894,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={advanceOnAnySwipe ? 0.22 : 0.9}
-          style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
+          style={{
+            x: dragX,
+            rotate: cardRotate,
+            touchAction: "none",
+            borderColor: currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F",
+          }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
@@ -933,13 +938,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
           <div
             data-no-drag="true"
-            className="absolute top-3.5 left-1/2 z-30 -translate-x-1/2"
+            className="absolute top-4 left-1/2 z-30 -translate-x-1/2"
             onPointerDownCapture={(e) => e.stopPropagation()}
             onPointerMoveCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
             {hasAnyRecipeText ? (
-              <div className="no-accent-border flex gap-0.5 rounded-full bg-black/65 p-0.5 text-white">
+              <div className="no-accent-border flex h-8 items-center gap-0.5 rounded-full bg-black/65 p-0.5 text-white">
                 <button
                   data-no-drag="true"
                   onClick={(e) => {
@@ -947,7 +952,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setShowRecipe(false);
                   }}
-                  className={`no-accent-border rounded-full px-2.5 py-1 text-[13px] font-semibold leading-none ${
+                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     !showRecipe ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -960,7 +965,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setShowRecipe(true);
                   }}
-                  className={`no-accent-border rounded-full px-2.5 py-1 text-[13px] font-semibold leading-none ${
+                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     showRecipe ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -976,14 +981,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setNoRecipeNoticeOpen(true);
                 }}
-                className="rounded-full bg-white px-3 py-1 text-[13px] font-semibold leading-none text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
+                className="inline-flex h-8 items-center rounded-full bg-white px-3 text-[13px] font-semibold leading-none text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
               >
                 dish
               </button>
             )}
           </div>
-          <div className="absolute top-3.5 left-4 z-30 flex items-center gap-1.5">
-            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-7 w-7 shrink-0 self-center" /> : null}
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-1.5">
+            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0 self-center" /> : null}
             {showStoryHistoryCounter ? (
               <button
                 type="button"
@@ -993,10 +998,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setStoryHistoryOpen(true);
                 }}
-                className="inline-flex h-7 items-center gap-1 rounded-full bg-black/65 px-2.5 text-[11px] font-semibold leading-none text-white self-center"
+                className="inline-flex h-8 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white self-center"
                 aria-label="Open story push history"
               >
-                <StoryStatIcon size={11} />
+                <StoryStatIcon size={12} />
                 <span>:</span>
                 <span>{currentStoryPushCount}</span>
               </button>
@@ -1038,7 +1043,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               e.preventDefault();
               if (typeof onSavesPress === "function") onSavesPress(currentCard);
             }}
-            className="absolute top-3.5 right-4 z-30 inline-flex h-7 items-center rounded-full bg-black/65 px-2.5 text-[11px] font-semibold leading-none text-white"
+            className="absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white"
           >
             saves: {Number(currentCard.saves || 0)}
           </button>

@@ -755,15 +755,15 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_COOKING)}
-    className={`rounded-[1.35rem] border-2 px-2.5 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid min-h-[4.6rem] grid-cols-[2.5rem,1fr] items-center gap-2">
-      <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[0.8rem] bg-[#FFF1C9] text-[#F0A623]">
+    <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+      <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFF1C9] text-[#F0A623]">
         <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
-      <div className="min-w-0 pr-1">
+      <div className="min-w-0">
         <div className="text-[13px] font-semibold leading-none text-black">Home</div>
-        <div className="mt-1 text-[9px] leading-[1.2] text-black/55">Recipe to cook at home</div>
+        <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Recipe to cook at home</div>
       </div>
     </div>
   </button>
@@ -771,15 +771,15 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-    className={`rounded-[1.35rem] border-2 px-2.5 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid min-h-[4.6rem] grid-cols-[2.5rem,1fr] items-center gap-2">
-      <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[0.8rem] bg-[#FFE2E2] text-[#E64646]">
+    <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+      <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFE2E2] text-[#E64646]">
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
-      <div className="min-w-0 pr-1">
+      <div className="min-w-0">
         <div className="text-[13px] font-semibold leading-none text-black">Restaurant</div>
-        <div className="mt-1 text-[9px] leading-[1.2] text-black/55">Suggestion to eat out</div>
+        <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Suggestion to eat out</div>
       </div>
     </div>
   </button>

@@ -1126,7 +1126,7 @@ export default function Profile() {
     className="flex h-[46px] items-center justify-center gap-2 rounded-full border-2 border-black/30 bg-white px-4 text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
     aria-label="Open profile map"
   >
-    <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
+    <RestaurantMapIcon className="h-5.5 w-5.5 text-[#E64646]" />
     <span className="text-[13px] font-semibold">Map</span>
   </button>
 </div>
@@ -2291,7 +2291,7 @@ export default function Profile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="mx-auto flex w-full max-w-[24rem] max-h-[62dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
+              className="mx-auto flex w-full max-w-[24.5rem] max-h-[78dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
@@ -2317,7 +2317,7 @@ export default function Profile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
-                className="h-[44vh] min-h-[20rem] max-h-[28rem]"
+                className="h-[50vh] min-h-[24rem] max-h-[34rem]"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile?list=uploaded")}`}

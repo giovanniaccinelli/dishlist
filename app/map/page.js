@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CircleUserRound } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -13,6 +13,7 @@ import { getRestaurantDishGroups } from "../lib/restaurants";
 
 export default function MapPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const [dishes, setDishes] = useState([]);
   const [loadingMapData, setLoadingMapData] = useState(true);
@@ -39,6 +40,7 @@ export default function MapPage() {
   }, []);
 
   const groups = useMemo(() => getRestaurantDishGroups(dishes), [dishes]);
+  const selectedPlaceId = searchParams.get("placeId") || "";
 
   if (loading || loadingMapData) {
     return <FullScreenLoading title="Loading map" />;
@@ -83,6 +85,7 @@ export default function MapPage() {
 
       <RestaurantMapView
         groups={groups}
+        initialSelectedPlaceId={selectedPlaceId}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
         className="mb-5 mx-auto h-[calc(100dvh-19rem)] min-h-[22rem] max-h-[28rem] max-w-[25rem]"

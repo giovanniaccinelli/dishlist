@@ -30,6 +30,7 @@ export default function RestaurantMapView({
   emptyText = "Nothing pinned here yet.",
   dishHrefBuilder,
   onDishSelect,
+  initialSelectedPlaceId = "",
   className = "",
 }) {
   const router = useRouter();
@@ -44,6 +45,11 @@ export default function RestaurantMapView({
     if (!selectedPlaceId) return groups[0] || null;
     return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
   }, [groups, selectedPlaceId]);
+
+  useEffect(() => {
+    if (!initialSelectedPlaceId) return;
+    setSelectedPlaceId(initialSelectedPlaceId);
+  }, [initialSelectedPlaceId]);
 
   useEffect(() => {
     let mounted = true;
@@ -161,7 +167,7 @@ export default function RestaurantMapView({
         )}
 
         {selectedGroup && mapState === "ready" ? (
-          <div className="absolute inset-x-3 bottom-3 z-10 max-h-[68%] overflow-y-auto rounded-[1.6rem] border border-black/10 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
+          <div className="absolute inset-x-3 bottom-3 z-10 max-h-[78%] overflow-y-auto rounded-[1.6rem] border border-black/10 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

@@ -932,7 +932,7 @@ export default function Profile() {
   <DishModeFilterButton
     value={selectedDishMode}
     onClick={() => setDishModeFilterOpen(true)}
-    className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+var(--app-top-nav-gap)+1.2rem)] -translate-x-1/2 -translate-y-1/2"
+    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
   />
   <div ref={profileOptionsRef} className="relative flex items-center gap-4">
           <button

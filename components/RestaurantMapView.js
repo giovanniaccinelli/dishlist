@@ -1,0 +1,228 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapPin, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { loadGoogleMaps } from "../app/lib/googleMapsClient";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+
+function Avatar({ user }) {
+  if (!user) return null;
+  if (user.photoURL) {
+    return (
+      <img
+        src={user.photoURL}
+        alt={user.name || "User"}
+        className="h-8 w-8 rounded-full object-cover border border-black/10"
+      />
+    );
+  }
+  return (
+    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F6F1E8] text-xs font-semibold text-black/65">
+      {(user.name || "U").slice(0, 1).toUpperCase()}
+    </div>
+  );
+}
+
+export default function RestaurantMapView({
+  groups = [],
+  emptyTitle = "No restaurant dishes yet",
+  emptyText = "Nothing pinned here yet.",
+  dishHrefBuilder,
+  onDishSelect,
+  className = "",
+}) {
+  const router = useRouter();
+  const mapNodeRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const [mapState, setMapState] = useState("loading");
+  const [selectedPlaceId, setSelectedPlaceId] = useState("");
+
+  const selectedGroup = useMemo(() => {
+    if (selectedPlaceId === "__none__") return null;
+    if (!selectedPlaceId) return groups[0] || null;
+    return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
+  }, [groups, selectedPlaceId]);
+
+  useEffect(() => {
+    let mounted = true;
+    loadGoogleMaps()
+      .then(() => {
+        if (!mounted) return;
+        setMapState("ready");
+      })
+      .catch((error) => {
+        console.warn("Map unavailable:", error);
+        if (!mounted) return;
+        setMapState("error");
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mapState !== "ready") return;
+    if (!mapNodeRef.current) return;
+    if (mapRef.current) return;
+
+    mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
+      center: { lat: 20, lng: 0 },
+      zoom: 2,
+      disableDefaultUI: true,
+      gestureHandling: "greedy",
+      clickableIcons: false,
+      styles: [
+        {
+          featureType: "poi.business",
+          stylers: [{ visibility: "off" }],
+        },
+      ],
+    });
+  }, [mapState]);
+
+  useEffect(() => {
+    if (!mapRef.current || mapState !== "ready") return;
+
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = [];
+
+    if (!groups.length) {
+      setSelectedPlaceId("");
+      return;
+    }
+
+    const bounds = new window.google.maps.LatLngBounds();
+    groups.forEach((group) => {
+      const position = { lat: group.lat, lng: group.lng };
+      const marker = new window.google.maps.Marker({
+        map: mapRef.current,
+        position,
+        title: group.name,
+      });
+      marker.addListener("click", () => setSelectedPlaceId(group.placeId));
+      markersRef.current.push(marker);
+      bounds.extend(position);
+    });
+
+    setSelectedPlaceId((current) =>
+      current && groups.some((group) => group.placeId === current)
+        ? current
+        : groups[0]?.placeId || ""
+    );
+
+    if (groups.length === 1) {
+      mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
+      mapRef.current.setZoom(13);
+      return;
+    }
+
+    mapRef.current.fitBounds(bounds, 56);
+    const listener = window.google.maps.event.addListenerOnce(mapRef.current, "bounds_changed", () => {
+      if (mapRef.current.getZoom() > 12) {
+        mapRef.current.setZoom(12);
+      }
+    });
+
+    return () => {
+      if (listener) {
+        window.google.maps.event.removeListener(listener);
+      }
+    };
+  }, [groups, mapState]);
+
+  const openDish = (dish) => {
+    if (!dish?.id) return;
+    if (onDishSelect) {
+      onDishSelect(dish);
+      return;
+    }
+    const href = dishHrefBuilder ? dishHrefBuilder(dish) : `/dish/${dish.id}?source=public&mode=single`;
+    router.push(href);
+  };
+
+  return (
+    <div className={`rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_50px_rgba(0,0,0,0.10)] overflow-hidden ${className}`}>
+      <div className="relative h-[52vh] min-h-[22rem] bg-[#F4EFE6]">
+        {mapState === "ready" && groups.length > 0 ? (
+          <div ref={mapNodeRef} className="h-full w-full" />
+        ) : (
+          <div className="flex h-full items-center justify-center px-6 text-center">
+            <div>
+              <div className="text-lg font-semibold text-black">
+                {mapState === "error" ? "Map unavailable" : emptyTitle}
+              </div>
+              <div className="mt-2 text-sm leading-6 text-black/55">
+                {mapState === "error" ? "Google Maps could not be loaded right now." : emptyText}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedGroup && mapState === "ready" ? (
+          <div className="absolute inset-x-3 bottom-3 z-10 rounded-[1.6rem] border border-black/10 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <MapPin size={15} className="shrink-0 text-[#E64646]" />
+                  <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+                </div>
+                <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
+              </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlaceId("__none__")}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-black/55"
+                  aria-label="Close restaurant details"
+                >
+                <X size={15} />
+              </button>
+            </div>
+
+            {selectedGroup.users?.length ? (
+              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+                {selectedGroup.users.map((user) => (
+                  <div key={`${selectedGroup.placeId}-${user.id}`} className="flex items-center gap-2 rounded-full bg-black/[0.04] px-2 py-1.5">
+                    <Avatar user={user} />
+                    <span className="max-w-[8rem] truncate text-xs font-medium text-black/72">
+                      {user.name || "User"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {(selectedGroup.dishes || []).map((dish) => (
+                <button
+                  key={`${selectedGroup.placeId}-${dish.id}`}
+                  type="button"
+                  onClick={() => openDish(dish)}
+                  className="w-[8.6rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-black/10 bg-[#FFFDF8] text-left"
+                >
+                  <img
+                    src={getDishImageUrl(dish, "thumb")}
+                    alt={dish.name || "Dish"}
+                    className="h-20 w-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
+                  <div className="p-2.5">
+                    <div className="truncate text-sm font-semibold text-black">
+                      {dish.name || "Untitled dish"}
+                    </div>
+                    <div className="mt-1 truncate text-xs text-black/52">
+                      {dish.ownerName || "User"}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}

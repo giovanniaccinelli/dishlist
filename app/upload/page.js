@@ -10,6 +10,7 @@ import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../components/DishModeControls";
+import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { useAuth } from "../lib/auth";
 import {
   getAllDishlistsForUser,
@@ -57,6 +58,7 @@ export default function UploadPage() {
   const [targetDishlistId, setTargetDishlistId] = useState("saved");
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
+  const [restaurant, setRestaurant] = useState(null);
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -148,6 +150,7 @@ export default function UploadPage() {
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
           taggedUserName: storyTaggedUser.trim(),
+          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
         });
         if (!ok) throw new Error("Failed to publish story.");
         setToastVariant("success");
@@ -159,6 +162,7 @@ export default function UploadPage() {
           description: dishDescription.trim(),
           dishLink: getNormalizedDishLink(),
           dishMode,
+          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
@@ -194,6 +198,7 @@ export default function UploadPage() {
   const openUploadFlow = () => {
     setShowUploadForm(true);
     setUploadStep(0);
+    setRestaurant(null);
   };
 
   const goToNextStep = () => {
@@ -237,6 +242,7 @@ export default function UploadPage() {
   const closeUploadFlow = () => {
     setShowUploadForm(false);
     setUploadStep(0);
+    setRestaurant(null);
   };
 
   if (loading) {
@@ -318,7 +324,10 @@ export default function UploadPage() {
                   <div className="mb-4 grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
-                      onClick={() => setDishMode(DISH_MODE_COOKING)}
+                      onClick={() => {
+                        setDishMode(DISH_MODE_COOKING);
+                        setRestaurant(null);
+                      }}
                       className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
@@ -346,6 +355,15 @@ export default function UploadPage() {
                         </div>
                       </div>
                     </button>
+                  </div>
+                ) : null}
+                {dishMode === DISH_MODE_RESTAURANT ? (
+                  <div className="mb-4">
+                    <RestaurantPlacePicker
+                      value={restaurant}
+                      onChange={setRestaurant}
+                      placeholder="Search where you ate it"
+                    />
                   </div>
                 ) : null}
                 <input

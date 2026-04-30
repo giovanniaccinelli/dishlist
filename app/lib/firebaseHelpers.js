@@ -22,6 +22,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { normalizeRestaurant } from "./restaurants";
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
 const ownerPhotoCache = new Map();
@@ -78,6 +79,7 @@ function buildDishPayload(dishId, dishData = null) {
         description: dishData.description || "",
         dishLink: dishData.dishLink || "",
         dishMode: dishData.dishMode || "",
+        restaurant: normalizeRestaurant(dishData.restaurant),
         mediaType: dishData.mediaType || (dishData.mediaMimeType?.startsWith("video/") ? "video" : "image"),
         mediaMimeType: dishData.mediaMimeType || "",
         recipeIngredients: dishData.recipeIngredients || "",
@@ -108,6 +110,7 @@ async function hydrateDishPayload(dishId, payload) {
       description: data.description || payload?.description || "",
       dishLink: data.dishLink || payload?.dishLink || "",
       dishMode: data.dishMode || payload?.dishMode || "",
+      restaurant: normalizeRestaurant(data.restaurant || payload?.restaurant),
       mediaType:
         data.mediaType ||
         payload?.mediaType ||
@@ -1278,6 +1281,7 @@ export async function getSavedDishesFromFirestore(userId) {
           ? "video"
           : "image"),
       dishMode: canonical.dishMode || dish.dishMode || "",
+      restaurant: normalizeRestaurant(canonical.restaurant || dish.restaurant),
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",

@@ -39,6 +39,7 @@ import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
+import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 26 24" fill="none" aria-hidden="true">
@@ -87,6 +88,7 @@ export default function DishDetail() {
   const [editTags, setEditTags] = useState([]);
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editDishMode, setEditDishMode] = useState(DISH_MODE_COOKING);
+  const [editRestaurant, setEditRestaurant] = useState(null);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [editStep, setEditStep] = useState(0);
@@ -414,6 +416,7 @@ export default function DishDetail() {
     setEditTags(normalizedTags);
     setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditDishMode(dishToEdit?.dishMode || DISH_MODE_COOKING);
+    setEditRestaurant(dishToEdit?.restaurant || null);
     setEditImageFile(null);
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
@@ -465,6 +468,7 @@ export default function DishDetail() {
         tags: editTags,
         isPublic: editIsPublic,
         dishMode: editDishMode,
+        restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,
         imageURL: nextImageURL || "",
         cardURL: nextCardURL || nextImageURL || "",
         thumbURL: nextThumbURL || nextCardURL || nextImageURL || "",
@@ -754,7 +758,10 @@ export default function DishDetail() {
                 <div className="mb-4 grid grid-cols-2 gap-2.5">
   <button
     type="button"
-    onClick={() => setEditDishMode(DISH_MODE_COOKING)}
+    onClick={() => {
+      setEditDishMode(DISH_MODE_COOKING);
+      setEditRestaurant(null);
+    }}
     className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
     <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
@@ -784,6 +791,15 @@ export default function DishDetail() {
     </div>
   </button>
 </div>
+                {editDishMode === DISH_MODE_RESTAURANT ? (
+                  <div className="mb-4">
+                    <RestaurantPlacePicker
+                      value={editRestaurant}
+                      onChange={setEditRestaurant}
+                      placeholder="Search where you ate it"
+                    />
+                  </div>
+                ) : null}
                 <input
                   type="text"
                   value={editName}

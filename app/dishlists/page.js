@@ -25,6 +25,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
+import { RestaurantMapIcon } from "../../components/DishModeControls";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -537,6 +538,14 @@ export default function Dishlists() {
       )}
 
       <BottomNav />
+      <motion.button
+        type="button"
+        onClick={() => router.push("/map")}
+        className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
+        aria-label="Open restaurant map"
+      >
+        <RestaurantMapIcon className="h-6 w-6 text-white" />
+      </motion.button>
       <StoryViewerModal
         open={storiesOpen}
         onClose={() => setStoriesOpen(false)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { collection, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
@@ -28,12 +28,14 @@ import {
   getAvatarTone,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { MoreHorizontal, Plus, Send, Shuffle } from "lucide-react";
+import { MoreHorizontal, Plus, Send, Shuffle, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../../components/DishModeControls";
+import RestaurantMapView from "../../../components/RestaurantMapView";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../../components/DishModeControls";
+import { getRestaurantDishGroups } from "../../lib/restaurants";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -141,6 +143,7 @@ export default function PublicProfile() {
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [profileMapOpen, setProfileMapOpen] = useState(false);
   const viewedAllStories =
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
@@ -414,6 +417,10 @@ export default function PublicProfile() {
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
+  const uploadedRestaurantGroups = useMemo(
+    () => getRestaurantDishGroups(dishes),
+    [dishes]
+  );
 
   const renderDishCounters = (dish) => (
     <div className="flex items-center gap-3.5 text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
@@ -613,6 +620,15 @@ export default function PublicProfile() {
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setProfileMapOpen(true)}
+          className="flex h-[46px] items-center justify-center gap-2 rounded-full border-2 border-black/30 bg-white px-3 text-black shadow-[0_12px_26px_rgba(0,0,0,0.10)]"
+          aria-label="Open profile map"
+        >
+          <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
+          <span className="text-[13px] font-semibold">Map</span>
+        </button>
         <button
           type="button"
           onClick={() => setDishlistsOpen(true)}
@@ -879,6 +895,51 @@ export default function PublicProfile() {
           setDishModeFilterOpen(false);
         }}
       />
+      <AnimatePresence>
+        {profileMapOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[88] bg-black/45 backdrop-blur-sm p-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setProfileMapOpen(false)}
+          >
+            <motion.div
+              className="mx-auto flex h-full w-full max-w-3xl flex-col rounded-[2rem] bg-[#F6F6F2] p-4 shadow-2xl"
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                    Profile map
+                  </div>
+                  <h3 className="mt-2 text-[1.6rem] leading-none font-semibold text-black">
+                    Restaurants {profileUser?.displayName || "this user"} pinned
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileMapOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                  aria-label="Close profile map"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <RestaurantMapView
+                groups={uploadedRestaurantGroups}
+                className="flex-1"
+                emptyTitle="No restaurant dishes yet"
+                emptyText="Restaurant-mode dishes with a selected place will show up here."
+                dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profileDocId)}?list=uploaded`)}`}
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

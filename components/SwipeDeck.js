@@ -293,6 +293,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       return;
     }
 
+    if (preserveContinuity) {
+      const currentKey = deck[currentIndex]?._key || null;
+      const previousKeys = deck.map((dish) => dish._key).join("|");
+      const nextKeys = formatted.map((dish) => dish._key).join("|");
+      if (previousKeys !== nextKeys) {
+        setDeck(formatted);
+        setCurrentIndex(() => {
+          if (!formatted.length) return 0;
+          const nextIndex = currentKey ? formatted.findIndex((dish) => dish._key === currentKey) : -1;
+          return nextIndex >= 0 ? nextIndex : 0;
+        });
+        setDeckEmpty(formatted.length === 0);
+      }
+      return;
+    }
+
     if (!preserveContinuity) {
       setDeck((prev) => {
         const existing = new Set(prev.map((d) => d._key));
@@ -300,7 +316,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         return appended.length > 0 ? [...prev, ...appended] : prev;
       });
     }
-  }, [dishes, deckInitialized, preserveContinuity, initialIndex]);
+  }, [dishes, deck, currentIndex, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
 
@@ -961,7 +977,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             )}
           </div>
           <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
-            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8" /> : null}
+            {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0" /> : null}
             {showStoryHistoryCounter ? (
               <button
                 type="button"
@@ -971,7 +987,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setStoryHistoryOpen(true);
                 }}
-                className="inline-flex items-center gap-1 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white"
+                className="inline-flex h-8 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white"
                 aria-label="Open story push history"
               >
                 <StoryStatIcon size={12} />

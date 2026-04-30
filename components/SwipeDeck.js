@@ -319,6 +319,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [dishes, deck, currentIndex, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+  const currentCardBorderClass = currentCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
+  const nextCardBorderClass = nextCard?.dishMode === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]";
 
   useEffect(() => {
     setShowRecipe(false);
@@ -871,7 +873,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       >
         {nextCard ? (
           <motion.div
-            className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border-2 border-[#E64646] ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            className={`pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] border-2 ${nextCardBorderClass} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale }}
           >
             {renderImage(nextCard, {
@@ -890,7 +892,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragElastic={0.9}
           style={{ x: dragX, rotate: cardRotate, touchAction: "none" }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] border-2 border-[#E64646] bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] border-2 ${currentCardBorderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div
@@ -1032,7 +1034,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               e.preventDefault();
               if (typeof onSavesPress === "function") onSavesPress(currentCard);
             }}
-            className="absolute top-4 right-4 z-30 bg-black/65 text-white text-xs font-semibold px-3 py-1 rounded-full"
+            className="absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white"
           >
             saves: {Number(currentCard.saves || 0)}
           </button>

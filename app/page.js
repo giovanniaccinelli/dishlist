@@ -81,6 +81,7 @@ export default function Feed() {
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
+  const showDishModeFilterButton = false;
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -513,7 +514,9 @@ export default function Feed() {
           <img src="/logo-real.png" alt="DishList logo" className="w-8 h-8 rounded-full object-cover" />
           <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </button>
-        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+        {showDishModeFilterButton ? (
+          <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+        ) : null}
         <div className="flex items-center gap-2">
           <button
             type="button"

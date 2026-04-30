@@ -616,7 +616,7 @@ export default function Profile() {
       const docs = await Promise.all(ids.map((uid) => getDoc(doc(db, "users", uid))));
       const usersList = docs
         .filter((snap) => snap.exists())
-        .map((snap) => ({ id: snap.id, ...snap.data() }));
+        .map((snap) => ({ ...snap.data(), id: snap.id }));
       setConnectionsUsers(usersList);
     } catch (err) {
       console.error(`Failed to load ${type}:`, err);
@@ -1535,7 +1535,7 @@ export default function Profile() {
                   {connectionsUsers.map((u) => (
                     <Link
                       key={u.id}
-                      href={u.id === user.uid ? "/profile" : `/profile/${u.id}`}
+                      href={u.id === user.uid ? "/profile" : `/profile/${encodeURIComponent(u.id)}`}
                       onClick={() => setConnectionsOpen(false)}
                       className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3"
                     >

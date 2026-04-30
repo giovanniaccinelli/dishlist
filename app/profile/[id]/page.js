@@ -107,6 +107,7 @@ function mergeStoryStats(groups = []) {
 
 export default function PublicProfile() {
   const { id } = useParams();
+  const routeProfileId = decodeURIComponent(String(id || ""));
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
@@ -144,8 +145,8 @@ export default function PublicProfile() {
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
   const avatarTone = getAvatarTone(profileUser?.displayName || "");
-  const profileIdCandidates = getProfileIdCandidates(id, profileUser);
-  const profileDocId = profileUser?.id || id;
+  const profileIdCandidates = getProfileIdCandidates(routeProfileId, profileUser);
+  const profileDocId = profileUser?.id || routeProfileId;
   const profileAuthUid =
     profileUser?.uid ||
     profileUser?.authUid ||
@@ -155,20 +156,20 @@ export default function PublicProfile() {
   const isViewingOwnProfile = Boolean(user?.uid && profileIdCandidates.includes(user.uid));
 
   useEffect(() => {
-    if (!id) return;
+    if (!routeProfileId) return;
     let cancelled = false;
 
     (async () => {
       setProfileLoadFailed(false);
       const loadUserDoc = async () => {
         try {
-          const direct = await getDoc(doc(db, "users", id));
+          const direct = await getDoc(doc(db, "users", routeProfileId));
           if (direct.exists()) return direct;
         } catch (error) {
           console.error("Direct profile fetch failed:", error);
         }
         const snapshot = await getDocs(collection(db, "users"));
-        return snapshot.docs.find((docSnap) => getProfileIdCandidates(id, docSnap).includes(String(id))) || null;
+        return snapshot.docs.find((docSnap) => getProfileIdCandidates(routeProfileId, docSnap).includes(routeProfileId)) || null;
       };
 
       const userDoc = await loadUserDoc();
@@ -181,7 +182,7 @@ export default function PublicProfile() {
       }
 
       const nextProfileUser = { id: userDoc.id, ...userDoc.data() };
-      const candidateIds = getProfileIdCandidates(id, userDoc);
+      const candidateIds = getProfileIdCandidates(routeProfileId, userDoc);
 
       const results = await Promise.allSettled([
         Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
@@ -207,7 +208,7 @@ export default function PublicProfile() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [routeProfileId]);
 
   useEffect(() => {
     setIsFollowing(Boolean(profileUser?.followers?.includes(user?.uid)));
@@ -314,7 +315,7 @@ export default function PublicProfile() {
       const docs = await Promise.all(ids.map((uid) => getDoc(doc(db, "users", uid))));
       const usersList = docs
         .filter((snap) => snap.exists())
-        .map((snap) => ({ id: snap.id, ...snap.data() }));
+        .map((snap) => ({ ...snap.data(), id: snap.id }));
       setConnectionsUsers(usersList);
     } catch (err) {
       console.error(`Failed to load ${type}:`, err);
@@ -343,10 +344,10 @@ export default function PublicProfile() {
     const randomDish = pool[Math.floor(Math.random() * pool.length)];
     const returnTo = encodeURIComponent(buildProfileReturnTo());
     if (customDishlist) {
-      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${id}&returnTo=${returnTo}`);
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}`);
       return;
     }
-    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${id}&returnTo=${returnTo}`);
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}`);
   };
 
   const handleOpenSavers = async (dish) => {
@@ -648,8 +649,8 @@ export default function PublicProfile() {
                 <Link
                   href={
                     activeDishlist?.type === "custom"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${id}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
+                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
                   }
                   className="absolute inset-0 z-10"
                 >
@@ -729,7 +730,7 @@ export default function PublicProfile() {
                   {connectionsUsers.map((u) => (
                     <Link
                       key={u.id}
-                      href={user?.uid === u.id ? "/profile" : `/profile/${u.id}`}
+                      href={user?.uid === u.id ? "/profile" : `/profile/${encodeURIComponent(u.id)}`}
                       onClick={() => setConnectionsOpen(false)}
                       className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3"
                     >

@@ -908,7 +908,7 @@ export default function PublicProfile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="mx-auto flex w-full max-w-[24.5rem] max-h-[78dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
+              className="mx-auto flex w-full max-w-[24.5rem] max-h-[68dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
@@ -934,7 +934,7 @@ export default function PublicProfile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
-                className="h-[50vh] min-h-[24rem] max-h-[34rem]"
+                className="h-[38vh] min-h-[22rem] max-h-[26rem]"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profileDocId)}?list=uploaded`)}`}

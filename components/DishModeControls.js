@@ -107,7 +107,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 className={`rounded-[1.45rem] border-2 px-4 py-4 text-center ${value === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
               >
                 <CookingHomeIcon className="mx-auto h-8 w-8 text-[#F0A623]" />
-                <div className="mt-2 text-sm font-semibold text-black">Cooking</div>
+                <div className="mt-2 text-sm font-semibold text-black">Home</div>
               </button>
               <button
                 type="button"

@@ -922,8 +922,8 @@ export default function Profile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-1 flex justify-end relative">
-        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
-        <div ref={profileOptionsRef} className="relative flex items-center gap-2">
+  <div ref={profileOptionsRef} className="relative flex items-center gap-4">
+    <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
           <button
             type="button"
             onClick={() => {

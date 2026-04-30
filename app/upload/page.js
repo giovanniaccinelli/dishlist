@@ -314,7 +314,7 @@ export default function UploadPage() {
                     {storyMode ? "Story title and cover" : "Name and cover"}
                   </h2>
                 </div>
-                {!storyMode ? (
+                {true ? (
                   <div className="mb-4 grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -322,12 +322,12 @@ export default function UploadPage() {
                       className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1rem] bg-[#FFF1C9] text-[#F0A623]">
+                        <span className="inline-flex h-14 aspect-square flex-shrink-0 items-center justify-center rounded-[1rem] bg-[#FFF1C9] text-[#F0A623]">
                           <CookingHomeIcon className="h-7 w-7" strokeWidth={2.05} />
                         </span>
                         <div>
-                          <div className="text-sm font-semibold text-black">Cooking</div>
-                          <div className="text-xs text-black/55">Made it</div>
+                          <div className="text-sm font-semibold text-black">Home</div>
+                          <div className="text-xs text-black/55">Recipe to cook at home</div>
                         </div>
                       </div>
                     </button>
@@ -337,12 +337,12 @@ export default function UploadPage() {
                       className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[1rem] bg-[#FFE2E2] text-[#E64646]">
+                        <span className="inline-flex h-14 aspect-square flex-shrink-0 items-center justify-center rounded-[1rem] bg-[#FFE2E2] text-[#E64646]">
                           <RestaurantMapIcon className="h-7 w-7" strokeWidth={2.05} />
                         </span>
                         <div>
                           <div className="text-sm font-semibold text-black">Restaurant</div>
-                          <div className="text-xs text-black/55">Ate it out</div>
+                          <div className="text-xs text-black/55">Suggestion for eating out</div>
                         </div>
                       </div>
                     </button>

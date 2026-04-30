@@ -38,7 +38,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
-
+import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 26 24" fill="none" aria-hidden="true">
@@ -86,6 +86,7 @@ export default function DishDetail() {
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
   const [editTags, setEditTags] = useState([]);
   const [editIsPublic, setEditIsPublic] = useState(true);
+  const [editDishMode, setEditDishMode] = useState(DISH_MODE_COOKING);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [editStep, setEditStep] = useState(0);
@@ -412,6 +413,7 @@ export default function DishDetail() {
       : [];
     setEditTags(normalizedTags);
     setEditIsPublic(dishToEdit?.isPublic !== false);
+    setEditDishMode(dishToEdit?.dishMode || DISH_MODE_COOKING);
     setEditImageFile(null);
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
@@ -462,6 +464,7 @@ export default function DishDetail() {
         recipeMethod: editRecipeMethod.trim(),
         tags: editTags,
         isPublic: editIsPublic,
+        dishMode: editDishMode,
         imageURL: nextImageURL || "",
         cardURL: nextCardURL || nextImageURL || "",
         thumbURL: nextThumbURL || nextCardURL || nextImageURL || "",
@@ -748,6 +751,39 @@ export default function DishDetail() {
                   </div>
                   <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and cover</h2>
                 </div>
+                <div className="mb-4 grid grid-cols-2 gap-3">
+  <button
+    type="button"
+    onClick={() => setEditDishMode(DISH_MODE_COOKING)}
+    className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+  >
+    <div className="flex items-center gap-3">
+      <span className="inline-flex h-14 aspect-square flex-shrink-0 items-center justify-center rounded-[1rem] bg-[#FFF1C9] text-[#F0A623]">
+        <CookingHomeIcon className="h-7 w-7" strokeWidth={2.05} />
+      </span>
+      <div>
+        <div className="text-sm font-semibold text-black">Home</div>
+        <div className="text-xs text-black/55">Recipe to cook at home</div>
+      </div>
+    </div>
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
+    className={`rounded-[1.4rem] border-2 px-4 py-4 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+  >
+    <div className="flex items-center gap-3">
+      <span className="inline-flex h-14 aspect-square flex-shrink-0 items-center justify-center rounded-[1rem] bg-[#FFE2E2] text-[#E64646]">
+        <RestaurantMapIcon className="h-7 w-7" strokeWidth={2.05} />
+      </span>
+      <div>
+        <div className="text-sm font-semibold text-black">Restaurant</div>
+        <div className="text-xs text-black/55">Suggestion for eating out</div>
+      </div>
+    </div>
+  </button>
+</div>
                 <input
                   type="text"
                   value={editName}

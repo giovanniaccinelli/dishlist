@@ -514,14 +514,13 @@ export default function Feed() {
           <img src="/logo-real.png" alt="DishList logo" className="w-8 h-8 rounded-full object-cover" />
           <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </button>
-        {showDishModeFilterButton ? (
-          <DishModeFilterButton
-            value={selectedDishMode}
-            onClick={() => setDishModeFilterOpen(true)}
-            className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+var(--app-top-nav-gap)+1.2rem)] -translate-x-1/2 -translate-y-1/2"
-          />
-        ) : null}
         <div className="flex items-center gap-2">
+          {showDishModeFilterButton ? (
+            <DishModeFilterButton
+              value={selectedDishMode}
+              onClick={() => setDishModeFilterOpen(true)}
+            />
+          ) : null}
           <Link
             href={userId ? "/directs" : "/?auth=1"}
             className="top-action-btn relative"

@@ -56,7 +56,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className
     <button
       type="button"
       onClick={onClick}
-      className={`top-action-btn !h-[2.4rem] !w-[3.9rem] !min-w-[3.9rem] rounded-[1rem] flex items-center justify-center -mt-0.5 px-1.5 ${className}`}
+      className={`top-action-btn !h-[2.4rem] !w-[3.9rem] !min-w-[3.9rem] rounded-[1rem] flex items-center justify-center px-1.5 ${className}`}
       aria-label="Filter dish mode"
     >
       <span className="flex items-center gap-1 text-black">

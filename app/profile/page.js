@@ -1123,11 +1123,10 @@ export default function Profile() {
   <button
     type="button"
     onClick={() => setProfileMapOpen(true)}
-    className="flex h-[46px] items-center justify-center gap-2 rounded-full border-2 border-black/30 bg-white px-4 text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+    className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
     aria-label="Open profile map"
   >
-    <RestaurantMapIcon className="h-5.5 w-5.5 text-[#E64646]" />
-    <span className="text-[13px] font-semibold">Map</span>
+    <RestaurantMapIcon className="h-5.5 w-5.5 text-black" />
   </button>
 </div>
 

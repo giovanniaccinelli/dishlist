@@ -56,10 +56,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className
     <button
       type="button"
       onClick={onClick}
-      className={`top-action-btn !h-[2.6rem] !w-[5.6rem] !min-w-[5.6rem] rounded-[1.2rem] flex items-center justify-center -mt-0.5 ${className}`}
+      className={`top-action-btn !h-[2.4rem] !w-[3.9rem] !min-w-[3.9rem] rounded-[1rem] flex items-center justify-center -mt-0.5 px-1.5 ${className}`}
       aria-label="Filter dish mode"
     >
-      <span className="flex items-center gap-1.5 text-black">
+      <span className="flex items-center gap-1 text-black">
         <CookingHomeIcon className={`h-[1.18rem] w-[1.18rem] ${value === DISH_MODE_RESTAURANT ? "text-black/35" : "text-[#F0A623]"}`} strokeWidth={2.1} />
         <span className="text-[14px] font-black leading-none text-black">/</span>
         <RestaurantMapIcon className={`h-[1.18rem] w-[1.18rem] ${value === DISH_MODE_COOKING ? "text-black/35" : "text-[#E64646]"}`} strokeWidth={2.1} />

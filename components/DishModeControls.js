@@ -37,14 +37,14 @@ export function DishModeBadge({ dishMode, className = "" }) {
   if (dishMode === DISH_MODE_COOKING) {
     return (
       <span className={`inline-flex items-center justify-center rounded-full bg-black/65 text-[#F0A623] ${className}`}>
-        <CookingHomeIcon className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.25} />
+        <CookingHomeIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.3} />
       </span>
     );
   }
   if (dishMode === DISH_MODE_RESTAURANT) {
     return (
       <span className={`inline-flex items-center justify-center rounded-full bg-black/65 text-[#E64646] ${className}`}>
-        <RestaurantMapIcon className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.25} />
+        <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.3} />
       </span>
     );
   }

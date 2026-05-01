@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapPin, X } from "lucide-react";
+import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
@@ -37,8 +37,15 @@ export default function RestaurantMapView({
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const autocompleteServiceRef = useRef(null);
+  const placesServiceRef = useRef(null);
+  const requestRef = useRef(0);
   const [mapState, setMapState] = useState("loading");
   const [selectedPlaceId, setSelectedPlaceId] = useState("");
+  const [query, setQuery] = useState("");
+  const [predictions, setPredictions] = useState([]);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
 
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
@@ -54,8 +61,10 @@ export default function RestaurantMapView({
   useEffect(() => {
     let mounted = true;
     loadGoogleMaps()
-      .then(() => {
+      .then((google) => {
         if (!mounted) return;
+        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+        placesServiceRef.current = new google.maps.places.PlacesService(document.createElement("div"));
         setMapState("ready");
       })
       .catch((error) => {
@@ -67,6 +76,62 @@ export default function RestaurantMapView({
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (mapState !== "ready") return;
+    if (!searchFocused) return;
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setPredictions([]);
+      setLoadingPredictions(false);
+      return;
+    }
+
+    const localMatches = groups
+      .filter((group) => group.name?.toLowerCase().includes(trimmed.toLowerCase()))
+      .slice(0, 4)
+      .map((group) => ({
+        place_id: group.placeId,
+        description: group.address || group.name,
+        structured_formatting: {
+          main_text: group.name,
+          secondary_text: group.address || "Pinned restaurant",
+        },
+      }));
+
+    const requestId = requestRef.current + 1;
+    requestRef.current = requestId;
+    setLoadingPredictions(true);
+
+    const timeoutId = window.setTimeout(() => {
+      autocompleteServiceRef.current?.getPlacePredictions(
+        {
+          input: trimmed,
+          types: ["establishment"],
+        },
+        (results, status) => {
+          if (requestRef.current !== requestId) return;
+          const googleResults =
+            status === window.google?.maps?.places?.PlacesServiceStatus?.OK && Array.isArray(results)
+              ? results
+              : [];
+          const seen = new Set();
+          const merged = [...localMatches, ...googleResults].filter((item) => {
+            const key = item.place_id || item.description;
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setPredictions(merged.slice(0, 6));
+          setLoadingPredictions(false);
+        }
+      );
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [groups, mapState, query, searchFocused]);
 
   useEffect(() => {
     if (mapState !== "ready") return;
@@ -148,9 +213,113 @@ export default function RestaurantMapView({
     router.push(href);
   };
 
+  const focusGroup = (group) => {
+    if (!group) return;
+    setSelectedPlaceId(group.placeId || "");
+    if (mapRef.current && typeof group.lat === "number" && typeof group.lng === "number") {
+      mapRef.current.panTo({ lat: group.lat, lng: group.lng });
+      mapRef.current.setZoom(14);
+    }
+    setQuery(group.name || "");
+    setPredictions([]);
+    setSearchFocused(false);
+  };
+
+  const handlePredictionSelect = (prediction) => {
+    const matchingGroup = groups.find((group) => group.placeId === prediction?.place_id);
+    if (matchingGroup) {
+      focusGroup(matchingGroup);
+      return;
+    }
+    if (!prediction?.place_id || !placesServiceRef.current) return;
+    placesServiceRef.current.getDetails(
+      {
+        placeId: prediction.place_id,
+        fields: ["place_id", "name", "geometry"],
+      },
+      (place, status) => {
+        if (
+          status !== window.google?.maps?.places?.PlacesServiceStatus?.OK ||
+          !place?.geometry?.location ||
+          !mapRef.current
+        ) {
+          return;
+        }
+        setSelectedPlaceId("__none__");
+        setQuery(place.name || query);
+        setPredictions([]);
+        setSearchFocused(false);
+        mapRef.current.panTo({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        });
+        mapRef.current.setZoom(14);
+      }
+    );
+  };
+
+  const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
+
   return (
     <div className={`h-[44vh] min-h-[22rem] overflow-hidden rounded-[2rem] bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
+        <div className="absolute inset-x-3 top-3 z-10">
+          <div className="overflow-hidden rounded-[1.2rem] border border-black/10 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              <Search size={16} className="shrink-0 text-black/35" />
+              <input
+                type="text"
+                value={query}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search restaurant"
+                className="w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setQuery("");
+                    setPredictions([]);
+                  }}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-black/55"
+                  aria-label="Clear restaurant search"
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
+            </div>
+            {loadingPredictions ? (
+              <div className="border-t border-black/6 px-3 py-2 text-xs text-black/45">Searching...</div>
+            ) : null}
+            {showPredictions ? (
+              <div className="max-h-52 overflow-y-auto border-t border-black/6 bg-[#FFFCF7]">
+                {predictions.map((prediction) => (
+                  <button
+                    key={prediction.place_id || prediction.description}
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handlePredictionSelect(prediction)}
+                    className="flex w-full items-start gap-2 border-b border-black/6 px-3 py-2.5 text-left last:border-b-0 hover:bg-black/[0.03]"
+                  >
+                    <MapPin size={14} className="mt-0.5 shrink-0 text-[#E64646]" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-black">
+                        {prediction.structured_formatting?.main_text || prediction.description}
+                      </div>
+                      <div className="truncate text-xs text-black/45">
+                        {prediction.structured_formatting?.secondary_text || prediction.description}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
         {mapState === "ready" && groups.length > 0 ? (
           <div ref={mapNodeRef} className="h-full w-full" />
         ) : (

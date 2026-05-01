@@ -929,7 +929,10 @@ export default function Profile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 flex justify-end px-4 pb-1.5 relative">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center">
+        <div
+          className="pointer-events-none absolute left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 1.2rem)" }}
+        >
           <DishModeFilterButton
             value={selectedDishMode}
             onClick={() => setDishModeFilterOpen(true)}
@@ -1128,7 +1131,7 @@ export default function Profile() {
           className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
           aria-label="Open profile map"
         >
-          <RestaurantMapIcon className="h-7 w-7 text-black" strokeWidth={2.7} />
+          <RestaurantMapIcon className="h-6 w-6 text-black" strokeWidth={2.15} />
         </button>
 </div>
 

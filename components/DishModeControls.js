@@ -59,7 +59,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className
       className={`top-action-btn relative !h-[2.5rem] !w-[4.7rem] !min-w-[4.7rem] overflow-hidden rounded-full border border-black/14 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${className}`}
       aria-label="Filter dish mode"
     >
-      <span className="pointer-events-none absolute bottom-[0.42rem] left-1/2 top-[0.42rem] z-[1] w-[1.5px] -translate-x-1/2 rounded-full bg-black/55" />
+      <span className="no-accent-border pointer-events-none absolute bottom-[0.42rem] left-1/2 top-[0.42rem] z-[1] w-[1.5px] -translate-x-1/2 rounded-full bg-black" />
       <span className="relative z-[2] flex h-full w-full overflow-hidden rounded-full">
         <span className={`flex flex-1 items-center justify-center ${value === DISH_MODE_RESTAURANT ? "text-black/35" : "text-[#D48A00]"}`}>
           <CookingHomeIcon className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.4} />

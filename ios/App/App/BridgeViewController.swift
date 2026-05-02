@@ -5,6 +5,7 @@ class BridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(SignInWithApple())
+        bridge?.registerPluginInstance(NativePushBridge())
         enableNativeBackSwipe()
     }
 

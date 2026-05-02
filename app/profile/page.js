@@ -32,6 +32,7 @@ import {
   getAvatarTone,
   isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
+import { dispatchPushEvent } from "../lib/pushClient";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -328,7 +329,7 @@ export default function Profile() {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
         if (!imageFields.imageURL) throw new Error("Failed to upload image.");
       }
-      await saveDishToFirestore({
+      const dishId = await saveDishToFirestore({
         name: dishName,
         description: dishDescription || "",
         dishMode: DISH_MODE_COOKING,
@@ -342,6 +343,13 @@ export default function Profile() {
         ownerPhotoURL: effectiveProfilePhotoURL || "",
         createdAt: new Date(),
       });
+      if (dishId) {
+        await dispatchPushEvent("dish_posted", {
+          ownerId: user.uid,
+          dishId,
+          dishName: dishName || "",
+        });
+      }
       const updatedDishes = await getDishesFromFirestore(user.uid);
       setUploadedDishes(updatedDishes);
       setDishName("");

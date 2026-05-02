@@ -1,4 +1,5 @@
 import { db, storage } from "./firebase";
+import { dispatchPushEvent } from "./pushClient";
 import {
   collection,
   collectionGroup,
@@ -1163,6 +1164,12 @@ export async function sendMessage(conversationId, message) {
       },
       { merge: true }
     );
+    await dispatchPushEvent("direct_message", {
+      conversationId,
+      senderId: message.senderId,
+      text: payload.text || "",
+      type: payload.type || "text",
+    });
     return true;
   } catch (err) {
     console.error("Failed to send message:", err);

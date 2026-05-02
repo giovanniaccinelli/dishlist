@@ -2,16 +2,26 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
 import { collection, collectionGroup, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../app/lib/firebase";
 import { useAuth } from "../app/lib/auth";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
+import {
+  addNativePushListeners,
+  disableNativePushToken,
+  getNativePushPermissionState,
+  isNativePushSupported,
+  registerForNativePush,
+  requestNativePushPermission,
+  saveNativePushToken,
+} from "../app/lib/pushClient";
 
 const ASKED_KEY = "notifications:asked";
 const ENABLED_KEY = "notifications:enabled";
 
 async function showAppNotification(title, options = {}) {
-  if (typeof window === "undefined" || Notification.permission !== "granted") return;
+  if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
   try {
     const registration = await navigator.serviceWorker?.getRegistration?.();
     if (registration?.showNotification) {
@@ -42,14 +52,21 @@ export default function NotificationsManager() {
   const { user } = useAuth();
   const [showPrompt, setShowPrompt] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [nativePermission, setNativePermission] = useState("unsupported");
   const followedIdsRef = useRef([]);
   const initialDishesLoadedRef = useRef(false);
   const initialStoriesLoadedRef = useRef(false);
   const initialConversationsLoadedRef = useRef(false);
   const notifiedKeysRef = useRef(new Set());
+  const nativePushTokenRef = useRef("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (isNativePushSupported()) {
+      setEnabled(localStorage.getItem(ENABLED_KEY) === "1");
+      getNativePushPermissionState().then(setNativePermission).catch(() => setNativePermission("unsupported"));
+      return;
+    }
     setEnabled(localStorage.getItem(ENABLED_KEY) === "1" && Notification.permission === "granted");
   }, []);
 
@@ -57,6 +74,18 @@ export default function NotificationsManager() {
     if (typeof window === "undefined") return;
     if (!user?.uid) {
       setShowPrompt(false);
+      return;
+    }
+    if (isNativePushSupported()) {
+      const asked = localStorage.getItem(ASKED_KEY) === "1";
+      if (nativePermission === "granted") {
+        localStorage.setItem(ENABLED_KEY, "1");
+        setEnabled(true);
+        return;
+      }
+      if (!asked && (nativePermission === "prompt" || nativePermission === "unsupported")) {
+        setShowPrompt(true);
+      }
       return;
     }
     if (!("Notification" in window)) return;
@@ -70,6 +99,46 @@ export default function NotificationsManager() {
     if (!asked && Notification.permission === "default") {
       setShowPrompt(true);
     }
+  }, [nativePermission, user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid || !isNativePushSupported()) return;
+    let removeListeners = () => {};
+    let cancelled = false;
+
+    (async () => {
+      removeListeners = await addNativePushListeners({
+        onRegistration: async (event) => {
+          const token = String(event?.token || event?.value || "").trim();
+          if (!token || cancelled) return;
+          nativePushTokenRef.current = token;
+          await saveNativePushToken(user.uid, token);
+          localStorage.setItem(ENABLED_KEY, "1");
+          setEnabled(true);
+        },
+        onRegistrationError: (event) => {
+          console.warn("Native push registration failed:", event);
+        },
+        onNotificationActionPerformed: (event) => {
+          const target =
+            event?.notification?.data?.url ||
+            event?.data?.url ||
+            "/";
+          window.location.href = target;
+        },
+      });
+
+      if (localStorage.getItem(ENABLED_KEY) === "1") {
+        await registerForNativePush().catch((error) => {
+          console.warn("Native push register failed:", error);
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      removeListeners?.();
+    };
   }, [user?.uid]);
 
   useEffect(() => {
@@ -87,7 +156,7 @@ export default function NotificationsManager() {
   }, [enabled, user?.uid]);
 
   useEffect(() => {
-    if (!user?.uid || !enabled) return;
+    if (!user?.uid || !enabled || isNativePushSupported()) return;
     const dishesQuery = query(collection(db, "dishes"), orderBy("createdAt", "desc"));
     return onSnapshot(dishesQuery, (snap) => {
       const followed = new Set(followedIdsRef.current);
@@ -110,7 +179,7 @@ export default function NotificationsManager() {
   }, [enabled, user?.uid]);
 
   useEffect(() => {
-    if (!user?.uid || !enabled) return;
+    if (!user?.uid || !enabled || isNativePushSupported()) return;
     const storiesQuery = query(collectionGroup(db, "stories"), orderBy("createdAt", "desc"));
     return onSnapshot(storiesQuery, (snap) => {
       const followed = new Set(followedIdsRef.current);
@@ -133,7 +202,7 @@ export default function NotificationsManager() {
   }, [enabled, user?.uid]);
 
   useEffect(() => {
-    if (!user?.uid || !enabled) return;
+    if (!user?.uid || !enabled || isNativePushSupported()) return;
     const conversationsQuery = query(collection(db, "conversations"), orderBy("updatedAt", "desc"));
     return onSnapshot(conversationsQuery, (snap) => {
       snap.docChanges().forEach((change) => {
@@ -157,13 +226,30 @@ export default function NotificationsManager() {
   }, [enabled, user?.uid]);
 
   const permissionLabel = useMemo(() => {
+    if (isNativePushSupported()) return nativePermission;
     if (typeof window === "undefined" || !("Notification" in window)) return "";
     return Notification.permission;
-  }, [showPrompt]);
+  }, [nativePermission, showPrompt]);
 
   const requestNotifications = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (typeof window === "undefined") return;
     localStorage.setItem(ASKED_KEY, "1");
+    if (isNativePushSupported()) {
+      const result = await requestNativePushPermission();
+      setNativePermission(result);
+      if (result === "granted") {
+        await registerForNativePush().catch((error) => {
+          console.warn("Native push register failed:", error);
+        });
+        localStorage.setItem(ENABLED_KEY, "1");
+        setEnabled(true);
+      } else if (nativePushTokenRef.current) {
+        await disableNativePushToken(user?.uid, nativePushTokenRef.current).catch(() => {});
+      }
+      setShowPrompt(false);
+      return;
+    }
+    if (!("Notification" in window)) return;
     const result = await Notification.requestPermission();
     if (result === "granted") {
       localStorage.setItem(ENABLED_KEY, "1");

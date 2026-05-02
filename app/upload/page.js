@@ -12,6 +12,7 @@ import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { useAuth } from "../lib/auth";
+import { dispatchPushEvent } from "../lib/pushClient";
 import {
   getAllDishlistsForUser,
   publishCustomStory,
@@ -153,6 +154,10 @@ export default function UploadPage() {
           restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
         });
         if (!ok) throw new Error("Failed to publish story.");
+        await dispatchPushEvent("story_posted", {
+          ownerId: user.uid,
+          storyName: dishName.trim(),
+        });
         setToastVariant("success");
         setToast("Story published");
         setTimeout(() => navigateBackToOrigin(), 1200);
@@ -174,6 +179,13 @@ export default function UploadPage() {
           createdAt: new Date(),
         };
         const dishId = await saveDishToFirestore(dishPayload);
+        if (dishId) {
+          await dispatchPushEvent("dish_posted", {
+            ownerId: user.uid,
+            dishId,
+            dishName: dishPayload.name || "",
+          });
+        }
         const savedTargets = selectedDishlistIds.filter((dishlistId) => dishlistId !== "uploaded");
         if (dishId && savedTargets.length) {
           const savedDish = { id: dishId, ...dishPayload };

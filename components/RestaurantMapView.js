@@ -369,32 +369,31 @@ export default function RestaurantMapView({
         )}
 
         {selectedGroup && mapState === "ready" ? (
-          <div className="restaurant-accent-border absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden rounded-[1.7rem] border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
-            <div
-              className="h-full"
-              onPointerDown={(event) => {
-                swipeStartRef.current = { x: event.clientX, y: event.clientY };
-              }}
-              onPointerUp={(event) => {
-                if (!swipeStartRef.current) return;
-                const dx = event.clientX - swipeStartRef.current.x;
-                const dy = event.clientY - swipeStartRef.current.y;
-                swipeStartRef.current = null;
-                if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
-                  cycleRestaurant(dx < 0 ? 1 : -1);
-                }
-              }}
-            >
-              <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
-                <motion.div
-                  key={selectedGroup.placeId}
-                  custom={sheetDirection}
-                  initial={{ x: sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="flex h-full flex-col overflow-hidden p-4"
-                >
+          <div
+            className="absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden"
+            onPointerDown={(event) => {
+              swipeStartRef.current = { x: event.clientX, y: event.clientY };
+            }}
+            onPointerUp={(event) => {
+              if (!swipeStartRef.current) return;
+              const dx = event.clientX - swipeStartRef.current.x;
+              const dy = event.clientY - swipeStartRef.current.y;
+              swipeStartRef.current = null;
+              if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+                cycleRestaurant(dx < 0 ? 1 : -1);
+              }
+            }}
+          >
+            <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
+              <motion.div
+                key={selectedGroup.placeId}
+                custom={sheetDirection}
+                initial={{ x: sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                className="restaurant-accent-border absolute inset-0 flex h-full flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
+              >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -456,9 +455,8 @@ export default function RestaurantMapView({
                       ))}
                     </div>
                   ) : null}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         ) : null}
       </div>

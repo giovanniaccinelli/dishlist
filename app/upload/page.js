@@ -289,17 +289,15 @@ export default function UploadPage() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${
+                    className={`no-accent-border h-1.5 rounded-full transition-all ${
                       step <= uploadStep
-                        ? dishMode === DISH_MODE_RESTAURANT
+                        ? step === 0
                           ? "w-10 bg-[#E64646]"
-                          : step === 0
-                            ? "w-10 bg-[#E64646]"
-                            : step === 1
-                              ? "w-10 bg-[#F59E0B]"
-                              : step === 2
-                                ? "w-10 bg-[#23C268]"
-                                : "w-10 bg-[#111111]"
+                          : step === 1
+                            ? "w-10 bg-[#F59E0B]"
+                            : step === 2
+                              ? "w-10 bg-[#23C268]"
+                              : "w-10 bg-[#111111]"
                         : "w-7 bg-black/10"
                     }`}
                   />
@@ -333,7 +331,7 @@ export default function UploadPage() {
                       className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF5F5]" : dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-                        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFF1C9] text-[#F0A623]">
+                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF1F1] text-[#E64646]" : "border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]"}`}>
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
@@ -345,10 +343,10 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-                        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFE2E2] text-[#E64646]">
+                        <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
                           <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
@@ -374,7 +372,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
-                    className={`w-full p-4 rounded-full bg-white text-black mb-4 border-[2px] ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] shadow-[0_10px_24px_rgba(230,70,70,0.14)] focus:ring-[#E64646]/25" : "border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:ring-[#E5C15A]/30"} focus:outline-none focus:ring-2 text-base`}
+                    className={`w-full p-4 rounded-full bg-white text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border shadow-[0_10px_24px_rgba(230,70,70,0.14)] focus:ring-[#E64646]/25" : "border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:ring-[#E5C15A]/30"} focus:outline-none focus:ring-2 text-base`}
                   disabled={loadingUpload}
                 />
                 <div
@@ -387,10 +385,10 @@ export default function UploadPage() {
                   className={`w-full h-44 rounded-[1.65rem] border-2 border-dashed ${
                     dragActive
                       ? dishMode === DISH_MODE_RESTAURANT
-                        ? "border-[#E64646] bg-[#FFE8E4]"
+                        ? "restaurant-accent-border bg-[#FFE8E4]"
                         : "border-[#F59E0B] bg-[#FFF1CC]"
                       : dishMode === DISH_MODE_RESTAURANT
-                        ? "border-[#E64646] bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]"
+                        ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]"
                         : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
                   } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative overflow-hidden`}
                 >
@@ -558,12 +556,12 @@ export default function UploadPage() {
                         <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
                       ) : null}
                       {storyMode && storyTaggedUser.trim() ? (
-                        <div className="mt-2 inline-flex max-w-full items-center rounded-full border border-[#E2C7A5] bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]">
+                        <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
                           @{storyTaggedUser.trim().replace(/^@+/, "")}
                         </div>
                       ) : null}
                       {dishLink ? (
-                        <div className="mt-2 inline-flex max-w-full items-center rounded-full border border-[#D8C090] bg-white/72 px-3 py-1 text-[11px] font-medium text-black/62">
+                        <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/72 px-3 py-1 text-[11px] font-medium text-black/62`}>
                           <span className="truncate">{getNormalizedDishLink()}</span>
                         </div>
                       ) : null}

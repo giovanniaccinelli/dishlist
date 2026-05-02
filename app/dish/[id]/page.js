@@ -720,17 +720,15 @@ export default function DishDetail() {
                 {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={`h-1.5 rounded-full transition-all ${
+                    className={`no-accent-border h-1.5 rounded-full transition-all ${
                     step <= editStep
-                      ? editDishMode === DISH_MODE_RESTAURANT
+                      ? step === 0
                         ? "w-10 bg-[#E64646]"
-                        : step === 0
-                          ? "w-10 bg-[#E64646]"
-                          : step === 1
-                            ? "w-10 bg-[#F59E0B]"
-                            : step === 2
-                              ? "w-10 bg-[#23C268]"
-                              : "w-10 bg-[#111111]"
+                        : step === 1
+                          ? "w-10 bg-[#F59E0B]"
+                          : step === 2
+                            ? "w-10 bg-[#23C268]"
+                            : "w-10 bg-[#111111]"
                       : "w-7 bg-black/10"
                   }`}
                   />
@@ -767,7 +765,7 @@ export default function DishDetail() {
     className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF5F5]" : editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
     <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-      <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFF1C9] text-[#F0A623]">
+      <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF1F1] text-[#E64646]" : "border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]"}`}>
         <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
@@ -780,10 +778,10 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
   >
     <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-      <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFE2E2] text-[#E64646]">
+      <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
@@ -808,10 +806,10 @@ export default function DishDetail() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Dish name"
-                  className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
+                  className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
-                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"} flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}>
+                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"} flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}>
                   <input
                     type="file"
                     accept="image/*,video/*"

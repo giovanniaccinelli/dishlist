@@ -414,9 +414,9 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex min-h-0 items-start gap-3 overflow-x-auto pb-1">
+                    <div className="mt-3 flex flex-1 min-h-0 items-stretch gap-3 overflow-x-auto pb-1">
                       {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[10.4rem] shrink-0">
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex h-full w-[10.4rem] shrink-0 flex-col">
                           <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">
                             <Avatar user={user} />
                             <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">
@@ -427,9 +427,9 @@ export default function RestaurantMapView({
                             <button
                               type="button"
                               onClick={() => openDish(user.dishes[0])}
-                              className="restaurant-accent-border w-full overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
+                              className="restaurant-accent-border flex min-h-0 flex-1 overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
                             >
-                              <div className="relative h-[11.25rem] w-full overflow-hidden">
+                              <div className="relative h-full w-full overflow-hidden">
                                 <img
                                   src={getDishImageUrl(user.dishes[0], "thumb")}
                                   alt={user.dishes[0].name || "Dish"}

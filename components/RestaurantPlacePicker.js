@@ -24,7 +24,11 @@ export default function RestaurantPlacePicker({
   label = "Restaurant (optional)",
   placeholder = "Search restaurant",
   className = "",
+  accent = "default",
 }) {
+  const isRestaurantAccent = accent === "restaurant";
+  const borderClass = isRestaurantAccent ? "restaurant-accent-border" : "default-accent-border";
+  const focusClass = isRestaurantAccent ? "focus:ring-[#E64646]/20" : "focus:ring-black/10";
   const [query, setQuery] = useState(value?.name || "");
   const [predictions, setPredictions] = useState([]);
   const [ready, setReady] = useState(false);
@@ -155,7 +159,7 @@ export default function RestaurantPlacePicker({
         ) : null}
       </div>
 
-      <div className="rounded-[1.35rem] border border-black/10 bg-white/90 p-3 shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
+      <div className={`rounded-[1.35rem] border-2 ${borderClass} bg-white/90 p-3 shadow-[0_10px_24px_rgba(0,0,0,0.04)]`}>
         <div className="flex items-center gap-2">
           <Search size={16} className="text-black/35" />
           <input
@@ -173,13 +177,13 @@ export default function RestaurantPlacePicker({
               }
             }}
             placeholder={placeholder}
-            className="w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none"
+            className={`w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none ${focusClass}`}
           />
           {query ? (
             <button
               type="button"
               onClick={handleClear}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-black/55"
+              className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${borderClass} bg-black/5 text-black/55`}
               aria-label="Clear restaurant"
             >
               <X size={14} />
@@ -188,7 +192,7 @@ export default function RestaurantPlacePicker({
         </div>
 
         {value ? (
-          <div className="mt-3 rounded-[1rem] bg-[#FFF7EB] px-3 py-2.5">
+          <div className={`mt-3 rounded-[1rem] border-2 ${borderClass} bg-[#FFF7EB] px-3 py-2.5`}>
             <div className="flex items-start gap-2">
               <MapPin size={15} className="mt-0.5 shrink-0 text-[#E64646]" />
               <div className="min-w-0">
@@ -212,7 +216,7 @@ export default function RestaurantPlacePicker({
           <div className="mt-3 text-xs text-black/45">Loading restaurant details...</div>
         ) : null}
         {showPredictions ? (
-          <div className="mt-3 overflow-hidden rounded-[1rem] border border-black/8 bg-[#FFFCF7]">
+          <div className={`mt-3 overflow-hidden rounded-[1rem] border-2 ${borderClass} bg-[#FFFCF7]`}>
             {predictions.map((prediction) => (
               <button
                 key={prediction.place_id}
@@ -221,7 +225,7 @@ export default function RestaurantPlacePicker({
                   event.preventDefault();
                 }}
                 onClick={() => handleSelectPrediction(prediction)}
-                className="flex w-full items-start gap-2 border-b border-black/6 px-3 py-2.5 text-left last:border-b-0 hover:bg-black/[0.03]"
+                className={`flex w-full items-start gap-2 border-b border-black/6 px-3 py-2.5 text-left last:border-b-0 hover:bg-black/[0.03] ${borderClass}`}
               >
                 <MapPin size={14} className="mt-0.5 shrink-0 text-[#E64646]" />
                 <div className="min-w-0">

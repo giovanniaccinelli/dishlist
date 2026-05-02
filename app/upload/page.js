@@ -291,13 +291,15 @@ export default function UploadPage() {
                     key={step}
                     className={`h-1.5 rounded-full transition-all ${
                       step <= uploadStep
-                        ? step === 0
+                        ? dishMode === DISH_MODE_RESTAURANT
                           ? "w-10 bg-[#E64646]"
-                          : step === 1
-                            ? "w-10 bg-[#F59E0B]"
-                            : step === 2
-                              ? "w-10 bg-[#23C268]"
-                              : "w-10 bg-[#111111]"
+                          : step === 0
+                            ? "w-10 bg-[#E64646]"
+                            : step === 1
+                              ? "w-10 bg-[#F59E0B]"
+                              : step === 2
+                                ? "w-10 bg-[#23C268]"
+                                : "w-10 bg-[#111111]"
                         : "w-7 bg-black/10"
                     }`}
                   />
@@ -328,7 +330,7 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF5F5]" : dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] bg-[#FFF1C9] text-[#F0A623]">
@@ -363,6 +365,7 @@ export default function UploadPage() {
                       value={restaurant}
                       onChange={setRestaurant}
                       placeholder="Search where you ate it"
+                      accent="restaurant"
                     />
                   </div>
                 ) : null}
@@ -528,7 +531,7 @@ export default function UploadPage() {
                 </div>
                 <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "default-accent-border bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
+                    <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}>
                       {preview ? (
                         dishImage?.type?.startsWith("video/") ? (
                           <video
@@ -588,7 +591,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={openDishlistPicker}
-                  className="w-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg"
+                  className={`w-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg`}
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}

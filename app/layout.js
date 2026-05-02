@@ -6,6 +6,7 @@ import { AuthProvider } from "./lib/auth";
 import DebugBanner from "../components/DebugBanner";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import GoogleAnalytics from "../components/GoogleAnalytics";
+import NotificationsManager from "../components/NotificationsManager";
 
 export default function RootLayout({ children }) {
   return (
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <GoogleAnalytics />
             <ServiceWorkerRegister />
+            <NotificationsManager />
             <DebugBanner />
             {children}
           </AuthProvider>

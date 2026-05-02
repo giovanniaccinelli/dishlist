@@ -49,23 +49,38 @@ export function getRestaurantDishGroups(dishes = []) {
     }
 
     const userId = String(dish?.owner || "").trim();
-    if (userId && !existing.users.some((item) => item.id === userId)) {
-      existing.users.push({
-        id: userId,
-        name: dish?.ownerName || "User",
-        photoURL: dish?.ownerPhotoURL || "",
-      });
+    if (userId) {
+      let userEntry = existing.users.find((item) => item.id === userId);
+      if (!userEntry) {
+        userEntry = {
+          id: userId,
+          name: dish?.ownerName || "User",
+          photoURL: dish?.ownerPhotoURL || "",
+          dishes: [],
+        };
+        existing.users.push(userEntry);
+      }
+      if (dish?.id && !userEntry.dishes.some((item) => item.id === dish.id)) {
+        userEntry.dishes.push(dish);
+      }
     }
 
     groups.set(restaurant.placeId, existing);
   });
 
-  return Array.from(groups.values()).sort((a, b) => {
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      users: (group.users || []).sort(
+        (a, b) => (b.dishes?.length || 0) - (a.dishes?.length || 0) || (a.name || "").localeCompare(b.name || "")
+      ),
+    }))
+    .sort((a, b) => {
     if ((b.dishes?.length || 0) !== (a.dishes?.length || 0)) {
       return (b.dishes?.length || 0) - (a.dishes?.length || 0);
     }
     return a.name.localeCompare(b.name);
-  });
+    });
 }
 
 export function hasRestaurantLocation(dish) {

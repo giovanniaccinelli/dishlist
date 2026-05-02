@@ -231,6 +231,7 @@ const TAG_DECOR = {
   spicy: { icon: ChiliIcon, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
   gourmet: { icon: ChefHat, iconClass: "text-[#8A6A46]", pillClass: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
+  "date night": { icon: HeartIcon, iconClass: "text-[#D4475B]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
@@ -263,7 +264,7 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title }) {
   return (
-    <div className="pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer">
+    <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <img
         src={getDishImageUrl(dish, "thumb")}
@@ -381,7 +382,7 @@ function ExpandedCategoryModal({ row, onClose }) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish) => (
-            <div key={`${row.key}-${dish.id}`} className="relative bg-white rounded-2xl overflow-hidden shadow-md">
+            <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}>
               <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
               <img
                 src={getDishImageUrl(dish, "thumb")}

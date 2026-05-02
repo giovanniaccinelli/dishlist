@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trash2, X } from "lucide-react";
+import { Eye, Trash2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
-import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
+import { addCommentToDish, deleteCommentThread, getCommentsForDish, getUsersByIds } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import StoryViewsModal from "./StoryViewsModal";
 
 const STORY_DURATION_MS = 4500;
 
@@ -64,6 +65,9 @@ export default function StoryViewerModal({
   const [previewComment, setPreviewComment] = useState(null);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
+  const [viewsOpen, setViewsOpen] = useState(false);
+  const [viewsLoading, setViewsLoading] = useState(false);
+  const [viewers, setViewers] = useState([]);
   const rafProgressRef = useRef(0);
   useEffect(() => {
     if (!open) return;
@@ -372,6 +376,24 @@ export default function StoryViewerModal({
     setPreviewComment(top?.[0] || null);
   };
 
+  const openViews = async (event) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    setViewsOpen(true);
+    const viewerIds = Array.isArray(currentStory?.viewedBy)
+      ? currentStory.viewedBy.filter((id) => id && id !== currentGroup?.ownerId)
+      : [];
+    setViewsLoading(true);
+    try {
+      const users = await getUsersByIds(viewerIds);
+      setViewers(users);
+    } finally {
+      setViewsLoading(false);
+    }
+  };
+
   const publishedAtLabel = (() => {
     const raw = currentStory.createdAt;
     let date = null;
@@ -484,6 +506,21 @@ export default function StoryViewerModal({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+              {canDelete ? (
+                <button
+                  type="button"
+                  data-no-story-pause="true"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={openViews}
+                  className="relative z-50 inline-flex h-10 items-center gap-1.5 rounded-full bg-white/10 px-3 text-white"
+                  aria-label="Open story views"
+                >
+                  <Eye size={15} />
+                  <span className="text-xs font-semibold">{Math.max((currentStory?.viewedBy || []).length - 1, 0)}</span>
+                </button>
+              ) : null}
               {canDelete ? (
                 <button
                   type="button"
@@ -608,6 +645,12 @@ export default function StoryViewerModal({
         currentUser={currentUser}
         replyTo={replyTo}
         setReplyTo={setReplyTo}
+      />
+      <StoryViewsModal
+        open={viewsOpen}
+        onClose={() => setViewsOpen(false)}
+        viewers={viewers}
+        loading={viewsLoading}
       />
     </AnimatePresence>
   );

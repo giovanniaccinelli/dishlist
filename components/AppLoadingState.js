@@ -44,8 +44,13 @@ export function FeedLoading() {
         </div>
         <PulseBlock className="h-11 w-11 rounded-full" />
       </div>
-      <div className="flex h-[68vh] items-center justify-center pt-3">
-        <div className="animate-pulse">
+      <div className="relative flex h-[68vh] items-center justify-center pt-3">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="max-w-[16rem] text-center text-[2.2rem] font-semibold leading-[0.94] tracking-tight text-black/82">
+            whats your next meal
+          </div>
+        </div>
+        <div className="animate-pulse translate-y-16">
           <img
             src="/logo-real.png"
             alt="DishList"

@@ -404,6 +404,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
+  const restaurantAccentBorder = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
@@ -954,7 +955,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onPointerUpCapture={(e) => e.stopPropagation()}
           >
             {hasAnyRecipeText ? (
-              <div className="no-accent-border flex h-8 items-center gap-0.5 rounded-full bg-black/65 p-0.5 text-white">
+              <div className={`no-accent-border flex h-8 items-center gap-0.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 p-0.5 text-white`}>
                 <button
                   data-no-drag="true"
                   onClick={(e) => {
@@ -991,7 +992,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   setNoRecipeNoticeOpen(true);
                 }}
-                className="inline-flex h-8 items-center rounded-full bg-white px-3 text-[13px] font-semibold leading-none text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
+                className={`inline-flex h-8 items-center rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 text-[13px] font-semibold leading-none text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
               >
                 dish
               </button>
@@ -1009,7 +1010,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setStoryHistoryOpen(true);
                   }}
-                  className="inline-flex h-8 items-center gap-1 rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white self-center"
+                  className={`inline-flex h-8 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white self-center`}
                   aria-label="Open story push history"
                 >
                   <StoryStatIcon size={12} />
@@ -1027,7 +1028,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
-                className="max-w-full truncate rounded-full bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white"
+                className={`max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`}
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
                 {currentRestaurantLabel}
@@ -1070,7 +1071,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               e.preventDefault();
               if (typeof onSavesPress === "function") onSavesPress(currentCard);
             }}
-            className="absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full bg-black/65 px-3 text-xs font-semibold leading-none text-white"
+            className={`absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`}
           >
             saves: {Number(currentCard.saves || 0)}
           </button>
@@ -1120,7 +1121,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-7 h-7 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold">
+                    <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>
                       {currentCard.ownerPhotoURL ? (
                         <img
                           src={currentCard.ownerPhotoURL}
@@ -1177,7 +1178,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                           onPointerDown={(e) => {
                             e.stopPropagation();
                           }}
-                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]"
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}
                         >
                           <span>Link</span>
                           <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -1225,7 +1226,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={ingredientsPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative"
+                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative`}
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Ingredients</h3>
@@ -1250,7 +1251,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("ingredients");
                           }}
-                          className="pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} bg-[#F7F5EF] text-black/65`}
                           style={{ touchAction: "manipulation" }}
                           aria-label="Open ingredients full screen"
                         >
@@ -1267,7 +1268,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={methodPanelRef}
                     data-no-drag="true"
-                    className="min-h-0 flex-1 rounded-[1.4rem] border border-black/8 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative"
+                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative`}
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Method</h3>
@@ -1292,7 +1293,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("method");
                           }}
-                          className="pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F7F5EF] text-black/65"
+                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} bg-[#F7F5EF] text-black/65`}
                           style={{ touchAction: "manipulation" }}
                           aria-label="Open method full screen"
                         >
@@ -1503,7 +1504,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 type="button"
                 data-no-drag="true"
                 key={`${tag}-${idx}`}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                className={`px-2.5 py-1 rounded-full border-2 ${restaurantAccentBorder} text-[11px] font-semibold ${
                   TAG_COLORS[idx % TAG_COLORS.length]
                 }`}
                 onClick={(e) => handleTagPress(tag, e)}

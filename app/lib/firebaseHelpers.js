@@ -21,7 +21,7 @@ import {
   writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { normalizeRestaurant } from "./restaurants";
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
@@ -250,7 +250,18 @@ export async function uploadImage(file, userId) {
   const safeName = file.name ? file.name.replace(/\s+/g, "-") : "upload";
   const uniqueName = `${Date.now()}-${safeName}`;
   const storageRef = ref(storage, `dishImages/${userId}/${uniqueName}`);
-  const snapshot = await uploadBytes(storageRef, file);
+  const snapshot = await new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(storageRef, file, {
+      contentType: file.type || undefined,
+      cacheControl: "public,max-age=31536000,immutable",
+    });
+    task.on(
+      "state_changed",
+      undefined,
+      (error) => reject(error),
+      () => resolve(task.snapshot)
+    );
+  });
   const url = await getDownloadURL(snapshot.ref);
   return url;
 }
@@ -833,6 +844,26 @@ export async function getUsersWhoSavedDish(dishId) {
     return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
   } catch (err) {
     console.error("Failed to fetch users who saved dish:", err);
+    return [];
+  }
+}
+
+export async function getUsersByIds(userIds = []) {
+  const ids = Array.from(
+    new Set(
+      (userIds || [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean)
+    )
+  );
+  if (!ids.length) return [];
+  try {
+    const docs = await Promise.all(ids.map((uid) => getDoc(doc(db, "users", uid))));
+    return docs
+      .filter((snap) => snap.exists())
+      .map((snap) => ({ id: snap.id, ...snap.data() }));
+  } catch (err) {
+    console.error("Failed to load users by ids:", err);
     return [];
   }
 }

@@ -688,7 +688,7 @@ export default function Dishes() {
             return (
               <div
                 key={dish.id || `${dish.owner || "dish"}-${dish.name || "untitled"}`}
-                className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
+                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}
               >
                 <Link
                   href={`/dish/${dish.id}?source=public&mode=single&returnTo=${encodeURIComponent(buildSearchReturnTo())}&deckIds=${encodeURIComponent(visibleDishes.map((item) => item.id).filter(Boolean).join(","))}`}

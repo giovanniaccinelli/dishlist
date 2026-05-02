@@ -18,6 +18,7 @@ export const TAG_OPTIONS = [
   "summer",
   "winter",
   "gourmet",
+  "date night",
 ];
 
 const TAG_COLOR_STYLES = [

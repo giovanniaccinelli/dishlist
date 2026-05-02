@@ -46,6 +46,7 @@ export default function RestaurantMapView({
   const [predictions, setPredictions] = useState([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
+  const swipeStartRef = useRef(null);
 
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
@@ -57,6 +58,16 @@ export default function RestaurantMapView({
     if (!initialSelectedPlaceId) return;
     setSelectedPlaceId(initialSelectedPlaceId);
   }, [initialSelectedPlaceId]);
+
+  useEffect(() => {
+    if (!selectedGroup || !mapRef.current) return;
+    if (!Number.isFinite(selectedGroup.lat) || !Number.isFinite(selectedGroup.lng)) return;
+    mapRef.current.panTo({ lat: selectedGroup.lat, lng: selectedGroup.lng });
+    const currentZoom = mapRef.current.getZoom?.() || 0;
+    if (currentZoom < 13) {
+      mapRef.current.setZoom(13);
+    }
+  }, [selectedGroup?.placeId]);
 
   useEffect(() => {
     let mounted = true;
@@ -213,6 +224,17 @@ export default function RestaurantMapView({
     router.push(href);
   };
 
+  const selectedIndex = useMemo(
+    () => Math.max(0, groups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
+    [groups, selectedGroup?.placeId]
+  );
+
+  const cycleRestaurant = (direction) => {
+    if (!groups.length) return;
+    const nextIndex = (selectedIndex + direction + groups.length) % groups.length;
+    focusGroup(groups[nextIndex]);
+  };
+
   const focusGroup = (group) => {
     if (!group) return;
     setSelectedPlaceId(group.placeId || "");
@@ -337,6 +359,20 @@ export default function RestaurantMapView({
 
         {selectedGroup && mapState === "ready" ? (
           <div className="absolute inset-x-3 bottom-3 z-10 max-h-[90%] overflow-y-auto rounded-[1.6rem] border border-black/10 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
+            <div
+              onPointerDown={(event) => {
+                swipeStartRef.current = { x: event.clientX, y: event.clientY };
+              }}
+              onPointerUp={(event) => {
+                if (!swipeStartRef.current) return;
+                const dx = event.clientX - swipeStartRef.current.x;
+                const dy = event.clientY - swipeStartRef.current.y;
+                swipeStartRef.current = null;
+                if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+                  cycleRestaurant(dx < 0 ? 1 : -1);
+                }
+              }}
+            >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -356,44 +392,53 @@ export default function RestaurantMapView({
             </div>
 
             {selectedGroup.users?.length ? (
-              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+              <div className="mt-3 flex items-start gap-3 overflow-x-auto pb-1">
                 {selectedGroup.users.map((user) => (
-                  <div key={`${selectedGroup.placeId}-${user.id}`} className="flex items-center gap-2 rounded-full bg-black/[0.04] px-2 py-1.5">
-                    <Avatar user={user} />
-                    <span className="max-w-[8rem] truncate text-xs font-medium text-black/72">
-                      {user.name || "User"}
-                    </span>
+                  <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[9rem] shrink-0">
+                    <div className="mb-2 flex items-center gap-2 rounded-full bg-black/[0.04] px-2.5 py-1.5">
+                      <Avatar user={user} />
+                      <span className="max-w-[5.4rem] truncate text-xs font-medium text-black/72">
+                        {user.name || "User"}
+                      </span>
+                    </div>
+                    {user.dishes?.[0] ? (
+                      <button
+                        type="button"
+                        onClick={() => openDish(user.dishes[0])}
+                        className="w-full overflow-hidden rounded-[1.25rem] border border-black/10 text-left"
+                      >
+                        <div className="relative h-24 w-full overflow-hidden">
+                          <img
+                            src={getDishImageUrl(user.dishes[0], "thumb")}
+                            alt={user.dishes[0].name || "Dish"}
+                            className="h-full w-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                          <div className="absolute inset-x-0 bottom-0 px-2.5 py-2 text-white">
+                            <div className="truncate text-sm font-semibold">
+                              {user.dishes[0].name || "Untitled dish"}
+                            </div>
+                            {(user.dishes?.length || 0) > 1 ? (
+                              <div className="mt-0.5 text-[10px] text-white/80">
+                                +{user.dishes.length - 1} more here
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </button>
+                    ) : null}
                   </div>
                 ))}
               </div>
             ) : null}
-
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {(selectedGroup.dishes || []).map((dish) => (
-                <button
-                  key={`${selectedGroup.placeId}-${dish.id}`}
-                  type="button"
-                  onClick={() => openDish(dish)}
-                  className="w-[8.6rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-black/10 bg-[#FFFDF8] text-left"
-                >
-                  <img
-                    src={getDishImageUrl(dish, "thumb")}
-                    alt={dish.name || "Dish"}
-                    className="h-20 w-full object-cover"
-                    onError={(event) => {
-                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                    }}
-                  />
-                  <div className="p-2.5">
-                    <div className="truncate text-sm font-semibold text-black">
-                      {dish.name || "Untitled dish"}
-                    </div>
-                    <div className="mt-1 truncate text-xs text-black/52">
-                      {dish.ownerName || "User"}
-                    </div>
-                  </div>
-                </button>
-              ))}
+            {groups.length > 1 ? (
+              <div className="mt-3 text-center text-[11px] font-medium text-black/45">
+                Swipe left or right to move between restaurants
+              </div>
+            ) : null}
             </div>
           </div>
         ) : null}

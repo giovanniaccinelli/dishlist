@@ -662,7 +662,7 @@ export default function PublicProfile() {
             {(activeDishlist?.dishes || []).map((dish, index) => (
               <motion.div
                 key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
-                className="pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative"
+                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}
               >
                 <Link
                   href={

@@ -32,7 +32,13 @@ import {
   getAvatarTone,
   isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
-import { dispatchPushEvent } from "../lib/pushClient";
+import {
+  dispatchPushEvent,
+  getNativePushPermissionState,
+  isNativePushSupported,
+  registerForNativePush,
+  requestNativePushPermission,
+} from "../lib/pushClient";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -118,6 +124,8 @@ export default function Profile() {
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [connectionsUsers, setConnectionsUsers] = useState([]);
   const [profileOptionsOpen, setProfileOptionsOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsBusy, setNotificationsBusy] = useState(false);
   const [removePhoto, setRemovePhoto] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
@@ -179,6 +187,76 @@ export default function Profile() {
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [profileOptionsOpen]);
+
+  useEffect(() => {
+  if (typeof window === "undefined") return;
+  setNotificationsEnabled(localStorage.getItem("notifications:enabled") === "1");
+}, []);
+
+const handleToggleNotifications = async () => {
+  if (notificationsBusy) return;
+  setNotificationsBusy(true);
+
+  try {
+    const next = !notificationsEnabled;
+
+    if (next) {
+      localStorage.setItem("notifications:asked", "1");
+
+      if (isNativePushSupported()) {
+        const currentPermission = await getNativePushPermissionState();
+        const permission =
+          currentPermission === "granted"
+            ? "granted"
+            : await requestNativePushPermission();
+
+        if (permission !== "granted") {
+          localStorage.setItem("notifications:enabled", "0");
+          setNotificationsEnabled(false);
+          setToastVariant("error");
+          setToast("Notifications not allowed");
+          setTimeout(() => setToast(""), 1400);
+          return;
+        }
+
+        await registerForNativePush();
+      } else if (typeof window !== "undefined" && "Notification" in window) {
+        const permission =
+          Notification.permission === "granted"
+            ? "granted"
+            : await Notification.requestPermission();
+
+        if (permission !== "granted") {
+          localStorage.setItem("notifications:enabled", "0");
+          setNotificationsEnabled(false);
+          setToastVariant("error");
+          setToast("Notifications not allowed");
+          setTimeout(() => setToast(""), 1400);
+          return;
+        }
+      }
+
+      localStorage.setItem("notifications:enabled", "1");
+      setNotificationsEnabled(true);
+      setToastVariant("success");
+      setToast("Notifications enabled");
+      setTimeout(() => setToast(""), 1200);
+    } else {
+      localStorage.setItem("notifications:enabled", "0");
+      setNotificationsEnabled(false);
+      setToastVariant("success");
+      setToast("Notifications disabled");
+      setTimeout(() => setToast(""), 1200);
+    }
+  } catch (err) {
+    console.error("Failed to toggle notifications:", err);
+    setToastVariant("error");
+    setToast("Notification setup failed");
+    setTimeout(() => setToast(""), 1400);
+  } finally {
+    setNotificationsBusy(false);
+  }
+};
 
   useEffect(() => {
     if (!editProfileModal) return undefined;
@@ -980,6 +1058,26 @@ export default function Profile() {
               >
                 Edit Profile
               </button>
+
+              <button
+  type="button"
+  onClick={handleToggleNotifications}
+  disabled={notificationsBusy}
+  className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-black/5 text-sm disabled:opacity-50"
+>
+  <span>Notifications</span>
+  <span
+    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+      notificationsEnabled
+        ? "bg-[#DDF6E5] text-[#176A37]"
+        : "bg-black/5 text-black/45"
+    }`}
+  >
+    {notificationsBusy ? "..." : notificationsEnabled ? "ON" : "OFF"}
+  </span>
+</button>
+
+
               <button
                 type="button"
                 onClick={() => {

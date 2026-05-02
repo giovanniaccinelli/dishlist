@@ -25,31 +25,6 @@ function Avatar({ user }) {
   );
 }
 
-function buildRestaurantMarkerIcon(group) {
-  const imageUrl = group?.dishes?.[0] ? getDishImageUrl(group.dishes[0], "thumb") : DEFAULT_DISH_IMAGE;
-  const safeImageUrl = imageUrl || DEFAULT_DISH_IMAGE;
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <defs>
-        <clipPath id="dishlist-marker-clip">
-          <circle cx="32" cy="32" r="24"/>
-        </clipPath>
-      </defs>
-      <circle cx="32" cy="32" r="27" fill="#ffffff"/>
-      <circle cx="32" cy="32" r="24.5" fill="${String(group?.placeId || "").trim() ? "#E64646" : "#E4B43F"}" opacity="0.22"/>
-      <image href="${safeImageUrl}" x="8" y="8" width="48" height="48" preserveAspectRatio="xMidYMid slice" clip-path="url(#dishlist-marker-clip)"/>
-      <circle cx="32" cy="32" r="24" fill="none" stroke="#111111" stroke-opacity="0.10" stroke-width="1.5"/>
-      <circle cx="32" cy="32" r="26.5" fill="none" stroke="#E64646" stroke-width="3"/>
-    </svg>
-  `;
-
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    scaledSize: new window.google.maps.Size(48, 48),
-    anchor: new window.google.maps.Point(24, 24),
-  };
-}
-
 export default function RestaurantMapView({
   groups = [],
   emptyTitle = "No restaurant dishes yet",
@@ -209,7 +184,6 @@ export default function RestaurantMapView({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: buildRestaurantMarkerIcon(group),
       });
       marker.addListener("click", () => setSelectedPlaceId(group.placeId));
       markersRef.current.push(marker);

@@ -135,11 +135,31 @@
   border-color: #e64646 !important;
 }
 
-.default-accent-border {
+:where(
+  .pressable-card,
+  .card,
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  div,
+  span
+).default-accent-border {
   border-color: #e4b43f !important;
 }
 
-.restaurant-accent-border {
+:where(
+  .pressable-card,
+  .card,
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  div,
+  span
+).restaurant-accent-border {
   border-color: #e64646 !important;
 }
 

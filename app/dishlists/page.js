@@ -90,27 +90,32 @@ export default function Dishlists() {
       const toTryDishIds = Array.isArray(u.toTryDishes) ? u.toTryDishes : [];
       const uploadedDishes = uploadedByOwner.get(u.id) || [];
       const storyStats = storyStatsByUser.get(u.id) || {};
-      const previewImages = [];
+      const previewDishes = [];
       const seenDishIds = new Set();
 
-      const pushImage = (dishData) => {
+      const pushPreviewDish = (dishData) => {
         const imageUrl = getDishImageUrl(dishData, "thumb");
         const dishId = String(dishData?.id || "");
-        if (!imageUrl || !dishId || seenDishIds.has(dishId) || previewImages.length >= 4) return;
+        if (!imageUrl || !dishId || seenDishIds.has(dishId) || previewDishes.length >= 4) return;
         seenDishIds.add(dishId);
-        previewImages.push(imageUrl);
+        previewDishes.push({
+          id: dishId,
+          imageUrl,
+          dishMode: String(dishData?.dishMode || "").toLowerCase(),
+        });
       };
 
       Object.entries(storyStats)
         .sort(([, a], [, b]) => Number(b?.count || 0) - Number(a?.count || 0))
-        .forEach(([dishId]) => pushImage(dishById.get(dishId)));
+        .forEach(([dishId]) => pushPreviewDish(dishById.get(dishId)));
 
-      [...savedDishIds, ...toTryDishIds].forEach((dishId) => pushImage(dishById.get(dishId)));
-      uploadedDishes.forEach((dish) => pushImage(dish));
+      [...savedDishIds, ...toTryDishIds].forEach((dishId) => pushPreviewDish(dishById.get(dishId)));
+      uploadedDishes.forEach((dish) => pushPreviewDish(dish));
 
       return {
         ...u,
-        previewImages,
+        previewDishes,
+        previewImages: previewDishes.map((dish) => dish.imageUrl),
         activeStories: [],
         hasActiveStory: Boolean(u.hasActiveStory),
         profileDishCount: savedDishIds.length + toTryDishIds.length + uploadedDishes.length,
@@ -420,7 +425,9 @@ export default function Dishlists() {
             {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const alreadyFollowing = u.followers?.includes(user?.uid);
-              const previewCells = Array.from({ length: 4 }, (_, idx) => u.previewImages?.[idx] || "");
+              const previewCells = Array.from({ length: 4 }, (_, idx) => (
+                u.previewDishes?.[idx] || { imageUrl: "", dishMode: "" }
+              ));
               const hasAnyDishes = (u.profileDishCount || 0) > 0;
               const avatarTone = getAvatarTone(u.displayName || "");
               return (
@@ -488,14 +495,16 @@ export default function Dishlists() {
 
                   {hasAnyDishes ? (
                     <div className="grid grid-cols-2 gap-2">
-                      {previewCells.map((imageSrc, idx) => (
+                      {previewCells.map((previewDish, idx) => (
                         <div
-                          key={`${u.id}-preview-${idx}`}
-                          className="aspect-square rounded-lg bg-neutral-100 overflow-hidden"
+                          key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
+                          className={`aspect-square overflow-hidden rounded-lg border-2 ${
+                            previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                          } bg-neutral-100`}
                         >
-                          {imageSrc ? (
+                          {previewDish?.imageUrl ? (
                             <img
-                              src={imageSrc}
+                              src={previewDish.imageUrl}
                               alt="Dish preview"
                               loading="lazy"
                               decoding="async"

@@ -328,10 +328,10 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF5F5]" : dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING || dishMode === DISH_MODE_RESTAURANT ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFF1F1] text-[#E64646]" : "border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]"}`}>
+                        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
@@ -415,7 +415,11 @@ export default function UploadPage() {
                     )
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)] text-white flex items-center justify-center shadow-lg">
+                        <div className={`w-16 h-16 rounded-full text-white flex items-center justify-center shadow-lg ${
+                          dishMode === DISH_MODE_RESTAURANT
+                            ? "bg-[linear-gradient(135deg,#E64646_0%,#FF8A5B_100%)]"
+                            : "bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
+                        }`}>
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo or video</div>

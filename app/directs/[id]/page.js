@@ -70,6 +70,7 @@ export default function DirectChat() {
   const [dragOffsets, setDragOffsets] = useState({});
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
+  const isRestaurantDish = (dish) => String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
 
   useEffect(() => {
     if (!user?.uid || !id) return;
@@ -489,7 +490,7 @@ export default function DirectChat() {
                           key={dish.id}
                           type="button"
                           onClick={() => setConfirmDish(dish)}
-                          className="relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
+                          className={`relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] border-2 ${isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border"} bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]`}
                         >
                           <img
                             src={imageSrc}
@@ -525,7 +526,7 @@ export default function DirectChat() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 text-lg font-bold">Send this dish?</div>
-            <div className="relative overflow-hidden rounded-[22px] bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
+            <div className={`relative overflow-hidden rounded-[22px] border-2 ${isRestaurantDish(confirmDish) ? "restaurant-accent-border" : "default-accent-border"} bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]`}>
               <img
                 src={getDishImageUrl(confirmDish, "thumb")}
                 alt={confirmDish.name || "Dish"}

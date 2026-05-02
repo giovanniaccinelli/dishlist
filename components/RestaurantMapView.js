@@ -52,7 +52,7 @@ export default function RestaurantMapView({
 
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
-    if (!selectedPlaceId) return groups[0] || null;
+    if (!selectedPlaceId) return null;
     return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
   }, [groups, selectedPlaceId]);
 
@@ -173,10 +173,9 @@ export default function RestaurantMapView({
     markersRef.current = [];
 
     if (!groups.length) {
-      setSelectedPlaceId("");
+      setSelectedPlaceId("__none__");
       return;
     }
-
     const bounds = new window.google.maps.LatLngBounds();
     groups.forEach((group) => {
       const position = { lat: group.lat, lng: group.lng };
@@ -190,11 +189,10 @@ export default function RestaurantMapView({
       bounds.extend(position);
     });
 
-    setSelectedPlaceId((current) =>
-      current && groups.some((group) => group.placeId === current)
-        ? current
-        : groups[0]?.placeId || ""
-    );
+    setSelectedPlaceId((current) => {
+      if (current === "__none__") return current;
+      return current && groups.some((group) => group.placeId === current) ? current : "__none__";
+    });
 
     const highlightedGroup =
       (initialSelectedPlaceId && groups.find((group) => group.placeId === initialSelectedPlaceId)) ||
@@ -416,9 +414,9 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex flex-1 min-h-0 items-start gap-3 overflow-x-auto pb-1">
+                    <div className="mt-3 flex min-h-0 items-start gap-3 overflow-x-auto pb-1">
                       {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[11.2rem] shrink-0">
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[10.4rem] shrink-0">
                           <div className="mb-2 flex items-center gap-2 rounded-full bg-black/[0.04] px-2.5 py-1.5">
                             <Avatar user={user} />
                             <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">
@@ -431,7 +429,7 @@ export default function RestaurantMapView({
                               onClick={() => openDish(user.dishes[0])}
                               className="w-full overflow-hidden rounded-[1.35rem] border border-black/10 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
                             >
-                              <div className="relative h-[15.75rem] w-full overflow-hidden">
+                              <div className="relative h-[11.75rem] w-full overflow-hidden">
                                 <img
                                   src={getDishImageUrl(user.dishes[0], "thumb")}
                                   alt={user.dishes[0].name || "Dish"}

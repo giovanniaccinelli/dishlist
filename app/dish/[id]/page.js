@@ -805,10 +805,10 @@ export default function DishDetail() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Dish name"
-                  className="w-full p-4 rounded-full bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/25 text-base"
+                  className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
-                <div className="w-full h-60 rounded-[2rem] border-2 border-dashed border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden">
+                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${editDishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"} flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}>
                   <input
                     type="file"
                     accept="image/*,video/*"

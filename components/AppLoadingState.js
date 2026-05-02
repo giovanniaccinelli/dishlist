@@ -52,7 +52,7 @@ export function FeedLoading() {
           <img
             src="/logo-real.png"
             alt="DishList"
-            className="h-44 w-44 object-contain drop-shadow-[0_18px_38px_rgba(240,166,35,0.22)]"
+            className="h-44 w-44 object-contain"
           />
         </div>
       </div>

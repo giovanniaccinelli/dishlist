@@ -371,7 +371,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
-                    className="w-full p-4 rounded-full bg-white text-black mb-4 border-[2px] border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:outline-none focus:ring-2 focus:ring-[#E5C15A]/30 text-base"
+                    className={`w-full p-4 rounded-full bg-white text-black mb-4 border-[2px] ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] shadow-[0_10px_24px_rgba(230,70,70,0.14)] focus:ring-[#E64646]/25" : "border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:ring-[#E5C15A]/30"} focus:outline-none focus:ring-2 text-base`}
                   disabled={loadingUpload}
                 />
                 <div
@@ -382,7 +382,13 @@ export default function UploadPage() {
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
                   className={`w-full h-44 rounded-[1.65rem] border-2 border-dashed ${
-                    dragActive ? "border-[#F59E0B] bg-[#FFF1CC]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
+                    dragActive
+                      ? dishMode === DISH_MODE_RESTAURANT
+                        ? "border-[#E64646] bg-[#FFE8E4]"
+                        : "border-[#F59E0B] bg-[#FFF1CC]"
+                      : dishMode === DISH_MODE_RESTAURANT
+                        ? "border-[#E64646] bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]"
+                        : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
                   } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative overflow-hidden`}
                 >
                   <input

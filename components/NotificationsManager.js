@@ -206,10 +206,37 @@ export default function NotificationsManager() {
     const conversationsQuery = query(collection(db, "conversations"), orderBy("updatedAt", "desc"));
     return onSnapshot(conversationsQuery, (snap) => {
       snap.docChanges().forEach((change) => {
-        const data = change.doc.data() || {};
-        if (!Array.isArray(data.participants) || !data.participants.includes(user.uid)) return;
-        const lastMessage = data.lastMessage || {};
-        const senderId = String(lastMessage.senderId || "").trim();
+        try {
+          const data = change.doc.data();
+          if (!data) return;
+
+          if (!Array.isArray(data.participants) || !data.participants.includes(user.uid)) return;
+
+          const lastMessage = data.lastMessage;
+          if (!lastMessage || typeof lastMessage !== "object") return;
+
+          const senderId = typeof lastMessage.senderId === "string"
+            ? lastMessage.senderId.trim()
+            : "";
+
+          if (!senderId || senderId === user.uid) return;
+
+          const unreadBy = Array.isArray(data.unreadBy) ? data.unreadBy : [];
+          if (!unreadBy.includes(user.uid)) return;
+
+          const key = `direct:${change.doc.id}:${lastMessage.id || lastMessage.createdAt?.seconds || ""}`;
+          if (!initialConversationsLoadedRef.current || notifiedKeysRef.current.has(key)) return;
+
+          notifiedKeysRef.current.add(key);
+
+          showAppNotification(lastMessage.senderName || "New message", {
+            body: lastMessage.text || "Sent you a message on DishList",
+            data: { url: `/directs/${change.doc.id}` },
+          });
+        } catch (err) {
+          console.error("Notification crash prevented:", err);
+        }
+      });
         if (!senderId || senderId === user.uid) return;
         const unreadBy = Array.isArray(data.unreadBy) ? data.unreadBy : [];
         if (!unreadBy.includes(user.uid)) return;

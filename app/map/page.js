@@ -59,7 +59,7 @@ function MapPageContent() {
         </button>
         <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.06)] border border-black/10">
           <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
-          <span className="text-sm font-semibold text-black">Out in the world</span>
+          <span className="text-sm font-semibold text-black">Restaurant map</span>
         </div>
         <button
           type="button"
@@ -73,13 +73,13 @@ function MapPageContent() {
 
       <div className="mb-4 px-1">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/36">
-          Shared places
+          Pinned restaurants
         </div>
         <h1 className="mt-2 text-[2rem] leading-none font-semibold text-black">
-          Follow dishes back to where they happened
+          See where dishes were eaten
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-black/58">
-          Browse restaurants people have actually linked to their dishes, then open the meals posted there.
+          Open a place, see who posted from there, and jump straight into their dishes.
         </p>
       </div>
 

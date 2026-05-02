@@ -836,10 +836,10 @@ export default function DishDetail() {
                     )
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className={`w-16 h-16 rounded-full text-white flex items-center justify-center shadow-lg ${
+                      <div className={`w-16 h-16 rounded-full border-2 text-white flex items-center justify-center shadow-lg ${
                         editDishMode === DISH_MODE_RESTAURANT
-                          ? "bg-[linear-gradient(135deg,#E64646_0%,#FF8A5B_100%)]"
-                          : "bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
+                          ? "restaurant-accent-border bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
+                          : "border-transparent bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
                       }`}>
                         <Camera size={28} />
                       </div>

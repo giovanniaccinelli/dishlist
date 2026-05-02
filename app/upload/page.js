@@ -250,33 +250,33 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-hidden bg-transparent text-black flex flex-col">
-      <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
-        <h1 className="text-xl font-bold leading-none text-left">
-          {showUploadForm ? (storyMode ? "Add to Story" : "Upload Dish") : "Add to a DishList"}
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => router.push("/directs")}
-            className="top-action-btn relative"
-            aria-label="Directs"
-          >
-            <Send size={18} />
-            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/profile")}
-            className="top-action-btn"
-            aria-label="Profile"
-          >
-            <CircleUserRound size={18} />
-          </button>
+    <div className={`${showUploadForm ? "h-[100dvh] overflow-y-auto" : "bottom-nav-spacer h-[100dvh] overflow-hidden"} bg-transparent text-black flex flex-col`}>
+      {!showUploadForm ? (
+        <div className="app-top-nav px-4 pb-2 flex items-center justify-between">
+          <h1 className="text-xl font-bold leading-none text-left">Add to a DishList</h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.push("/directs")}
+              className="top-action-btn relative"
+              aria-label="Directs"
+            >
+              <Send size={18} />
+              {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/profile")}
+              className="top-action-btn"
+              aria-label="Profile"
+            >
+              <CircleUserRound size={18} />
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className="screen-between-navs-center px-4">
+      <div className={showUploadForm ? "min-h-[100dvh] px-4 py-4 flex items-center justify-center" : "screen-between-navs-center px-4"}>
         {showUploadForm ? (
           <motion.div
             className={`p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}
@@ -415,10 +415,10 @@ export default function UploadPage() {
                     )
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                        <div className={`w-16 h-16 rounded-full text-white flex items-center justify-center shadow-lg ${
+                        <div className={`w-16 h-16 rounded-full border-2 text-white flex items-center justify-center shadow-lg ${
                           dishMode === DISH_MODE_RESTAURANT
-                            ? "bg-[linear-gradient(135deg,#E64646_0%,#FF8A5B_100%)]"
-                            : "bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
+                            ? "restaurant-accent-border bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
+                            : "border-transparent bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
                         }`}>
                         <Camera size={28} />
                       </div>
@@ -745,7 +745,7 @@ export default function UploadPage() {
         confirmLabel="Upload dish"
       />
       <AppToast message={toast} variant={toastVariant} />
-      <BottomNav />
+      {!showUploadForm ? <BottomNav /> : null}
     </div>
   );
 }

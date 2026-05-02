@@ -1060,22 +1060,22 @@ const handleToggleNotifications = async () => {
               </button>
 
               <button
-  type="button"
-  onClick={handleToggleNotifications}
-  disabled={notificationsBusy}
-  className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-black/5 text-sm disabled:opacity-50"
->
-  <span>Notifications</span>
-  <span
-    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-      notificationsEnabled
-        ? "bg-[#DDF6E5] text-[#176A37]"
-        : "bg-black/5 text-black/45"
-    }`}
-  >
-    {notificationsBusy ? "..." : notificationsEnabled ? "ON" : "OFF"}
-  </span>
-</button>
+                type="button"
+                onClick={handleToggleNotifications}
+                disabled={notificationsBusy}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-black/5 text-sm disabled:opacity-50"
+              >
+                <span>Notifications</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    notificationsEnabled
+                      ? "bg-[#DDF6E5] text-[#176A37]"
+                      : "bg-black/5 text-black/45"
+                  }`}
+                >
+                  {notificationsBusy ? "..." : notificationsEnabled ? "ON" : "OFF"}
+                </span>
+              </button>
 
 
               <button

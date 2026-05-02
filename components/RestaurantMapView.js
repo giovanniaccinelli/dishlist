@@ -294,10 +294,10 @@ export default function RestaurantMapView({
   const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
 
   return (
-    <div className={`h-[44vh] min-h-[22rem] overflow-hidden rounded-[2rem] bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
+    <div className={`restaurant-accent-border h-[44vh] min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
         <div className="absolute inset-x-3 top-3 z-10">
-          <div className="overflow-hidden rounded-[1.2rem] border border-black/10 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">
+          <div className="restaurant-accent-border overflow-hidden rounded-[1.2rem] border-2 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">
             <div className="flex items-center gap-2 px-3 py-2.5">
               <Search size={16} className="shrink-0 text-black/35" />
               <input
@@ -317,7 +317,7 @@ export default function RestaurantMapView({
                     setQuery("");
                     setPredictions([]);
                   }}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-black/55"
+                  className="restaurant-accent-border flex h-7 w-7 items-center justify-center rounded-full border-2 bg-black/5 text-black/55"
                   aria-label="Clear restaurant search"
                 >
                   <X size={14} />
@@ -369,7 +369,7 @@ export default function RestaurantMapView({
         )}
 
         {selectedGroup && mapState === "ready" ? (
-          <div className="absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden rounded-[1.7rem] border border-black/10 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
+          <div className="restaurant-accent-border absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden rounded-[1.7rem] border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
             <div
               className="h-full"
               onPointerDown={(event) => {
@@ -406,7 +406,7 @@ export default function RestaurantMapView({
                     <button
                       type="button"
                       onClick={() => setSelectedPlaceId("__none__")}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-black/55"
+                      className="restaurant-accent-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 bg-black/5 text-black/55"
                       aria-label="Close restaurant details"
                     >
                       <X size={15} />
@@ -417,7 +417,7 @@ export default function RestaurantMapView({
                     <div className="mt-3 flex min-h-0 items-start gap-3 overflow-x-auto pb-1">
                       {selectedGroup.users.map((user) => (
                         <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[10.4rem] shrink-0">
-                          <div className="mb-2 flex items-center gap-2 rounded-full bg-black/[0.04] px-2.5 py-1.5">
+                          <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">
                             <Avatar user={user} />
                             <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">
                               {user.name || "User"}
@@ -427,9 +427,9 @@ export default function RestaurantMapView({
                             <button
                               type="button"
                               onClick={() => openDish(user.dishes[0])}
-                              className="w-full overflow-hidden rounded-[1.35rem] border border-black/10 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
+                              className="restaurant-accent-border w-full overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
                             >
-                              <div className="relative h-[11.75rem] w-full overflow-hidden">
+                              <div className="relative h-[11.25rem] w-full overflow-hidden">
                                 <img
                                   src={getDishImageUrl(user.dishes[0], "thumb")}
                                   alt={user.dishes[0].name || "Dish"}

@@ -279,7 +279,7 @@ export default function UploadPage() {
       <div className="screen-between-navs-center px-4">
         {showUploadForm ? (
           <motion.div
-            className="bg-white p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border border-black/10 my-0"
+            className={`p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -306,7 +306,7 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={closeUploadFlow}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                className={`flex h-11 w-11 items-center justify-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
                 aria-label="Close"
               >
                 <X size={18} />
@@ -436,7 +436,7 @@ export default function UploadPage() {
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white text-black mb-5 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                  className={`w-full p-4 rounded-[1.5rem] bg-white text-black mb-5 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -444,7 +444,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={() => setShowLinkField((prev) => !prev)}
-                    className="inline-flex items-center rounded-full border border-[#D8C090] bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55"
+                    className={`inline-flex items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55`}
                   >
                     {showLinkField || dishLink ? "Dish link" : "Add link"}
                   </button>
@@ -454,7 +454,7 @@ export default function UploadPage() {
                       placeholder="https://..."
                       value={dishLink}
                       onChange={(e) => setDishLink(e.target.value)}
-                      className="mt-3 w-full rounded-full border border-[#D8C090] bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                      className={`mt-3 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
                       disabled={loadingUpload}
                       autoCapitalize="none"
                       autoCorrect="off"
@@ -472,7 +472,7 @@ export default function UploadPage() {
                     placeholder="Tag a user (optional)"
                     value={storyTaggedUser}
                     onChange={(e) => setStoryTaggedUser(e.target.value)}
-                    className="mb-4 w-full rounded-full border border-[#D8C090] bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+                    className={`mb-4 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
                     disabled={loadingUpload}
                   />
                 ) : null}
@@ -484,7 +484,7 @@ export default function UploadPage() {
                         key={tag}
                         type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, active)}`}
+                        className={`px-3 py-1 rounded-full text-xs border-2 transition ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}
                       >
                         {tag}
                       </button>
@@ -504,7 +504,7 @@ export default function UploadPage() {
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
                   onChange={(e) => setDishRecipeIngredients(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
                   rows={4}
                   disabled={loadingUpload}
                 />
@@ -512,7 +512,7 @@ export default function UploadPage() {
                   placeholder="Method"
                   value={dishRecipeMethod}
                   onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className="w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
                   rows={5}
                   disabled={loadingUpload}
                 />
@@ -526,7 +526,7 @@ export default function UploadPage() {
                     {storyMode ? "Review and publish" : "Review and upload"}
                   </h2>
                 </div>
-                <div className="rounded-[2rem] bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)] border border-[#D8C090] p-4 mb-5">
+                <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "default-accent-border bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0">
                       {preview ? (
@@ -567,7 +567,7 @@ export default function UploadPage() {
                       {dishTags.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {dishTags.slice(0, 4).map((tag) => (
-                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}>
+                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, true)}`}>
                               {tag}
                             </span>
                           ))}
@@ -601,7 +601,7 @@ export default function UploadPage() {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                  className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-sm"
+                    className={`w-12 h-12 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} flex items-center justify-center bg-white shadow-sm`}
                   disabled={loadingUpload}
                   aria-label="Previous step"
                 >
@@ -616,7 +616,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg"
+                    className={`w-14 h-14 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg`}
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >

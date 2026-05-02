@@ -1718,7 +1718,7 @@ export default function Profile() {
                               key={`${dishlist.id}-${dish.id}-${index}`}
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
-                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 object-cover"
+                              className={`aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
                               loading="lazy"
                               decoding="async"
                               onError={(event) => {
@@ -1868,7 +1868,7 @@ export default function Profile() {
                                     key={`${dishlist.id}-${dish.id}-${index}`}
                                     src={getDishImageUrl(dish, "thumb")}
                                     alt={dish.name || dishlist.name}
-                                    className="aspect-square w-full rounded-[0.85rem] object-cover"
+                                    className={`aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
                                     loading="lazy"
                                     decoding="async"
                                     onError={(event) => {
@@ -1900,8 +1900,12 @@ export default function Profile() {
                                 key={`${createSourceDishlist.id}-${dish.id}`}
                                 type="button"
                                 onClick={() => toggleDishSelection(dish)}
-                                className={`overflow-hidden rounded-[1rem] border text-left ${
-                                  selected ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/35" : "border-black/10"
+                                className={`overflow-hidden rounded-[1rem] border-2 text-left ${
+                                  selected
+                                    ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/35"
+                                    : String(dish?.dishMode || "").toLowerCase() === "restaurant"
+                                      ? "restaurant-accent-border"
+                                      : "default-accent-border"
                                 }`}
                               >
                                 <img

@@ -861,7 +861,7 @@ export default function Profile() {
             {dishes.map((dish, index) => (
               <motion.div
                 key={`${dish.id}-${index}`}
-                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}
+                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
               >
                 <Link
                   href={

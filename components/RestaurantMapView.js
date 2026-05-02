@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
@@ -22,6 +23,31 @@ function Avatar({ user }) {
       {(user.name || "U").slice(0, 1).toUpperCase()}
     </div>
   );
+}
+
+function buildRestaurantMarkerIcon(group) {
+  const imageUrl = group?.dishes?.[0] ? getDishImageUrl(group.dishes[0], "thumb") : DEFAULT_DISH_IMAGE;
+  const safeImageUrl = imageUrl || DEFAULT_DISH_IMAGE;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <defs>
+        <clipPath id="dishlist-marker-clip">
+          <circle cx="32" cy="32" r="24"/>
+        </clipPath>
+      </defs>
+      <circle cx="32" cy="32" r="27" fill="#ffffff"/>
+      <circle cx="32" cy="32" r="24.5" fill="${String(group?.placeId || "").trim() ? "#E64646" : "#E4B43F"}" opacity="0.22"/>
+      <image href="${safeImageUrl}" x="8" y="8" width="48" height="48" preserveAspectRatio="xMidYMid slice" clip-path="url(#dishlist-marker-clip)"/>
+      <circle cx="32" cy="32" r="24" fill="none" stroke="#111111" stroke-opacity="0.10" stroke-width="1.5"/>
+      <circle cx="32" cy="32" r="26.5" fill="none" stroke="#E64646" stroke-width="3"/>
+    </svg>
+  `;
+
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+    scaledSize: new window.google.maps.Size(48, 48),
+    anchor: new window.google.maps.Point(24, 24),
+  };
 }
 
 export default function RestaurantMapView({
@@ -46,6 +72,7 @@ export default function RestaurantMapView({
   const [predictions, setPredictions] = useState([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
+  const [sheetDirection, setSheetDirection] = useState(0);
   const swipeStartRef = useRef(null);
 
   const selectedGroup = useMemo(() => {
@@ -182,6 +209,7 @@ export default function RestaurantMapView({
         map: mapRef.current,
         position,
         title: group.name,
+        icon: buildRestaurantMarkerIcon(group),
       });
       marker.addListener("click", () => setSelectedPlaceId(group.placeId));
       markersRef.current.push(marker);
@@ -193,6 +221,16 @@ export default function RestaurantMapView({
         ? current
         : groups[0]?.placeId || ""
     );
+
+    const highlightedGroup =
+      (initialSelectedPlaceId && groups.find((group) => group.placeId === initialSelectedPlaceId)) ||
+      (selectedPlaceId && selectedPlaceId !== "__none__" && groups.find((group) => group.placeId === selectedPlaceId));
+
+    if (highlightedGroup) {
+      mapRef.current.setCenter({ lat: highlightedGroup.lat, lng: highlightedGroup.lng });
+      mapRef.current.setZoom(14);
+      return;
+    }
 
     if (groups.length === 1) {
       mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
@@ -232,11 +270,12 @@ export default function RestaurantMapView({
   const cycleRestaurant = (direction) => {
     if (!groups.length) return;
     const nextIndex = (selectedIndex + direction + groups.length) % groups.length;
-    focusGroup(groups[nextIndex]);
+    focusGroup(groups[nextIndex], direction);
   };
 
-  const focusGroup = (group) => {
+  const focusGroup = (group, direction = 0) => {
     if (!group) return;
+    setSheetDirection(direction);
     setSelectedPlaceId(group.placeId || "");
     if (mapRef.current && typeof group.lat === "number" && typeof group.lng === "number") {
       mapRef.current.panTo({ lat: group.lat, lng: group.lng });
@@ -358,8 +397,9 @@ export default function RestaurantMapView({
         )}
 
         {selectedGroup && mapState === "ready" ? (
-          <div className="absolute inset-x-3 bottom-3 z-10 max-h-[90%] overflow-y-auto rounded-[1.6rem] border border-black/10 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
+          <div className="absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden rounded-[1.7rem] border border-black/10 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md">
             <div
+              className="h-full"
               onPointerDown={(event) => {
                 swipeStartRef.current = { x: event.clientX, y: event.clientY };
               }}
@@ -373,72 +413,79 @@ export default function RestaurantMapView({
                 }
               }}
             >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <MapPin size={15} className="shrink-0 text-[#E64646]" />
-                  <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
-                </div>
-                <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
-              </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlaceId("__none__")}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-black/55"
-                  aria-label="Close restaurant details"
+              <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
+                <motion.div
+                  key={selectedGroup.placeId}
+                  custom={sheetDirection}
+                  initial={{ x: sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="flex h-full flex-col overflow-hidden p-4"
                 >
-                <X size={15} />
-              </button>
-            </div>
-
-            {selectedGroup.users?.length ? (
-              <div className="mt-3 flex items-start gap-3 overflow-x-auto pb-1">
-                {selectedGroup.users.map((user) => (
-                  <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[9rem] shrink-0">
-                    <div className="mb-2 flex items-center gap-2 rounded-full bg-black/[0.04] px-2.5 py-1.5">
-                      <Avatar user={user} />
-                      <span className="max-w-[5.4rem] truncate text-xs font-medium text-black/72">
-                        {user.name || "User"}
-                      </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={15} className="shrink-0 text-[#E64646]" />
+                        <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+                      </div>
+                      <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
                     </div>
-                    {user.dishes?.[0] ? (
-                      <button
-                        type="button"
-                        onClick={() => openDish(user.dishes[0])}
-                        className="w-full overflow-hidden rounded-[1.25rem] border border-black/10 text-left"
-                      >
-                        <div className="relative h-24 w-full overflow-hidden">
-                          <img
-                            src={getDishImageUrl(user.dishes[0], "thumb")}
-                            alt={user.dishes[0].name || "Dish"}
-                            className="h-full w-full object-cover"
-                            onError={(event) => {
-                              event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                          <div className="absolute inset-x-0 bottom-0 px-2.5 py-2 text-white">
-                            <div className="truncate text-sm font-semibold">
-                              {user.dishes[0].name || "Untitled dish"}
-                            </div>
-                            {(user.dishes?.length || 0) > 1 ? (
-                              <div className="mt-0.5 text-[10px] text-white/80">
-                                +{user.dishes.length - 1} more here
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </button>
-                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlaceId("__none__")}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-black/55"
+                      aria-label="Close restaurant details"
+                    >
+                      <X size={15} />
+                    </button>
                   </div>
-                ))}
-              </div>
-            ) : null}
-            {groups.length > 1 ? (
-              <div className="mt-3 text-center text-[11px] font-medium text-black/45">
-                Swipe left or right to move between restaurants
-              </div>
-            ) : null}
+
+                  {selectedGroup.users?.length ? (
+                    <div className="mt-3 flex min-h-0 items-start gap-3 overflow-x-auto pb-1">
+                      {selectedGroup.users.map((user) => (
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="w-[10.4rem] shrink-0">
+                          <div className="mb-2 flex items-center gap-2 rounded-full bg-black/[0.04] px-2.5 py-1.5">
+                            <Avatar user={user} />
+                            <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">
+                              {user.name || "User"}
+                            </span>
+                          </div>
+                          {user.dishes?.[0] ? (
+                            <button
+                              type="button"
+                              onClick={() => openDish(user.dishes[0])}
+                              className="w-full overflow-hidden rounded-[1.35rem] border border-black/10 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
+                            >
+                              <div className="relative h-32 w-full overflow-hidden">
+                                <img
+                                  src={getDishImageUrl(user.dishes[0], "thumb")}
+                                  alt={user.dishes[0].name || "Dish"}
+                                  className="h-full w-full object-cover"
+                                  onError={(event) => {
+                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/12 to-transparent" />
+                                <div className="absolute inset-x-0 bottom-0 px-2.5 py-2 text-white">
+                                  <div className="truncate text-sm font-semibold">
+                                    {user.dishes[0].name || "Untitled dish"}
+                                  </div>
+                                  {(user.dishes?.length || 0) > 1 ? (
+                                    <div className="mt-0.5 text-[10px] text-white/80">
+                                      +{user.dishes.length - 1} more here
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         ) : null}

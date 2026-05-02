@@ -166,6 +166,31 @@ function HeartIcon({ className = "" }) {
   );
 }
 
+function ClinkingGlassesIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M7.1 4.8h4.4L10.8 9a3 3 0 0 1-3 .1L7.1 4.8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5 4.8h4.4l-.7 4.3a3 3 0 0 1-3-.1l-.7-4.2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M9.4 9.1v7.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M14.6 9.1v7.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7.8 18.2h3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M13 18.2h3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M10.4 7.1 13.6 4.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M10.4 4.8 13.6 7.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function NoWheatIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -231,7 +256,7 @@ const TAG_DECOR = {
   spicy: { icon: ChiliIcon, iconClass: "text-[#D94A2E]", pillClass: "bg-[#FFD7D2] text-[#922B21] border-[#F28A7B]" },
   gourmet: { icon: ChefHat, iconClass: "text-[#8A6A46]", pillClass: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
-  "date night": { icon: HeartIcon, iconClass: "text-[#D4475B]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
+  "date night": { icon: ClinkingGlassesIcon, iconClass: "text-[#B13D56]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
@@ -264,7 +289,7 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title }) {
   return (
-    <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}>
+    <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <img
         src={getDishImageUrl(dish, "thumb")}
@@ -382,7 +407,7 @@ function ExpandedCategoryModal({ row, onClose }) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish) => (
-            <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "border-[#E64646]" : "border-[#E4B43F]"}`}>
+            <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
               <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
               <img
                 src={getDishImageUrl(dish, "thumb")}

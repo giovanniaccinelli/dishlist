@@ -44,13 +44,11 @@ export function FeedLoading() {
         </div>
         <PulseBlock className="h-11 w-11 rounded-full" />
       </div>
-      <div className="relative flex h-[68vh] items-center justify-center pt-3">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-[16rem] text-center text-[2.2rem] font-semibold leading-[0.94] tracking-tight text-black/82">
-            whats your next meal
-          </div>
+      <div className="flex h-[68vh] flex-col items-center justify-center px-4 pt-8">
+        <div className="max-w-[16.5rem] text-center text-[2.15rem] font-semibold leading-[0.92] tracking-[-0.03em] text-black/84">
+          What&apos;s your next meal?
         </div>
-        <div className="animate-pulse translate-y-16">
+        <div className="mt-12 animate-pulse">
           <img
             src="/logo-real.png"
             alt="DishList"

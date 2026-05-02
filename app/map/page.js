@@ -73,13 +73,13 @@ function MapPageContent() {
 
       <div className="mb-4 px-1">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/36">
-          Pinned restaurants
+          World map
         </div>
         <h1 className="mt-2 text-[2rem] leading-none font-semibold text-black">
-          See where dishes were eaten
+          Restaurants map
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-black/58">
-          Open a place, see who posted from there, and jump straight into their dishes.
+          A shared map of restaurants people have linked to their dishes, with the meals posted from each place.
         </p>
       </div>
 

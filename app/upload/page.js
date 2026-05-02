@@ -276,7 +276,7 @@ export default function UploadPage() {
         </div>
       ) : null}
 
-      <div className={showUploadForm ? "min-h-[100dvh] px-4 py-4 flex items-center justify-center" : "screen-between-navs-center px-4"}>
+      <div className={showUploadForm ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-4"}>
         {showUploadForm ? (
           <motion.div
             className={`p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}

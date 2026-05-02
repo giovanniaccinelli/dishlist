@@ -398,7 +398,19 @@ export default function RestaurantMapView({
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <MapPin size={15} className="shrink-0 text-[#E64646]" />
-                        <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+                        {selectedGroup.googleMapsUrl ? (
+                          <a
+                            href={selectedGroup.googleMapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate text-[1rem] font-semibold text-black underline decoration-black/30 underline-offset-2"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {selectedGroup.name}
+                          </a>
+                        ) : (
+                          <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+                        )}
                       </div>
                       <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
                     </div>

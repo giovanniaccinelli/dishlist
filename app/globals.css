@@ -215,6 +215,38 @@
   border-style: solid !important;
 }
 
+:where(
+  .pressable-card,
+  .card,
+  button[class*="rounded"],
+  a[class*="rounded"],
+  input[class*="rounded"],
+  textarea[class*="rounded"],
+  select[class*="rounded"],
+  div[class*="rounded"][class*="bg"],
+  div[class*="rounded"][class*="border"],
+  span[class*="rounded"][class*="bg"],
+  span[class*="rounded"][class*="border"]
+):not(.no-accent-border):not(.dish-card-shell).default-accent-border {
+  border-color: #e4b43f !important;
+}
+
+:where(
+  .pressable-card,
+  .card,
+  button[class*="rounded"],
+  a[class*="rounded"],
+  input[class*="rounded"],
+  textarea[class*="rounded"],
+  select[class*="rounded"],
+  div[class*="rounded"][class*="bg"],
+  div[class*="rounded"][class*="border"],
+  span[class*="rounded"][class*="bg"],
+  span[class*="rounded"][class*="border"]
+):not(.no-accent-border):not(.dish-card-shell).restaurant-accent-border {
+  border-color: #e64646 !important;
+}
+
 .accent-avatar-photo {
   border: 2px solid var(--app-accent-border-strong) !important;
 }

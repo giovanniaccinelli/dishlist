@@ -7,7 +7,10 @@ import { Eye, Trash2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish, getUsersByIds } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import { dispatchPushEvent } from "../app/lib/pushClient";
 import StoryViewsModal from "./StoryViewsModal";
+import { db } from "../app/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const STORY_DURATION_MS = 4500;
 
@@ -68,6 +71,7 @@ export default function StoryViewerModal({
   const [viewsOpen, setViewsOpen] = useState(false);
   const [viewsLoading, setViewsLoading] = useState(false);
   const [viewers, setViewers] = useState([]);
+  const [storyDishMeta, setStoryDishMeta] = useState(null);
   const rafProgressRef = useRef(0);
   useEffect(() => {
     if (!open) return;
@@ -296,6 +300,31 @@ export default function StoryViewerModal({
     }
   };
 
+  const currentStoryDishId = currentStory?.dishId || currentStory?.id || null;
+  const resolvedStoryName = storyDishMeta?.name || currentStory?.name || currentStory?.dishName || "Untitled dish";
+  const resolvedRestaurant = storyDishMeta?.restaurant || currentStory?.restaurant || null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!open || !currentStoryDishId) {
+      setStoryDishMeta(null);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "dishes", currentStoryDishId));
+        if (!cancelled) {
+          setStoryDishMeta(snap.exists() ? snap.data() || null : null);
+        }
+      } catch {
+        if (!cancelled) setStoryDishMeta(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStoryDishId, open]);
+
   if (!open || !currentStory) return null;
 
   const progressWidth = `${Math.min((progressMs / storyDurationMs) * 100, 100)}%`;
@@ -320,8 +349,6 @@ export default function StoryViewerModal({
     onClose?.();
     router.push(`/dish/${storyDishId}?source=public&mode=single`);
   };
-
-  const currentStoryDishId = currentStory?.dishId || currentStory?.id || null;
 
   const loadComments = async () => {
     if (!currentStoryDishId) return;
@@ -357,6 +384,22 @@ export default function StoryViewerModal({
         parentId: replyTo?.id || null,
       });
       if (!ok) return;
+      const recipients = Array.from(
+        new Set(
+          [String(currentStory?.owner || "").trim(), String(currentGroup?.ownerId || "").trim()].filter(Boolean)
+        )
+      ).filter((id) => id && id !== currentUser.uid);
+      if (recipients.length) {
+        void dispatchPushEvent("comment_posted", {
+          actorId: currentUser.uid,
+          recipientIds: recipients,
+          dishId: currentStoryDishId,
+          dishName: currentStory?.name || "",
+          commentText: text,
+          isStoryComment: true,
+          storyOwnerId: currentGroup?.ownerId || currentStory?.owner || "",
+        });
+      }
       setNewComment("");
       setReplyTo(null);
       await loadComments();
@@ -573,8 +616,27 @@ export default function StoryViewerModal({
 
           <div className="absolute bottom-24 left-0 right-0 z-40 p-5 text-white">
             <h2 className="text-2xl font-bold leading-tight">
-              {currentStory.name || "Untitled dish"}
+              {resolvedStoryName}
             </h2>
+            {resolvedRestaurant?.name ? (
+              <button
+                type="button"
+                data-no-story-pause="true"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (!resolvedRestaurant?.placeId) return;
+                  onClose?.();
+                  router.push(`/map?placeId=${encodeURIComponent(resolvedRestaurant.placeId)}`);
+                }}
+                className="mt-2 inline-flex items-center rounded-full border border-white/18 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm"
+              >
+                {resolvedRestaurant.name}
+              </button>
+            ) : null}
             {currentStory.taggedUserName ? (
               <div className="mt-2 inline-flex items-center rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm">
                 @{String(currentStory.taggedUserName).replace(/^@+/, "")}

@@ -363,7 +363,7 @@ export default function Dishlists() {
                   </div>
                 </div>
                 <span className="text-[11px] font-medium text-black/75 max-w-16 text-center leading-[1.1]">
-                  What are you eating?
+                  {t("What are you eating?")}
                 </span>
               </button>
             ) : null}
@@ -483,7 +483,7 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold border transition self-start ${
+                          className={`mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
                             alreadyFollowing
                               ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
@@ -540,7 +540,7 @@ export default function Dishlists() {
                   onClick={loadMoreUsers}
                   className="rounded-full border-2 border-[#D9B550] bg-[linear-gradient(180deg,#FFF2C9_0%,#F3D88C_100%)] px-5 py-3 text-sm font-semibold text-[#7A5400] shadow-[0_12px_26px_rgba(217,181,80,0.24)]"
                 >
-                  Load more
+                  {t("Load more")}
                 </button>
               )}
             </div>

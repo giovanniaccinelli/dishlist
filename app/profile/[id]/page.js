@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { collection, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import { useUnreadDirects } from "../../lib/useUnreadDirects";
@@ -216,8 +216,27 @@ export default function PublicProfile() {
   }, [routeProfileId]);
 
   useEffect(() => {
-    setIsFollowing(Boolean(profileUser?.followers?.includes(user?.uid)));
-  }, [profileUser?.followers, user?.uid]);
+    let cancelled = false;
+    if (!user?.uid) {
+      setIsFollowing(false);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const currentUserSnap = await getDoc(doc(db, "users", user.uid));
+        const following = Array.isArray(currentUserSnap.data()?.following) ? currentUserSnap.data().following : [];
+        const nextIsFollowing =
+          profileIdCandidates.some((candidateId) => following.includes(candidateId)) ||
+          Boolean(profileUser?.followers?.includes(user.uid));
+        if (!cancelled) setIsFollowing(nextIsFollowing);
+      } catch {
+        if (!cancelled) setIsFollowing(Boolean(profileUser?.followers?.includes(user.uid)));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileIdCandidates, profileUser?.followers, user?.uid]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -259,13 +278,17 @@ export default function PublicProfile() {
     const userRef = doc(db, "users", profileDocId);
     const currentUserRef = doc(db, "users", user.uid);
     const currentFollowers = profileUser.followers || [];
+    const currentUserSnap = await getDoc(currentUserRef);
+    const currentFollowing = Array.isArray(currentUserSnap.data()?.following) ? currentUserSnap.data().following : [];
     const newFollowers = isFollowing
       ? currentFollowers.filter(f => f !== user.uid)
       : [...currentFollowers, user.uid];
+    const newFollowing = isFollowing
+      ? currentFollowing.filter((followId) => !profileIdCandidates.includes(followId))
+      : Array.from(new Set([...currentFollowing, profileDocId]));
     await updateDoc(userRef, { followers: newFollowers });
-    await updateDoc(currentUserRef, {
-      following: isFollowing ? arrayRemove(profileDocId) : arrayUnion(profileDocId),
-    });
+    await updateDoc(currentUserRef, { following: newFollowing });
+    setProfileUser((prev) => (prev ? { ...prev, followers: newFollowers } : prev));
     setIsFollowing(!isFollowing);
   };
 

@@ -16,6 +16,7 @@ import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge } from "./DishModeControls";
 
 function DeckAutoplayVideo({
@@ -597,6 +598,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       parentId: replyTo?.id || null,
     });
     if (!ok) return;
+    const recipients = Array.from(
+      new Set([String(currentCard.owner || "").trim()].filter(Boolean))
+    ).filter((id) => id && id !== currentUser.uid);
+    if (recipients.length) {
+      void dispatchPushEvent("comment_posted", {
+        actorId: currentUser.uid,
+        recipientIds: recipients,
+        dishId: currentCard.id,
+        dishName: currentCard.name || "",
+        commentText: text,
+        isStoryComment: false,
+      });
+    }
     setNewComment("");
     setReplyTo(null);
     await loadComments();

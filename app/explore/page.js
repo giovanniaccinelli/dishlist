@@ -30,6 +30,7 @@ import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/fireba
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
+import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
@@ -287,7 +288,7 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title }) {
+function DishPreview({ dish, title, t }) {
   return (
     <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
@@ -303,19 +304,19 @@ function DishPreview({ dish, title }) {
       />
       <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
         <div className="text-[11px] font-semibold leading-tight truncate">
-          {dish.name || "Untitled dish"}
-        </div>
-        <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                  {dish.name || t("Untitled dish")}
+                </div>
+        <div className="text-[10px] text-white/80">{t("saves:")} {Number(dish.saves || 0)}</div>
       </div>
     </div>
   );
 }
 
-function CategoryTitle({ row }) {
+function CategoryTitle({ row, t }) {
   if (row.key === "most-saved") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{row.title}</span>
+        <span className="text-[1.28rem] font-bold tracking-tight text-black">{t(row.title)}</span>
         <Trophy size={22} strokeWidth={2.2} className="text-[#D7B443]" />
       </div>
     );
@@ -324,7 +325,7 @@ function CategoryTitle({ row }) {
   if (row.key === "trending") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{row.title}</span>
+        <span className="text-[1.28rem] font-bold tracking-tight text-black">{t(row.title)}</span>
         <Flame size={22} strokeWidth={2.2} className="text-[#F26A21]" />
       </div>
     );
@@ -338,17 +339,18 @@ function CategoryTitle({ row }) {
   };
   const Icon = decor.icon;
 
+  const displayTitle = t(String(row.rawTag || row.title || ""));
   return (
     <div className="flex items-center gap-2">
       <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
-        {row.title}
+        {displayTitle}
       </span>
       <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />
     </div>
   );
 }
 
-function ExploreRow({ row, onExpand }) {
+function ExploreRow({ row, onExpand, t }) {
   const { title, dishes } = row;
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
@@ -362,7 +364,7 @@ function ExploreRow({ row, onExpand }) {
           className="min-w-0 text-left"
           aria-label={`Open ${title}`}
         >
-          <CategoryTitle row={row} />
+          <CategoryTitle row={row} t={t} />
         </button>
         {dishes.length > 3 ? (
           <button
@@ -378,7 +380,7 @@ function ExploreRow({ row, onExpand }) {
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish) => (
           <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
-            <DishPreview dish={dish} title={title} />
+            <DishPreview dish={dish} title={title} t={t} />
           </div>
         ))}
       </div>
@@ -386,7 +388,7 @@ function ExploreRow({ row, onExpand }) {
   );
 }
 
-function ExpandedCategoryModal({ row, onClose }) {
+function ExpandedCategoryModal({ row, onClose, t }) {
   if (!row) return null;
 
   return (
@@ -394,7 +396,7 @@ function ExpandedCategoryModal({ row, onClose }) {
       <div className="min-h-screen px-5 pt-1 pb-24 text-black">
         <div className="app-top-nav -mx-5 mb-6 px-5 flex items-center justify-between">
           <div className="min-w-0 pr-4">
-            <CategoryTitle row={row} />
+            <CategoryTitle row={row} t={t} />
           </div>
           <button
             type="button"
@@ -421,9 +423,9 @@ function ExpandedCategoryModal({ row, onClose }) {
               />
               <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none">
                 <div className="text-[11px] font-semibold leading-tight truncate">
-                  {dish.name || "Untitled dish"}
+                  {dish.name || t("Untitled dish")}
                 </div>
-                <div className="text-[10px] text-white/80">saves: {Number(dish.saves || 0)}</div>
+                <div className="text-[10px] text-white/80">{t("saves:")} {Number(dish.saves || 0)}</div>
               </div>
             </div>
           ))}
@@ -436,6 +438,7 @@ function ExpandedCategoryModal({ row, onClose }) {
 export default function Explore() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
@@ -529,18 +532,18 @@ export default function Explore() {
       return {
         key: `tag-${tag}`,
         rawTag: tag,
-        title: String(tag).replace(/\b\w/g, (char) => char.toUpperCase()),
+        title: String(tag),
         dishes: tagged.slice(0, BASE_LIMIT),
         totalCount: tagged.length,
       };
     })
       .filter((row) => row.totalCount > 0)
-      .sort((a, b) => b.totalCount - a.totalCount || a.title.localeCompare(b.title));
+        .sort((a, b) => b.totalCount - a.totalCount || t(a.title).localeCompare(t(b.title)));
 
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, search, selectedDishMode, selectedTagsApplied, trendingDishes]);
+  }, [allDishes, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -566,7 +569,7 @@ export default function Explore() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
-        <h1 className="text-2xl font-bold">Explore</h1>
+        <h1 className="text-2xl font-bold">{t("Explore")}</h1>
         <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
         <div className="flex items-center gap-2">
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
@@ -577,7 +580,7 @@ export default function Explore() {
       <SearchBar
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search dishes or tags..."
+        placeholder={t("Search dishes or tags")}
       />
       <div className="relative mb-6">
         <div className="flex flex-wrap gap-2 items-center">
@@ -586,7 +589,7 @@ export default function Explore() {
               key={tag}
               className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, true)}`}
             >
-              {tag}
+              {t(tag)}
               <button
                 type="button"
                 onClick={() => removeAppliedTag(tag)}
@@ -598,7 +601,7 @@ export default function Explore() {
             </span>
           ))}
           {selectedTagsApplied.length === 0 && (
-            <span className="text-xs text-black/50">No tag filters selected</span>
+            <span className="text-xs text-black/50">{t("No tag filters selected")}</span>
           )}
           <button
             type="button"
@@ -608,13 +611,13 @@ export default function Explore() {
             }}
             className="px-3 py-1 rounded-full border border-black bg-black text-white text-xs font-medium"
           >
-            Add filters
+            {t("Add filters")}
           </button>
         </div>
         {showTagsPicker && (
           <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-black">Select tags</p>
+              <p className="text-sm font-semibold text-black">{t("Select tags")}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -623,7 +626,7 @@ export default function Explore() {
                 }}
                 className="px-3 py-1 rounded-full border border-black/20 text-xs font-medium"
               >
-                Close
+                {t("Close")}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -636,7 +639,7 @@ export default function Explore() {
                     onClick={() => toggleTagFilter(tag)}
                     className={`px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, active)}`}
                   >
-                    {tag}
+                    {t(tag)}
                   </button>
                 );
               })}
@@ -647,14 +650,14 @@ export default function Explore() {
                 onClick={() => setSelectedTagsDraft([])}
                 className="px-3 py-2 rounded-full border border-black/20 text-xs font-medium"
               >
-                Clear
+                {t("Clear")}
               </button>
               <button
                 type="button"
                 onClick={applyTagFilters}
                 className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold"
               >
-                Done
+                {t("Done")}
               </button>
             </div>
           </div>
@@ -666,12 +669,12 @@ export default function Explore() {
       ) : (
         <div>
           {categoryRows.map((row) => (
-            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} />
+            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} t={t} />
           ))}
         </div>
       )}
 
-      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} />
+      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} t={t} />
       <DishModeFilterModal
         open={dishModeFilterOpen}
         value={selectedDishMode}

@@ -33,6 +33,7 @@ import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getTagChipClass } from "./lib/tags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
+import { useLanguage } from "../components/LanguageProvider";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -44,6 +45,7 @@ const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const userId = user?.uid || null;
   const router = useRouter();
   const forYouDeckRef = useRef(null);
@@ -562,7 +564,7 @@ export default function Feed() {
               activeFeed === "following" ? "text-black" : "text-black/45"
             }`}
           >
-            Following
+            {t("Following")}
             {followingHasUpdate ? (
               <span className="no-accent-border absolute -top-0.5 -right-3 w-2.5 h-2.5 rounded-full bg-[#E64646]" />
             ) : null}
@@ -577,7 +579,7 @@ export default function Feed() {
               activeFeed === "for_you" ? "text-black" : "text-black/45"
             }`}
           >
-            For You
+            {t("For you")}
             {activeFeed === "for_you" ? (
               <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
             ) : null}

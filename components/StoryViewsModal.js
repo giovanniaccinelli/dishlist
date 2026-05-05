@@ -83,9 +83,6 @@ export default function StoryViewsModal({ open, onClose, viewers = [], loading =
                       <div className="truncate text-sm font-semibold text-black">
                         {viewer.displayName || viewer.name || "User"}
                       </div>
-                      {viewer.email ? (
-                        <div className="truncate text-xs text-black/45">{viewer.email}</div>
-                      ) : null}
                     </div>
                   </div>
                 ))}

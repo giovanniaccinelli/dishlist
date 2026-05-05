@@ -72,6 +72,34 @@ async function dispatchDirectMessage({ decoded, conversationId, senderId, text =
   });
 }
 
+async function dispatchCommentPosted({
+  decoded,
+  actorId,
+  recipientIds = [],
+  dishId = "",
+  storyOwnerId = "",
+  dishName = "",
+  commentText = "",
+  isStoryComment = false,
+}) {
+  if (decoded.uid !== actorId) throw new Error("Not allowed to dispatch this comment notification.");
+  const db = getAdminDb();
+  const actorSnap = await db.collection("users").doc(actorId).get();
+  const actorData = actorSnap.data() || {};
+  const tokens = await getEnabledTokensForUserIds(
+    recipientIds.filter((id) => id && id !== actorId)
+  );
+  if (!tokens.length) return { sent: 0, failed: 0, skipped: 0 };
+  return sendApnsNotifications(tokens, {
+    title: `${actorData.displayName || "Someone"} commented`,
+    body: commentText || (isStoryComment ? "Commented on a story" : dishName || "Commented on a dish"),
+    url:
+      isStoryComment && storyOwnerId
+        ? `/profile/${encodeURIComponent(storyOwnerId)}`
+        : `/dish/${dishId}?source=public&mode=single`,
+  });
+}
+
 export async function POST(request) {
   try {
     const decoded = await verifyRequest(request);
@@ -85,6 +113,8 @@ export async function POST(request) {
       result = await dispatchStoryPosted({ decoded, ...body });
     } else if (type === "direct_message") {
       result = await dispatchDirectMessage({ decoded, ...body });
+    } else if (type === "comment_posted") {
+      result = await dispatchCommentPosted({ decoded, ...body });
     } else {
       return NextResponse.json({ error: "Unsupported notification type." }, { status: 400 });
     }

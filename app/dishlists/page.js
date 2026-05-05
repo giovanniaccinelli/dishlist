@@ -483,7 +483,7 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold border transition self-start ${
+                          className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold border transition self-start ${
                             alreadyFollowing
                               ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"

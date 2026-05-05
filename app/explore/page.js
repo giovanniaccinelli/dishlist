@@ -570,7 +570,7 @@ export default function Explore() {
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
         <h1 className="text-2xl font-bold">{t("Explore")}</h1>
-        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+        <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
         <div className="flex items-center gap-2">
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
           <TopActionButton href={user ? "/profile" : "/?auth=1"} icon={CircleUserRound} label="Open profile" />

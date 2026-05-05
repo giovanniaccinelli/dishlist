@@ -520,7 +520,7 @@ export default function Feed() {
           {showDishModeFilterButton ? (
             <DishModeFilterButton
               value={selectedDishMode}
-              onClick={() => setDishModeFilterOpen(true)}
+              onSelect={setSelectedDishMode}
             />
           ) : null}
           <Link
@@ -859,7 +859,7 @@ export default function Feed() {
                   <div className="rounded-[1.35rem] bg-[#F0A623]/16 p-3.5">
                     <div className="mb-2 text-sm font-semibold text-[#FFD07B]">DishLists</div>
                     <p className="text-sm leading-5 text-white/76">
-                      Organize your food brain into Top picks, Uploaded, All dishes, or your own custom lists.
+                      Organize your food brain into Favorites, Uploaded, All dishes, or your own custom lists.
                     </p>
                   </div>
                   <div className="rounded-[1.35rem] bg-[#2BD36B]/16 p-3.5">

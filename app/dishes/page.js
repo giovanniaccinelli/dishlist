@@ -549,7 +549,7 @@ export default function Dishes() {
     >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
         <h1 className="text-2xl font-bold">{storyPicker ? "Search Dish" : "Dishes"}</h1>
-        <DishModeFilterButton value={selectedDishMode} onClick={() => setDishModeFilterOpen(true)} />
+        <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
         <div className="flex items-center gap-2">
           <Link
             href={user ? "/directs" : "/?auth=1"}

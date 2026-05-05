@@ -716,7 +716,7 @@ export async function getAllDishlistsForUser(userId) {
     ...custom.flatMap((dishlist) => dishlist.dishes || []),
   ]);
   return [
-    makeSystemDishlist("saved", "Top picks", saved),
+    makeSystemDishlist("saved", "Favorites", saved),
     makeSystemDishlist("all_dishes", "All dishes", allDishes),
     makeSystemDishlist("uploaded", "Uploaded", uploaded),
     ...custom,

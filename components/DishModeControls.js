@@ -51,24 +51,42 @@ export function DishModeBadge({ dishMode, className = "" }) {
   return null;
 }
 
-export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, className = "" }) {
+export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect, className = "" }) {
+  const handlePress = (mode) => {
+    if (typeof onSelect === "function") {
+      onSelect(value === mode ? DISH_MODE_ALL : mode);
+      return;
+    }
+    onClick?.();
+  };
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`top-action-btn relative !h-[2.5rem] !w-[4.7rem] !min-w-[4.7rem] overflow-hidden rounded-full border border-black/14 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${className}`}
-      aria-label="Filter dish mode"
-    >
-      <span className="no-accent-border pointer-events-none absolute bottom-[0.42rem] left-1/2 top-[0.42rem] z-[1] w-[1.5px] -translate-x-1/2 rounded-full bg-black" />
-      <span className="relative z-[2] flex h-full w-full overflow-hidden rounded-full">
-        <span className={`flex flex-1 items-center justify-center ${value === DISH_MODE_RESTAURANT ? "text-black/35" : "text-[#D48A00]"}`}>
-          <CookingHomeIcon className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.4} />
-        </span>
-        <span className={`flex flex-1 items-center justify-center ${value === DISH_MODE_COOKING ? "text-black/35" : "text-[#D53333]"}`}>
-          <RestaurantMapIcon className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.4} />
-        </span>
-      </span>
-    </button>
+    <div className={`flex items-center gap-2 ${className}`} aria-label="Filter dish mode">
+      <button
+        type="button"
+        onClick={() => handlePress(DISH_MODE_COOKING)}
+        className={`top-action-btn relative !h-[2.7rem] !w-[2.9rem] !min-w-[2.9rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+          value === DISH_MODE_COOKING
+            ? "border-[#F0A623] bg-[#F0A623] text-white"
+            : "border-black/12 bg-white text-[#D59A14]"
+        }`}
+        aria-label="Filter home dishes"
+      >
+        <CookingHomeIcon className="h-[1.25rem] w-[1.25rem]" strokeWidth={2.45} />
+      </button>
+      <button
+        type="button"
+        onClick={() => handlePress(DISH_MODE_RESTAURANT)}
+        className={`top-action-btn relative !h-[2.7rem] !w-[2.9rem] !min-w-[2.9rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+          value === DISH_MODE_RESTAURANT
+            ? "border-[#E64646] bg-[#E64646] text-white"
+            : "border-black/12 bg-white text-[#D53333]"
+        }`}
+        aria-label="Filter restaurant dishes"
+      >
+        <RestaurantMapIcon className="h-[1.25rem] w-[1.25rem]" strokeWidth={2.45} />
+      </button>
+    </div>
   );
 }
 

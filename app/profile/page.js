@@ -38,7 +38,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -257,15 +257,21 @@ export default function Profile() {
       });
     });
 
+    const uploadedQuery = query(collection(db, "dishes"), where("owner", "==", user.uid));
+    const unsubscribeUploaded = onSnapshot(uploadedQuery, (snapshot) => {
+      const uploaded = snapshot.docs.map((dishDoc) => ({ ...dishDoc.data(), id: dishDoc.id }));
+      setUploadedDishes(uploaded);
+    });
+
     const savedRef = collection(db, "users", user.uid, "saved");
-    const unsubscribeSaved = onSnapshot(savedRef, async () => {
-      const saved = await getSavedDishesFromFirestore(user.uid);
+    const unsubscribeSaved = onSnapshot(savedRef, (snapshot) => {
+      const saved = snapshot.docs.map((savedDoc) => ({ ...savedDoc.data(), id: savedDoc.id }));
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
-    const unsubscribeToTry = onSnapshot(toTryRef, async () => {
-      const items = await getToTryDishesFromFirestore(user.uid);
+    const unsubscribeToTry = onSnapshot(toTryRef, (snapshot) => {
+      const items = snapshot.docs.map((toTryDoc) => ({ ...toTryDoc.data(), id: toTryDoc.id }));
       setToTryDishes(items);
     });
 
@@ -283,6 +289,7 @@ export default function Profile() {
 
     return () => {
       unsubscribeUser();
+      unsubscribeUploaded();
       unsubscribeSaved();
       unsubscribeToTry();
       unsubscribeStories();
@@ -995,7 +1002,7 @@ export default function Profile() {
         >
           <DishModeFilterButton
             value={selectedDishMode}
-            onClick={() => setDishModeFilterOpen(true)}
+            onSelect={setSelectedDishMode}
             className="pointer-events-auto"
           />
         </div>

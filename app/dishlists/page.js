@@ -648,7 +648,7 @@ export default function Dishlists() {
                       </div>
                     </div>
                     <div className="space-y-2 text-sm text-black/65">
-                      <p>Pick from your uploaded dishes or saved DishLists.</p>
+                      <p>Pick from your uploaded dishes or Favorites.</p>
                       <p>Share it instantly to your story.</p>
                     </div>
                   </div>

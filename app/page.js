@@ -27,7 +27,7 @@ import SaversModal from "../components/SaversModal";
 import { ChevronLeft, ChevronRight, CircleUserRound, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
-import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner } from "../components/DishModeControls";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
@@ -540,6 +540,7 @@ export default function Feed() {
           </Link>
         </div>
       </div>
+      <DishModeSelectionBanner value={selectedDishMode} className="shrink-0" />
       {!userId && guestMode === "feed" && (
         <div className="px-5">
           <div className="bg-white border border-black/10 rounded-2xl px-4 py-3 text-sm text-black/70">

@@ -34,7 +34,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import RestaurantMapView from "../../../components/RestaurantMapView";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner, RestaurantMapIcon } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { useLanguage } from "../../../components/LanguageProvider";
 
@@ -536,6 +536,7 @@ export default function PublicProfile() {
           </button>
         </div>
       </div>
+      <DishModeSelectionBanner value={selectedDishMode} />
 
       <div className="mb-4">
         <div className="flex items-start gap-4">

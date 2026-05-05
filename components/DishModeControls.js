@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
@@ -65,27 +66,50 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_COOKING)}
-        className={`top-action-btn relative !h-[2.7rem] !w-[2.9rem] !min-w-[2.9rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+        className={`top-action-btn relative !h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
           value === DISH_MODE_COOKING
-            ? "border-[#F0A623] bg-[#F0A623] text-white"
-            : "border-black/12 bg-white text-[#D59A14]"
+            ? "border-[#F0A623] bg-[#FFF1C8] text-[#C78400]"
+            : "border-[#F0A623] bg-white text-[#D59A14]"
         }`}
         aria-label="Filter home dishes"
       >
-        <CookingHomeIcon className="h-[1.25rem] w-[1.25rem]" strokeWidth={2.45} />
+        <CookingHomeIcon className="h-[1.38rem] w-[1.38rem]" strokeWidth={2.5} />
       </button>
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className={`top-action-btn relative !h-[2.7rem] !w-[2.9rem] !min-w-[2.9rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+        className={`top-action-btn restaurant-accent-border no-accent-border relative !h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
           value === DISH_MODE_RESTAURANT
-            ? "border-[#E64646] bg-[#E64646] text-white"
-            : "border-black/12 bg-white text-[#D53333]"
+            ? "border-[#E64646] bg-[#FFE0E0] text-[#D53333]"
+            : "border-[#E64646] bg-white text-[#D53333]"
         }`}
         aria-label="Filter restaurant dishes"
       >
-        <RestaurantMapIcon className="h-[1.25rem] w-[1.25rem]" strokeWidth={2.45} />
+        <RestaurantMapIcon className="h-[1.38rem] w-[1.38rem]" strokeWidth={2.5} />
       </button>
+    </div>
+  );
+}
+
+export function DishModeSelectionBanner({ value = DISH_MODE_ALL, className = "" }) {
+  const { t } = useLanguage();
+  if (!value || value === DISH_MODE_ALL) return null;
+
+  const isCooking = value === DISH_MODE_COOKING;
+  return (
+    <div
+      className={`mx-auto mt-2 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+        isCooking
+          ? "border-[#F0A623] bg-[#FFF7DF] text-[#9B6500]"
+          : "restaurant-accent-border no-accent-border border-[#E64646] bg-[#FFF0F0] text-[#B12626]"
+      } ${className}`}
+    >
+      {isCooking ? (
+        <CookingHomeIcon className="h-4 w-4 shrink-0" strokeWidth={2.35} />
+      ) : (
+        <RestaurantMapIcon className="h-4 w-4 shrink-0" strokeWidth={2.35} />
+      )}
+      <span>{t(isCooking ? "Showing home dishes" : "Showing restaurant dishes")}</span>
     </div>
   );
 }

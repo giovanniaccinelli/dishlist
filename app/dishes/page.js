@@ -23,7 +23,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner } from "../../components/DishModeControls";
 
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
@@ -568,6 +568,7 @@ export default function Dishes() {
           </Link>
         </div>
       </div>
+      <DishModeSelectionBanner value={selectedDishMode} />
       <div className="relative mb-6">
         <div className="flex gap-2">
           <input

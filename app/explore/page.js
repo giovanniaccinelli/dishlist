@@ -29,7 +29,7 @@ import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
@@ -576,6 +576,7 @@ export default function Explore() {
           <TopActionButton href={user ? "/profile" : "/?auth=1"} icon={CircleUserRound} label="Open profile" />
         </div>
       </div>
+      <DishModeSelectionBanner value={selectedDishMode} />
 
       <SearchBar
         value={search}

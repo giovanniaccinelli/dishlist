@@ -48,6 +48,7 @@ import RestaurantMapView from "../../components/RestaurantMapView";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -73,6 +74,7 @@ function StoryStatIcon({ size = 10 }) {
 
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const pathname = usePathname();
@@ -137,10 +139,11 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
+  const effectiveDisplayName = profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =
     typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
-  const avatarTone = getAvatarTone(user?.displayName || "");
+  const avatarTone = getAvatarTone(effectiveDisplayName);
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -210,6 +213,7 @@ export default function Profile() {
         followers: data.followers || [],
         following: data.following || [],
         savedDishes: data.savedDishes || [],
+        displayName: data.displayName || "",
         photoURL: data.photoURL || "",
         bio: data.bio || "",
       });
@@ -451,6 +455,7 @@ export default function Profile() {
 
       setProfileMeta((prev) => ({
         ...prev,
+        displayName: cleanedName,
         photoURL: nextPhotoURL || "",
         bio: cleanedBio,
       }));
@@ -520,13 +525,18 @@ export default function Profile() {
       alert("No dishes to shuffle.");
       return;
     }
-    const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    const shuffledPool = pool
+      .slice()
+      .sort(() => Math.random() - 0.5)
+      .filter((dish) => dish?.id);
+    const randomDish = shuffledPool[0];
     const returnTo = encodeURIComponent(buildProfileReturnTo());
+    const encodedDeckIds = encodeURIComponent(shuffledPool.map((dish) => dish.id).join(","));
     if (customDishlist) {
-      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&returnTo=${returnTo}`);
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&returnTo=${returnTo}&deckIds=${encodedDeckIds}`);
       return;
     }
-    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&returnTo=${returnTo}`);
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&returnTo=${returnTo}&deckIds=${encodedDeckIds}`);
   };
 
   const removeDishFromProfileOnly = async (dish) => {
@@ -874,11 +884,13 @@ export default function Profile() {
                 className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
               >
                 <Link
-                  href={
-                    source === "dishlist" || activeDishlist?.type === "custom"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                      : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                  }
+                  href={(() => {
+                    const deckParam = encodeURIComponent(dishes.map((item) => item.id).filter(Boolean).join(","));
+                    const returnParam = encodeURIComponent(buildProfileReturnTo());
+                    return source === "dishlist" || activeDishlist?.type === "custom"
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`
+                      : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`;
+                  })()}
                   className="absolute inset-0 z-10"
                 >
                   <span className="sr-only">Open dish</span>
@@ -957,7 +969,7 @@ export default function Profile() {
               router.push("/directs");
             }}
             className="top-action-btn relative"
-            aria-label="Directs"
+            aria-label={t("Directs")}
           >
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
@@ -966,12 +978,12 @@ export default function Profile() {
             type="button"
             onClick={() => setProfileOptionsOpen((prev) => !prev)}
             className="top-action-btn"
-            aria-label="Profile options"
+            aria-label={t("Profile options")}
           >
             <Settings size={18} />
           </button>
           {profileOptionsOpen && (
-            <div className="absolute top-full right-0 mt-2 z-[90] bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-48">
+            <div className="absolute top-full right-0 mt-2 z-[90] bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-56">
               <button
                 type="button"
                 onClick={() => {
@@ -980,10 +992,31 @@ export default function Profile() {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
               >
-                Edit Profile
+                {t("Edit Profile")}
               </button>
-
-             
+              <div className="px-3 pb-2 pt-1">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/38">
+                  {t("Language")}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage(LANGUAGE_EN)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${language === LANGUAGE_EN ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    aria-label={t("English")}
+                  >
+                    🇬🇧
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage(LANGUAGE_IT)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${language === LANGUAGE_IT ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    aria-label={t("Italian")}
+                  >
+                    🇮🇹
+                  </button>
+                </div>
+              </div>
 
               <button
                 type="button"
@@ -993,7 +1026,7 @@ export default function Profile() {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
               >
-                Log Out
+                {t("Log Out")}
               </button>
               <div className="my-1 h-px bg-black/8" />
               <button
@@ -1006,7 +1039,7 @@ export default function Profile() {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-sm font-medium text-red-600"
               >
-                Delete Account
+                {t("Delete Account")}
               </button>
             </div>
           )}
@@ -1038,7 +1071,7 @@ export default function Profile() {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <span style={{ color: avatarTone.text }}>{user.displayName?.[0] || "U"}</span>
+                    <span style={{ color: avatarTone.text }}>{effectiveDisplayName?.[0] || "U"}</span>
                   )}
                 </div>
               </div>
@@ -1054,7 +1087,7 @@ export default function Profile() {
           </div>
 
           <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
-            <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{user.displayName || "My Profile"}</h1>
+            <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div className="text-[1.28rem] font-bold leading-none">{profileMeta.followers.length}</div>
@@ -1062,7 +1095,7 @@ export default function Profile() {
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  followers
+                  {t("followers")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1071,7 +1104,7 @@ export default function Profile() {
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  following
+                  {t("following")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1080,7 +1113,7 @@ export default function Profile() {
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  uploaded
+                  {t("uploaded")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">

@@ -5,10 +5,12 @@ import { Home, LayoutGrid, Plus, Utensils, User } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
 import { useState } from "react";
 import AuthPromptModal from "./AuthPromptModal";
+import { useLanguage } from "./LanguageProvider";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const profileHref = "/profile";
 
@@ -72,7 +74,7 @@ export default function BottomNav() {
                   <span className="mt-1 invisible">upload</span>
                 ) : (
                   <div className="mt-1 flex flex-col items-center">
-                    <span className="text-black/45">{item.label}</span>
+                    <span className="text-black/45">{t(item.label)}</span>
                     <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-transparent" />
                   </div>
                 )}
@@ -93,7 +95,7 @@ export default function BottomNav() {
                 <span className="mt-1 invisible">upload</span>
               ) : (
                 <div className="mt-1 flex flex-col items-center">
-                  <span className={labelClass}>{item.label}</span>
+                  <span className={labelClass}>{t(item.label)}</span>
                   <span className={`no-accent-border mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-1.5 bg-black/12"}`} />
                 </div>
               )}

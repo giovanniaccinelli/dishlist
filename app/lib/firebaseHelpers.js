@@ -22,7 +22,7 @@ import {
   writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { normalizeRestaurant } from "./restaurants";
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
@@ -375,17 +375,48 @@ export async function updateDishAndSavedCopies(dishId, updates) {
   if (!dishId || !updates || Object.keys(updates).length === 0) return;
   await updateDoc(doc(db, "dishes", dishId), updates);
   clearReadCache();
+  dataCache.clear();
+  pendingCache.clear();
 
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, where("savedDishes", "array-contains", dishId));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return;
+  const savedUsersQuery = query(collection(db, "users"), where("savedDishes", "array-contains", dishId));
+  const [savedUsersSnapshot, toTrySnapshot, storySnapshot, customItemsSnapshot] = await Promise.all([
+    getDocs(savedUsersQuery),
+    getDocs(collectionGroup(db, "toTry")),
+    getDocs(collectionGroup(db, "stories")),
+    getDocs(collectionGroup(db, "items")),
+  ]);
 
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((userDoc) => {
-    batch.set(doc(db, "users", userDoc.id, "saved", dishId), updates, { merge: true });
+  const commitRefs = [];
+
+  savedUsersSnapshot.docs.forEach((userDoc) => {
+    commitRefs.push(doc(db, "users", userDoc.id, "saved", dishId));
   });
-  await batch.commit();
+
+  toTrySnapshot.docs.forEach((docSnap) => {
+    const linkedDishId = docSnap.data()?.dishId || docSnap.id;
+    if (linkedDishId === dishId) commitRefs.push(docSnap.ref);
+  });
+
+  storySnapshot.docs.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const linkedDishId = data.dishId || docSnap.id;
+    if (linkedDishId === dishId) commitRefs.push(docSnap.ref);
+  });
+
+  customItemsSnapshot.docs.forEach((docSnap) => {
+    const linkedDishId = docSnap.data()?.dishId || docSnap.id;
+    if (linkedDishId === dishId) commitRefs.push(docSnap.ref);
+  });
+
+  if (commitRefs.length === 0) return;
+
+  for (let i = 0; i < commitRefs.length; i += 400) {
+    const batch = writeBatch(db);
+    commitRefs.slice(i, i + 400).forEach((refToUpdate) => {
+      batch.set(refToUpdate, updates, { merge: true });
+    });
+    await batch.commit();
+  }
 }
 
 // Save dish to global dishes collection

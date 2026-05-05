@@ -7,10 +7,11 @@ import DebugBanner from "../components/DebugBanner";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import NotificationsManager from "../components/NotificationsManager";
+import { LanguageProvider } from "../components/LanguageProvider";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-RK0GKK67BN"
@@ -42,11 +43,13 @@ export default function RootLayout({ children }) {
         </div>
         <div className="relative z-10 min-h-[100dvh]">
           <AuthProvider>
-            <GoogleAnalytics />
-            <ServiceWorkerRegister />
-            <NotificationsManager />
-            <DebugBanner />
-            {children}
+            <LanguageProvider>
+              <GoogleAnalytics />
+              <ServiceWorkerRegister />
+              <NotificationsManager />
+              <DebugBanner />
+              {children}
+            </LanguageProvider>
           </AuthProvider>
         </div>
       </body>

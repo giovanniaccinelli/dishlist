@@ -26,6 +26,7 @@ import { getActiveStoriesForUser, getAllDishesFromFirestore, getAvatarTone, getS
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
+import { useLanguage } from "../../components/LanguageProvider";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -59,6 +60,7 @@ const sortUsersByProfileDishes = (usersList) =>
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const [users, setUsers] = useState([]);
@@ -338,7 +340,7 @@ export default function Dishlists() {
       <div className="relative mb-6">
         <input
           type="text"
-          placeholder="Search users..."
+          placeholder={t("Search users...")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-4 pr-4 py-3.5 rounded-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] border border-black/10 text-black shadow-[0_12px_30px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-black/15 placeholder:text-black/38"
@@ -417,7 +419,7 @@ export default function Dishlists() {
         <PeopleGridLoading searching />
       ) : filteredUsers.length === 0 ? (
         <div className="bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
-          No users found.
+          {t("No users found.")}
         </div>
       ) : (
         <div>
@@ -487,7 +489,7 @@ export default function Dishlists() {
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
                           }`}
                         >
-                          {alreadyFollowing ? "Unfollow" : "Follow"}
+                          {alreadyFollowing ? t("Unfollow") : t("Follow")}
                         </button>
                       )}
                     </div>

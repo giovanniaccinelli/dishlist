@@ -10,11 +10,13 @@ import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { useLanguage } from "../../components/LanguageProvider";
 
 function MapPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const [dishes, setDishes] = useState([]);
   const [loadingMapData, setLoadingMapData] = useState(true);
 
@@ -43,7 +45,7 @@ function MapPageContent() {
   const selectedPlaceId = searchParams.get("placeId") || "";
 
   if (loading || loadingMapData) {
-    return <FullScreenLoading title="Loading map" />;
+    return <FullScreenLoading title={t("Loading map")} />;
   }
 
   return (
@@ -59,7 +61,7 @@ function MapPageContent() {
         </button>
         <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.06)] border border-black/10">
           <RestaurantMapIcon className="h-4 w-4 text-[#E64646]" />
-          <span className="text-sm font-semibold text-black">Restaurant map</span>
+          <span className="text-sm font-semibold text-black">{t("Restaurants map")}</span>
         </div>
         <button
           type="button"
@@ -73,10 +75,10 @@ function MapPageContent() {
 
       <div className="mb-4 px-1">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/36">
-          World map
+          {t("World map")}
         </div>
         <h1 className="mt-2 text-[2rem] leading-none font-semibold text-black">
-          Restaurants map
+          {t("Restaurants map")}
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-black/58">
           A shared map of restaurants people have linked to their dishes, with the meals posted from each place.

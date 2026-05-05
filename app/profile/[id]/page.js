@@ -36,6 +36,7 @@ import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import RestaurantMapView from "../../../components/RestaurantMapView";
 import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
+import { useLanguage } from "../../../components/LanguageProvider";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -113,6 +114,7 @@ export default function PublicProfile() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [profileUser, setProfileUser] = useState(null);
   const [savedDishes, setSavedDishes] = useState([]);
@@ -341,16 +343,21 @@ export default function PublicProfile() {
             ? savedDishes
             : customDishlist?.dishes || [];
     if (!pool.length) {
-      alert("No dishes to shuffle.");
+      alert(t("No dishes to shuffle."));
       return;
     }
-    const randomDish = pool[Math.floor(Math.random() * pool.length)];
+    const shuffledPool = pool
+      .slice()
+      .sort(() => Math.random() - 0.5)
+      .filter((dish) => dish?.id);
+    const randomDish = shuffledPool[0];
     const returnTo = encodeURIComponent(buildProfileReturnTo());
+    const encodedDeckIds = encodeURIComponent(shuffledPool.map((dish) => dish.id).join(","));
     if (customDishlist) {
-      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}`);
+      router.push(`/dish/${randomDish.id}?source=dishlist&listId=${customDishlist.id}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}&deckIds=${encodedDeckIds}`);
       return;
     }
-    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}`);
+    router.push(`/dish/${randomDish.id}?source=${source}&mode=shuffle&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnTo}&deckIds=${encodedDeckIds}`);
   };
 
   const handleOpenSavers = async (dish) => {
@@ -473,7 +480,7 @@ export default function PublicProfile() {
                   : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
               }`}
             >
-              {isFollowing ? "Unfollow" : "Follow"}
+              {isFollowing ? t("Unfollow") : t("Follow")}
             </button>
           ) : null}
         </div>
@@ -554,7 +561,7 @@ export default function PublicProfile() {
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  followers
+                  {t("followers")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -563,7 +570,7 @@ export default function PublicProfile() {
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  following
+                  {t("following")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -572,7 +579,7 @@ export default function PublicProfile() {
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  uploaded
+                  {t("uploaded")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -581,7 +588,7 @@ export default function PublicProfile() {
                   onClick={() => selectDishlist("all_dishes")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  dishes
+                  {t("dishes")}
                 </button>
               </div>
             </div>
@@ -596,9 +603,9 @@ export default function PublicProfile() {
 
       <div className="mb-2 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: "Top picks" },
-          { id: "uploaded", label: "Uploaded" },
-          { id: "all_dishes", label: "All dishes" },
+          { id: "saved", label: t("Top picks") },
+          { id: "uploaded", label: t("uploaded") },
+          { id: "all_dishes", label: t("All dishes") },
         ].map((item) => {
           const active = activeDishlistId === item.id;
           return (
@@ -649,13 +656,13 @@ export default function PublicProfile() {
           disabled={(activeDishlist?.dishes || []).length === 0}
         >
           <Shuffle size={14} />
-          Shuffle
+          {t("Shuffle")}
         </button>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {(activeDishlist?.dishes || []).length === 0 ? (
           <div className="col-span-2 bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
-            No dishes here.
+            {t("No dishes here.")}
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -665,11 +672,13 @@ export default function PublicProfile() {
                 className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
               >
                 <Link
-                  href={
-                    activeDishlist?.type === "custom"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(buildProfileReturnTo())}`
-                  }
+                  href={(() => {
+                    const deckParam = encodeURIComponent((activeDishlist?.dishes || []).map((item) => item.id).filter(Boolean).join(","));
+                    const returnParam = encodeURIComponent(buildProfileReturnTo());
+                    return activeDishlist?.type === "custom"
+                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`
+                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
+                  })()}
                   className="absolute inset-0 z-10"
                 >
                   <span className="sr-only">Open dish card</span>

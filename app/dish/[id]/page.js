@@ -119,6 +119,25 @@ export default function DishDetail() {
     return copy;
   };
 
+  const orderedDeckIds = useMemo(
+    () =>
+      deckIds
+        .split(",")
+        .map((value) => String(value || "").trim())
+        .filter(Boolean),
+    [deckIds]
+  );
+
+  const applyDeckOrder = (items) => {
+    const normalizedItems = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!orderedDeckIds.length) return normalizedItems;
+    const orderedSet = new Set(orderedDeckIds);
+    const byId = new Map(normalizedItems.map((entry) => [entry.id, entry]));
+    const ordered = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
+    const remaining = normalizedItems.filter((entry) => !orderedSet.has(entry.id));
+    return [...ordered, ...remaining];
+  };
+
   useEffect(() => {
     if (!dishId) return;
     if (!listOwnerId && source !== "public") {
@@ -131,16 +150,7 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         const publicItems = all.filter((d) => d.isPublic !== false);
-        const orderedDeckIds = deckIds
-          .split(",")
-          .map((value) => String(value || "").trim())
-          .filter(Boolean);
-        if (orderedDeckIds.length) {
-          const byId = new Map(publicItems.map((entry) => [entry.id, entry]));
-          items = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
-        } else {
-          items = publicItems;
-        }
+        items = applyDeckOrder(publicItems);
       } else if (source === "all_dishes") {
         const lists = await getAllDishlistsForUser(listOwnerId);
         items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
@@ -153,13 +163,15 @@ export default function DishDetail() {
       } else {
         items = await getSavedDishesFromFirestore(listOwnerId);
       }
-      items = items
-        .slice()
-        .sort((a, b) => {
-          const aTime = a?.createdAt?.seconds || 0;
-          const bTime = b?.createdAt?.seconds || 0;
-          return bTime - aTime;
-        });
+      items = orderedDeckIds.length
+        ? applyDeckOrder(items)
+        : items
+            .slice()
+            .sort((a, b) => {
+              const aTime = a?.createdAt?.seconds || 0;
+              const bTime = b?.createdAt?.seconds || 0;
+              return bTime - aTime;
+            });
       const found = items.find((d) => d.id === dishId) || null;
       if (found) {
         setDish(found);
@@ -194,7 +206,7 @@ export default function DishDetail() {
       }
       setLoadingDish(false);
     })();
-  }, [dishId, listOwnerId, source, mode, listId, returnTo, deckIds]);
+  }, [dishId, listOwnerId, source, mode, listId, returnTo, deckIds, orderedDeckIds]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
@@ -299,16 +311,7 @@ export default function DishDetail() {
       if (source === "public") {
         const all = await getAllDishesFromFirestore();
         const publicItems = all.filter((d) => d.isPublic !== false);
-        const orderedDeckIds = deckIds
-          .split(",")
-          .map((value) => String(value || "").trim())
-          .filter(Boolean);
-        if (orderedDeckIds.length) {
-          const byId = new Map(publicItems.map((entry) => [entry.id, entry]));
-          items = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
-        } else {
-          items = publicItems;
-        }
+        items = applyDeckOrder(publicItems);
       } else if (source === "all_dishes") {
         const lists = await getAllDishlistsForUser(listOwnerId);
         items = lists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
@@ -321,9 +324,11 @@ export default function DishDetail() {
       } else {
         items = await getSavedDishesFromFirestore(listOwnerId);
       }
-      items = items
-        .slice()
-        .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+      items = orderedDeckIds.length
+        ? applyDeckOrder(items)
+        : items
+            .slice()
+            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
       const found = items.find((d) => d.id === dishId) || items[0] || null;
       if (found) {
         setDish(found);

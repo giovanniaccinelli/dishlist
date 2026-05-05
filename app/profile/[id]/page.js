@@ -423,7 +423,7 @@ export default function PublicProfile() {
   );
 
   const allDishlists = [
-    { id: "saved", name: "Top picks", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -497,7 +497,7 @@ export default function PublicProfile() {
           {!isViewingOwnProfile ? (
             <button
               onClick={handleFollow}
-              className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-semibold border transition ${
                 isFollowing
                   ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                   : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
@@ -584,7 +584,7 @@ export default function PublicProfile() {
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("followers")}
+                  {t("Followers")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -593,7 +593,7 @@ export default function PublicProfile() {
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("following")}
+                  {t("Following")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -602,7 +602,7 @@ export default function PublicProfile() {
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("uploaded")}
+                  {t("Uploaded")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -626,8 +626,8 @@ export default function PublicProfile() {
 
       <div className="mb-2 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: t("Top picks") },
-          { id: "uploaded", label: t("uploaded") },
+          { id: "saved", label: t("Favorites") },
+          { id: "uploaded", label: t("Uploaded") },
           { id: "all_dishes", label: t("All dishes") },
         ].map((item) => {
           const active = activeDishlistId === item.id;
@@ -672,7 +672,7 @@ export default function PublicProfile() {
 </div>
 
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{activeDishlist?.name || "Top picks"}</h2>
+        <h2 className="text-xl font-semibold">{activeDishlist?.name || "Favorites"}</h2>
         <button
           onClick={() => openShuffleDeck(activeDishlist?.id || "saved")}
           className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"

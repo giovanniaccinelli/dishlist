@@ -171,6 +171,44 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
+    if (!user?.uid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [userSnap, uploaded, saved, toTry, custom] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDishesFromFirestore(user.uid),
+          getSavedDishesFromFirestore(user.uid),
+          getToTryDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
+        ]);
+        if (cancelled) return;
+        if (userSnap.exists()) {
+          const data = userSnap.data() || {};
+          setProfileMeta((prev) => ({
+            ...prev,
+            followers: Array.isArray(data.followers) ? data.followers : [],
+            following: Array.isArray(data.following) ? data.following : [],
+            savedDishes: Array.isArray(data.savedDishes) ? data.savedDishes : [],
+            displayName: data.displayName || "",
+            photoURL: data.photoURL || "",
+            bio: data.bio || "",
+          }));
+        }
+        setUploadedDishes(uploaded);
+        setSavedDishes(saved);
+        setToTryDishes(toTry);
+        setCustomDishlists(custom);
+      } catch (err) {
+        console.error("Failed to hydrate profile counts:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
+
+  useEffect(() => {
     if (!profileOptionsOpen) return;
 
     const handleOutsideClick = (event) => {
@@ -677,7 +715,7 @@ export default function Profile() {
   );
 
   const allDishlists = [
-    { id: "saved", name: "Top picks", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -744,8 +782,8 @@ export default function Profile() {
   const getRemovalTargetMeta = (source) => {
     if (source === "saved") {
       return {
-        label: "Top picks",
-        description: "Remove it from Top picks only",
+        label: "Favorites",
+        description: "Remove it from Favorites only",
         buttonClass: "border-[#D8C66A] bg-[#FFFBE7]",
         iconClass: "border-[#D0B74A] bg-[#D0B74A] text-white",
       };
@@ -1095,7 +1133,7 @@ export default function Profile() {
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("followers")}
+                  {t("Followers")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1104,7 +1142,7 @@ export default function Profile() {
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("following")}
+                  {t("Following")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1113,7 +1151,7 @@ export default function Profile() {
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  {t("uploaded")}
+                  {t("Uploaded")}
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1122,7 +1160,7 @@ export default function Profile() {
                   onClick={() => selectDishlist("all_dishes")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
-                  dishes
+                  {t("Dishes")}
                 </button>
               </div>
             </div>
@@ -1136,7 +1174,7 @@ export default function Profile() {
 
       <div className="mb-2 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: "Top picks" },
+          { id: "saved", label: "Favorites" },
           { id: "uploaded", label: "Uploaded" },
           { id: "all_dishes", label: "All dishes" },
         ].map((item) => {
@@ -1182,7 +1220,7 @@ export default function Profile() {
 </div>
 
       <DishGrid
-        title={activeDishlist?.name || "Top picks"}
+        title={activeDishlist?.name || "Favorites"}
         dishes={activeDishlist?.dishes || []}
         allowDelete={false}
         source={activeDishlist?.id || "saved"}

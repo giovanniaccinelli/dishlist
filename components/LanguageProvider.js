@@ -214,19 +214,29 @@ function applyTranslationsToDocument(language) {
 
   const translateNode = (node) => {
     if (!node) return;
+    const parentTag = node.parentElement?.tagName;
+    if (parentTag === "SCRIPT" || parentTag === "STYLE") return;
     const original = textNodeOriginals.has(node) ? textNodeOriginals.get(node) : node.nodeValue;
     if (!textNodeOriginals.has(node)) textNodeOriginals.set(node, original);
-    node.nodeValue = translateString(original, language);
+    const nextValue = translateString(original, language);
+    if (node.nodeValue !== nextValue) {
+      node.nodeValue = nextValue;
+    }
   };
 
   const translateElementAttrs = (element) => {
     if (!element) return;
+    const tagName = element.tagName;
+    if (tagName === "SCRIPT" || tagName === "STYLE") return;
     const attrStore = elementAttrOriginals.get(element) || {};
     TEXT_ATTRIBUTES.forEach((attr) => {
       if (!element.hasAttribute?.(attr)) return;
       if (!(attr in attrStore)) attrStore[attr] = element.getAttribute(attr);
       const original = attrStore[attr];
-      element.setAttribute(attr, translateString(original, language));
+      const nextValue = translateString(original, language);
+      if (element.getAttribute(attr) !== nextValue) {
+        element.setAttribute(attr, nextValue);
+      }
     });
     elementAttrOriginals.set(element, attrStore);
   };

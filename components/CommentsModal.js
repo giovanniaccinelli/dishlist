@@ -127,8 +127,7 @@ export default function CommentsModal({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="whitespace-pre-wrap break-words text-sm leading-5 text-black/78">
-                              <span className="font-semibold text-black/72">{c.userName || "User"}</span>
-                              <span className="mx-1 text-black/44">:</span>
+                              <span className="font-semibold text-black/72">{c.userName || "User"}:</span>{" "}
                               {c.text}
                             </div>
                             {c.parentId ? (

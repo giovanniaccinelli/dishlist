@@ -673,8 +673,7 @@ export default function StoryViewerModal({
                     )}
                   </span>
                   <span className="min-w-0 truncate text-[11px] text-white/88">
-                    <span className="font-semibold text-white/88">{previewComment.userName || "User"}</span>
-                    <span className="mx-1 text-white/55">:</span>
+                    <span className="font-semibold text-white/88">{previewComment.userName || "User"}:</span>{" "}
                     {previewComment.text}
                   </span>
                 </button>

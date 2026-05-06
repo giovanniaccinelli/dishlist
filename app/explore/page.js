@@ -459,6 +459,22 @@ export default function Explore() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
 
+  const buildExploreUrl = (overrides = {}) => {
+    const params = new URLSearchParams();
+    const nextSearch = typeof overrides.search === "string" ? overrides.search : search;
+    const nextCategory = Object.prototype.hasOwnProperty.call(overrides, "category")
+      ? overrides.category
+      : expandedRow?.key || "";
+    if (String(nextSearch || "").trim()) {
+      params.set("q", String(nextSearch).trim());
+    }
+    if (String(nextCategory || "").trim()) {
+      params.set("category", String(nextCategory).trim());
+    }
+    const query = params.toString();
+    return query ? `/explore?${query}` : "/explore";
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -555,6 +571,13 @@ export default function Explore() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const initialSearch = params.get("q") || "";
+    setSearch(initialSearch);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     const selectedCategory = (new URLSearchParams(window.location.search).get("category") || "").toLowerCase();
     if (!selectedCategory) {
       setExpandedRow(null);
@@ -566,12 +589,12 @@ export default function Explore() {
 
   const openExpandedRow = (row) => {
     setExpandedRow(row);
-    router.replace(`/explore?category=${encodeURIComponent(row.key)}`, { scroll: false });
+    router.replace(buildExploreUrl({ category: row.key }), { scroll: false });
   };
 
   const closeExpandedRow = () => {
     setExpandedRow(null);
-    router.replace("/explore", { scroll: false });
+    router.replace(buildExploreUrl({ category: "" }), { scroll: false });
   };
 
   return (
@@ -586,7 +609,11 @@ export default function Explore() {
       </div>
       <SearchBar
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          setSearch(nextValue);
+          router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
+        }}
         placeholder={t("Search dishes or tags")}
       />
       <div className="relative mb-6">

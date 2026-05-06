@@ -1576,8 +1576,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     )}
                   </span>
                   <span className="min-w-0 truncate text-[11px] text-black/72">
-                    <span className="font-semibold text-black/62">{recipePreviewComment.userName || "User"}</span>
-                    <span className="mx-1 text-black/38">:</span>
+                    <span className="font-semibold text-black/62">{recipePreviewComment.userName || "User"}:</span>{" "}
                     {recipePreviewComment.text}
                   </span>
                 </button>
@@ -1623,8 +1622,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     )}
                   </span>
                   <span className="min-w-0 truncate text-[11px] text-white/88">
-                    <span className="font-semibold text-white/88">{dishPreviewComment.userName || "User"}</span>
-                    <span className="mx-1 text-white/55">:</span>
+                    <span className="font-semibold text-white/88">{dishPreviewComment.userName || "User"}:</span>{" "}
                     {dishPreviewComment.text}
                   </span>
                 </button>

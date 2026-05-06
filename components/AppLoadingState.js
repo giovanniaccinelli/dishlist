@@ -26,24 +26,7 @@ export function FullScreenLoading({ title = "Loading" }) {
 export function FeedLoading() {
   return (
     <div className="h-[100dvh] bg-transparent px-4 text-black">
-      <div className="app-top-nav pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <PulseBlock className="h-8 w-8 rounded-full" />
-          <PulseBlock className="h-7 w-36 rounded-full" />
-        </div>
-        <div className="flex gap-2">
-          <PulseBlock className="h-10 w-10 rounded-[0.95rem]" />
-          <PulseBlock className="h-10 w-10 rounded-[0.95rem]" />
-          <PulseBlock className="h-10 w-10 rounded-[0.95rem]" />
-        </div>
-      </div>
-      <div className="grid grid-cols-[48px_1fr_48px] items-end gap-3">
-        <PulseBlock className="h-11 w-11 rounded-full" />
-        <div className="flex justify-center">
-          <PulseBlock className="h-7 w-40 rounded-full" />
-        </div>
-        <PulseBlock className="h-11 w-11 rounded-full" />
-      </div>
+      <div className="app-top-nav pb-2" />
       <div className="flex h-[68vh] flex-col items-center justify-center px-4 pt-8">
         <div className="max-w-[16.5rem] text-center text-[2.15rem] font-semibold leading-[0.92] tracking-[-0.03em] text-black/84">
           What&apos;s your next meal?

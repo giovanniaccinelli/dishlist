@@ -38,6 +38,7 @@ import {
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantMapIcon,
+  usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
 
@@ -332,12 +333,7 @@ function DishPreview({ dish, title, t }) {
 function CategoryTitle({ row, t }) {
   if (row.key.startsWith("restaurant-")) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="inline-flex items-center rounded-full border border-[#E64646]/22 bg-[#FFECEC] px-4 py-1.5 text-[1.05rem] font-semibold text-[#B92E2E]">
-          {row.title}
-        </span>
-        <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.25} />
-      </div>
+      <span className="text-[1.28rem] font-bold tracking-tight text-black">{row.title}</span>
     );
   }
 
@@ -382,18 +378,33 @@ function ExploreRow({ row, onExpand, t }) {
   const { title, dishes } = row;
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
+  const isRestaurantRow = row.key.startsWith("restaurant-");
 
   return (
     <section className="mb-6" style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}>
       <div className="mb-2.5 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onExpand}
-          className="min-w-0 text-left"
-          aria-label={`Open ${title}`}
-        >
-          <CategoryTitle row={row} t={t} />
-        </button>
+        {isRestaurantRow ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (!row.placeId) return;
+              window.location.href = `/map?placeId=${encodeURIComponent(row.placeId)}`;
+            }}
+            className="min-w-0 text-left"
+            aria-label={`Open ${title} on map`}
+          >
+            <CategoryTitle row={row} t={t} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onExpand}
+            className="min-w-0 text-left"
+            aria-label={`Open ${title}`}
+          >
+            <CategoryTitle row={row} t={t} />
+          </button>
+        )}
         {dishes.length > 3 ? (
           <button
             type="button"
@@ -477,7 +488,7 @@ export default function Explore() {
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:explore", DISH_MODE_ALL);
 
   const buildExploreUrl = (overrides = {}) => {
     const params = new URLSearchParams();
@@ -548,13 +559,17 @@ export default function Explore() {
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     if (selectedDishMode === DISH_MODE_RESTAURANT) {
-      return getRestaurantDishGroups(modePool).map((group) => ({
-        key: `restaurant-${group.placeId}`,
-        title: group.name,
-        rawTag: group.name,
-        dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
-        totalCount: group.dishes?.length || 0,
-      }));
+      return getRestaurantDishGroups(modePool)
+        .map((group) => ({
+          key: `restaurant-${group.placeId}`,
+          title: group.name,
+          rawTag: group.name,
+          placeId: group.placeId,
+          dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
+          totalCount: group.dishes?.length || 0,
+          totalSaves: (group.dishes || []).reduce((sum, dish) => sum + Math.max(0, Number(dish?.saves || 0)), 0),
+        }))
+        .sort((a, b) => b.totalCount - a.totalCount || b.totalSaves - a.totalSaves || a.title.localeCompare(b.title));
     }
 
     const rows = [];

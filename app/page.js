@@ -34,6 +34,7 @@ import {
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
+  usePersistentDishMode,
 } from "../components/DishModeControls";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
@@ -87,7 +88,7 @@ export default function Feed() {
   const [filterVersion, setFilterVersion] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;

@@ -35,6 +35,33 @@ export function dishModeMatches(dish, selectedMode) {
   return String(dish?.dishMode || "").toLowerCase() === selectedMode;
 }
 
+export function usePersistentDishMode(storageKey, defaultMode = DISH_MODE_ALL) {
+  const [mode, setMode] = useState(defaultMode);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !storageKey) return;
+    try {
+      const stored = String(window.localStorage.getItem(storageKey) || "").trim().toLowerCase();
+      if (
+        stored === DISH_MODE_ALL ||
+        stored === DISH_MODE_COOKING ||
+        stored === DISH_MODE_RESTAURANT
+      ) {
+        setMode(stored);
+      }
+    } catch {}
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !storageKey) return;
+    try {
+      window.localStorage.setItem(storageKey, mode || DISH_MODE_ALL);
+    } catch {}
+  }, [mode, storageKey]);
+
+  return [mode, setMode];
+}
+
 export function DishModeBadge({ dishMode, className = "" }) {
   if (dishMode === DISH_MODE_COOKING) {
     return (

@@ -34,7 +34,14 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import RestaurantMapView from "../../../components/RestaurantMapView";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../../components/DishModeControls";
+import {
+  dishModeMatches,
+  DISH_MODE_ALL,
+  DishModeFilterButton,
+  DishModeFilterModal,
+  RestaurantMapIcon,
+  usePersistentDishMode,
+} from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { useLanguage } from "../../../components/LanguageProvider";
 
@@ -144,7 +151,7 @@ export default function PublicProfile() {
   const [storyPushStats, setStoryPushStats] = useState({});
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const viewedAllStories =
     activeStories.length > 0 &&

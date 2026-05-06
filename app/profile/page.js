@@ -46,7 +46,15 @@ import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../components/DishModeControls";
+import {
+  dishModeMatches,
+  DISH_MODE_ALL,
+  DISH_MODE_COOKING,
+  DishModeFilterButton,
+  DishModeFilterModal,
+  RestaurantMapIcon,
+  usePersistentDishMode,
+} from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 
@@ -193,7 +201,7 @@ export default function Profile() {
   const [deleteAccountError, setDeleteAccountError] = useState("");
   const [removePreviewTarget, setRemovePreviewTarget] = useState(null);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =

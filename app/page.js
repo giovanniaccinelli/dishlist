@@ -321,15 +321,20 @@ export default function Feed() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("recountSaves") !== "1") return;
+    const recountFlagKey = "dishlist-save-recount-v2";
+    const shouldRecount = params.get("recountSaves") === "1" || window.localStorage.getItem(recountFlagKey) !== "done";
+    if (!shouldRecount) return;
     recountDishSavesFromUsers()
-      .then(() => getAllDishesFromFirestore().then((items) => {
-        const publicItems = items.filter((dish) => dish.isPublic !== false);
-        const ordered = publicItems
-          .slice()
-          .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
-        setForYouDeck(shuffleArray(ordered));
-      }))
+      .then(() => {
+        window.localStorage.setItem(recountFlagKey, "done");
+        return getAllDishesFromFirestore().then((items) => {
+          const publicItems = items.filter((dish) => dish.isPublic !== false);
+          const ordered = publicItems
+            .slice()
+            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+          setForYouDeck(shuffleArray(ordered));
+        });
+      })
       .catch((err) => console.error("Failed to recount saves:", err));
   }, []);
 

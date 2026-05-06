@@ -1473,23 +1473,13 @@ export async function removeDishFromAllUsers(dishId) {
 
 export async function recountDishSavesFromUsers() {
   const dishesSnap = await getDocs(collection(db, "dishes"));
-  const counts = new Map();
-  dishesSnap.docs.forEach((d) => counts.set(d.id, 0));
-
-  const savedDocsSnap = await getDocs(collectionGroup(db, "saved"));
-  const uniquePairs = new Set();
-  savedDocsSnap.docs.forEach((savedDoc) => {
-    const uid = savedDoc.ref.parent.parent?.id;
-    const dishId = savedDoc.data()?.dishId || savedDoc.id;
-    if (!uid || !dishId) return;
-    uniquePairs.add(`${uid}:${dishId}`);
-  });
-  uniquePairs.forEach((pair) => {
-    const [, dishId] = pair.split(":");
-    counts.set(dishId, (counts.get(dishId) || 0) + 1);
-  });
-
-  const entries = Array.from(counts.entries());
+  const entries = await Promise.all(
+    dishesSnap.docs.map(async (dishDoc) => {
+      const dishId = dishDoc.id;
+      const userIds = await getUserIdsWithDishInAnyDishlist(dishId);
+      return [dishId, userIds.length];
+    })
+  );
   const chunkSize = 400;
   for (let i = 0; i < entries.length; i += chunkSize) {
     const batch = writeBatch(db);

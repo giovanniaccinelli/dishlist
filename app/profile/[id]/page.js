@@ -499,11 +499,11 @@ export default function PublicProfile() {
           <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-start">
             <AppBackButton fallback="/dishlists" />
           </div>
-          <div className="flex min-w-0 items-center justify-center gap-2 pl-8">
+          <div className="flex min-w-0 items-center justify-center gap-1.5 pl-14">
             {!isViewingOwnProfile ? (
               <button
                 onClick={handleFollow}
-                className={`min-h-[2.5rem] shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[0.7rem] font-semibold border transition ${
+                className={`h-[2.2rem] shrink-0 whitespace-nowrap px-2.5 py-0 rounded-full text-[0.64rem] font-semibold border transition ${
                   isFollowing
                     ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                     : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"

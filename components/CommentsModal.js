@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function CommentsModal({
   open,
   onClose,
+  title = "Comments",
   comments,
   loading,
   onSubmit,
@@ -67,7 +68,7 @@ export default function CommentsModal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex shrink-0 items-center justify-between border-b border-black/8 px-5 py-4">
-              <h3 className="text-[1.45rem] font-bold leading-none text-black">Comments</h3>
+              <h3 className="text-[1.45rem] font-bold leading-none text-black">{title}</h3>
               <div className="flex items-center gap-2">
                 {orderedComments.length > 1 ? (
                   <button
@@ -109,9 +110,9 @@ export default function CommentsModal({
                         c.parentId ? "ml-7 border-l-[3px] border-l-[#D7B443]" : ""
                       }`}
                     >
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-xs font-bold text-black/70">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-[10px] font-bold text-black/70">
                             {c.userPhotoURL ? (
                               <img
                                 src={c.userPhotoURL}
@@ -124,13 +125,14 @@ export default function CommentsModal({
                               c.userName?.[0] || "U"
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold leading-tight text-black">
-                              {c.userName || "User"}
+                          <div className="min-w-0 flex-1">
+                            <div className="whitespace-pre-wrap break-words text-sm leading-5 text-black/78">
+                              <span className="mr-1 font-semibold text-black/58">:</span>
+                              {c.text}
                             </div>
-                            <div className="text-[11px] font-medium text-black/38">
-                              {c.parentId ? "reply" : ""}
-                            </div>
+                            {c.parentId ? (
+                              <div className="mt-1 text-[11px] font-medium text-black/38">reply</div>
+                            ) : null}
                           </div>
                         </div>
                         {currentUser?.uid === c.userId && (
@@ -143,7 +145,6 @@ export default function CommentsModal({
                           </button>
                         )}
                       </div>
-                      <div className="whitespace-pre-wrap break-words text-sm leading-5 text-black/78">{c.text}</div>
                       {!c.parentId && (
                         <button
                           type="button"

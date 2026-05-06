@@ -72,6 +72,20 @@ function normalizeTags(tags) {
   return Array.from(new Set(cleaned)).slice(0, 6);
 }
 
+function normalizeDishCommentScope(scope = "dish") {
+  return scope === "recipe" ? "recipe" : "dish";
+}
+
+function getDishCommentsCollection(dishId, scope = "dish") {
+  const normalizedScope = normalizeDishCommentScope(scope);
+  const subcollection = normalizedScope === "recipe" ? "recipeComments" : "comments";
+  return collection(db, "dishes", dishId, subcollection);
+}
+
+function getStoryCommentsCollection(ownerId, storyId) {
+  return collection(db, "users", ownerId, "stories", storyId, "comments");
+}
+
 async function getUserIdsWithDishInAnyDishlist(dishId) {
   if (!dishId) return [];
   const userIds = new Set();
@@ -955,11 +969,11 @@ export async function getUsersByIds(userIds = []) {
   }
 }
 
-export async function getCommentsForDish(dishId, max = 20) {
+export async function getCommentsForDish(dishId, max = 20, scope = "dish") {
   if (!dishId) return [];
   try {
     const q = query(
-      collection(db, "dishes", dishId, "comments"),
+      getDishCommentsCollection(dishId, scope),
       orderBy("createdAt", "desc"),
       limitResults(max)
     );
@@ -971,10 +985,10 @@ export async function getCommentsForDish(dishId, max = 20) {
   }
 }
 
-export async function addCommentToDish(dishId, payload) {
+export async function addCommentToDish(dishId, payload, scope = "dish") {
   if (!dishId || !payload?.userId || !payload?.text) return false;
   try {
-    await addDoc(collection(db, "dishes", dishId, "comments"), {
+    await addDoc(getDishCommentsCollection(dishId, scope), {
       userId: payload.userId,
       userName: payload.userName || "User",
       userPhotoURL: payload.userPhotoURL || "",
@@ -989,19 +1003,70 @@ export async function addCommentToDish(dishId, payload) {
   }
 }
 
-export async function deleteCommentThread(dishId, commentId) {
+export async function deleteCommentThread(dishId, commentId, scope = "dish") {
   if (!dishId || !commentId) return false;
   try {
-    const commentsRef = collection(db, "dishes", dishId, "comments");
+    const commentsRef = getDishCommentsCollection(dishId, scope);
     const q = query(commentsRef, where("parentId", "==", commentId));
     const repliesSnap = await getDocs(q);
     const batch = writeBatch(db);
     repliesSnap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
-    batch.delete(doc(db, "dishes", dishId, "comments", commentId));
+    batch.delete(doc(commentsRef, commentId));
     await batch.commit();
     return true;
   } catch (err) {
     console.error("Failed to delete comment thread:", err);
+    return false;
+  }
+}
+
+export async function getCommentsForStory(ownerId, storyId, max = 20) {
+  if (!ownerId || !storyId) return [];
+  try {
+    const q = query(
+      getStoryCommentsCollection(ownerId, storyId),
+      orderBy("createdAt", "desc"),
+      limitResults(max)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (err) {
+    console.error("Failed to load story comments:", err);
+    return [];
+  }
+}
+
+export async function addCommentToStory(ownerId, storyId, payload) {
+  if (!ownerId || !storyId || !payload?.userId || !payload?.text) return false;
+  try {
+    await addDoc(getStoryCommentsCollection(ownerId, storyId), {
+      userId: payload.userId,
+      userName: payload.userName || "User",
+      userPhotoURL: payload.userPhotoURL || "",
+      text: payload.text,
+      parentId: payload.parentId || null,
+      createdAt: serverTimestamp(),
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to add story comment:", err);
+    return false;
+  }
+}
+
+export async function deleteStoryCommentThread(ownerId, storyId, commentId) {
+  if (!ownerId || !storyId || !commentId) return false;
+  try {
+    const commentsRef = getStoryCommentsCollection(ownerId, storyId);
+    const q = query(commentsRef, where("parentId", "==", commentId));
+    const repliesSnap = await getDocs(q);
+    const batch = writeBatch(db);
+    repliesSnap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
+    batch.delete(doc(commentsRef, commentId));
+    await batch.commit();
+    return true;
+  } catch (err) {
+    console.error("Failed to delete story comment thread:", err);
     return false;
   }
 }

@@ -263,7 +263,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [comments, setComments] = useState([]);
-  const [previewComment, setPreviewComment] = useState(null);
+  const [dishPreviewComment, setDishPreviewComment] = useState(null);
+  const [recipePreviewComment, setRecipePreviewComment] = useState(null);
+  const [commentsScope, setCommentsScope] = useState("dish");
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
@@ -371,12 +373,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!currentCard?.id) return;
     onCardViewed?.(currentCard);
     setComments([]);
-    setPreviewComment(null);
+    setDishPreviewComment(null);
+    setRecipePreviewComment(null);
+    setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
     (async () => {
-      const top = await getCommentsForDish(currentCard.id, 1);
-      setPreviewComment(top?.[0] || null);
+      const [topDish, topRecipe] = await Promise.all([
+        getCommentsForDish(currentCard.id, 1, "dish"),
+        getCommentsForDish(currentCard.id, 1, "recipe"),
+      ]);
+      setDishPreviewComment(topDish?.[0] || null);
+      setRecipePreviewComment(topRecipe?.[0] || null);
     })();
   }, [currentCard?.id, onCardViewed]);
 
@@ -566,20 +574,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setRecipePanelModal(null);
   };
 
-  const loadComments = async () => {
+  const loadComments = async (scope = commentsScope) => {
     if (!currentCard?.id) return;
     setCommentsLoading(true);
     try {
-      const items = await getCommentsForDish(currentCard.id, 30);
+      const items = await getCommentsForDish(currentCard.id, 30, scope);
       setComments(items);
     } finally {
       setCommentsLoading(false);
     }
   };
 
-  const openComments = async () => {
+  const openComments = async (scope = "dish") => {
+    setCommentsScope(scope);
     setCommentsOpen(true);
-    await loadComments();
+    await loadComments(scope);
   };
 
   const submitComment = async () => {
@@ -596,7 +605,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       userPhotoURL: currentUser.photoURL || "",
       text,
       parentId: replyTo?.id || null,
-    });
+    }, commentsScope);
     if (!ok) return;
     const recipients = Array.from(
       new Set([String(currentCard.owner || "").trim()].filter(Boolean))
@@ -613,19 +622,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
     setNewComment("");
     setReplyTo(null);
-    await loadComments();
-    const top = await getCommentsForDish(currentCard.id, 1);
-    setPreviewComment(top?.[0] || null);
+    await loadComments(commentsScope);
+    const top = await getCommentsForDish(currentCard.id, 1, commentsScope);
+    if (commentsScope === "recipe") {
+      setRecipePreviewComment(top?.[0] || null);
+    } else {
+      setDishPreviewComment(top?.[0] || null);
+    }
   };
 
   const handleDeleteComment = async (comment) => {
     if (!currentCard?.id || !comment?.id) return;
     if (comment.userId !== currentUser?.uid) return;
-    const ok = await deleteCommentThread(currentCard.id, comment.id);
+    const ok = await deleteCommentThread(currentCard.id, comment.id, commentsScope);
     if (!ok) return;
-    await loadComments();
-    const top = await getCommentsForDish(currentCard.id, 1);
-    setPreviewComment(top?.[0] || null);
+    await loadComments(commentsScope);
+    const top = await getCommentsForDish(currentCard.id, 1, commentsScope);
+    if (commentsScope === "recipe") {
+      setRecipePreviewComment(top?.[0] || null);
+    } else {
+      setDishPreviewComment(top?.[0] || null);
+    }
   };
 
   const advanceCard = () => {
@@ -1530,18 +1547,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsBottom }}>
-              {previewComment ? (
+              {recipePreviewComment ? (
                 <button
                   type="button"
                   data-no-drag="true"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    openComments();
+                    openComments("recipe");
                   }}
                   className={`max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
                 >
-                  {previewComment.userName || "User"}: {previewComment.text}
+                  {recipePreviewComment.text}
                 </button>
               ) : (
                 <button
@@ -1550,7 +1567,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    openComments();
+                    openComments("recipe");
                   }}
                   className={`inline-flex items-center rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
                 >
@@ -1562,18 +1579,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
           {!showRecipe ? (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>
-              {previewComment ? (
+              {dishPreviewComment ? (
                 <button
                   type="button"
                   data-no-drag="true"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    openComments();
+                    openComments("dish");
                   }}
                   className="text-xs text-white/90 underline-offset-2 hover:underline"
                 >
-                  {previewComment.userName || "User"}: {previewComment.text}
+                  {dishPreviewComment.text}
                 </button>
               ) : (
                 <button
@@ -1582,7 +1599,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    openComments();
+                    openComments("dish");
                   }}
                   className="text-xs text-white/70"
                 >
@@ -1597,6 +1614,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <CommentsModal
         open={commentsOpen}
         onClose={() => setCommentsOpen(false)}
+        title={commentsScope === "recipe" ? "Recipe comments" : "Comments"}
         comments={comments}
         loading={commentsLoading}
         onDelete={handleDeleteComment}

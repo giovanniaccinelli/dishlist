@@ -541,7 +541,7 @@ export default function Explore() {
         key: `tag-${tag}`,
         rawTag: tag,
         title: String(tag),
-        dishes: tagged.slice(0, BASE_LIMIT),
+        dishes: [...tagged].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
         totalCount: tagged.length,
       };
     })

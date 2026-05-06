@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, Trash2, X } from "lucide-react";
 import CommentsModal from "./CommentsModal";
-import { addCommentToDish, deleteCommentThread, getCommentsForDish, getUsersByIds } from "../app/lib/firebaseHelpers";
+import { addCommentToStory, deleteStoryCommentThread, getCommentsForStory, getUsersByIds } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import StoryViewsModal from "./StoryViewsModal";
@@ -112,7 +112,7 @@ export default function StoryViewerModal({
 
     let cancelled = false;
     (async () => {
-      const top = await getCommentsForDish(storyDishId, 1);
+      const top = await getCommentsForStory(currentGroup?.ownerId || currentStory?.owner || "", currentStory.id, 1);
       if (!cancelled) setPreviewComment(top?.[0] || null);
     })();
 
@@ -351,10 +351,11 @@ export default function StoryViewerModal({
   };
 
   const loadComments = async () => {
-    if (!currentStoryDishId) return;
+    const storyOwnerId = currentGroup?.ownerId || currentStory?.owner || "";
+    if (!storyOwnerId || !currentStory?.id) return;
     setCommentsLoading(true);
     try {
-      const items = await getCommentsForDish(currentStoryDishId, 30);
+      const items = await getCommentsForStory(storyOwnerId, currentStory.id, 30);
       setComments(items);
     } finally {
       setCommentsLoading(false);
@@ -371,12 +372,13 @@ export default function StoryViewerModal({
   };
 
   const submitComment = async () => {
-    if (!currentStoryDishId || !currentUser?.uid || commentSubmitting) return;
+    const storyOwnerId = currentGroup?.ownerId || currentStory?.owner || "";
+    if (!storyOwnerId || !currentStory?.id || !currentUser?.uid || commentSubmitting) return;
     const text = newComment.trim();
     if (!text) return;
     setCommentSubmitting(true);
     try {
-      const ok = await addCommentToDish(currentStoryDishId, {
+      const ok = await addCommentToStory(storyOwnerId, currentStory.id, {
         userId: currentUser.uid,
         userName: currentUser.displayName || "User",
         userPhotoURL: currentUser.photoURL || "",
@@ -403,7 +405,7 @@ export default function StoryViewerModal({
       setNewComment("");
       setReplyTo(null);
       await loadComments();
-      const top = await getCommentsForDish(currentStoryDishId, 1);
+      const top = await getCommentsForStory(storyOwnerId, currentStory.id, 1);
       setPreviewComment(top?.[0] || null);
     } finally {
       setCommentSubmitting(false);
@@ -411,11 +413,12 @@ export default function StoryViewerModal({
   };
 
   const handleDeleteComment = async (comment) => {
-    if (!currentStoryDishId || !comment?.id || comment.userId !== currentUser?.uid) return;
-    const ok = await deleteCommentThread(currentStoryDishId, comment.id);
+    const storyOwnerId = currentGroup?.ownerId || currentStory?.owner || "";
+    if (!storyOwnerId || !currentStory?.id || !comment?.id || comment.userId !== currentUser?.uid) return;
+    const ok = await deleteStoryCommentThread(storyOwnerId, currentStory.id, comment.id);
     if (!ok) return;
     await loadComments();
-    const top = await getCommentsForDish(currentStoryDishId, 1);
+    const top = await getCommentsForStory(storyOwnerId, currentStory.id, 1);
     setPreviewComment(top?.[0] || null);
   };
 
@@ -658,7 +661,7 @@ export default function StoryViewerModal({
                   onClick={openComments}
                   className="text-left text-xs text-white/88 underline-offset-2 hover:underline"
                 >
-                  {previewComment.userName || "User"}: {previewComment.text}
+                  {previewComment.text}
                 </button>
               ) : (
                 <button
@@ -697,6 +700,7 @@ export default function StoryViewerModal({
       <CommentsModal
         open={commentsOpen}
         onClose={() => setCommentsOpen(false)}
+        title="Story comments"
         comments={comments}
         loading={commentsLoading}
         onDelete={handleDeleteComment}

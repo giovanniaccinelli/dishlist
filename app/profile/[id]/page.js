@@ -494,18 +494,45 @@ export default function PublicProfile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[104px_1fr_104px] items-center gap-3 relative">
-        <div className="flex min-w-[104px] items-center gap-2">
-          
-          <AppBackButton fallback="/dishlists" />
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
+        <div className="grid grid-cols-[104px_1fr_104px] items-center">
+          <div className="flex min-w-[104px] items-center justify-start">
+            <AppBackButton fallback="/dishlists" />
+          </div>
+          <div className="min-h-[2.4rem]" />
+          <div className="flex min-w-[104px] items-center justify-end">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!user) {
+                  setShowAuthPrompt(true);
+                  return;
+                }
+                const targetUser = {
+                  id: profileAuthUid,
+                  uid: profileAuthUid,
+                  displayName: profileUser?.displayName || "",
+                  photoURL: profileUser?.photoURL || "",
+                };
+                const conversationId =
+                  (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, profileAuthUid);
+                if (conversationId) {
+                  router.push(`/directs/${conversationId}`);
+                }
+              }}
+              className="top-action-btn relative shrink-0"
+              aria-label="Directs"
+            >
+              <Send size={18} />
+              {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            </button>
+          </div>
         </div>
-         
-        <div className="flex flex-1 items-center justify-center">
-          
+        <div className="mt-3 flex flex-col items-center justify-center gap-2">
           {!isViewingOwnProfile ? (
             <button
               onClick={handleFollow}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-semibold border transition ${
+              className={`min-h-[2.5rem] whitespace-nowrap px-4 py-2 rounded-full text-xs font-semibold border transition ${
                 isFollowing
                   ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                   : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
@@ -514,34 +541,7 @@ export default function PublicProfile() {
               {isFollowing ? t("Unfollow") : t("Follow")}
             </button>
           ) : null}
-        </div>
-        <div className="flex min-w-[104px] items-center justify-end gap-4">
           <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
-          <button
-            type="button"
-            onClick={async () => {
-              if (!user) {
-                setShowAuthPrompt(true);
-                return;
-              }
-              const targetUser = {
-                id: profileAuthUid,
-                uid: profileAuthUid,
-                displayName: profileUser?.displayName || "",
-                photoURL: profileUser?.photoURL || "",
-              };
-              const conversationId =
-                (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, profileAuthUid);
-              if (conversationId) {
-                router.push(`/directs/${conversationId}`);
-              }
-            }}
-            className="top-action-btn relative"
-            aria-label="Directs"
-          >
-            <Send size={18} />
-            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
-          </button>
         </div>
       </div>
       <div className="mb-4">

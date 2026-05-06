@@ -46,7 +46,7 @@ import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner, RestaurantMapIcon } from "../../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, RestaurantMapIcon } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 
@@ -125,6 +125,19 @@ function mergeStoryStats(groups = []) {
     });
   });
   return merged;
+}
+
+function scoreUserDocMatch(userDoc, authUid) {
+  const data = userDoc?.data?.() || {};
+  let score = 0;
+  if (String(userDoc?.id || "").trim() !== String(authUid || "").trim()) score += 8;
+  if (data.displayName) score += 6;
+  if (Array.isArray(data.followers) && data.followers.length) score += 5;
+  if (Array.isArray(data.following) && data.following.length) score += 5;
+  if (Array.isArray(data.savedDishes) && data.savedDishes.length) score += 4;
+  if (data.photoURL) score += 2;
+  if (data.bio) score += 1;
+  return score;
 }
 
 export default function Profile() {
@@ -247,14 +260,14 @@ export default function Profile() {
           setProfileIdentity(null);
           return;
         }
-        let userSnap = await getDoc(doc(db, "users", user.uid));
-        if (!userSnap.exists()) {
-          const usersSnapshot = await getDocs(collection(db, "users"));
-          userSnap =
-            usersSnapshot.docs.find((docSnap) =>
-              getProfileIdCandidates(user.uid, docSnap).includes(user.uid)
-            ) || null;
-        }
+        const directSnap = await getDoc(doc(db, "users", user.uid));
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const matchingDocs = usersSnapshot.docs.filter((docSnap) =>
+          getProfileIdCandidates(user.uid, docSnap).includes(user.uid)
+        );
+        let userSnap =
+          matchingDocs.sort((a, b) => scoreUserDocMatch(b, user.uid) - scoreUserDocMatch(a, user.uid))[0] ||
+          (directSnap.exists() ? directSnap : null);
         if (cancelled) return;
         if (!userSnap?.exists?.()) {
           setProfileIdentity({ docId: user.uid, candidateIds: uniqueNonEmpty([user.uid]) });
@@ -1150,8 +1163,6 @@ export default function Profile() {
           )}
         </div>
       </div>
-      <DishModeSelectionBanner value={selectedDishMode} />
-
       <div className="mb-4">
         <div className="flex items-start gap-4">
           <div className="relative shrink-0">

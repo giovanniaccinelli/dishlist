@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { getActiveStoriesForUser, getAllDishesFromFirestore, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
@@ -143,6 +143,43 @@ export default function Dishlists() {
     }));
   };
 
+  const refineUsersWithCurrentAllDishes = async (usersList, storyStatsByUser = new Map()) => {
+    const refinedEntries = await Promise.all(
+      usersList.map(async (userItem) => {
+        try {
+          const dishlists = await getAllDishlistsForUser(userItem.id);
+          const allDishesDishlist = dishlists.find((dishlist) => dishlist.id === "all_dishes");
+          const storyStats = storyStatsByUser.get(userItem.id) || {};
+          const previewDishes = [...(allDishesDishlist?.dishes || [])]
+            .sort(
+              (a, b) =>
+                Number(storyStats[b.id]?.count || 0) - Number(storyStats[a.id]?.count || 0) ||
+                Number(b?.saves || 0) - Number(a?.saves || 0)
+            )
+            .slice(0, 4)
+            .map((dish) => ({
+              id: dish.id,
+              imageUrl: getDishImageUrl(dish, "thumb"),
+              dishMode: String(dish?.dishMode || "").toLowerCase(),
+            }))
+            .filter((dish) => dish.imageUrl);
+
+          return {
+            ...userItem,
+            previewDishes,
+            previewImages: previewDishes.map((dish) => dish.imageUrl),
+            profileDishCount: Number(allDishesDishlist?.count || allDishesDishlist?.dishes?.length || 0),
+          };
+        } catch (error) {
+          console.warn("Failed to refine current all-dishes preview:", userItem.id, error);
+          return userItem;
+        }
+      })
+    );
+
+    return sortUsersByProfileDishes(refinedEntries);
+  };
+
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
@@ -163,12 +200,12 @@ export default function Dishlists() {
 
       void Promise.all(
         usersList.map(async (userItem) => [userItem.id, await getStoryPushStatsForUser(userItem.id)])
-      ).then((storyStatsEntries) => {
+      ).then(async (storyStatsEntries) => {
         const storyStatsByUser = new Map(storyStatsEntries);
         const withStoryPreview = attachPreviewData(usersList, allDishes, storyStatsByUser);
-        const sortedWithStoryPreview = sortUsersByProfileDishes(withStoryPreview);
-        setUsers(sortedWithStoryPreview);
-        setAllUsersPool(sortedWithStoryPreview);
+        const refinedUsers = await refineUsersWithCurrentAllDishes(withStoryPreview, storyStatsByUser);
+        setUsers(refinedUsers);
+        setAllUsersPool(refinedUsers);
       });
 
       void enrichUsersWithStories(fastSortedUsers).then((usersWithStories) => {

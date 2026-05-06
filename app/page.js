@@ -27,13 +27,13 @@ import SaversModal from "../components/SaversModal";
 import { ChevronLeft, ChevronRight, CircleUserRound, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
-import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal, DishModeSelectionBanner } from "../components/DishModeControls";
+import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../components/DishModeControls";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getTagChipClass } from "./lib/tags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
-import { useLanguage } from "../components/LanguageProvider";
+import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../components/LanguageProvider";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -45,7 +45,7 @@ const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const userId = user?.uid || null;
   const router = useRouter();
   const forYouDeckRef = useRef(null);
@@ -81,6 +81,7 @@ export default function Feed() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
@@ -531,16 +532,51 @@ export default function Feed() {
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
-          <Link
-            href={userId ? "/profile" : "/?auth=1"}
-            className="top-action-btn"
-            aria-label="Open profile"
-          >
-            <CircleUserRound size={18} />
-          </Link>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLanguageMenuOpen((prev) => !prev)}
+              className="top-action-btn text-[1.05rem]"
+              aria-label="Open language options"
+            >
+              {language === LANGUAGE_IT ? "🇮🇹" : "🇬🇧"}
+            </button>
+            <AnimatePresence>
+              {languageMenuOpen ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                  className="absolute right-0 top-[calc(100%+0.45rem)] z-40 w-36 rounded-2xl border border-black/10 bg-white p-2 shadow-[0_18px_36px_rgba(0,0,0,0.14)]"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguage(LANGUAGE_EN);
+                      setLanguageMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold ${language === LANGUAGE_EN ? "bg-black/5 text-black" : "text-black/72"}`}
+                  >
+                    <span className="text-base">🇬🇧</span>
+                    <span>{t("English")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguage(LANGUAGE_IT);
+                      setLanguageMenuOpen(false);
+                    }}
+                    className={`mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold ${language === LANGUAGE_IT ? "bg-black/5 text-black" : "text-black/72"}`}
+                  >
+                    <span className="text-base">🇮🇹</span>
+                    <span>{t("Italian")}</span>
+                  </button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-      <DishModeSelectionBanner value={selectedDishMode} className="shrink-0" />
       {!userId && guestMode === "feed" && (
         <div className="px-5">
           <div className="bg-white border border-black/10 rounded-2xl px-4 py-3 text-sm text-black/70">

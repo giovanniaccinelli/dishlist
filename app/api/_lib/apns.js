@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 
 const APNS_TEAM_ID = process.env.APPLE_TEAM_ID || "";
 const APNS_KEY_ID = process.env.APPLE_KEY_ID || "";
-const APNS_PRIVATE_KEY = process.env.APPLE_PUSH_PRIVATE_KEY?.replace(/\\n/g, "\n") || "";
 const APNS_BUNDLE_ID = process.env.APPLE_PUSH_BUNDLE_ID || "com.giovanniaccinelli.dishlist";
 const APNS_HOST = process.env.APPLE_PUSH_USE_SANDBOX === "1"
   ? "https://api.sandbox.push.apple.com"
@@ -10,6 +9,33 @@ const APNS_HOST = process.env.APPLE_PUSH_USE_SANDBOX === "1"
 
 let cachedJwt = "";
 let cachedJwtExpiry = 0;
+
+function normalizeApnsPrivateKey(rawValue = "") {
+  let value = String(rawValue || "").trim();
+  if (!value) return "";
+
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+
+  value = value.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").trim();
+
+  if (!value.includes("BEGIN PRIVATE KEY")) {
+    try {
+      const decoded = Buffer.from(value, "base64").toString("utf8").trim();
+      if (decoded.includes("BEGIN PRIVATE KEY")) {
+        value = decoded.replace(/\r\n/g, "\n").trim();
+      }
+    } catch {}
+  }
+
+  return value;
+}
+
+const APNS_PRIVATE_KEY = normalizeApnsPrivateKey(process.env.APPLE_PUSH_PRIVATE_KEY);
 
 function base64UrlEncode(input) {
   return Buffer.from(input)

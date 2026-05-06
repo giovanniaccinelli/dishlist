@@ -81,7 +81,7 @@ export async function dispatchPushEvent(type, payload) {
       "content-type": "application/json",
       authorization: `Bearer ${idToken}`,
     },
-    body: JSON.stringify({ type, ...payload }),
+    body: JSON.stringify({ ...payload, type }),
   });
   if (!response.ok) {
     let details = "";

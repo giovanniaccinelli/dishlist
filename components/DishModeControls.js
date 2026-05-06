@@ -115,13 +115,24 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <AnimatePresence>
         {flashMessage ? (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            initial={{ opacity: 0, y: -14, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96 }}
-            className="pointer-events-none fixed left-1/2 z-[120] -translate-x-1/2 whitespace-nowrap rounded-full border border-black/10 bg-white/97 px-4 py-2.5 text-[11px] font-semibold text-black shadow-[0_16px_34px_rgba(0,0,0,0.16)] backdrop-blur-md"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 5.6rem)" }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="pointer-events-none fixed inset-x-4 z-[120] flex justify-center"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 5.15rem)" }}
           >
-            {flashMessage}
+            <div
+              className={`max-w-[18rem] rounded-[1.15rem] border px-4 py-3 text-center text-[0.84rem] font-semibold leading-[1.15] shadow-[0_18px_40px_rgba(0,0,0,0.16)] backdrop-blur-xl ${
+                value === DISH_MODE_RESTAURANT
+                  ? "border-[#E64646]/20 bg-[linear-gradient(180deg,rgba(255,239,239,0.96)_0%,rgba(255,230,230,0.96)_100%)] text-[#B92E2E]"
+                  : value === DISH_MODE_COOKING
+                    ? "border-[#F0A623]/25 bg-[linear-gradient(180deg,rgba(255,248,226,0.97)_0%,rgba(255,241,198,0.97)_100%)] text-[#A66A00]"
+                    : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(246,246,242,0.97)_100%)] text-black/78"
+              }`}
+            >
+              {flashMessage}
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>

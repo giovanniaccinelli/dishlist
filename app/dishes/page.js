@@ -726,7 +726,7 @@ export default function Dishes() {
                     }}
                     className="pointer-events-auto text-left self-start text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
                   >
-                    saves: {Number(dish.saves || 0)}
+                    saves: {Math.max(0, Number(dish.saves || 0))}
                   </button>
                 </div>
                 <button

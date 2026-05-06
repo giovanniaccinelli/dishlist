@@ -979,7 +979,7 @@ export default function Profile() {
         }}
         className="pointer-events-auto text-left"
       >
-        saves: {Number(dish.saves || 0)}
+        saves: {Math.max(0, Number(dish.saves || 0))}
       </button>
     </div>
   );
@@ -1230,7 +1230,7 @@ export default function Profile() {
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.followers}</div>
+                <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>
                 <button
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1239,7 +1239,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.following}</div>
+                <div key={`following-${profileCounts.following}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.following) || 0)}</div>
                 <button
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1248,7 +1248,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.uploaded}</div>
+                <div key={`uploaded-${profileCounts.uploaded}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.uploaded) || 0)}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1257,7 +1257,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.dishes}</div>
+                <div key={`dishes-${profileCounts.dishes}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.dishes) || 0)}</div>
                 <button
                   onClick={() => selectDishlist("all_dishes")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"

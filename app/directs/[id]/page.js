@@ -288,7 +288,7 @@ export default function DirectChat() {
                             {dish?.name || "Dish"}
                           </div>
                           <div className="text-[10px] text-white/80">
-                            saves: {Number(dish?.saves || 0)}
+                            saves: {Math.max(0, Number(dish?.saves || 0))}
                           </div>
                         </div>
                       </Link>

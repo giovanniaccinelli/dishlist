@@ -555,7 +555,7 @@ export async function removeSavedDishFromUser(userId, dishId) {
   try {
     await updateDoc(refDoc, { savedDishes: arrayRemove(dishId) });
     await deleteDoc(savedDocRef);
-    await setDoc(doc(db, "dishes", dishId), { saves: increment(-1) }, { merge: true });
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -599,7 +599,7 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
     await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
     await setDoc(savedDocRef, payload, { merge: true });
     if (!existingSaved.exists()) {
-      await setDoc(doc(db, "dishes", dishId), { saves: increment(1) }, { merge: true });
+      await syncDishSaveCount(dishId);
     }
     clearReadCache(userId);
     return true;
@@ -1386,7 +1386,7 @@ export async function getSavedDishesFromFirestore(userId) {
       owner: canonical.owner || dish.owner || "",
       ownerName: canonical.ownerName || dish.ownerName || "",
       ownerPhotoURL: canonical.ownerPhotoURL || dish.ownerPhotoURL || "",
-      saves: Number(canonical.saves || 0),
+      saves: Math.max(0, Number(canonical.saves || 0)),
     };
   });
 

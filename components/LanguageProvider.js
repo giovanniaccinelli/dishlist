@@ -12,6 +12,10 @@ const TEXT_ATTRIBUTES = ["placeholder", "aria-label", "title", "value"];
 const textNodeOriginals = new WeakMap();
 const elementAttrOriginals = new WeakMap();
 
+function isNumericLikeText(value) {
+  return /^[\s0-9.,:+\-/%()]*$/.test(String(value ?? ""));
+}
+
 const translations = {
   en: {},
   it: {
@@ -256,7 +260,9 @@ function applyTranslationsToDocument(language) {
     if (!node) return;
     const parentTag = node.parentElement?.tagName;
     if (parentTag === "SCRIPT" || parentTag === "STYLE") return;
+    if (node.parentElement?.closest?.("[data-no-translate='true']")) return;
     const currentValue = node.nodeValue;
+    if (isNumericLikeText(currentValue)) return;
     const hadOriginal = textNodeOriginals.has(node);
     const storedOriginal = hadOriginal ? textNodeOriginals.get(node) : currentValue;
     const translatedStoredOriginal = translateString(storedOriginal, language);
@@ -277,10 +283,12 @@ function applyTranslationsToDocument(language) {
     if (!element) return;
     const tagName = element.tagName;
     if (tagName === "SCRIPT" || tagName === "STYLE") return;
+    if (element.closest?.("[data-no-translate='true']")) return;
     const attrStore = elementAttrOriginals.get(element) || {};
     TEXT_ATTRIBUTES.forEach((attr) => {
       if (!element.hasAttribute?.(attr)) return;
       const currentValue = element.getAttribute(attr);
+      if (isNumericLikeText(currentValue)) return;
       const hadOriginal = attr in attrStore;
       const storedOriginal = hadOriginal ? attrStore[attr] : currentValue;
       const translatedStoredOriginal = translateString(storedOriginal, language);

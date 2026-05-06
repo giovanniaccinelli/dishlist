@@ -468,7 +468,7 @@ export default function PublicProfile() {
         }}
         className="pointer-events-auto text-left"
       >
-        saves: {Number(dish.saves || 0)}
+        saves: {Math.max(0, Number(dish.saves || 0))}
       </button>
     </div>
   );
@@ -579,7 +579,7 @@ export default function PublicProfile() {
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileUser.followers?.length || 0}</div>
+                <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.followers?.length || 0))}</div>
                 <button
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -588,7 +588,7 @@ export default function PublicProfile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileUser.following?.length || 0}</div>
+                <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.following?.length || 0))}</div>
                 <button
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -597,7 +597,7 @@ export default function PublicProfile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{dishes.length}</div>
+                <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(dishes.length || 0))}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -606,7 +606,7 @@ export default function PublicProfile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
+                <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(allDishesCount || 0))}</div>
                 <button
                   onClick={() => selectDishlist("all_dishes")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"

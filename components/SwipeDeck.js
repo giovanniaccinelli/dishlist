@@ -1087,7 +1087,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             }}
             className={`absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`}
           >
-            saves: {Number(currentCard.saves || 0)}
+            saves: {Math.max(0, Number(currentCard.saves || 0))}
           </button>
           <motion.div
             className="absolute inset-0"

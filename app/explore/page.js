@@ -314,7 +314,7 @@ function DishPreview({ dish, title, t }) {
         <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>
-        <div className="text-[10px] text-white/80">{t("saves:")} {Number(dish.saves || 0)}</div>
+        <div className="text-[10px] text-white/80">{t("saves:")} {Math.max(0, Number(dish.saves || 0))}</div>
       </div>
     </div>
   );
@@ -433,7 +433,7 @@ function ExpandedCategoryModal({ row, onClose, t }) {
                 <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>
-                <div className="text-[10px] text-white/80">{t("saves:")} {Number(dish.saves || 0)}</div>
+                <div className="text-[10px] text-white/80">{t("saves:")} {Math.max(0, Number(dish.saves || 0))}</div>
               </div>
             </div>
           ))}

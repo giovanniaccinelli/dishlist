@@ -10,9 +10,61 @@ async function verifyRequest(request) {
   return decoded;
 }
 
+function uniqueNonEmpty(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function getUserIdCandidates(routeId, userDoc) {
+  const data = userDoc?.data?.() || userDoc || {};
+  const rawAppleSub = String(data.appleSub || "").trim();
+  const routeValue = String(routeId || "").trim();
+  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
+  return uniqueNonEmpty([
+    userDoc?.id,
+    routeValue,
+    data.uid,
+    data.userId,
+    data.appleUserId,
+    data.authUid,
+    rawAppleSub,
+    rawAppleSub ? `apple:${rawAppleSub}` : "",
+    routeAppleSub,
+  ]);
+}
+
+async function resolveUserIdsForPush(userIds = []) {
+  const db = getAdminDb();
+  const uniqueIds = uniqueNonEmpty(userIds);
+  if (!uniqueIds.length) return [];
+  const usersSnapshot = await db.collection("users").get();
+  const resolvedIds = new Set();
+
+  uniqueIds.forEach((userId) => resolvedIds.add(userId));
+
+  usersSnapshot.docs.forEach((userDoc) => {
+    const candidates = getUserIdCandidates(null, userDoc);
+    if (uniqueIds.some((userId) => candidates.includes(String(userId || "").trim()))) {
+      candidates.forEach((candidateId) => resolvedIds.add(candidateId));
+    }
+  });
+
+  const resolved = Array.from(resolvedIds);
+  console.log("Resolved push user ids", {
+    requestedUserIds: uniqueIds,
+    resolvedUserIds: resolved,
+  });
+  return resolved;
+}
+
 async function getEnabledTokensForUserIds(userIds = []) {
   const db = getAdminDb();
-  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
+  const uniqueIds = await resolveUserIdsForPush(userIds);
   const snapshots = await Promise.all(
     uniqueIds.map((userId) => db.collection("users").doc(userId).collection("pushTokens").get())
   );

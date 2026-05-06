@@ -10,7 +10,17 @@ const APNS_HOST = process.env.APPLE_PUSH_USE_SANDBOX === "1"
 let cachedJwt = "";
 let cachedJwtExpiry = 0;
 
-function normalizeApnsPrivateKey(rawValue = "") {
+function normalizeApnsPrivateKey(rawValue = "", base64Value = "") {
+  const normalizedBase64 = String(base64Value || "").trim();
+  if (normalizedBase64) {
+    try {
+      const decoded = Buffer.from(normalizedBase64, "base64").toString("utf8").trim();
+      if (decoded.includes("BEGIN PRIVATE KEY")) {
+        return decoded.replace(/\r\n/g, "\n").trim();
+      }
+    } catch {}
+  }
+
   let value = String(rawValue || "").trim();
   if (!value) return "";
 
@@ -35,7 +45,10 @@ function normalizeApnsPrivateKey(rawValue = "") {
   return value;
 }
 
-const APNS_PRIVATE_KEY = normalizeApnsPrivateKey(process.env.APPLE_PUSH_PRIVATE_KEY);
+const APNS_PRIVATE_KEY = normalizeApnsPrivateKey(
+  process.env.APPLE_PUSH_PRIVATE_KEY,
+  process.env.APPLE_PUSH_PRIVATE_KEY_BASE64
+);
 
 function base64UrlEncode(input) {
   return Buffer.from(input)

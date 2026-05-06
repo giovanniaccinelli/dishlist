@@ -169,6 +169,8 @@ export default function Dishlists() {
             previewDishes,
             previewImages: previewDishes.map((dish) => dish.imageUrl),
             profileDishCount: Number(allDishesDishlist?.count || allDishesDishlist?.dishes?.length || 0),
+            activeStories: userItem.activeStories || [],
+            hasActiveStory: userItem.hasActiveStory,
           };
         } catch (error) {
           console.warn("Failed to refine current all-dishes preview:", userItem.id, error);

@@ -659,9 +659,20 @@ export default function StoryViewerModal({
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onClick={openComments}
-                  className="text-left text-xs text-white/88 underline-offset-2 hover:underline"
+                  className="flex items-center gap-2 text-left text-xs text-white/88 underline-offset-2 hover:underline"
                 >
-                  {previewComment.text}
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/18 text-[9px] font-bold text-white/88">
+                    {previewComment.userPhotoURL ? (
+                      <img
+                        src={previewComment.userPhotoURL}
+                        alt={previewComment.userName || "User"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (previewComment.userName?.[0] || "U").toUpperCase()
+                    )}
+                  </span>
+                  <span className="min-w-0 truncate">{previewComment.text}</span>
                 </button>
               ) : (
                 <button

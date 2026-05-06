@@ -1556,9 +1556,20 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments("recipe");
                   }}
-                  className={`max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
+                  className={`flex max-w-full items-center gap-2 rounded-full border-2 ${restaurantAccentBorder} bg-white px-2.5 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
                 >
-                  {recipePreviewComment.text}
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-[9px] font-bold text-black/60">
+                    {recipePreviewComment.userPhotoURL ? (
+                      <img
+                        src={recipePreviewComment.userPhotoURL}
+                        alt={recipePreviewComment.userName || "User"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (recipePreviewComment.userName?.[0] || "U").toUpperCase()
+                    )}
+                  </span>
+                  <span className="min-w-0 truncate">{recipePreviewComment.text}</span>
                 </button>
               ) : (
                 <button
@@ -1588,9 +1599,20 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments("dish");
                   }}
-                  className="text-xs text-white/90 underline-offset-2 hover:underline"
+                  className="flex items-center gap-2 text-left text-xs text-white/90 underline-offset-2 hover:underline"
                 >
-                  {dishPreviewComment.text}
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/18 text-[9px] font-bold text-white/88">
+                    {dishPreviewComment.userPhotoURL ? (
+                      <img
+                        src={dishPreviewComment.userPhotoURL}
+                        alt={dishPreviewComment.userName || "User"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (dishPreviewComment.userName?.[0] || "U").toUpperCase()
+                    )}
+                  </span>
+                  <span className="min-w-0 truncate">{dishPreviewComment.text}</span>
                 </button>
               ) : (
                 <button

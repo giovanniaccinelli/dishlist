@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { usePathname, useRouter } from "next/navigation";
@@ -38,7 +38,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -72,61 +72,6 @@ function StoryStatIcon({ size = 10 }) {
   );
 }
 
-function uniqueNonEmpty(values = []) {
-  return Array.from(
-    new Set(
-      values
-        .map((value) => String(value || "").trim())
-        .filter(Boolean)
-    )
-  );
-}
-
-function getProfileIdCandidates(routeId, userDoc) {
-  const data = userDoc?.data?.() || userDoc || {};
-  const rawAppleSub = String(data.appleSub || "").trim();
-  const routeValue = String(routeId || "").trim();
-  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
-  return uniqueNonEmpty([
-    userDoc?.id,
-    routeValue,
-    data.uid,
-    data.userId,
-    data.appleUserId,
-    data.authUid,
-    rawAppleSub,
-    rawAppleSub ? `apple:${rawAppleSub}` : "",
-    routeAppleSub,
-  ]);
-}
-
-function mergeUniqueById(groups = []) {
-  return Array.from(
-    new Map(
-      groups
-        .flat()
-        .filter((item) => item?.id)
-        .map((item) => [item.id, item])
-    ).values()
-  );
-}
-
-function mergeStoryStats(groups = []) {
-  const merged = {};
-  groups.forEach((group) => {
-    Object.entries(group || {}).forEach(([dishId, data]) => {
-      const existing = merged[dishId] || { count: 0, history: [], updatedAt: null };
-      const nextHistory = Array.isArray(data?.history) ? data.history : [];
-      merged[dishId] = {
-        count: Math.max(existing.count || 0, Number(data?.count || 0)),
-        history: Array.from(new Set([...(existing.history || []), ...nextHistory])),
-        updatedAt: data?.updatedAt || existing.updatedAt || null,
-      };
-    });
-  });
-  return merged;
-}
-
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -141,7 +86,6 @@ export default function Profile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
-  const [profileIdentity, setProfileIdentity] = useState(null);
   const [activeDishlistId, setActiveDishlistId] = useState("saved");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
@@ -195,45 +139,17 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
-  const profileDocId = profileIdentity?.docId || user?.uid || "";
-  const profileIdCandidates = profileIdentity?.candidateIds || uniqueNonEmpty([user?.uid]);
-  const effectiveDisplayName = user?.displayName || profileMeta.displayName || "My Profile";
+  const effectiveDisplayName = profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =
-    (typeof user?.photoURL === "string" && user.photoURL) ||
-    (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : "") ||
-    "";
+    typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
-  const refreshCustomDishlists = async (ownerId = profileDocId || user?.uid) => {
+  const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
     setCustomDishlists(lists);
     return lists;
   };
-
-  const hydrateProfileData = useCallback(async (identity = profileIdentity) => {
-    if (!identity?.candidateIds?.length) return;
-    try {
-      const results = await Promise.allSettled([
-        Promise.all(identity.candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
-        Promise.all(identity.candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
-        Promise.all(identity.candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
-        Promise.all(identity.candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
-        Promise.all(identity.candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
-        Promise.all(identity.candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
-      ]);
-
-      const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
-      setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById(uploadedRes.value) : []);
-      setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
-      setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
-      setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
-      setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
-      setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
-    } catch (err) {
-      console.error("Failed to hydrate profile data:", err);
-    }
-  }, [profileIdentity]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -242,62 +158,55 @@ export default function Profile() {
   }, [user, loading, router]);
 
   useEffect(() => {
+    if (user) {
+      (async () => {
+        const [uploaded, custom] = await Promise.all([
+          getDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
+        ]);
+        setUploadedDishes(uploaded);
+        setCustomDishlists(custom);
+      })();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
     let cancelled = false;
     (async () => {
       try {
-        if (!user?.uid) {
-          setProfileIdentity(null);
-          return;
-        }
-        const directSnap = await getDoc(doc(db, "users", user.uid));
-        let userSnap = directSnap.exists() ? directSnap : null;
-
-        if (user.email) {
-          const emailSnapshot = await getDocs(
-            query(collection(db, "users"), where("email", "==", String(user.email || "").trim()))
-          );
-          const emailDoc = emailSnapshot.docs[0] || null;
-          if (emailDoc?.exists?.()) {
-            userSnap = emailDoc;
-          }
-        }
-
+        const [userSnap, uploaded, saved, toTry, custom] = await Promise.all([
+          getDoc(doc(db, "users", user.uid)),
+          getDishesFromFirestore(user.uid),
+          getSavedDishesFromFirestore(user.uid),
+          getToTryDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
+        ]);
         if (cancelled) return;
-        if (!userSnap?.exists?.()) {
-          setProfileIdentity({ docId: user.uid, candidateIds: uniqueNonEmpty([user.uid]) });
+        if (userSnap.exists()) {
+          const data = userSnap.data() || {};
           setProfileMeta((prev) => ({
             ...prev,
-            displayName: user.displayName || "",
-            photoURL: user.photoURL || "",
+            followers: Array.isArray(data.followers) ? data.followers : [],
+            following: Array.isArray(data.following) ? data.following : [],
+            savedDishes: Array.isArray(data.savedDishes) ? data.savedDishes : [],
+            displayName: data.displayName || "",
+            photoURL: data.photoURL || "",
+            bio: data.bio || "",
           }));
-          return;
         }
-        const data = userSnap.data() || {};
-        setProfileIdentity({
-          docId: userSnap.id,
-          candidateIds: uniqueNonEmpty([userSnap.id, user.uid]),
-        });
-        setProfileMeta((prev) => ({
-          ...prev,
-          followers: Array.isArray(data.followers) ? data.followers : [],
-          following: Array.isArray(data.following) ? data.following : [],
-          savedDishes: Array.isArray(data.savedDishes) ? data.savedDishes : [],
-          displayName: data.displayName || user.displayName || "",
-          photoURL: data.photoURL || user.photoURL || "",
-          bio: data.bio || "",
-        }));
+        setUploadedDishes(uploaded);
+        setSavedDishes(saved);
+        setToTryDishes(toTry);
+        setCustomDishlists(custom);
       } catch (err) {
-        console.error("Failed to resolve own profile identity:", err);
+        console.error("Failed to hydrate profile counts:", err);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [user?.uid, user?.email, user?.displayName]);
-
-  useEffect(() => {
-    hydrateProfileData();
-  }, [hydrateProfileData, profileIdentity?.docId]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!profileOptionsOpen) return;
@@ -333,47 +242,53 @@ export default function Profile() {
   }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL, profileMeta.bio]);
 
   useEffect(() => {
-    if (!profileDocId || profileIdCandidates.length === 0) return undefined;
-    const userRef = doc(db, "users", profileDocId);
+    if (!user) return undefined;
+    const userRef = doc(db, "users", user.uid);
     const unsubscribeUser = onSnapshot(userRef, (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
-      setProfileMeta((prev) => ({
-        ...prev,
+      setProfileMeta({
         followers: data.followers || [],
         following: data.following || [],
         savedDishes: data.savedDishes || [],
         displayName: data.displayName || "",
         photoURL: data.photoURL || "",
         bio: data.bio || "",
-      }));
+      });
     });
 
-    const refreshFromSnapshots = () => {
-      hydrateProfileData({
-        docId: profileDocId,
-        candidateIds: profileIdCandidates,
-      });
-    };
+    const savedRef = collection(db, "users", user.uid, "saved");
+    const unsubscribeSaved = onSnapshot(savedRef, async () => {
+      const saved = await getSavedDishesFromFirestore(user.uid);
+      setSavedDishes(saved);
+    });
 
-    const unsubscribeRest = profileIdCandidates.flatMap((candidateId) => {
-      const listeners = [];
-      listeners.push(
-        onSnapshot(query(collection(db, "dishes"), where("owner", "==", candidateId)), refreshFromSnapshots)
-      );
-      listeners.push(onSnapshot(collection(db, "users", candidateId, "saved"), refreshFromSnapshots));
-      listeners.push(onSnapshot(collection(db, "users", candidateId, "toTry"), refreshFromSnapshots));
-      listeners.push(onSnapshot(collection(db, "users", candidateId, "stories"), refreshFromSnapshots));
-      listeners.push(onSnapshot(collection(db, "users", candidateId, "storyPushes"), refreshFromSnapshots));
-      listeners.push(onSnapshot(collection(db, "users", candidateId, "dishlists"), refreshFromSnapshots));
-      return listeners;
+    const toTryRef = collection(db, "users", user.uid, "toTry");
+    const unsubscribeToTry = onSnapshot(toTryRef, async () => {
+      const items = await getToTryDishesFromFirestore(user.uid);
+      setToTryDishes(items);
+    });
+
+    const storiesRef = collection(db, "users", user.uid, "stories");
+    const unsubscribeStories = onSnapshot(storiesRef, async () => {
+      const stories = await getActiveStoriesForUser(user.uid);
+      setActiveStories(stories);
+    });
+
+    const storyPushesRef = collection(db, "users", user.uid, "storyPushes");
+    const unsubscribeStoryPushes = onSnapshot(storyPushesRef, async () => {
+      const stats = await getStoryPushStatsForUser(user.uid);
+      setStoryPushStats(stats);
     });
 
     return () => {
       unsubscribeUser();
-      unsubscribeRest.forEach((unsubscribe) => unsubscribe());
+      unsubscribeSaved();
+      unsubscribeToTry();
+      unsubscribeStories();
+      unsubscribeStoryPushes();
     };
-  }, [hydrateProfileData, profileDocId, profileIdCandidates]);
+  }, [user]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -418,13 +333,13 @@ export default function Profile() {
   };
 
   const handleStoryViewed = async (story) => {
-    if (!user?.uid || !story?.id || !profileDocId) return;
-    await markStoryViewed(profileDocId, story.id, user.uid);
+    if (!user?.uid || !story?.id) return;
+    await markStoryViewed(user.uid, story.id, user.uid);
   };
 
   const handleDeleteStory = async (story) => {
-    if (!user?.uid || !story?.id || !profileDocId) return false;
-    const ok = await deleteStory(profileDocId, story.id);
+    if (!user?.uid || !story?.id) return false;
+    const ok = await deleteStory(user.uid, story.id);
     if (!ok) return false;
     const nextStories = activeStories.filter((item) => item.id !== story.id);
     setActiveStories(nextStories);
@@ -467,19 +382,20 @@ export default function Profile() {
         tags: dishTags,
         isPublic: dishIsPublic,
         ...imageFields,
-        owner: profileDocId || user.uid,
+        owner: user.uid,
         ownerName: user.displayName || "Anonymous",
         ownerPhotoURL: effectiveProfilePhotoURL || "",
         createdAt: new Date(),
       });
       if (dishId) {
         await dispatchPushEvent("dish_posted", {
-          ownerId: profileDocId || user.uid,
+          ownerId: user.uid,
           dishId,
           dishName: dishName || "",
         });
       }
-      await hydrateProfileData();
+      const updatedDishes = await getDishesFromFirestore(user.uid);
+      setUploadedDishes(updatedDishes);
       setDishName("");
       setDishDescription("");
       setDishRecipeIngredients("");
@@ -506,25 +422,30 @@ export default function Profile() {
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image
     );
     await removeDishFromAllUsers(dish.id);
-    await hydrateProfileData();
+    const refreshedUploaded = await getDishesFromFirestore(user.uid);
+    const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
+    setUploadedDishes(refreshedUploaded);
+    setSavedDishes(refreshedSaved);
     setToastVariant("success");
     setToast("Dish deleted");
     setTimeout(() => setToast(""), 1200);
   };
 
   const handleRemoveSavedDish = async (dish) => {
-    const ok = await removeSavedDishFromUser(profileDocId || user.uid, dish.id);
+    const ok = await removeSavedDishFromUser(user.uid, dish.id);
     if (!ok) return;
-    await hydrateProfileData();
+    const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
+    setSavedDishes(refreshedSaved);
     setToastVariant("success");
     setToast("Removed from DishList");
     setTimeout(() => setToast(""), 1200);
   };
 
   const handleRemoveToTryDish = async (dish) => {
-    const ok = await removeDishFromToTry(profileDocId || user.uid, dish.id);
+    const ok = await removeDishFromToTry(user.uid, dish.id);
     if (!ok) return;
-    await hydrateProfileData();
+    const refreshed = await getToTryDishesFromFirestore(user.uid);
+    setToTryDishes(refreshed);
     setToastVariant("success");
     setToast("Removed from To Try");
     setTimeout(() => setToast(""), 1200);
@@ -536,7 +457,7 @@ export default function Profile() {
     const cleanedBio = newBio.trim();
     setSavingProfile(true);
     try {
-      if (await isDisplayNameTaken(cleanedName, profileDocId || user.uid)) {
+      if (await isDisplayNameTaken(cleanedName, user.uid)) {
         throw new Error("That display name is already taken.");
       }
       const currentPhotoURL = profileMeta.photoURL || user?.photoURL || "";
@@ -546,7 +467,7 @@ export default function Profile() {
         nextPhotoURL = "";
       }
       if (newPhotoFile) {
-        nextPhotoURL = await uploadProfileImage(newPhotoFile, profileDocId || user.uid);
+        nextPhotoURL = await uploadProfileImage(newPhotoFile, user.uid);
       }
 
       const currentAuthUser = auth.currentUser;
@@ -559,7 +480,7 @@ export default function Profile() {
       await currentAuthUser.reload();
 
       await setDoc(
-        doc(db, "users", profileDocId || user.uid),
+        doc(db, "users", user.uid),
         {
           displayName: cleanedName,
           displayNameLower: cleanedName.toLowerCase(),
@@ -585,10 +506,8 @@ export default function Profile() {
       setToast("Profile updated");
       setTimeout(() => setToast(""), 1200);
 
-      profileIdCandidates.forEach((candidateId) => {
-        updateOwnerNameForDishes(candidateId, cleanedName, nextPhotoURL || "").catch((err) => {
-          console.warn("Failed to update owner metadata on dishes:", err);
-        });
+      updateOwnerNameForDishes(user.uid, cleanedName, nextPhotoURL || "").catch((err) => {
+        console.warn("Failed to update owner metadata on dishes:", err);
       });
 
       if ((newPhotoFile || removePhoto) && currentPhotoURL && currentPhotoURL !== nextPhotoURL) {
@@ -662,20 +581,27 @@ export default function Profile() {
     const customMemberships = customDishlists.filter((dishlist) =>
       (dishlist.dishes || []).some((item) => item.id === dish.id)
     );
-    await Promise.all(customMemberships.map((dishlist) => removeDishFromCustomDishlist(profileDocId || user.uid, dishlist.id, dish.id)));
+    await Promise.all(customMemberships.map((dishlist) => removeDishFromCustomDishlist(user.uid, dishlist.id, dish.id)));
     const savedMembership = savedDishes.some((item) => item.id === dish.id);
     const toTryMembership = toTryDishes.some((item) => item.id === dish.id);
-    if (savedMembership) await removeSavedDishFromUser(profileDocId || user.uid, dish.id);
-    if (toTryMembership) await removeDishFromToTry(profileDocId || user.uid, dish.id);
-    if (profileIdCandidates.includes(dish.owner)) {
+    if (savedMembership) await removeSavedDishFromUser(user.uid, dish.id);
+    if (toTryMembership) await removeDishFromToTry(user.uid, dish.id);
+    if (dish.owner === user.uid) {
       await deleteDishAndImage(
         dish.id,
         dish.imageURL || dish.imageUrl || dish.image_url || dish.image
       );
       await removeDishFromAllUsers(dish.id);
     }
-    await hydrateProfileData();
-    await refreshCustomDishlists(profileDocId || user.uid);
+    const [refreshedUploaded, refreshedSaved, refreshedToTry] = await Promise.all([
+      getDishesFromFirestore(user.uid),
+      getSavedDishesFromFirestore(user.uid),
+      getToTryDishesFromFirestore(user.uid),
+    ]);
+    setUploadedDishes(refreshedUploaded);
+    setSavedDishes(refreshedSaved);
+    setToTryDishes(refreshedToTry);
+    await refreshCustomDishlists(user.uid);
   };
 
   const handleDishPreviewRemove = (dish, source) => {
@@ -706,9 +632,9 @@ export default function Profile() {
     }
     const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
     if (customDishlist) {
-      const ok = await removeDishFromCustomDishlist(profileDocId || user.uid, customDishlist.id, dish.id);
+      const ok = await removeDishFromCustomDishlist(user.uid, customDishlist.id, dish.id);
       if (ok) {
-        await refreshCustomDishlists(profileDocId || user.uid);
+        await refreshCustomDishlists(user.uid);
         setToastVariant("success");
         setToast("Removed from dishlist");
         setTimeout(() => setToast(""), 1200);
@@ -721,7 +647,7 @@ export default function Profile() {
       ...customDishlists
         .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
         .map((dishlist) => dishlist.id),
-      profileIdCandidates.includes(dish.owner) ? "uploaded" : null,
+      dish.owner === user.uid ? "uploaded" : null,
     ].filter(Boolean);
     const firstMembership = allDishesMembership[0];
     if (firstMembership === "saved") {
@@ -729,9 +655,9 @@ export default function Profile() {
     } else if (firstMembership === "uploaded") {
       await handleDeleteDish(dish);
     } else if (firstMembership) {
-      const ok = await removeDishFromCustomDishlist(profileDocId || user.uid, firstMembership, dish.id);
+      const ok = await removeDishFromCustomDishlist(user.uid, firstMembership, dish.id);
       if (ok) {
-        await refreshCustomDishlists(profileDocId || user.uid);
+        await refreshCustomDishlists(user.uid);
         setToastVariant("success");
         setToast("Removed from dishlist");
         setTimeout(() => setToast(""), 1200);
@@ -888,8 +814,8 @@ export default function Profile() {
     if (!newDishlistName.trim()) return;
     setCreatingDishlist(true);
     try {
-      const dishlistId = await createCustomDishlist(profileDocId || user.uid, newDishlistName, selectedCreateDishes);
-      await refreshCustomDishlists(profileDocId || user.uid);
+      const dishlistId = await createCustomDishlist(user.uid, newDishlistName, selectedCreateDishes);
+      await refreshCustomDishlists(user.uid);
       if (dishlistId) {
         selectDishlist(dishlistId);
       }
@@ -909,14 +835,14 @@ export default function Profile() {
 
   const handleDeleteDishlist = async () => {
     if (!user?.uid || !dishlistDeleteTarget?.id) return;
-    const deleted = await deleteCustomDishlist(profileDocId || user.uid, dishlistDeleteTarget.id);
+    const deleted = await deleteCustomDishlist(user.uid, dishlistDeleteTarget.id);
     if (!deleted) {
       setToastVariant("error");
       setToast("Dishlist deletion failed");
       setTimeout(() => setToast(""), 1400);
       return;
     }
-    await refreshCustomDishlists(profileDocId || user.uid);
+    await refreshCustomDishlists(user.uid);
     if (activeDishlistId === dishlistDeleteTarget.id) {
       selectDishlist("saved");
     }
@@ -929,14 +855,14 @@ export default function Profile() {
 
   const handleRenameDishlist = async () => {
     if (!user?.uid || !dishlistRenameTarget?.id || !dishlistRenameValue.trim()) return;
-    const renamed = await updateCustomDishlistName(profileDocId || user.uid, dishlistRenameTarget.id, dishlistRenameValue);
+    const renamed = await updateCustomDishlistName(user.uid, dishlistRenameTarget.id, dishlistRenameValue);
     if (!renamed) {
       setToastVariant("error");
       setToast("Dishlist rename failed");
       setTimeout(() => setToast(""), 1400);
       return;
     }
-    await refreshCustomDishlists(profileDocId || user.uid);
+    await refreshCustomDishlists(user.uid);
     setDishlistRenameTarget(null);
     setDishlistRenameValue("");
     setToastVariant("success");

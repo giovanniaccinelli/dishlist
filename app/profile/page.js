@@ -133,7 +133,12 @@ function scoreUserDocMatch(userDoc, currentUser) {
   const authUid = String(currentUser?.uid || "").trim();
   const authEmail = String(currentUser?.email || "").trim().toLowerCase();
   const authDisplayName = String(currentUser?.displayName || "").trim().toLowerCase();
-  if (String(userDoc?.id || "").trim() !== authUid) score += 8;
+  const docId = String(userDoc?.id || "").trim();
+  if (authUid && docId === authUid) {
+    score += 120;
+  } else if (authUid && getProfileIdCandidates(authUid, userDoc).includes(authUid)) {
+    score += 24;
+  }
   if (authEmail && String(data.email || "").trim().toLowerCase() === authEmail) score += 40;
   if (authDisplayName && String(data.displayName || "").trim().toLowerCase() === authDisplayName) score += 18;
   if (data.displayName) score += 6;
@@ -279,8 +284,12 @@ export default function Profile() {
             String(data.displayName || "").trim().toLowerCase() === String(user.displayName || "").trim().toLowerCase();
           return emailMatches || nameMatches || getProfileIdCandidates(user.uid, docSnap).includes(user.uid);
         });
+        const candidateDocs = [...matchingDocs];
+        if (directSnap.exists() && !candidateDocs.some((docSnap) => docSnap.id === directSnap.id)) {
+          candidateDocs.push(directSnap);
+        }
         let userSnap =
-          matchingDocs.sort((a, b) => scoreUserDocMatch(b, user) - scoreUserDocMatch(a, user))[0] ||
+          candidateDocs.sort((a, b) => scoreUserDocMatch(b, user) - scoreUserDocMatch(a, user))[0] ||
           (directSnap.exists() ? directSnap : null);
         if (cancelled) return;
         if (!userSnap?.exists?.()) {
@@ -313,7 +322,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, user?.email, user?.displayName]);
 
   useEffect(() => {
     hydrateProfileData();
@@ -833,6 +842,15 @@ export default function Profile() {
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
+  const profileCounts = useMemo(
+    () => ({
+      followers: Array.isArray(profileMeta.followers) ? profileMeta.followers.length : 0,
+      following: Array.isArray(profileMeta.following) ? profileMeta.following.length : 0,
+      uploaded: uploadedDishes.length,
+      dishes: allDishesCount,
+    }),
+    [allDishesCount, profileMeta.followers, profileMeta.following, uploadedDishes.length]
+  );
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(uploadedDishes),
     [uploadedDishes]
@@ -1221,7 +1239,7 @@ export default function Profile() {
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileMeta.followers.length}</div>
+                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.followers}</div>
                 <button
                   onClick={() => openConnections("followers")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1230,7 +1248,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{profileMeta.following.length}</div>
+                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.following}</div>
                 <button
                   onClick={() => openConnections("following")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1239,7 +1257,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{uploadedDishes.length}</div>
+                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.uploaded}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
@@ -1248,7 +1266,7 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div className="text-[1.28rem] font-bold leading-none">{allDishesCount}</div>
+                <div className="text-[1.28rem] font-bold leading-none">{profileCounts.dishes}</div>
                 <button
                   onClick={() => selectDishlist("all_dishes")}
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"

@@ -517,7 +517,7 @@ export default function StoryViewerModal({
 
           <div
             className="absolute left-4 right-4 z-40 flex gap-1"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 0.2rem)" }}
+            style={{ top: "calc(var(--app-top-nav-offset) + 0.2rem)" }}
           >
             {currentStories.map((story, idx) => (
               <div key={story.id || idx} className="no-accent-border h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
@@ -534,7 +534,7 @@ export default function StoryViewerModal({
 
           <div
             className="absolute left-4 right-4 z-40 flex items-center justify-between text-white"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 1.1rem)" }}
+            style={{ top: "calc(var(--app-top-nav-offset) + 1.1rem)" }}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center font-semibold">
@@ -606,13 +606,13 @@ export default function StoryViewerModal({
 
           <div
             className="absolute left-0 bottom-24 z-10 w-1/3"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 5.5rem)" }}
+            style={{ top: "calc(var(--app-top-nav-offset) + 5.5rem)" }}
           >
             <button type="button" className="w-full h-full" onClick={goPrev} aria-label="Previous story" />
           </div>
           <div
             className="absolute right-0 bottom-24 z-10 w-1/3"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 5.5rem)" }}
+            style={{ top: "calc(var(--app-top-nav-offset) + 5.5rem)" }}
           >
             <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
           </div>

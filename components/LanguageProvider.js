@@ -23,6 +23,7 @@ const translations = {
     explore: "Esplora",
     upload: "Carica",
     people: "Persone",
+    People: "Persone",
     profile: "Profilo",
     "Edit Profile": "Modifica profilo",
     "Log Out": "Esci",

@@ -25,6 +25,10 @@
   :root {
     --app-top-nav-gap: clamp(0.9rem, 1.8vh, 1.25rem);
     --app-top-nav-min-offset: 2.8rem;
+    --app-top-nav-offset: max(
+      calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap)),
+      var(--app-top-nav-min-offset)
+    );
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
     --app-accent-border: #e4b43f;
@@ -104,10 +108,7 @@
   position: sticky;
   top: 0;
   z-index: 45;
-  padding-top: max(
-    calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap)),
-    var(--app-top-nav-min-offset)
-  );
+  padding-top: var(--app-top-nav-offset);
   padding-bottom: 0.3rem;
   background: transparent;
   border-bottom: 0;
@@ -289,7 +290,7 @@
 }
 
 .top-nav-modal-frame {
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 2.75rem);
+  padding-top: calc(var(--app-top-nav-offset) + 2.75rem);
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.75rem);
 }
 

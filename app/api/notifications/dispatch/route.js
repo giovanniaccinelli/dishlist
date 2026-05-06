@@ -16,12 +16,17 @@ async function getEnabledTokensForUserIds(userIds = []) {
   const snapshots = await Promise.all(
     uniqueIds.map((userId) => db.collection("users").doc(userId).collection("pushTokens").get())
   );
-  return snapshots.flatMap((snap) =>
+  const tokens = snapshots.flatMap((snap) =>
     snap.docs
       .map((doc) => doc.data() || {})
       .filter((item) => item.enabled !== false && typeof item.token === "string" && item.token.trim())
       .map((item) => item.token.trim())
   );
+  console.log("Push token lookup", {
+    requestedUserIds: uniqueIds,
+    tokenCount: tokens.length,
+  });
+  return tokens;
 }
 
 async function dispatchDishPosted({ decoded, ownerId, dishId, dishName = "" }) {
@@ -30,6 +35,11 @@ async function dispatchDishPosted({ decoded, ownerId, dishId, dishName = "" }) {
   const ownerSnap = await db.collection("users").doc(ownerId).get();
   const ownerData = ownerSnap.data() || {};
   const followers = Array.isArray(ownerData.followers) ? ownerData.followers : [];
+  console.log("Dispatching dish_posted", {
+    ownerId,
+    followerCount: followers.length,
+    dishId,
+  });
   const tokens = await getEnabledTokensForUserIds(followers);
   return sendApnsNotifications(tokens, {
     title: `${ownerData.displayName || "Someone"} posted a dish`,
@@ -44,6 +54,10 @@ async function dispatchStoryPosted({ decoded, ownerId, storyName = "" }) {
   const ownerSnap = await db.collection("users").doc(ownerId).get();
   const ownerData = ownerSnap.data() || {};
   const followers = Array.isArray(ownerData.followers) ? ownerData.followers : [];
+  console.log("Dispatching story_posted", {
+    ownerId,
+    followerCount: followers.length,
+  });
   const tokens = await getEnabledTokensForUserIds(followers);
   return sendApnsNotifications(tokens, {
     title: `${ownerData.displayName || "Someone"} added a story`,
@@ -60,6 +74,12 @@ async function dispatchDirectMessage({ decoded, conversationId, senderId, text =
   const recipients = Array.isArray(convoData.participants)
     ? convoData.participants.filter((id) => id && id !== senderId)
     : [];
+  console.log("Dispatching direct_message", {
+    conversationId,
+    senderId,
+    recipientCount: recipients.length,
+    type,
+  });
   if (!recipients.length) return { sent: 0, failed: 0, skipped: 0 };
 
   const senderSnap = await db.collection("users").doc(senderId).get();
@@ -89,6 +109,13 @@ async function dispatchCommentPosted({
   const tokens = await getEnabledTokensForUserIds(
     recipientIds.filter((id) => id && id !== actorId)
   );
+  console.log("Dispatching comment_posted", {
+    actorId,
+    recipientCount: recipientIds.filter((id) => id && id !== actorId).length,
+    tokenCount: tokens.length,
+    dishId,
+    isStoryComment,
+  });
   if (!tokens.length) return { sent: 0, failed: 0, skipped: 0 };
   return sendApnsNotifications(tokens, {
     title: `${actorData.displayName || "Someone"} commented`,
@@ -105,6 +132,17 @@ export async function POST(request) {
     const decoded = await verifyRequest(request);
     const body = await request.json();
     const type = String(body?.type || "");
+    console.log("Push dispatch request received", {
+      type,
+      actor: decoded.uid,
+      sandbox: process.env.APPLE_PUSH_USE_SANDBOX === "1",
+      hasApnsTeam: Boolean(process.env.APPLE_TEAM_ID),
+      hasApnsKey: Boolean(process.env.APPLE_KEY_ID),
+      hasApnsPrivateKey: Boolean(process.env.APPLE_PUSH_PRIVATE_KEY),
+      hasFirebaseAdminProject: Boolean(process.env.FIREBASE_ADMIN_PROJECT_ID),
+      hasFirebaseAdminEmail: Boolean(process.env.FIREBASE_ADMIN_CLIENT_EMAIL),
+      hasFirebaseAdminPrivateKey: Boolean(process.env.FIREBASE_ADMIN_PRIVATE_KEY),
+    });
 
     let result;
     if (type === "dish_posted") {

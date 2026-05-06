@@ -52,6 +52,14 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
   if (!Array.isArray(tokens) || !tokens.length) return { sent: 0, failed: 0, skipped: 0 };
   if (!isApnsConfigured()) return { sent: 0, failed: 0, skipped: tokens.length };
 
+  console.log("APNs dispatch starting", {
+    host: APNS_HOST,
+    topic: APNS_BUNDLE_ID,
+    sandbox: process.env.APPLE_PUSH_USE_SANDBOX === "1",
+    tokenCount: tokens.length,
+    title,
+  });
+
   const jwt = getApnsJwt();
   let sent = 0;
   let failed = 0;

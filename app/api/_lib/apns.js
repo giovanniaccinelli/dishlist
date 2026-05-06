@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import http2 from "node:http2";
 
 const APNS_TEAM_ID = process.env.APPLE_TEAM_ID || "";
 const APNS_KEY_ID = process.env.APPLE_KEY_ID || "";
@@ -103,38 +104,78 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
   let sent = 0;
   let failed = 0;
 
+  const payload = JSON.stringify({
+    aps: {
+      alert: { title, body },
+      sound: "default",
+    },
+    url,
+    ...data,
+  });
+
   await Promise.all(
-    tokens.map(async (token) => {
-      try {
-        const response = await fetch(`${APNS_HOST}/3/device/${encodeURIComponent(token)}`, {
-          method: "POST",
-          headers: {
-            authorization: `bearer ${jwt}`,
-            "apns-topic": APNS_BUNDLE_ID,
-            "apns-push-type": "alert",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            aps: {
-              alert: { title, body },
-              sound: "default",
-            },
-            url,
-            ...data,
-          }),
-        });
-        if (response.ok) {
-          sent += 1;
-          return;
-        }
-        failed += 1;
-        const errorText = await response.text().catch(() => "");
-        console.warn("APNs send failed:", response.status, errorText);
-      } catch (error) {
-        failed += 1;
-        console.warn("APNs request failed:", error);
-      }
-    })
+    tokens.map(
+      (token) =>
+        new Promise((resolve) => {
+          let client;
+          try {
+            client = http2.connect(APNS_HOST);
+            client.on("error", (error) => {
+              failed += 1;
+              console.warn("APNs client connection failed:", error);
+              client?.close();
+              resolve();
+            });
+
+            const request = client.request({
+              ":method": "POST",
+              ":path": `/3/device/${encodeURIComponent(token)}`,
+              authorization: `bearer ${jwt}`,
+              "apns-topic": APNS_BUNDLE_ID,
+              "apns-push-type": "alert",
+              "content-type": "application/json",
+            });
+
+            let responseHeaders = null;
+            let responseBody = "";
+
+            request.setEncoding("utf8");
+            request.on("response", (headers) => {
+              responseHeaders = headers;
+            });
+            request.on("data", (chunk) => {
+              responseBody += chunk;
+            });
+            request.on("error", (error) => {
+              failed += 1;
+              console.warn("APNs request failed:", error);
+              client?.close();
+              resolve();
+            });
+            request.on("end", () => {
+              const status = Number(responseHeaders?.[":status"] || 0);
+              if (status >= 200 && status < 300) {
+                sent += 1;
+              } else {
+                failed += 1;
+                console.warn("APNs send failed:", status, responseBody);
+              }
+              client?.close();
+              resolve();
+            });
+
+            request.write(payload);
+            request.end();
+          } catch (error) {
+            failed += 1;
+            console.warn("APNs setup failed:", error);
+            try {
+              client?.close();
+            } catch {}
+            resolve();
+          }
+        })
+    )
   );
 
   return { sent, failed, skipped: 0 };

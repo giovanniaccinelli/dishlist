@@ -1099,7 +1099,7 @@ export default function Profile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[74px_1fr_74px] items-center px-4 pb-1.5 relative">
+      <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[74px_1fr_104px] items-center px-4 pb-1.5 relative">
         <div className="flex items-center justify-start" />
         <div className="flex items-center justify-center">
           <DishModeFilterButton

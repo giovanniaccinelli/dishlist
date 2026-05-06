@@ -495,11 +495,11 @@ export default function PublicProfile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
-        <div className="grid grid-cols-[2.4rem_minmax(0,1fr)_2.4rem] items-center gap-3">
-          <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-start">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3">
+          <div className="flex items-center justify-start">
             <AppBackButton fallback="/dishlists" />
           </div>
-          <div className="flex min-w-0 items-center justify-center gap-1.5 pl-14">
+          <div className="flex min-w-0 items-center justify-center">
             {!isViewingOwnProfile ? (
               <button
                 onClick={handleFollow}
@@ -512,6 +512,8 @@ export default function PublicProfile() {
                 {isFollowing ? t("Unfollow") : t("Follow")}
               </button>
             ) : null}
+          </div>
+          <div className="flex items-center justify-end">
             <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} className="shrink-0" />
           </div>
           <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-end">

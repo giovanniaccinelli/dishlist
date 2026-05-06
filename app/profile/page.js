@@ -127,29 +127,6 @@ function mergeStoryStats(groups = []) {
   return merged;
 }
 
-function scoreUserDocMatch(userDoc, currentUser) {
-  const data = userDoc?.data?.() || {};
-  let score = 0;
-  const authUid = String(currentUser?.uid || "").trim();
-  const authEmail = String(currentUser?.email || "").trim().toLowerCase();
-  const authDisplayName = String(currentUser?.displayName || "").trim().toLowerCase();
-  const docId = String(userDoc?.id || "").trim();
-  if (authUid && docId === authUid) {
-    score += 120;
-  } else if (authUid && getProfileIdCandidates(authUid, userDoc).includes(authUid)) {
-    score += 24;
-  }
-  if (authEmail && String(data.email || "").trim().toLowerCase() === authEmail) score += 40;
-  if (authDisplayName && String(data.displayName || "").trim().toLowerCase() === authDisplayName) score += 18;
-  if (data.displayName) score += 6;
-  if (Array.isArray(data.followers) && data.followers.length) score += 5;
-  if (Array.isArray(data.following) && data.following.length) score += 5;
-  if (Array.isArray(data.savedDishes) && data.savedDishes.length) score += 4;
-  if (data.photoURL) score += 2;
-  if (data.bio) score += 1;
-  return score;
-}
-
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -273,24 +250,18 @@ export default function Profile() {
           return;
         }
         const directSnap = await getDoc(doc(db, "users", user.uid));
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const matchingDocs = usersSnapshot.docs.filter((docSnap) => {
-          const data = docSnap.data() || {};
-          const emailMatches =
-            user.email &&
-            String(data.email || "").trim().toLowerCase() === String(user.email || "").trim().toLowerCase();
-          const nameMatches =
-            user.displayName &&
-            String(data.displayName || "").trim().toLowerCase() === String(user.displayName || "").trim().toLowerCase();
-          return emailMatches || nameMatches || getProfileIdCandidates(user.uid, docSnap).includes(user.uid);
-        });
-        const candidateDocs = [...matchingDocs];
-        if (directSnap.exists() && !candidateDocs.some((docSnap) => docSnap.id === directSnap.id)) {
-          candidateDocs.push(directSnap);
+        let userSnap = directSnap.exists() ? directSnap : null;
+
+        if (user.email) {
+          const emailSnapshot = await getDocs(
+            query(collection(db, "users"), where("email", "==", String(user.email || "").trim()))
+          );
+          const emailDoc = emailSnapshot.docs[0] || null;
+          if (emailDoc?.exists?.()) {
+            userSnap = emailDoc;
+          }
         }
-        let userSnap =
-          candidateDocs.sort((a, b) => scoreUserDocMatch(b, user) - scoreUserDocMatch(a, user))[0] ||
-          (directSnap.exists() ? directSnap : null);
+
         if (cancelled) return;
         if (!userSnap?.exists?.()) {
           setProfileIdentity({ docId: user.uid, candidateIds: uniqueNonEmpty([user.uid]) });
@@ -304,7 +275,7 @@ export default function Profile() {
         const data = userSnap.data() || {};
         setProfileIdentity({
           docId: userSnap.id,
-          candidateIds: getProfileIdCandidates(user.uid, userSnap),
+          candidateIds: uniqueNonEmpty([userSnap.id, user.uid]),
         });
         setProfileMeta((prev) => ({
           ...prev,

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   ChefHat,
@@ -29,7 +30,13 @@ import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
+import {
+  dishModeMatches,
+  DISH_MODE_ALL,
+  DishModeFilterButton,
+  DishModeFilterModal,
+  RestaurantMapIcon,
+} from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
@@ -719,6 +726,14 @@ export default function Explore() {
         }}
       />
       <BottomNav />
+      <motion.button
+        type="button"
+        onClick={() => router.push("/map")}
+        className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
+        aria-label="Open restaurant map"
+      >
+        <RestaurantMapIcon className="h-6 w-6 text-white" />
+      </motion.button>
     </div>
   );
 }

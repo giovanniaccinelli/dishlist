@@ -1426,7 +1426,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 {resolvedSecondaryActionLabel === "Edit" ? (
                   <Pencil size={18} strokeWidth={2.1} />
                 ) : resolvedSecondaryActionLabel === "map" ? (
-                  <RestaurantMapIcon className="h-[1.45rem] w-[1.45rem] text-[#E64646]" strokeWidth={2.35} />
+                  <RestaurantMapIcon className="h-[1.45rem] w-[1.45rem] text-black" strokeWidth={2.35} />
                 ) : (
                   resolvedSecondaryActionLabel
                 )}

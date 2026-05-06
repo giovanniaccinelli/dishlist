@@ -672,7 +672,7 @@ export default function Feed() {
                 ? (dish) => (String(dish?.dishMode || "").toLowerCase() === DISH_MODE_RESTAURANT ? "map" : null)
                 : null
             }
-            secondaryActionClassName="add-action-btn action-btn-white-ring restaurant-accent-border h-14 w-14"
+            secondaryActionClassName="add-action-btn action-btn-white-ring h-14 w-14"
             actionToast="Added to DishList"
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
@@ -731,7 +731,7 @@ export default function Feed() {
                   ? (dish) => (String(dish?.dishMode || "").toLowerCase() === DISH_MODE_RESTAURANT ? "map" : null)
                   : null
               }
-              secondaryActionClassName="add-action-btn action-btn-white-ring restaurant-accent-border h-14 w-14"
+              secondaryActionClassName="add-action-btn action-btn-white-ring h-14 w-14"
               actionToast="Added to DishList"
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}

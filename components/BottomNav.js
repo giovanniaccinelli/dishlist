@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Plus, Utensils, User } from "lucide-react";
+import { Home, LayoutGrid, Plus, Search, User } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
 import { useState } from "react";
 import AuthPromptModal from "./AuthPromptModal";
@@ -16,7 +16,7 @@ export default function BottomNav() {
 
   const navItems = [
     { href: "/", icon: Home, label: "feed" },
-    { href: "/explore", icon: Utensils, label: "explore" },
+    { href: "/explore", icon: Search, label: "explore" },
     { href: "/upload", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
     { href: "/dishlists", icon: LayoutGrid, label: "people" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },

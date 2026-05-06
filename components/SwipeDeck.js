@@ -1508,25 +1508,57 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
 
-          <div
-            ref={tagsRef}
-            className="absolute left-5 right-5 z-30 flex flex-wrap gap-2"
-            style={{ bottom: tagsBottom }}
-          >
-            {getTags(currentCard).map((tag, idx) => (
-              <button
-                type="button"
-                data-no-drag="true"
-                key={`${tag}-${idx}`}
-                className={`px-2.5 py-1 rounded-full border-2 ${restaurantAccentBorder} text-[11px] font-semibold ${
-                  TAG_COLORS[idx % TAG_COLORS.length]
-                }`}
-                onClick={(e) => handleTagPress(tag, e)}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+          {!showRecipe ? (
+            <div
+              ref={tagsRef}
+              className="absolute left-5 right-5 z-30 flex flex-wrap gap-2"
+              style={{ bottom: tagsBottom }}
+            >
+              {getTags(currentCard).map((tag, idx) => (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  key={`${tag}-${idx}`}
+                  className={`px-2.5 py-1 rounded-full border-2 ${restaurantAccentBorder} text-[11px] font-semibold ${
+                    TAG_COLORS[idx % TAG_COLORS.length]
+                  }`}
+                  onClick={(e) => handleTagPress(tag, e)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsBottom }}>
+              {previewComment ? (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openComments();
+                  }}
+                  className={`max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
+                >
+                  {previewComment.userName || "User"}: {previewComment.text}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openComments();
+                  }}
+                  className={`inline-flex items-center rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
+                >
+                  Be the first to comment
+                </button>
+              )}
+            </div>
+          )}
 
           {!showRecipe ? (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>

@@ -72,6 +72,44 @@ function normalizeTags(tags) {
   return Array.from(new Set(cleaned)).slice(0, 6);
 }
 
+async function getUserIdsWithDishInAnyDishlist(dishId) {
+  if (!dishId) return [];
+  const userIds = new Set();
+  const [dishSnap, savedSnap, toTrySnap, customItemsSnap] = await Promise.all([
+    getDoc(doc(db, "dishes", dishId)),
+    getDocs(collectionGroup(db, "saved")),
+    getDocs(collectionGroup(db, "toTry")),
+    getDocs(collectionGroup(db, "items")),
+  ]);
+
+  if (dishSnap.exists()) {
+    const ownerId = String(dishSnap.data()?.owner || "").trim();
+    if (ownerId) userIds.add(ownerId);
+  }
+
+  const collectParentUserId = (docSnap) => {
+    const userId = docSnap.ref.parent.parent?.parent?.parent?.id || docSnap.ref.parent.parent?.id;
+    if (userId) userIds.add(userId);
+  };
+
+  savedSnap.docs.forEach((docSnap) => {
+    const linkedDishId = docSnap.data()?.dishId || docSnap.id;
+    if (linkedDishId === dishId) collectParentUserId(docSnap);
+  });
+
+  toTrySnap.docs.forEach((docSnap) => {
+    const linkedDishId = docSnap.data()?.dishId || docSnap.id;
+    if (linkedDishId === dishId) collectParentUserId(docSnap);
+  });
+
+  customItemsSnap.docs.forEach((docSnap) => {
+    const linkedDishId = docSnap.data()?.dishId || docSnap.id;
+    if (linkedDishId === dishId) collectParentUserId(docSnap);
+  });
+
+  return Array.from(userIds);
+}
+
 function buildDishPayload(dishId, dishData = null) {
   return dishData
     ? {
@@ -422,12 +460,14 @@ export async function updateDishAndSavedCopies(dishId, updates) {
 // Save dish to global dishes collection
 export async function saveDishToFirestore(dish) {
   const docRef = await addDoc(collection(db, "dishes"), dish);
+  await syncDishSaveCount(docRef.id);
   clearReadCache(dish?.owner || null);
   return docRef.id;
 }
 
 export async function createDishForUser(dish) {
   const docRef = await addDoc(collection(db, "dishes"), dish);
+  await syncDishSaveCount(docRef.id);
   clearReadCache(dish?.owner || null);
   return docRef.id;
 }
@@ -619,6 +659,7 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
   try {
     await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
     await setDoc(toTryDocRef, payload, { merge: true });
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -638,6 +679,7 @@ export async function removeDishFromToTry(userId, dishId) {
   }
   try {
     await deleteDoc(toTryDocRef);
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -748,6 +790,7 @@ export async function createCustomDishlist(userId, name, initialDishes = []) {
       batch.set(customDishlistItemDoc(userId, dishlistRef.id, dish.id), payload, { merge: true });
     }
     await batch.commit();
+    await Promise.all(uniqueDishes.map((dish) => syncDishSaveCount(dish.id)));
   }
   clearReadCache(userId);
   return dishlistRef.id;
@@ -793,6 +836,7 @@ export async function addDishToCustomDishlist(userId, dishlistId, dishId, dishDa
       { merge: true }
     );
     await setDoc(customDishlistItemDoc(userId, dishlistId, dishId), payload, { merge: true });
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -813,6 +857,7 @@ export async function removeDishFromCustomDishlist(userId, dishlistId, dishId) {
       { merge: true }
     );
     await deleteDoc(customDishlistItemDoc(userId, dishlistId, dishId));
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -825,12 +870,22 @@ export async function deleteCustomDishlist(userId, dishlistId) {
   if (!userId || !dishlistId) return false;
   try {
     const itemsSnap = await getDocs(customDishlistItemsCollection(userId, dishlistId));
+    const affectedDishIds = Array.from(
+      new Set(
+        itemsSnap.docs
+          .map((itemDoc) => itemDoc.data()?.dishId || itemDoc.id)
+          .filter(Boolean)
+      )
+    );
     const batch = writeBatch(db);
     itemsSnap.docs.forEach((itemDoc) => {
       batch.delete(itemDoc.ref);
     });
     batch.delete(customDishlistDoc(userId, dishlistId));
     await batch.commit();
+    if (affectedDishIds.length) {
+      await Promise.all(affectedDishIds.map((dishId) => syncDishSaveCount(dishId)));
+    }
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -871,9 +926,9 @@ export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
 export async function getUsersWhoSavedDish(dishId) {
   if (!dishId) return [];
   try {
-    const q = query(collection(db, "users"), where("savedDishes", "array-contains", dishId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    const userIds = await getUserIdsWithDishInAnyDishlist(dishId);
+    const docs = await Promise.all(userIds.map((uid) => getDoc(doc(db, "users", uid))));
+    return docs.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
   } catch (err) {
     console.error("Failed to fetch users who saved dish:", err);
     return [];
@@ -1449,15 +1504,8 @@ export async function recountDishSavesFromUsers() {
 
 export async function syncDishSaveCount(dishId) {
   if (!dishId) return 0;
-  const snapshot = await getDocs(collectionGroup(db, "saved"));
-  const userIds = new Set();
-  snapshot.docs.forEach((savedDoc) => {
-    const savedDishId = savedDoc.data()?.dishId || savedDoc.id;
-    if (savedDishId !== dishId) return;
-    const uid = savedDoc.ref.parent.parent?.id;
-    if (uid) userIds.add(uid);
-  });
-  const saveCount = userIds.size;
+  const userIds = await getUserIdsWithDishInAnyDishlist(dishId);
+  const saveCount = userIds.length;
   await setDoc(doc(db, "dishes", dishId), { saves: saveCount }, { merge: true });
   return saveCount;
 }

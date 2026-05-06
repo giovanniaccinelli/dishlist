@@ -23,8 +23,8 @@
   }
 
   :root {
-    --app-top-nav-gap: clamp(0.4rem, 1.1vh, 0.85rem);
-    --app-top-nav-min-offset: 2.2rem;
+    --app-top-nav-gap: clamp(0.7rem, 1.5vh, 1.1rem);
+    --app-top-nav-min-offset: 2.55rem;
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
     --app-accent-border: #e4b43f;

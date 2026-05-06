@@ -50,6 +50,8 @@ const translations = {
     "Profile options": "Opzioni profilo",
     "World map": "Mappa mondiale",
     "Restaurants map": "Mappa ristoranti",
+    "Most Saved": "Più salvati",
+    "Trending Now": "Di tendenza ora",
     "Loading map": "Caricamento mappa",
     "For you": "Per te",
     "for you": "Per te",

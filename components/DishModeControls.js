@@ -118,7 +118,8 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
             initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
-            className="pointer-events-none absolute left-1/2 top-[calc(100%+0.45rem)] z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-black/10 bg-white/96 px-3 py-2 text-[11px] font-semibold text-black shadow-[0_14px_28px_rgba(0,0,0,0.14)] backdrop-blur-md"
+            className="pointer-events-none fixed left-1/2 z-[120] -translate-x-1/2 whitespace-nowrap rounded-full border border-black/10 bg-white/97 px-4 py-2.5 text-[11px] font-semibold text-black shadow-[0_16px_34px_rgba(0,0,0,0.16)] backdrop-blur-md"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 5.6rem)" }}
           >
             {flashMessage}
           </motion.div>

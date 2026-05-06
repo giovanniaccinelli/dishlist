@@ -105,7 +105,7 @@ export default function DishDetail() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved", "all_dishes"]);
   const [lockedDishlistIds, setLockedDishlistIds] = useState([]);
   const [initialDeckIndex, setInitialDeckIndex] = useState(0);
   const activeDeckRef = useRef(null);
@@ -258,11 +258,11 @@ export default function DishDetail() {
     setDishlistsLoading(true);
     try {
       const nextLists = (await getAllDishlistsForUser(userId)).filter(
-        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+        (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["saved"]);
-      setLockedDishlistIds([]);
+      setSelectedDishlistIds(["saved", "all_dishes"]);
+      setLockedDishlistIds(["saved", "all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -573,8 +573,9 @@ export default function DishDetail() {
 
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
+    const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
     const results = await Promise.all(
-      selectedDishlistIds.map((dishlistId) =>
+      persistDishlistIds.map((dishlistId) =>
         saveDishToSelectedDishlist(userId, dishlistId, dishlistPickerDish)
       )
     );

@@ -24,7 +24,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { ChevronLeft, ChevronRight, CircleUserRound, Send, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import { dishModeMatches, DISH_MODE_ALL, DISH_MODE_COOKING, DishModeFilterButton, DishModeFilterModal } from "../components/DishModeControls";
@@ -66,7 +66,7 @@ export default function Feed() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved", "all_dishes"]);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [guestMode, setGuestMode] = useState(null);
@@ -409,10 +409,10 @@ export default function Feed() {
     setDishlistsLoading(true);
     try {
       const nextLists = (await getAllDishlistsForUser(userId)).filter(
-        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+        (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["saved"]);
+      setSelectedDishlistIds(["saved", "all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -478,8 +478,9 @@ export default function Feed() {
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
     const dishToAdd = dishlistPickerDish;
+    const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
     const results = await Promise.all(
-      selectedDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
+      persistDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
     );
     if (results.some((result) => !result)) {
       setToastVariant("error");
@@ -835,6 +836,7 @@ export default function Feed() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={selectedDishlistIds}
+        lockedIds={["saved", "all_dishes"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

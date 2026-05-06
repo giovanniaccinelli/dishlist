@@ -127,10 +127,15 @@ function mergeStoryStats(groups = []) {
   return merged;
 }
 
-function scoreUserDocMatch(userDoc, authUid) {
+function scoreUserDocMatch(userDoc, currentUser) {
   const data = userDoc?.data?.() || {};
   let score = 0;
-  if (String(userDoc?.id || "").trim() !== String(authUid || "").trim()) score += 8;
+  const authUid = String(currentUser?.uid || "").trim();
+  const authEmail = String(currentUser?.email || "").trim().toLowerCase();
+  const authDisplayName = String(currentUser?.displayName || "").trim().toLowerCase();
+  if (String(userDoc?.id || "").trim() !== authUid) score += 8;
+  if (authEmail && String(data.email || "").trim().toLowerCase() === authEmail) score += 40;
+  if (authDisplayName && String(data.displayName || "").trim().toLowerCase() === authDisplayName) score += 18;
   if (data.displayName) score += 6;
   if (Array.isArray(data.followers) && data.followers.length) score += 5;
   if (Array.isArray(data.following) && data.following.length) score += 5;
@@ -210,9 +215,11 @@ export default function Profile() {
   const profileOptionsRef = useRef(null);
   const profileDocId = profileIdentity?.docId || user?.uid || "";
   const profileIdCandidates = profileIdentity?.candidateIds || uniqueNonEmpty([user?.uid]);
-  const effectiveDisplayName = profileMeta.displayName || user?.displayName || "My Profile";
+  const effectiveDisplayName = user?.displayName || profileMeta.displayName || "My Profile";
   const effectiveProfilePhotoURL =
-    typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
+    (typeof user?.photoURL === "string" && user.photoURL) ||
+    (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : "") ||
+    "";
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
   const refreshCustomDishlists = async (ownerId = profileDocId || user?.uid) => {
@@ -262,11 +269,18 @@ export default function Profile() {
         }
         const directSnap = await getDoc(doc(db, "users", user.uid));
         const usersSnapshot = await getDocs(collection(db, "users"));
-        const matchingDocs = usersSnapshot.docs.filter((docSnap) =>
-          getProfileIdCandidates(user.uid, docSnap).includes(user.uid)
-        );
+        const matchingDocs = usersSnapshot.docs.filter((docSnap) => {
+          const data = docSnap.data() || {};
+          const emailMatches =
+            user.email &&
+            String(data.email || "").trim().toLowerCase() === String(user.email || "").trim().toLowerCase();
+          const nameMatches =
+            user.displayName &&
+            String(data.displayName || "").trim().toLowerCase() === String(user.displayName || "").trim().toLowerCase();
+          return emailMatches || nameMatches || getProfileIdCandidates(user.uid, docSnap).includes(user.uid);
+        });
         let userSnap =
-          matchingDocs.sort((a, b) => scoreUserDocMatch(b, user.uid) - scoreUserDocMatch(a, user.uid))[0] ||
+          matchingDocs.sort((a, b) => scoreUserDocMatch(b, user) - scoreUserDocMatch(a, user))[0] ||
           (directSnap.exists() ? directSnap : null);
         if (cancelled) return;
         if (!userSnap?.exists?.()) {

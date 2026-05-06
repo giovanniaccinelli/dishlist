@@ -36,6 +36,14 @@ const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
 const TAP_MOVE_THRESHOLD = 10;
 
+function toTitleCase(value = "") {
+  return String(value || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function SafeDishOpenButton({ href, label }) {
   const router = useRouter();
   const pointerStartRef = useRef(null);
@@ -316,7 +324,7 @@ function CategoryTitle({ row, t }) {
   if (row.key === "most-saved") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{t(row.title)}</span>
+        <span className="text-[1.28rem] font-bold tracking-tight text-black">{toTitleCase(t(row.title))}</span>
         <Trophy size={22} strokeWidth={2.2} className="text-[#D7B443]" />
       </div>
     );
@@ -325,7 +333,7 @@ function CategoryTitle({ row, t }) {
   if (row.key === "trending") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{t(row.title)}</span>
+        <span className="text-[1.28rem] font-bold tracking-tight text-black">{toTitleCase(t(row.title))}</span>
         <Flame size={22} strokeWidth={2.2} className="text-[#F26A21]" />
       </div>
     );
@@ -339,7 +347,7 @@ function CategoryTitle({ row, t }) {
   };
   const Icon = decor.icon;
 
-  const displayTitle = t(String(row.rawTag || row.title || ""));
+  const displayTitle = toTitleCase(t(String(row.rawTag || row.title || "")));
   return (
     <div className="flex items-center gap-2">
       <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>

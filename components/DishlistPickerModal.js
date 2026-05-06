@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Lock, Plus } from "lucide-react";
+import { Check, Lock, Plus, Star } from "lucide-react";
 
 export default function DishlistPickerModal({
   open,
@@ -93,7 +93,10 @@ export default function DishlistPickerModal({
                       >
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold text-black">
-                            {dishlist.name}
+                            <span className="inline-flex items-center gap-1.5">
+                              {dishlist.id === "saved" ? <Star size={14} className="text-[#D9B550] fill-[#F3D88C]" /> : null}
+                              <span>{dishlist.name}</span>
+                            </span>
                           </div>
                           <div className="mt-0.5 text-xs text-black/48">
                             {Number(dishlist.count || 0)} dishes

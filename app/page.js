@@ -868,7 +868,7 @@ export default function Feed() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={selectedDishlistIds}
-        lockedIds={["saved", "all_dishes"]}
+        lockedIds={["all_dishes"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

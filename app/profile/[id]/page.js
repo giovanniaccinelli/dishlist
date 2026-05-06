@@ -494,8 +494,8 @@ export default function PublicProfile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[74px_1fr_104px] items-center gap-3 relative">
-        <div className="flex min-w-[74px] items-center gap-2">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[104px_1fr_104px] items-center gap-3 relative">
+        <div className="flex min-w-[104px] items-center gap-2">
           
           <AppBackButton fallback="/dishlists" />
         </div>
@@ -907,7 +907,7 @@ export default function PublicProfile() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={selectedDishlistIds}
-        lockedIds={["saved", "all_dishes"]}
+        lockedIds={["all_dishes"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

@@ -75,16 +75,23 @@ export async function dispatchPushEvent(type, payload) {
   const currentUser = auth.currentUser;
   if (!currentUser) return;
   const idToken = await currentUser.getIdToken();
-  await fetch("/api/notifications/dispatch", {
+  const response = await fetch("/api/notifications/dispatch", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({ type, ...payload }),
-  }).catch((error) => {
-    console.warn("Push dispatch request failed:", error);
   });
+  if (!response.ok) {
+    let details = "";
+    try {
+      details = await response.text();
+    } catch {}
+    console.warn("Push dispatch request failed:", response.status, details);
+    return null;
+  }
+  return response.json().catch(() => null);
 }
 
 export async function addNativePushListeners(handlers = {}) {

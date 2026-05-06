@@ -256,8 +256,17 @@ function applyTranslationsToDocument(language) {
     if (!node) return;
     const parentTag = node.parentElement?.tagName;
     if (parentTag === "SCRIPT" || parentTag === "STYLE") return;
-    const original = textNodeOriginals.has(node) ? textNodeOriginals.get(node) : node.nodeValue;
-    if (!textNodeOriginals.has(node)) textNodeOriginals.set(node, original);
+    const currentValue = node.nodeValue;
+    const hadOriginal = textNodeOriginals.has(node);
+    const storedOriginal = hadOriginal ? textNodeOriginals.get(node) : currentValue;
+    const translatedStoredOriginal = translateString(storedOriginal, language);
+    const original =
+      hadOriginal && currentValue !== translatedStoredOriginal
+        ? currentValue
+        : storedOriginal;
+    if (!hadOriginal || original !== storedOriginal) {
+      textNodeOriginals.set(node, original);
+    }
     const nextValue = translateString(original, language);
     if (node.nodeValue !== nextValue) {
       node.nodeValue = nextValue;
@@ -271,8 +280,15 @@ function applyTranslationsToDocument(language) {
     const attrStore = elementAttrOriginals.get(element) || {};
     TEXT_ATTRIBUTES.forEach((attr) => {
       if (!element.hasAttribute?.(attr)) return;
-      if (!(attr in attrStore)) attrStore[attr] = element.getAttribute(attr);
-      const original = attrStore[attr];
+      const currentValue = element.getAttribute(attr);
+      const hadOriginal = attr in attrStore;
+      const storedOriginal = hadOriginal ? attrStore[attr] : currentValue;
+      const translatedStoredOriginal = translateString(storedOriginal, language);
+      const original =
+        hadOriginal && currentValue !== translatedStoredOriginal
+          ? currentValue
+          : storedOriginal;
+      attrStore[attr] = original;
       const nextValue = translateString(original, language);
       if (element.getAttribute(attr) !== nextValue) {
         element.setAttribute(attr, nextValue);

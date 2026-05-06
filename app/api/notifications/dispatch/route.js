@@ -183,9 +183,14 @@ export async function POST(request) {
   try {
     const decoded = await verifyRequest(request);
     const body = await request.json();
-    const type = String(body?.type || "");
+    const rawType = String(body?.type || "");
+    const type =
+      body?.conversationId && body?.senderId && (rawType === "text" || rawType === "dish")
+        ? "direct_message"
+        : rawType;
     console.log("Push dispatch request received", {
       type,
+      rawType,
       actor: decoded.uid,
       sandbox: process.env.APPLE_PUSH_USE_SANDBOX === "1",
       hasApnsTeam: Boolean(process.env.APPLE_TEAM_ID),

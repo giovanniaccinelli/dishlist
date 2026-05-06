@@ -499,7 +499,7 @@ export default function PublicProfile() {
           <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-start">
             <AppBackButton fallback="/dishlists" />
           </div>
-          <div className="flex min-w-0 items-center justify-center gap-2">
+          <div className="flex min-w-0 items-center justify-center gap-2 pl-8">
             {!isViewingOwnProfile ? (
               <button
                 onClick={handleFollow}

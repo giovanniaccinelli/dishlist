@@ -111,7 +111,7 @@ export default function CommentsModal({
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-2.5">
+                        <div className="flex min-w-0 items-start gap-2">
                           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-[10px] font-bold text-black/70">
                             {c.userPhotoURL ? (
                               <img
@@ -127,7 +127,8 @@ export default function CommentsModal({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="whitespace-pre-wrap break-words text-sm leading-5 text-black/78">
-                              <span className="mr-1 font-semibold text-black/58">:</span>
+                              <span className="font-semibold text-black/72">{c.userName || "User"}</span>
+                              <span className="mx-1 text-black/44">:</span>
                               {c.text}
                             </div>
                             {c.parentId ? (

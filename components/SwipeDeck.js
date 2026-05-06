@@ -17,7 +17,7 @@ import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { dispatchPushEvent } from "../app/lib/pushClient";
-import { DishModeBadge } from "./DishModeControls";
+import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 
 function DeckAutoplayVideo({
   src,
@@ -1386,7 +1386,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
 
           {resolvedSecondaryActionLabel && !hasBottomActionRow && (
-            <div className="absolute left-4 z-30" style={{ bottom: actionBottom }}>
+            <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -1423,7 +1423,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 aria-label="Secondary action"
                 disabled={disabled}
               >
-                {resolvedSecondaryActionLabel === "Edit" ? <Pencil size={18} strokeWidth={2.1} /> : resolvedSecondaryActionLabel}
+                {resolvedSecondaryActionLabel === "Edit" ? (
+                  <Pencil size={18} strokeWidth={2.1} />
+                ) : resolvedSecondaryActionLabel === "map" ? (
+                  <RestaurantMapIcon className="h-[1.45rem] w-[1.45rem] text-[#E64646]" strokeWidth={2.35} />
+                ) : (
+                  resolvedSecondaryActionLabel
+                )}
               </button>
             </div>
           )}
@@ -1556,7 +1562,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments("recipe");
                   }}
-                  className={`flex max-w-full items-center gap-2 rounded-full border-2 ${restaurantAccentBorder} bg-white px-2.5 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
+                  className={`flex max-w-full items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-white px-2.5 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
                 >
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-[9px] font-bold text-black/60">
                     {recipePreviewComment.userPhotoURL ? (
@@ -1569,11 +1575,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       (recipePreviewComment.userName?.[0] || "U").toUpperCase()
                     )}
                   </span>
-                  <span className="shrink-0 text-[11px] font-semibold text-black/62">
-                    {recipePreviewComment.userName || "User"}
+                  <span className="min-w-0 truncate text-[11px] text-black/72">
+                    <span className="font-semibold text-black/62">{recipePreviewComment.userName || "User"}</span>
+                    <span className="mx-1 text-black/38">:</span>
+                    {recipePreviewComment.text}
                   </span>
-                  <span className="text-black/38">:</span>
-                  <span className="min-w-0 truncate">{recipePreviewComment.text}</span>
                 </button>
               ) : (
                 <button
@@ -1603,7 +1609,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     openComments("dish");
                   }}
-                  className="flex items-center gap-2 text-left text-xs text-white/90 underline-offset-2 hover:underline"
+                  className="flex items-center gap-1.5 text-left text-xs text-white/90 underline-offset-2 hover:underline"
                 >
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/18 text-[9px] font-bold text-white/88">
                     {dishPreviewComment.userPhotoURL ? (
@@ -1616,11 +1622,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       (dishPreviewComment.userName?.[0] || "U").toUpperCase()
                     )}
                   </span>
-                  <span className="shrink-0 text-[11px] font-semibold text-white/88">
-                    {dishPreviewComment.userName || "User"}
+                  <span className="min-w-0 truncate text-[11px] text-white/88">
+                    <span className="font-semibold text-white/88">{dishPreviewComment.userName || "User"}</span>
+                    <span className="mx-1 text-white/55">:</span>
+                    {dishPreviewComment.text}
                   </span>
-                  <span className="text-white/55">:</span>
-                  <span className="min-w-0 truncate">{dishPreviewComment.text}</span>
                 </button>
               ) : (
                 <button

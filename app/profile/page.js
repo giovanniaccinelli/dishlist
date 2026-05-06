@@ -834,13 +834,14 @@ export default function Profile() {
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const profileCounts = useMemo(
     () => ({
-      followers: profileUser?.followers?.length || 0,
-      following: profileUser?.following?.length || 0,
+      followers: profileMeta.followers?.length || 0,
+      following: profileMeta.following?.length || 0,
       uploaded: uploadedDishes.length,
       dishes: allDishesCount,
     }),
-    [allDishesCount, profileUser?.followers, profileUser?.following, uploadedDishes.length]
+    [allDishesCount, profileMeta.followers, profileMeta.following, uploadedDishes.length]
   );
+  
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(uploadedDishes),
     [uploadedDishes]

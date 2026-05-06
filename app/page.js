@@ -603,7 +603,7 @@ export default function Feed() {
           </div>
         </div>
       )}
-      <div className="px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+      <div className="px-4 pt-1 grid grid-cols-[48px_1fr_48px] items-end gap-3">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}

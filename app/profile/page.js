@@ -1099,18 +1099,15 @@ export default function Profile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 mb-1 flex justify-end px-4 pb-1.5 relative">
-        <div
-          className="pointer-events-none absolute left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center"
-          style={{ top: "calc(env(safe-area-inset-top, 0px) + var(--app-top-nav-gap) + 1.2rem)" }}
-        >
+      <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[74px_1fr_74px] items-center px-4 pb-1.5 relative">
+        <div className="flex items-center justify-start" />
+        <div className="flex items-center justify-center">
           <DishModeFilterButton
             value={selectedDishMode}
             onSelect={setSelectedDishMode}
-            className="pointer-events-auto"
           />
         </div>
-        <div ref={profileOptionsRef} className="relative z-20 flex items-center gap-4">
+        <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-4">
           <button
             type="button"
             onClick={() => {

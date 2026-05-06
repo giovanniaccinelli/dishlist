@@ -58,6 +58,20 @@ const sortUsersByProfileDishes = (usersList) =>
     return (a.displayName || "").localeCompare(b.displayName || "");
   });
 
+const mergeStoryStateByUser = (incomingList = [], existingList = []) => {
+  const existingById = new Map((existingList || []).map((item) => [item.id, item]));
+  return incomingList.map((item) => {
+    const existing = existingById.get(item.id);
+    const incomingStories = Array.isArray(item.activeStories) ? item.activeStories : [];
+    const existingStories = Array.isArray(existing?.activeStories) ? existing.activeStories : [];
+    return {
+      ...item,
+      activeStories: incomingStories.length ? incomingStories : existingStories,
+      hasActiveStory: Boolean(item.hasActiveStory || existing?.hasActiveStory || incomingStories.length || existingStories.length),
+    };
+  });
+};
+
 export default function Dishlists() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
@@ -206,8 +220,8 @@ export default function Dishlists() {
         const storyStatsByUser = new Map(storyStatsEntries);
         const withStoryPreview = attachPreviewData(usersList, allDishes, storyStatsByUser);
         const refinedUsers = await refineUsersWithCurrentAllDishes(withStoryPreview, storyStatsByUser);
-        setUsers(refinedUsers);
-        setAllUsersPool(refinedUsers);
+        setUsers((prev) => sortUsersByProfileDishes(mergeStoryStateByUser(refinedUsers, prev)));
+        setAllUsersPool((prev) => sortUsersByProfileDishes(mergeStoryStateByUser(refinedUsers, prev || [])));
       });
 
       void enrichUsersWithStories(fastSortedUsers).then((usersWithStories) => {

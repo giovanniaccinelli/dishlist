@@ -1569,6 +1569,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       (recipePreviewComment.userName?.[0] || "U").toUpperCase()
                     )}
                   </span>
+                  <span className="shrink-0 text-[11px] font-semibold text-black/62">
+                    {recipePreviewComment.userName || "User"}
+                  </span>
+                  <span className="text-black/38">:</span>
                   <span className="min-w-0 truncate">{recipePreviewComment.text}</span>
                 </button>
               ) : (
@@ -1612,6 +1616,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       (dishPreviewComment.userName?.[0] || "U").toUpperCase()
                     )}
                   </span>
+                  <span className="shrink-0 text-[11px] font-semibold text-white/88">
+                    {dishPreviewComment.userName || "User"}
+                  </span>
+                  <span className="text-white/55">:</span>
                   <span className="min-w-0 truncate">{dishPreviewComment.text}</span>
                 </button>
               ) : (

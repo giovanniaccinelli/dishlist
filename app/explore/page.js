@@ -30,9 +30,11 @@ import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { getRestaurantDishGroups } from "../lib/restaurants";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
+  DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantMapIcon,
@@ -328,6 +330,17 @@ function DishPreview({ dish, title, t }) {
 }
 
 function CategoryTitle({ row, t }) {
+  if (row.key.startsWith("restaurant-")) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center rounded-full border border-[#E64646]/22 bg-[#FFECEC] px-4 py-1.5 text-[1.05rem] font-semibold text-[#B92E2E]">
+          {row.title}
+        </span>
+        <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.25} />
+      </div>
+    );
+  }
+
   if (row.key === "most-saved") {
     return (
       <div className="flex items-center gap-2">
@@ -519,8 +532,9 @@ export default function Explore() {
     const textFiltered = term
       ? allDishes.filter((dish) => {
           const name = String(dish.name || "").toLowerCase();
+          const restaurantName = String(dish?.restaurant?.name || "").toLowerCase();
           const tags = Array.isArray(dish.tags) ? dish.tags.map((tag) => String(tag).toLowerCase()) : [];
-          return name.includes(term) || tags.some((tag) => tag.includes(term));
+          return name.includes(term) || restaurantName.includes(term) || tags.some((tag) => tag.includes(term));
         })
       : allDishes;
     const basePool =
@@ -532,6 +546,16 @@ export default function Explore() {
             return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
           });
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
+
+    if (selectedDishMode === DISH_MODE_RESTAURANT) {
+      return getRestaurantDishGroups(modePool).map((group) => ({
+        key: `restaurant-${group.placeId}`,
+        title: group.name,
+        rawTag: group.name,
+        dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
+        totalCount: group.dishes?.length || 0,
+      }));
+    }
 
     const rows = [];
     rows.push({

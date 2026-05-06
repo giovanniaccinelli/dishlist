@@ -42,7 +42,7 @@ const translations = {
     "No users found.": "Nessun utente trovato.",
     "Search users...": "Cerca utenti...",
     Follow: "Segui",
-    Unfollow: "Non seguire più",
+    Unfollow: "Non seguire",
     Followers: "Follower",
     Following: "Seguiti",
     "No dishes to shuffle.": "Nessun piatto da mischiare.",

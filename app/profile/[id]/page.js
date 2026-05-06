@@ -495,12 +495,26 @@ export default function PublicProfile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
-        <div className="grid grid-cols-[104px_1fr_104px] items-center">
-          <div className="flex min-w-[104px] items-center justify-start">
+        <div className="grid grid-cols-[2.4rem_minmax(0,1fr)_2.4rem] items-center gap-3">
+          <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-start">
             <AppBackButton fallback="/dishlists" />
           </div>
-          <div className="min-h-[2.4rem]" />
-          <div className="flex min-w-[104px] items-center justify-end">
+          <div className="flex min-w-0 items-center justify-center gap-2">
+            {!isViewingOwnProfile ? (
+              <button
+                onClick={handleFollow}
+                className={`min-h-[2.5rem] shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[0.7rem] font-semibold border transition ${
+                  isFollowing
+                    ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                    : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                }`}
+              >
+                {isFollowing ? t("Unfollow") : t("Follow")}
+              </button>
+            ) : null}
+            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} className="shrink-0" />
+          </div>
+          <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-end">
             <button
               type="button"
               onClick={async () => {
@@ -527,21 +541,6 @@ export default function PublicProfile() {
               {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
             </button>
           </div>
-        </div>
-        <div className="mt-3 flex flex-col items-center justify-center gap-2">
-          {!isViewingOwnProfile ? (
-            <button
-              onClick={handleFollow}
-              className={`min-h-[2.5rem] whitespace-nowrap px-4 py-2 rounded-full text-xs font-semibold border transition ${
-                isFollowing
-                  ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                  : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-              }`}
-            >
-              {isFollowing ? t("Unfollow") : t("Follow")}
-            </button>
-          ) : null}
-          <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
         </div>
       </div>
       <div className="mb-4">

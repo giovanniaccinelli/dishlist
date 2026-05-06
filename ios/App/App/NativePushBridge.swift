@@ -59,7 +59,7 @@ public class NativePushBridge: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func requestPermissions(_ call: CAPPluginCall) {
+    @objc override public func requestPermissions(_ call: CAPPluginCall) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error {
                 call.reject(error.localizedDescription)

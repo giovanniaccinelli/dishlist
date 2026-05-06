@@ -38,7 +38,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
 import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -72,6 +72,61 @@ function StoryStatIcon({ size = 10 }) {
   );
 }
 
+function uniqueNonEmpty(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function getProfileIdCandidates(routeId, userDoc) {
+  const data = userDoc?.data?.() || userDoc || {};
+  const rawAppleSub = String(data.appleSub || "").trim();
+  const routeValue = String(routeId || "").trim();
+  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
+  return uniqueNonEmpty([
+    userDoc?.id,
+    routeValue,
+    data.uid,
+    data.userId,
+    data.appleUserId,
+    data.authUid,
+    rawAppleSub,
+    rawAppleSub ? `apple:${rawAppleSub}` : "",
+    routeAppleSub,
+  ]);
+}
+
+function mergeUniqueById(groups = []) {
+  return Array.from(
+    new Map(
+      groups
+        .flat()
+        .filter((item) => item?.id)
+        .map((item) => [item.id, item])
+    ).values()
+  );
+}
+
+function mergeStoryStats(groups = []) {
+  const merged = {};
+  groups.forEach((group) => {
+    Object.entries(group || {}).forEach(([dishId, data]) => {
+      const existing = merged[dishId] || { count: 0, history: [], updatedAt: null };
+      const nextHistory = Array.isArray(data?.history) ? data.history : [];
+      merged[dishId] = {
+        count: Math.max(existing.count || 0, Number(data?.count || 0)),
+        history: Array.from(new Set([...(existing.history || []), ...nextHistory])),
+        updatedAt: data?.updatedAt || existing.updatedAt || null,
+      };
+    });
+  });
+  return merged;
+}
+
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -85,6 +140,7 @@ export default function Profile() {
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
+  const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [activeDishlistId, setActiveDishlistId] = useState("saved");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -139,11 +195,12 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
-  const effectiveDisplayName = profileMeta.displayName || user?.displayName || "My Profile";
+  const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =
-    typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "";
+    profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "");
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
+  const profileIdCandidates = getProfileIdCandidates(user?.uid, profileUser);
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -160,12 +217,47 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       (async () => {
-        const [uploaded, custom] = await Promise.all([
-          getDishesFromFirestore(user.uid),
-          getCustomDishlistsForUser(user.uid),
+        const loadUserDoc = async () => {
+          try {
+            const direct = await getDoc(doc(db, "users", user.uid));
+            if (direct.exists()) return direct;
+          } catch (error) {
+            console.error("Direct own-profile fetch failed:", error);
+          }
+          const snapshot = await getDocs(collection(db, "users"));
+          return snapshot.docs.find((docSnap) => getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) || null;
+        };
+
+        const userDoc = await loadUserDoc();
+        const nextProfileUser = userDoc?.exists?.() ? { id: userDoc.id, ...userDoc.data() } : null;
+        const candidateIds = getProfileIdCandidates(user.uid, userDoc);
+        const results = await Promise.allSettled([
+          Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
         ]);
-        setUploadedDishes(uploaded);
-        setCustomDishlists(custom);
+        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+        setProfileUser(nextProfileUser);
+        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById(uploadedRes.value) : []);
+        setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
+        setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
+        setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
+        setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
+        setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
+        if (nextProfileUser) {
+          setProfileMeta((prev) => ({
+            ...prev,
+            followers: Array.isArray(nextProfileUser.followers) ? nextProfileUser.followers : [],
+            following: Array.isArray(nextProfileUser.following) ? nextProfileUser.following : [],
+            savedDishes: Array.isArray(nextProfileUser.savedDishes) ? nextProfileUser.savedDishes : [],
+            displayName: nextProfileUser.displayName || "",
+            photoURL: nextProfileUser.photoURL || "",
+            bio: nextProfileUser.bio || "",
+          }));
+        }
       })();
     }
   }, [user]);
@@ -255,6 +347,7 @@ export default function Profile() {
         photoURL: data.photoURL || "",
         bio: data.bio || "",
       });
+      setProfileUser((prev) => (prev ? { ...prev, ...data, id: prev.id || user.uid } : { ...data, id: user.uid }));
     });
 
     const savedRef = collection(db, "users", user.uid, "saved");
@@ -741,12 +834,12 @@ export default function Profile() {
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const profileCounts = useMemo(
     () => ({
-      followers: Array.isArray(profileMeta.followers) ? profileMeta.followers.length : 0,
-      following: Array.isArray(profileMeta.following) ? profileMeta.following.length : 0,
+      followers: profileUser?.followers?.length || 0,
+      following: profileUser?.following?.length || 0,
       uploaded: uploadedDishes.length,
       dishes: allDishesCount,
     }),
-    [allDishesCount, profileMeta.followers, profileMeta.following, uploadedDishes.length]
+    [allDishesCount, profileUser?.followers, profileUser?.following, uploadedDishes.length]
   );
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(uploadedDishes),

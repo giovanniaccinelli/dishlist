@@ -25,8 +25,8 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#E64646" },
-  { label: "Details", color: "#F59E0B" },
-  { label: "Recipe", color: "#23C268" },
+  { label: "Recipe", color: "#F59E0B" },
+  { label: "Details", color: "#23C268" },
   { label: "Upload", color: "#111111" },
 ];
 
@@ -343,7 +343,7 @@ export default function UploadPage() {
               <>
                 <div className="mb-4">
                   <h2 className="text-[1.75rem] leading-none font-semibold text-black">
-                    {storyMode ? "Story title and cover" : "Name and cover"}
+                    {storyMode ? "Story title and photo" : "Name and photo"}
                   </h2>
                 </div>
                 {true ? (
@@ -471,6 +471,31 @@ export default function UploadPage() {
 
             {uploadStep === 1 ? (
               <>
+                <div className="mb-4 text-center">
+                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
+                </div>
+                <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
+                <textarea
+                  placeholder="Ingredients"
+                  value={dishRecipeIngredients}
+                  onChange={(e) => setDishRecipeIngredients(e.target.value)}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
+                  rows={4}
+                  disabled={loadingUpload}
+                />
+                <textarea
+                  placeholder="Method"
+                  value={dishRecipeMethod}
+                  onChange={(e) => setDishRecipeMethod(e.target.value)}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
+                  rows={5}
+                  disabled={loadingUpload}
+                />
+              </>
+            ) : null}
+
+            {uploadStep === 2 ? (
+              <>
                 <div className="mb-4">
                   <h2 className="text-[1.75rem] leading-none font-semibold text-black">
                     {storyMode ? "Story details and tags" : "Description and tags"}
@@ -535,31 +560,6 @@ export default function UploadPage() {
                     );
                   })}
                 </div>
-              </>
-            ) : null}
-
-            {uploadStep === 2 ? (
-              <>
-                <div className="mb-4 text-center">
-                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
-                </div>
-                <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-                <textarea
-                  placeholder="Ingredients"
-                  value={dishRecipeIngredients}
-                  onChange={(e) => setDishRecipeIngredients(e.target.value)}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  rows={4}
-                  disabled={loadingUpload}
-                />
-                <textarea
-                  placeholder="Method"
-                  value={dishRecipeMethod}
-                  onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  rows={5}
-                  disabled={loadingUpload}
-                />
               </>
             ) : null}
 
@@ -783,7 +783,7 @@ export default function UploadPage() {
                     <div className="text-[0.98rem] font-semibold text-black">Photo library</div>
                     <div className="mt-0.5 text-[0.8rem] text-black/48">Pick a photo or video</div>
                   </div>
-                  <Plus size={18} className="text-black/55" />
+                  <Plus size={24} className="text-black/55" />
                 </button>
                 <button
                   type="button"
@@ -794,7 +794,7 @@ export default function UploadPage() {
                     <div className="text-[0.98rem] font-semibold text-black">Take photo</div>
                     <div className="mt-0.5 text-[0.8rem] text-black/48">Open the camera</div>
                   </div>
-                  <Camera size={18} className="text-black/55" />
+                  <Camera size={24} className="text-black/55" />
                 </button>
               </div>
               <button

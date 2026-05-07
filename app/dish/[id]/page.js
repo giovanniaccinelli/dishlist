@@ -83,6 +83,7 @@ export default function DishDetail() {
   const [editingDish, setEditingDish] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editDishLink, setEditDishLink] = useState("");
   const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
   const [editTags, setEditTags] = useState([]);
@@ -407,6 +408,7 @@ export default function DishDetail() {
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
+    setEditDishLink(dishToEdit?.dishLink || "");
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
     const normalizedTags = Array.isArray(dishToEdit?.tags)
@@ -468,6 +470,7 @@ export default function DishDetail() {
       const updates = {
         name: editName.trim(),
         description: editDescription.trim(),
+        dishLink: editDishLink.trim(),
         recipeIngredients: editRecipeIngredients.trim(),
         recipeMethod: editRecipeMethod.trim(),
         tags: editTags,
@@ -741,7 +744,7 @@ export default function DishDetail() {
                 ))}
               </div>
               <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
-                {editStep === 0 ? "Basics" : editStep === 1 ? "Details" : editStep === 2 ? "Recipe" : "Review"}
+                    {editStep === 0 ? "Basics" : editStep === 1 ? "Recipe" : editStep === 2 ? "Details" : "Review"}
               </div>
               <button
                 type="button"
@@ -759,7 +762,7 @@ export default function DishDetail() {
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
                     Step 1
                   </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and cover</h2>
+                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and photo</h2>
                 </div>
                 <div className="mb-4 grid grid-cols-2 gap-2.5">
   <button
@@ -858,9 +861,34 @@ export default function DishDetail() {
 
             {editStep === 1 ? (
               <>
+                <div className="mb-4 text-center">
+                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
+                </div>
+                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
+                <textarea
+                  value={editRecipeIngredients}
+                  onChange={(e) => setEditRecipeIngredients(e.target.value)}
+                  placeholder="Ingredients"
+                  rows={4}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
+                  disabled={savingEdit}
+                />
+                <textarea
+                  value={editRecipeMethod}
+                  onChange={(e) => setEditRecipeMethod(e.target.value)}
+                  placeholder="Method"
+                  rows={5}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
+                  disabled={savingEdit}
+                />
+              </>
+            ) : null}
+
+            {editStep === 2 ? (
+              <>
                 <div className="mb-4">
                   <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Step 2
+                    Step 3
                   </div>
                   <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Description and tags</h2>
                 </div>
@@ -872,6 +900,25 @@ export default function DishDetail() {
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
                   disabled={savingEdit}
                 />
+                <div className="mb-5">
+                  <button
+                    type="button"
+                    className={`inline-flex items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55`}
+                  >
+                    {editDishLink.trim() ? "Dish link" : "Add link"}
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={editDishLink}
+                    onChange={(e) => setEditDishLink(e.target.value)}
+                    className={`mt-3 w-full rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
+                    disabled={savingEdit}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </div>
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-black">Tags</p>
@@ -893,31 +940,6 @@ export default function DishDetail() {
                     })}
                   </div>
                 </div>
-              </>
-            ) : null}
-
-            {editStep === 2 ? (
-              <>
-                <div className="mb-4 text-center">
-                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
-                </div>
-                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-                <textarea
-                  value={editRecipeIngredients}
-                  onChange={(e) => setEditRecipeIngredients(e.target.value)}
-                  placeholder="Ingredients"
-                  rows={4}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  disabled={savingEdit}
-                />
-                <textarea
-                  value={editRecipeMethod}
-                  onChange={(e) => setEditRecipeMethod(e.target.value)}
-                  placeholder="Method"
-                  rows={5}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  disabled={savingEdit}
-                />
               </>
             ) : null}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send, X } from "lucide-react";
@@ -60,6 +60,9 @@ export default function UploadPage() {
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
   const [restaurant, setRestaurant] = useState(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const libraryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -102,6 +105,7 @@ export default function UploadPage() {
     if (!file) return;
     setDishImage(file);
     setPreview(URL.createObjectURL(file));
+    setMediaPickerOpen(false);
   };
 
   const handleDrop = (e) => {
@@ -211,6 +215,16 @@ export default function UploadPage() {
     setShowUploadForm(true);
     setUploadStep(0);
     setRestaurant(null);
+  };
+
+  const openLibraryPicker = () => {
+    setMediaPickerOpen(false);
+    libraryInputRef.current?.click();
+  };
+
+  const openCameraPicker = () => {
+    setMediaPickerOpen(false);
+    cameraInputRef.current?.click();
   };
 
   const goToNextStep = () => {
@@ -394,6 +408,9 @@ export default function UploadPage() {
                   }}
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
+                  onClick={() => {
+                    if (!loadingUpload && !preview) setMediaPickerOpen(true);
+                  }}
                   className={`w-full h-44 rounded-[1.65rem] border-2 border-dashed ${
                     dragActive
                       ? dishMode === DISH_MODE_RESTAURANT
@@ -405,10 +422,20 @@ export default function UploadPage() {
                   } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative overflow-hidden`}
                 >
                   <input
+                    ref={libraryInputRef}
                     type="file"
                     accept="image/*,video/*"
                     onChange={(e) => handleImageChange(e.target.files?.[0])}
-                    className="absolute opacity-0 w-full h-full cursor-pointer"
+                    className="hidden"
+                    disabled={loadingUpload}
+                  />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    capture="environment"
+                    onChange={(e) => handleImageChange(e.target.files?.[0])}
+                    className="hidden"
                     disabled={loadingUpload}
                   />
                   {preview ? (
@@ -727,6 +754,59 @@ export default function UploadPage() {
       </div>
 
       <AnimatePresence>
+        {mediaPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-end justify-center bg-black/28 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur-[2px]"
+            onClick={() => setMediaPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full max-w-md rounded-[1.75rem] border-2 border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-2 pb-3 pt-1 text-center">
+                <div className="text-[1.05rem] font-semibold text-black">Add media</div>
+              </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={openLibraryPicker}
+                  className="flex w-full items-center justify-between rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+                >
+                  <div>
+                    <div className="text-[0.98rem] font-semibold text-black">Photo library</div>
+                    <div className="mt-0.5 text-[0.8rem] text-black/48">Pick a photo or video</div>
+                  </div>
+                  <Plus size={18} className="text-black/55" />
+                </button>
+                <button
+                  type="button"
+                  onClick={openCameraPicker}
+                  className="flex w-full items-center justify-between rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+                >
+                  <div>
+                    <div className="text-[0.98rem] font-semibold text-black">Take photo</div>
+                    <div className="mt-0.5 text-[0.8rem] text-black/48">Open the camera</div>
+                  </div>
+                  <Camera size={18} className="text-black/55" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMediaPickerOpen(false)}
+                className="mt-3 flex w-full items-center justify-center rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-3 text-[0.92rem] font-semibold text-black/70"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
         {showAuthPrompt && (
           <AuthPromptModal
             open={showAuthPrompt}

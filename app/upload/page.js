@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send, X } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -219,16 +221,57 @@ export default function UploadPage() {
     setRestaurant(null);
   };
 
-  const openLibraryPicker = () => {
+  const createImageFileFromNativePhoto = async (photo) => {
+    const sourceUrl = photo?.webPath || photo?.path || "";
+    if (!sourceUrl) return null;
+    const response = await fetch(sourceUrl);
+    const blob = await response.blob();
+    const extension = photo?.format ? `.${String(photo.format).toLowerCase()}` : ".jpeg";
+    const mimeType = blob.type || `image/${photo?.format || "jpeg"}`;
+    return new File([blob], `dishlist-${Date.now()}${extension}`, {
+      type: mimeType,
+      lastModified: Date.now(),
+    });
+  };
+
+  const openLibraryPicker = async () => {
     setMediaPickerOpen(false);
+    if (Capacitor.getPlatform() !== "web") {
+      try {
+        const photo = await CapacitorCamera.getPhoto({
+          source: CameraSource.Photos,
+          resultType: CameraResultType.Uri,
+          quality: 92,
+        });
+        const file = await createImageFileFromNativePhoto(photo);
+        if (file) handleImageChange(file);
+      } catch (error) {
+        console.error("Failed to open photo library:", error);
+      }
+      return;
+    }
     if (libraryInputRef.current) {
       libraryInputRef.current.value = "";
     }
     libraryInputRef.current?.click();
   };
 
-  const openCameraPicker = () => {
+  const openCameraPicker = async () => {
     setMediaPickerOpen(false);
+    if (Capacitor.getPlatform() !== "web") {
+      try {
+        const photo = await CapacitorCamera.getPhoto({
+          source: CameraSource.Camera,
+          resultType: CameraResultType.Uri,
+          quality: 92,
+        });
+        const file = await createImageFileFromNativePhoto(photo);
+        if (file) handleImageChange(file);
+      } catch (error) {
+        console.error("Failed to open camera:", error);
+      }
+      return;
+    }
     if (cameraInputRef.current) {
       cameraInputRef.current.value = "";
     }

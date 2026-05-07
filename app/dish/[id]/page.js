@@ -649,7 +649,7 @@ export default function DishDetail() {
           </>
         ) : (
           <>
-            <AppBackButton fallback={backFallback} forceFallback={Boolean(returnTo)} />
+            <AppBackButton fallback={backFallback} />
             <div className="w-[74px]" />
           </>
         )}

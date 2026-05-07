@@ -24,6 +24,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
+import { persistCurrentPageScroll, usePageScrollMemory } from "../lib/navigationMemory";
 
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
@@ -160,6 +161,7 @@ export default function Dishes() {
   const [saversUsers, setSaversUsers] = useState([]);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
+  const pageScrollRef = usePageScrollMemory("page:dishes", !loading && !applyingFilters);
   const scrollContainerRef = useRef(null);
   const dishesLoadMoreRef = useRef(null);
 
@@ -544,7 +546,10 @@ export default function Dishes() {
 
   return (
     <div
-      ref={scrollContainerRef}
+      ref={(node) => {
+        scrollContainerRef.current = node;
+        pageScrollRef.current = node;
+      }}
       className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative"
     >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
@@ -693,6 +698,7 @@ export default function Dishes() {
                 <Link
                   href={`/dish/${dish.id}?source=public&mode=single&returnTo=${encodeURIComponent(buildSearchReturnTo())}&deckIds=${encodeURIComponent(visibleDishes.map((item) => item.id).filter(Boolean).join(","))}`}
                   className="absolute inset-0 z-10"
+                  onClick={() => persistCurrentPageScroll("page:dishes")}
                 >
                   <span className="sr-only">Open dish card</span>
                 </Link>

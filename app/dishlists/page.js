@@ -27,7 +27,7 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
-import { usePageScrollMemory } from "../lib/navigationMemory";
+import { persistCurrentPageScroll, usePageScrollMemory } from "../lib/navigationMemory";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -492,7 +492,10 @@ export default function Dishlists() {
                   key={u.id}
                   className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
                   style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
-                  onClick={() => router.push(`/profile/${encodeURIComponent(u.id)}`)}
+                  onClick={() => {
+                    persistCurrentPageScroll("page:people");
+                    router.push(`/profile/${encodeURIComponent(u.id)}`);
+                  }}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button

@@ -7,6 +7,49 @@ function buildPageMemoryKey(namespace, pathname, query = "") {
   return `${namespace}:${pathname}${query ? `?${query}` : ""}`;
 }
 
+function readScrollPayload(storageKey) {
+  try {
+    const stored = sessionStorage.getItem(storageKey);
+    if (stored == null) return null;
+    const parsed = JSON.parse(stored);
+    if (typeof parsed === "number") {
+      return { container: parsed, window: parsed };
+    }
+    if (parsed && typeof parsed === "object") {
+      return {
+        container: Math.max(0, Number(parsed.container) || 0),
+        window: Math.max(0, Number(parsed.window) || 0),
+      };
+    }
+    const numeric = Math.max(0, Number(stored) || 0);
+    return { container: numeric, window: numeric };
+  } catch {
+    const numeric = Math.max(0, Number(sessionStorage.getItem(storageKey)) || 0);
+    return { container: numeric, window: numeric };
+  }
+}
+
+function writeScrollPayload(storageKey, node) {
+  try {
+    const payload = {
+      container: Math.max(0, Number(node?.scrollTop) || 0),
+      window: Math.max(
+        0,
+        Number(window.scrollY || window.pageYOffset || document.documentElement?.scrollTop || 0) || 0
+      ),
+    };
+    sessionStorage.setItem(storageKey, JSON.stringify(payload));
+  } catch {}
+}
+
+export function persistCurrentPageScroll(namespace) {
+  if (typeof window === "undefined") return;
+  const query = new URLSearchParams(window.location.search || "").toString();
+  const storageKey = buildPageMemoryKey(namespace, window.location.pathname, query);
+  const node = document.querySelector(`[data-page-scroll-memory="${namespace}"]`);
+  writeScrollPayload(storageKey, node);
+}
+
 export function usePageScrollMemory(namespace, ready = true) {
   const pathname = usePathname();
   const containerRef = useRef(null);
@@ -23,19 +66,20 @@ export function usePageScrollMemory(namespace, ready = true) {
   useEffect(() => {
     const node = containerRef.current;
     if (!node) return undefined;
+    node.dataset.pageScrollMemory = namespace;
 
     const persist = () => {
-      try {
-        sessionStorage.setItem(storageKey, String(node.scrollTop || 0));
-      } catch {}
+      writeScrollPayload(storageKey, node);
     };
 
     node.addEventListener("scroll", persist, { passive: true });
+    window.addEventListener("scroll", persist, { passive: true });
     return () => {
       persist();
       node.removeEventListener("scroll", persist);
+      window.removeEventListener("scroll", persist);
     };
-  }, [storageKey]);
+  }, [namespace, storageKey]);
 
   useEffect(() => {
     if (!ready) return;
@@ -48,13 +92,16 @@ export function usePageScrollMemory(namespace, ready = true) {
 
     const restore = () => {
       if (cancelled) return;
-      try {
-        const stored = sessionStorage.getItem(storageKey);
-        if (stored == null) return;
-        const target = Math.max(0, Number(stored) || 0);
-        lastAppliedScrollRef.current = target;
-        node.scrollTop = target;
-      } catch {}
+      const payload = readScrollPayload(storageKey);
+      if (!payload) return;
+      const target = Math.max(payload.container, payload.window);
+      lastAppliedScrollRef.current = target;
+      if (payload.container > 0 || target === 0) {
+        node.scrollTop = payload.container;
+      }
+      if (payload.window > 0 || target === 0) {
+        window.scrollTo(0, payload.window);
+      }
     };
 
     const scheduleRestore = (attempt = 0) => {

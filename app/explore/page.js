@@ -41,7 +41,7 @@ import {
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
-import { usePageScrollMemory } from "../lib/navigationMemory";
+import { persistCurrentPageScroll, usePageScrollMemory } from "../lib/navigationMemory";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
@@ -55,7 +55,7 @@ function toTitleCase(value = "") {
     .join(" ");
 }
 
-function SafeDishOpenButton({ href, label }) {
+function SafeDishOpenButton({ href, label, memoryNamespace }) {
   const router = useRouter();
   const pointerStartRef = useRef(null);
   const movedRef = useRef(false);
@@ -81,6 +81,7 @@ function SafeDishOpenButton({ href, label }) {
 
   const handlePointerUp = () => {
     if (!movedRef.current) {
+      if (memoryNamespace) persistCurrentPageScroll(memoryNamespace);
       router.push(href);
     }
     resetPointer();
@@ -98,6 +99,7 @@ function SafeDishOpenButton({ href, label }) {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
+          if (memoryNamespace) persistCurrentPageScroll(memoryNamespace);
           router.push(href);
         }
       }}
@@ -310,7 +312,7 @@ function SearchBar({ value, onChange, placeholder }) {
 function DishPreview({ dish, title, t }) {
   return (
     <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" memoryNamespace="page:explore" />
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -450,7 +452,7 @@ function ExpandedCategoryModal({ row, onClose, t }) {
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish) => (
             <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" memoryNamespace="page:explore" />
               <img
                 src={getDishImageUrl(dish, "thumb")}
                 alt={dish.name}

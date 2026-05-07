@@ -44,7 +44,7 @@ import {
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { useLanguage } from "../../../components/LanguageProvider";
-import { usePageScrollMemory } from "../../lib/navigationMemory";
+import { persistCurrentPageScroll, usePageScrollMemory } from "../../lib/navigationMemory";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -375,11 +375,12 @@ export default function PublicProfile() {
           : source === "saved"
             ? savedDishes
             : customDishlist?.dishes || [];
-    if (!pool.length) {
+    const modePool = pool.filter((dish) => dishModeMatches(dish, selectedDishMode));
+    if (!modePool.length) {
       alert(t("No dishes to shuffle."));
       return;
     }
-    const shuffledPool = pool
+    const shuffledPool = modePool
       .slice()
       .sort(() => Math.random() - 0.5)
       .filter((dish) => dish?.id);
@@ -432,19 +433,23 @@ export default function PublicProfile() {
     ).values()
   );
 
+  const getVisibleDishCount = (dishesList) =>
+    (dishesList || []).filter((dish) => dishModeMatches(dish, selectedDishMode)).length;
+
   const allDishlists = [
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: getVisibleDishCount(savedDishes) },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
       dishes: sortDishlistDishes(allDishesCollection),
-      count: allDishesCollection.length,
+      count: getVisibleDishCount(allDishesCollection),
     },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: dishes.length },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: getVisibleDishCount(dishes) },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: sortDishlistDishes(dishlist.dishes || []),
+      count: getVisibleDishCount(dishlist.dishes || []),
     })),
   ];
 
@@ -713,6 +718,7 @@ export default function PublicProfile() {
                       : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
                   })()}
                   className="absolute inset-0 z-10"
+                  onClick={() => persistCurrentPageScroll(`page:public-profile:${routeProfileId || "unknown"}`)}
                 >
                   <span className="sr-only">Open dish card</span>
                 </Link>

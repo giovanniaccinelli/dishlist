@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-function buildPageMemoryKey(namespace, pathname, searchParams) {
-  const query = searchParams?.toString?.() || "";
+function buildPageMemoryKey(namespace, pathname, query = "") {
   return `${namespace}:${pathname}${query ? `?${query}` : ""}`;
 }
 
 export function usePageScrollMemory(namespace, ready = true) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const containerRef = useRef(null);
   const restoredKeyRef = useRef("");
 
-  const storageKey = useMemo(
-    () => buildPageMemoryKey(namespace, pathname, searchParams),
-    [namespace, pathname, searchParams]
-  );
+  const query =
+    typeof window === "undefined"
+      ? ""
+      : new URLSearchParams(window.location.search || "").toString();
+
+  const storageKey = useMemo(() => buildPageMemoryKey(namespace, pathname, query), [namespace, pathname, query]);
 
   useEffect(() => {
     const node = containerRef.current;
@@ -61,4 +61,3 @@ export function usePageScrollMemory(namespace, ready = true) {
 
   return containerRef;
 }
-

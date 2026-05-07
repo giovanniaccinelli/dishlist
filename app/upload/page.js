@@ -22,6 +22,7 @@ import {
 } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
+import { useLanguage } from "../../components/LanguageProvider";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#E64646" },
@@ -34,6 +35,7 @@ export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
+  const { t, language } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -219,11 +221,17 @@ export default function UploadPage() {
 
   const openLibraryPicker = () => {
     setMediaPickerOpen(false);
+    if (libraryInputRef.current) {
+      libraryInputRef.current.value = "";
+    }
     libraryInputRef.current?.click();
   };
 
   const openCameraPicker = () => {
     setMediaPickerOpen(false);
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = "";
+    }
     cameraInputRef.current?.click();
   };
 
@@ -343,7 +351,13 @@ export default function UploadPage() {
               <>
                 <div className="mb-4">
                   <h2 className="text-[1.75rem] leading-none font-semibold text-black">
-                    {storyMode ? "Story title and photo" : "Name and photo"}
+                    {storyMode
+                      ? language === "it"
+                        ? "Titolo e foto della storia"
+                        : "Story title and photo"
+                      : language === "it"
+                        ? "Nome e foto"
+                        : "Name and photo"}
                   </h2>
                 </div>
                 {true ? (
@@ -424,7 +438,7 @@ export default function UploadPage() {
                   <input
                     ref={libraryInputRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*"
                     onChange={(e) => handleImageChange(e.target.files?.[0])}
                     className="hidden"
                     disabled={loadingUpload}

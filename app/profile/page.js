@@ -57,6 +57,7 @@ import {
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
+import { usePageScrollMemory } from "../lib/navigationMemory";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -141,6 +142,7 @@ export default function Profile() {
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const pathname = usePathname();
+  const pageScrollRef = usePageScrollMemory("page:profile", !loading);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProfileModal, setEditProfileModal] = useState(false);
@@ -1098,7 +1100,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[104px_1fr_104px] items-center px-4 pb-1.5 relative">
         <div className="flex min-w-[104px] items-center justify-start" />
         <div className="flex items-center justify-center">

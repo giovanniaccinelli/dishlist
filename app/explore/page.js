@@ -41,6 +41,7 @@ import {
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
+import { usePageScrollMemory } from "../lib/navigationMemory";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
@@ -482,6 +483,7 @@ export default function Explore() {
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const pageScrollRef = usePageScrollMemory("page:explore", !loading);
   const [search, setSearch] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
@@ -644,7 +646,7 @@ export default function Explore() {
   };
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
         <h1 className="text-2xl font-bold">{t("Explore")}</h1>
         <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />

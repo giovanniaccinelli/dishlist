@@ -50,6 +50,26 @@ const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
+const feedMemoryKey = (userId) => `feed:memory:${userId || "guest"}`;
+
+function restoreDeckMemory(items, memory = null) {
+  if (!Array.isArray(items) || !items.length || !memory?.deckIds?.length) {
+    return { deck: items, initialIndex: 0 };
+  }
+  const byId = new Map(items.map((item) => [String(item.id || ""), item]));
+  const orderedIds = memory.deckIds.map((id) => String(id || "")).filter(Boolean);
+  const seen = new Set(orderedIds);
+  const restored = [
+    ...orderedIds.map((id) => byId.get(id)).filter(Boolean),
+    ...items.filter((item) => !seen.has(String(item.id || ""))),
+  ];
+  const focusId = String(memory.currentDishId || "");
+  const focusIndex = focusId ? restored.findIndex((item) => String(item.id || "") === focusId) : -1;
+  return {
+    deck: restored,
+    initialIndex: focusIndex >= 0 ? focusIndex : 0,
+  };
+}
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -90,6 +110,8 @@ export default function Feed() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [forYouInitialIndex, setForYouInitialIndex] = useState(0);
+  const [followingInitialIndex, setFollowingInitialIndex] = useState(0);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
@@ -118,6 +140,15 @@ export default function Feed() {
       if (Array.isArray(saved)) setGuestSavedIds(saved);
     } catch {}
   }, [router, userId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const feed = params.get("feed");
+    if (feed === "following" || feed === "for_you") {
+      setActiveFeed(feed);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -217,9 +248,31 @@ export default function Feed() {
           following = [];
         }
 
+        let nextForYouDeck = forYou;
+        let nextFollowingDeck = following;
+        let nextForYouIndex = 0;
+        let nextFollowingIndex = 0;
+
+        if (typeof window !== "undefined") {
+          try {
+            const stored = JSON.parse(sessionStorage.getItem(feedMemoryKey(userId)) || "{}");
+            const restoredForYou = restoreDeckMemory(forYou, stored?.for_you);
+            const restoredFollowing = restoreDeckMemory(following, stored?.following);
+            nextForYouDeck = restoredForYou.deck;
+            nextFollowingDeck = restoredFollowing.deck;
+            nextForYouIndex = restoredForYou.initialIndex;
+            nextFollowingIndex = restoredFollowing.initialIndex;
+            if (stored?.activeFeed === "following" || stored?.activeFeed === "for_you") {
+              setActiveFeed(stored.activeFeed);
+            }
+          } catch {}
+        }
+
         setFollowingIds(nextFollowingIds);
-        setForYouDeck(forYou);
-        setFollowingDeck(following);
+        setForYouInitialIndex(nextForYouIndex);
+        setFollowingInitialIndex(nextFollowingIndex);
+        setForYouDeck(nextForYouDeck);
+        setFollowingDeck(nextFollowingDeck);
       } catch (err) {
         console.error("Failed to load feed dishes:", err);
         setFollowingIds([]);
@@ -380,6 +433,40 @@ export default function Feed() {
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.set("feed", tab);
+      router.replace(`/?${params.toString()}`, { scroll: false });
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(feedMemoryKey(userId)) || "{}");
+        sessionStorage.setItem(
+          feedMemoryKey(userId),
+          JSON.stringify({
+            ...stored,
+            activeFeed: tab,
+          })
+        );
+      } catch {}
+    }
+  };
+
+  const persistFeedDeckState = (tab, dish) => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(feedMemoryKey(userId)) || "{}");
+      const sourceDeck = tab === "following" ? followingDeck : forYouDeck;
+      sessionStorage.setItem(
+        feedMemoryKey(userId),
+        JSON.stringify({
+          ...stored,
+          activeFeed: stored?.activeFeed || activeFeed,
+          [tab]: {
+            currentDishId: dish?.id || "",
+            deckIds: sourceDeck.map((item) => item.id).filter(Boolean),
+          },
+        })
+      );
+    } catch {}
   };
 
   const handleDishViewed = (dish) => {
@@ -392,6 +479,16 @@ export default function Feed() {
       }
       return next;
     });
+  };
+
+  const handleForYouViewed = (dish) => {
+    persistFeedDeckState("for_you", dish);
+    handleDishViewed(dish);
+  };
+
+  const handleFollowingViewed = (dish) => {
+    persistFeedDeckState("following", dish);
+    handleDishViewed(dish);
   };
 
   const handleAdd = async (dishToAdd) => {
@@ -678,7 +775,8 @@ export default function Feed() {
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
             onResetFeed={() => handleResetFeed("for_you")}
-            onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
+            initialIndex={forYouInitialIndex}
+            onCardViewed={handleForYouViewed}
           />
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
@@ -737,7 +835,8 @@ export default function Feed() {
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}
               onResetFeed={() => handleResetFeed("following")}
-              onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
+              initialIndex={followingInitialIndex}
+              onCardViewed={handleFollowingViewed}
             />
           )}
         </div>

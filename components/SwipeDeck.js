@@ -259,7 +259,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     ingredients: false,
     method: false,
   });
-  const [tagsHeight, setTagsHeight] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [comments, setComments] = useState([]);
@@ -269,7 +268,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
-  const tagsRef = useRef(null);
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
@@ -388,23 +386,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     })();
   }, [currentCard?.id, onCardViewed]);
 
-  useEffect(() => {
-    if (!tagsRef.current) return;
-    const el = tagsRef.current;
-    const updateHeight = () => {
-      setTagsHeight(el.offsetHeight || 0);
-    };
-    updateHeight();
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [currentCard?._key]);
-
   const actionBottom = 24;
   const tagsBottom = actionBottom + 64;
-  const commentBottom = tagsBottom + tagsHeight + 8;
+  const commentBottom = tagsBottom + 8;
   const textBottom = Math.max(120, commentBottom + 40);
-  const recipeContentBottom = Math.max(tagsBottom + tagsHeight + 28, 132);
+  const recipeContentBottom = Math.max(tagsBottom + 28, 132);
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardBorderClass = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const nextCardBorderClass = isRestaurantDish(nextCard) ? "border-[#E64646]" : "border-[#E4B43F]";
@@ -861,29 +847,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       />
     );
   };
-
-  const getTags = (dish) => {
-    if (!Array.isArray(dish?.tags)) return [];
-    return dish.tags
-      .map((tag) => (typeof tag === "string" ? tag.trim() : ""))
-      .filter(Boolean)
-      .slice(0, 6);
-  };
-
-  const handleTagPress = (tag, event) => {
-    event.stopPropagation();
-    event.preventDefault();
-    router.push(`/explore?category=${encodeURIComponent(`tag-${tag}`)}`);
-  };
-
-  const TAG_COLORS = [
-    "bg-[#DFF3FF] text-[#123B52]",
-    "bg-[#E9FBD8] text-[#1D4F1A]",
-    "bg-[#FFF2D9] text-[#6A3E00]",
-    "bg-[#FFE3EC] text-[#6A1A36]",
-    "bg-[#EDE8FF] text-[#33205D]",
-    "bg-[#E5F7F4] text-[#0F4D45]",
-  ];
 
   if (deckEmpty || !currentCard) {
     return (
@@ -1531,27 +1494,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
 
-          {!showRecipe ? (
-            <div
-              ref={tagsRef}
-              className="absolute left-5 right-5 z-30 flex flex-wrap gap-2"
-              style={{ bottom: tagsBottom }}
-            >
-              {getTags(currentCard).map((tag, idx) => (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  key={`${tag}-${idx}`}
-                  className={`px-2.5 py-1 rounded-full border-2 ${restaurantAccentBorder} text-[11px] font-semibold ${
-                    TAG_COLORS[idx % TAG_COLORS.length]
-                  }`}
-                  onClick={(e) => handleTagPress(tag, e)}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          ) : (
+          {showRecipe ? (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsBottom }}>
               {recipePreviewComment ? (
                 <button
@@ -1595,7 +1538,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </button>
               )}
             </div>
-          )}
+          ) : null}
 
           {!showRecipe ? (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>

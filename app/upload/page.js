@@ -82,9 +82,11 @@ export default function UploadPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const nextStoryMode = params.get("story") === "1";
+    const nextDirectMode = params.get("direct") === "1";
     const nextTargetDishlistId = params.get("targetList") || "saved";
     setStoryMode(nextStoryMode);
-    setShowUploadForm(nextStoryMode);
+    setShowUploadForm(nextStoryMode || nextDirectMode);
+    setUploadStep(0);
     setTargetDishlistId(nextTargetDishlistId);
   }, []);
 

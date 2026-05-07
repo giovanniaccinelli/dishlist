@@ -17,7 +17,7 @@ export default function BottomNav() {
   const navItems = [
     { href: "/", icon: Home, label: "feed" },
     { href: "/explore", icon: Search, label: "explore" },
-    { href: "/upload", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
+    { href: "/upload?direct=1", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
     { href: "/dishlists", icon: Users, label: "people" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];

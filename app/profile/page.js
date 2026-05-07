@@ -57,7 +57,6 @@ import {
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
-import { persistCurrentPageScroll, usePageScrollMemory } from "../lib/navigationMemory";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -142,7 +141,6 @@ export default function Profile() {
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const pathname = usePathname();
-  const pageScrollRef = usePageScrollMemory("page:profile", !loading);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProfileModal, setEditProfileModal] = useState(false);
@@ -277,13 +275,12 @@ export default function Profile() {
     let cancelled = false;
     (async () => {
       try {
-        const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
         const [userSnap, uploaded, saved, toTry, custom] = await Promise.all([
           getDoc(doc(db, "users", user.uid)),
-          Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))).then(mergeUniqueById),
-          Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))).then(mergeUniqueById),
-          Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))).then(mergeUniqueById),
-          Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))).then(mergeUniqueById),
+          getDishesFromFirestore(user.uid),
+          getSavedDishesFromFirestore(user.uid),
+          getToTryDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
         ]);
         if (cancelled) return;
         if (userSnap.exists()) {
@@ -309,7 +306,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [profileIdCandidates, user?.uid]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!profileOptionsOpen) return;
@@ -363,15 +360,13 @@ export default function Profile() {
 
     const savedRef = collection(db, "users", user.uid, "saved");
     const unsubscribeSaved = onSnapshot(savedRef, async () => {
-      const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
-      const saved = await Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))).then(mergeUniqueById);
+      const saved = await getSavedDishesFromFirestore(user.uid);
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
     const unsubscribeToTry = onSnapshot(toTryRef, async () => {
-      const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
-      const items = await Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))).then(mergeUniqueById);
+      const items = await getToTryDishesFromFirestore(user.uid);
       setToTryDishes(items);
     });
 
@@ -394,7 +389,7 @@ export default function Profile() {
       unsubscribeStories();
       unsubscribeStoryPushes();
     };
-  }, [profileIdCandidates, user]);
+  }, [user]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -665,12 +660,11 @@ export default function Profile() {
           : source === "saved"
             ? savedDishes
             : customDishlist?.dishes || [];
-    const modePool = pool.filter((dish) => dishModeMatches(dish, selectedDishMode));
-    if (!modePool.length) {
+    if (!pool.length) {
       alert("No dishes to shuffle.");
       return;
     }
-    const shuffledPool = modePool
+    const shuffledPool = pool
       .slice()
       .sort(() => Math.random() - 0.5)
       .filter((dish) => dish?.id);
@@ -821,23 +815,19 @@ export default function Profile() {
     ).values()
   );
 
-  const getVisibleDishCount = (dishesList) =>
-    (dishesList || []).filter((dish) => dishModeMatches(dish, selectedDishMode)).length;
-
   const allDishlists = [
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: getVisibleDishCount(savedDishes) },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
       dishes: sortDishlistDishes(allDishesCollection),
-      count: getVisibleDishCount(allDishesCollection),
+      count: allDishesCollection.length,
     },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: getVisibleDishCount(uploadedDishes) },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: uploadedDishes.length },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: sortDishlistDishes(dishlist.dishes || []),
-      count: getVisibleDishCount(dishlist.dishes || []),
     })),
   ];
 
@@ -1051,7 +1041,6 @@ export default function Profile() {
                       : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`;
                   })()}
                   className="absolute inset-0 z-10"
-                  onClick={() => persistCurrentPageScroll("page:profile")}
                 >
                   <span className="sr-only">Open dish</span>
                 </Link>
@@ -1109,7 +1098,7 @@ export default function Profile() {
   };
 
   return (
-    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[104px_1fr_104px] items-center px-4 pb-1.5 relative">
         <div className="flex min-w-[104px] items-center justify-start" />
         <div className="flex items-center justify-center">

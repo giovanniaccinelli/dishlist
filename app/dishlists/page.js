@@ -27,7 +27,6 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CircleUserRound, Plus, Search, Send } from "lucide-react";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
-import { persistCurrentPageScroll, usePageScrollMemory } from "../lib/navigationMemory";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -82,7 +81,6 @@ export default function Dishlists() {
   const [allUsersPool, setAllUsersPool] = useState(null);
   const [search, setSearch] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const pageScrollRef = usePageScrollMemory("page:people", !loading && !loadingUsers);
   const [searchLoading, setSearchLoading] = useState(false);
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
@@ -91,13 +89,6 @@ export default function Dishlists() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
-
-  const buildPeopleUrl = () => {
-    const params = new URLSearchParams();
-    if (search.trim()) params.set("q", search.trim());
-    const query = params.toString();
-    return query ? `/dishlists?${query}` : "/dishlists";
-  };
 
   const attachPreviewData = (usersList, allDishes, storyStatsByUser = new Map()) => {
     const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
@@ -281,25 +272,6 @@ export default function Dishlists() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setSearch(params.get("q") || "");
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const nextSearch = search.trim();
-    if (nextSearch) {
-      params.set("q", nextSearch);
-    } else {
-      params.delete("q");
-    }
-    const nextUrl = params.toString() ? `/dishlists?${params.toString()}` : "/dishlists";
-    window.history.replaceState(window.history.state, "", nextUrl);
-  }, [search]);
-
-  useEffect(() => {
     if (!search.trim()) return;
     fetchAllUsersForSearch();
   }, [search]);
@@ -397,7 +369,7 @@ export default function Dishlists() {
   }
 
   return (
-    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("People")}</h1>
         <div className="flex items-center gap-2">
@@ -518,10 +490,7 @@ export default function Dishlists() {
                   key={u.id}
                   className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
                   style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
-                  onClick={() => {
-                    persistCurrentPageScroll("page:people");
-                    router.push(`/profile/${encodeURIComponent(u.id)}?returnTo=${encodeURIComponent(buildPeopleUrl())}`);
-                  }}
+                  onClick={() => router.push(`/profile/${encodeURIComponent(u.id)}`)}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button
@@ -635,10 +604,7 @@ export default function Dishlists() {
       <BottomNav />
       <motion.button
         type="button"
-        onClick={() => {
-          persistCurrentPageScroll("page:people");
-          router.push(`/map?returnTo=${encodeURIComponent(buildPeopleUrl())}`);
-        }}
+        onClick={() => router.push("/map")}
         className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
         aria-label="Open restaurant map"
       >

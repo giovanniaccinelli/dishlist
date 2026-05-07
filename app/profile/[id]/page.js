@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -44,7 +44,6 @@ import {
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { useLanguage } from "../../../components/LanguageProvider";
-import { persistCurrentPageScroll, usePageScrollMemory } from "../../lib/navigationMemory";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -121,7 +120,6 @@ export default function PublicProfile() {
   const routeProfileId = decodeURIComponent(String(id || ""));
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
@@ -152,7 +150,6 @@ export default function PublicProfile() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
-  const pageScrollRef = usePageScrollMemory(`page:public-profile:${routeProfileId || "unknown"}`, Boolean(profileUser) || profileLoadFailed);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
@@ -162,7 +159,6 @@ export default function PublicProfile() {
   const avatarTone = getAvatarTone(profileUser?.displayName || "");
   const profileIdCandidates = getProfileIdCandidates(routeProfileId, profileUser);
   const profileDocId = profileUser?.id || routeProfileId;
-  const returnTo = searchParams.get("returnTo") || "";
   const profileAuthUid =
     profileUser?.uid ||
     profileUser?.authUid ||
@@ -377,12 +373,11 @@ export default function PublicProfile() {
           : source === "saved"
             ? savedDishes
             : customDishlist?.dishes || [];
-    const modePool = pool.filter((dish) => dishModeMatches(dish, selectedDishMode));
-    if (!modePool.length) {
+    if (!pool.length) {
       alert(t("No dishes to shuffle."));
       return;
     }
-    const shuffledPool = modePool
+    const shuffledPool = pool
       .slice()
       .sort(() => Math.random() - 0.5)
       .filter((dish) => dish?.id);
@@ -435,23 +430,19 @@ export default function PublicProfile() {
     ).values()
   );
 
-  const getVisibleDishCount = (dishesList) =>
-    (dishesList || []).filter((dish) => dishModeMatches(dish, selectedDishMode)).length;
-
   const allDishlists = [
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: getVisibleDishCount(savedDishes) },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
       dishes: sortDishlistDishes(allDishesCollection),
-      count: getVisibleDishCount(allDishesCollection),
+      count: allDishesCollection.length,
     },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: getVisibleDishCount(dishes) },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: dishes.length },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: sortDishlistDishes(dishlist.dishes || []),
-      count: getVisibleDishCount(dishlist.dishes || []),
     })),
   ];
 
@@ -502,11 +493,11 @@ export default function PublicProfile() {
   }
 
   return (
-    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3">
           <div className="flex items-center justify-start">
-            <AppBackButton fallback={returnTo || "/dishlists"} forceFallback={Boolean(returnTo)} />
+            <AppBackButton fallback="/dishlists" />
           </div>
           <div className="flex min-w-0 items-center justify-center">
             {!isViewingOwnProfile ? (
@@ -720,7 +711,6 @@ export default function PublicProfile() {
                       : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
                   })()}
                   className="absolute inset-0 z-10"
-                  onClick={() => persistCurrentPageScroll(`page:public-profile:${routeProfileId || "unknown"}`)}
                 >
                   <span className="sr-only">Open dish card</span>
                 </Link>

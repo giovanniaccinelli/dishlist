@@ -310,9 +310,12 @@ function SearchBar({ value, onChange, placeholder }) {
 }
 
 function DishPreview({ dish, title, t }) {
+  const returnTo = encodeURIComponent(
+    typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/explore"
+  );
   return (
     <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" memoryNamespace="page:explore" />
+      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single&returnTo=${returnTo}`} label="Open dish card" memoryNamespace="page:explore" />
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -432,6 +435,9 @@ function ExploreRow({ row, onExpand, t }) {
 
 function ExpandedCategoryModal({ row, onClose, t }) {
   if (!row) return null;
+  const returnTo = encodeURIComponent(
+    typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/explore"
+  );
 
   return (
     <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
@@ -452,7 +458,7 @@ function ExpandedCategoryModal({ row, onClose, t }) {
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish) => (
             <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" memoryNamespace="page:explore" />
+              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single&returnTo=${returnTo}`} label="Open dish card" memoryNamespace="page:explore" />
               <img
                 src={getDishImageUrl(dish, "thumb")}
                 alt={dish.name}
@@ -771,7 +777,10 @@ export default function Explore() {
       <BottomNav />
       <motion.button
         type="button"
-        onClick={() => router.push("/map")}
+        onClick={() => {
+          persistCurrentPageScroll("page:explore");
+          router.push(`/map?returnTo=${encodeURIComponent(buildExploreUrl())}`);
+        }}
         className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
         aria-label="Open restaurant map"
       >

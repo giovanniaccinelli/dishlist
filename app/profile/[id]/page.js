@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -121,6 +121,7 @@ export default function PublicProfile() {
   const routeProfileId = decodeURIComponent(String(id || ""));
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
@@ -161,6 +162,7 @@ export default function PublicProfile() {
   const avatarTone = getAvatarTone(profileUser?.displayName || "");
   const profileIdCandidates = getProfileIdCandidates(routeProfileId, profileUser);
   const profileDocId = profileUser?.id || routeProfileId;
+  const returnTo = searchParams.get("returnTo") || "";
   const profileAuthUid =
     profileUser?.uid ||
     profileUser?.authUid ||
@@ -504,7 +506,7 @@ export default function PublicProfile() {
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3">
           <div className="flex items-center justify-start">
-            <AppBackButton fallback="/dishlists" />
+            <AppBackButton fallback={returnTo || "/dishlists"} forceFallback={Boolean(returnTo)} />
           </div>
           <div className="flex min-w-0 items-center justify-center">
             {!isViewingOwnProfile ? (

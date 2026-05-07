@@ -92,6 +92,13 @@ export default function Dishlists() {
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
 
+  const buildPeopleUrl = () => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("q", search.trim());
+    const query = params.toString();
+    return query ? `/dishlists?${query}` : "/dishlists";
+  };
+
   const attachPreviewData = (usersList, allDishes, storyStatsByUser = new Map()) => {
     const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
     const uploadedByOwner = new Map();
@@ -272,6 +279,25 @@ export default function Dishlists() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setSearch(params.get("q") || "");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const nextSearch = search.trim();
+    if (nextSearch) {
+      params.set("q", nextSearch);
+    } else {
+      params.delete("q");
+    }
+    const nextUrl = params.toString() ? `/dishlists?${params.toString()}` : "/dishlists";
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [search]);
 
   useEffect(() => {
     if (!search.trim()) return;
@@ -494,7 +520,7 @@ export default function Dishlists() {
                   style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
                   onClick={() => {
                     persistCurrentPageScroll("page:people");
-                    router.push(`/profile/${encodeURIComponent(u.id)}`);
+                    router.push(`/profile/${encodeURIComponent(u.id)}?returnTo=${encodeURIComponent(buildPeopleUrl())}`);
                   }}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
@@ -609,7 +635,10 @@ export default function Dishlists() {
       <BottomNav />
       <motion.button
         type="button"
-        onClick={() => router.push("/map")}
+        onClick={() => {
+          persistCurrentPageScroll("page:people");
+          router.push(`/map?returnTo=${encodeURIComponent(buildPeopleUrl())}`);
+        }}
         className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
         aria-label="Open restaurant map"
       >

@@ -195,6 +195,26 @@ function normalizeDishlistName(name) {
   return String(name || "").trim().slice(0, 40);
 }
 
+function getDishOwnerCandidates(dish = {}) {
+  const appleSub = String(dish.appleSub || "").trim();
+  return Array.from(
+    new Set(
+      [
+        dish.owner,
+        dish.uid,
+        dish.userId,
+        dish.ownerId,
+        dish.authUid,
+        dish.appleUserId,
+        appleSub,
+        appleSub ? `apple:${appleSub}` : "",
+      ]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 function normalizeDishlistNameKey(name) {
   return normalizeDishlistName(name).toLowerCase();
 }
@@ -543,8 +563,10 @@ export async function getDishesFromFirestore(userId) {
   return cachedRead(`user:${userId}:uploaded`, async () => {
     const q = query(collection(db, "dishes"), where("owner", "==", userId));
     const snapshot = await getDocs(q);
-    const dishes = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-    return enrichWithOwnerPhotos(dishes);
+    const directMatches = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    const allDishes = await getAllDishesFromFirestore();
+    const legacyMatches = allDishes.filter((dish) => getDishOwnerCandidates(dish).includes(String(userId || "").trim()));
+    return enrichWithOwnerPhotos(dedupeDishArray([...directMatches, ...legacyMatches]));
   });
 }
 

@@ -11,6 +11,7 @@ import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { useLanguage } from "../../components/LanguageProvider";
+import { usePageScrollMemory } from "../lib/navigationMemory";
 
 function MapPageContent() {
   const router = useRouter();
@@ -19,6 +20,7 @@ function MapPageContent() {
   const { t } = useLanguage();
   const [dishes, setDishes] = useState([]);
   const [loadingMapData, setLoadingMapData] = useState(true);
+  const pageScrollRef = usePageScrollMemory("page:map", !loading && !loadingMapData);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +51,7 @@ function MapPageContent() {
   }
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div ref={pageScrollRef} className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-3 flex items-center justify-between">
         <button
           type="button"

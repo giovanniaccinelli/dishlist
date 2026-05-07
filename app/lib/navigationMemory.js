@@ -72,12 +72,28 @@ export function usePageScrollMemory(namespace, ready = true) {
       writeScrollPayload(storageKey, node);
     };
 
+    const persistOnDocumentInteraction = () => {
+      persist();
+    };
+
+    const persistOnVisibilityChange = () => {
+      if (document.visibilityState === "hidden") persist();
+    };
+
     node.addEventListener("scroll", persist, { passive: true });
     window.addEventListener("scroll", persist, { passive: true });
+    document.addEventListener("pointerdown", persistOnDocumentInteraction, true);
+    document.addEventListener("click", persistOnDocumentInteraction, true);
+    document.addEventListener("visibilitychange", persistOnVisibilityChange);
+    window.addEventListener("pagehide", persist);
     return () => {
       persist();
       node.removeEventListener("scroll", persist);
       window.removeEventListener("scroll", persist);
+      document.removeEventListener("pointerdown", persistOnDocumentInteraction, true);
+      document.removeEventListener("click", persistOnDocumentInteraction, true);
+      document.removeEventListener("visibilitychange", persistOnVisibilityChange);
+      window.removeEventListener("pagehide", persist);
     };
   }, [namespace, storageKey]);
 

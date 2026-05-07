@@ -277,12 +277,13 @@ export default function Profile() {
     let cancelled = false;
     (async () => {
       try {
+        const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
         const [userSnap, uploaded, saved, toTry, custom] = await Promise.all([
           getDoc(doc(db, "users", user.uid)),
-          getDishesFromFirestore(user.uid),
-          getSavedDishesFromFirestore(user.uid),
-          getToTryDishesFromFirestore(user.uid),
-          getCustomDishlistsForUser(user.uid),
+          Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))).then(mergeUniqueById),
+          Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))).then(mergeUniqueById),
+          Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))).then(mergeUniqueById),
+          Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))).then(mergeUniqueById),
         ]);
         if (cancelled) return;
         if (userSnap.exists()) {
@@ -308,7 +309,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [profileIdCandidates, user?.uid]);
 
   useEffect(() => {
     if (!profileOptionsOpen) return;
@@ -362,13 +363,15 @@ export default function Profile() {
 
     const savedRef = collection(db, "users", user.uid, "saved");
     const unsubscribeSaved = onSnapshot(savedRef, async () => {
-      const saved = await getSavedDishesFromFirestore(user.uid);
+      const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
+      const saved = await Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))).then(mergeUniqueById);
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
     const unsubscribeToTry = onSnapshot(toTryRef, async () => {
-      const items = await getToTryDishesFromFirestore(user.uid);
+      const candidateIds = profileIdCandidates.length ? profileIdCandidates : [user.uid];
+      const items = await Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))).then(mergeUniqueById);
       setToTryDishes(items);
     });
 
@@ -391,7 +394,7 @@ export default function Profile() {
       unsubscribeStories();
       unsubscribeStoryPushes();
     };
-  }, [user]);
+  }, [profileIdCandidates, user]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

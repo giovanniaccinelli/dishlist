@@ -536,7 +536,21 @@ export default function StoryViewerModal({
             className="absolute left-4 right-4 z-40 flex items-center justify-between text-white"
             style={{ top: "calc(var(--app-top-nav-offset) + 1.1rem)" }}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              data-no-story-pause="true"
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (!currentGroup?.ownerId) return;
+                onClose?.();
+                router.push(currentUser?.uid && currentUser.uid === currentGroup.ownerId ? "/profile" : `/profile/${currentGroup.ownerId}`);
+              }}
+              className="flex min-w-0 items-center gap-3 text-left"
+            >
               <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center font-semibold">
                 {currentGroup?.ownerPhotoURL ? (
                   <img src={currentGroup.ownerPhotoURL} alt={currentGroup.ownerName || "User"} className="w-full h-full object-cover" />
@@ -544,13 +558,13 @@ export default function StoryViewerModal({
                   (currentGroup?.ownerName?.[0] || "U").toUpperCase()
                 )}
               </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">{currentGroup?.ownerName || "User"}</div>
-                  <div className="text-xs text-white/70 truncate">
-                    {publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")}
-                  </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold truncate">{currentGroup?.ownerName || "User"}</div>
+                <div className="text-xs text-white/70 truncate">
+                  {publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")}
                 </div>
               </div>
+            </button>
               <div className="flex items-center gap-2">
               {canDelete ? (
                 <button

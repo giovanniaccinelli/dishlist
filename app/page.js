@@ -526,23 +526,26 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="app-top-nav px-4 pb-2 flex items-center justify-between shrink-0 relative">
+      <div className="app-top-nav px-4 pb-2 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
         <button
           type="button"
           onClick={() => setAboutOpen(true)}
-          className="flex items-center gap-3"
+          className="justify-self-start text-left"
           aria-label="Open DishList guide"
         >
-          <img src="/logo-real.png" alt="DishList logo" className="w-8 h-8 rounded-full object-cover" />
           <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
         </button>
-        <div className="flex items-center gap-2">
-          {showDishModeFilterButton ? (
+        {showDishModeFilterButton ? (
+          <div className="justify-self-center">
             <DishModeFilterButton
               value={selectedDishMode}
               onSelect={setSelectedDishMode}
             />
-          ) : null}
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="flex items-center justify-self-end gap-2">
           <Link
             href={userId ? "/directs" : "/?auth=1"}
             className="top-action-btn relative"

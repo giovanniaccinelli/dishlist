@@ -52,6 +52,7 @@ export default function UploadPage() {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
   const [storyMode, setStoryMode] = useState(false);
+  const [directEntryMode, setDirectEntryMode] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
@@ -85,6 +86,7 @@ export default function UploadPage() {
     const nextDirectMode = params.get("direct") === "1";
     const nextTargetDishlistId = params.get("targetList") || "saved";
     setStoryMode(nextStoryMode);
+    setDirectEntryMode(nextDirectMode);
     setShowUploadForm(nextStoryMode || nextDirectMode);
     setUploadStep(0);
     setTargetDishlistId(nextTargetDishlistId);
@@ -155,6 +157,7 @@ export default function UploadPage() {
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
+          taggedUserName: storyTaggedUser.trim(),
           ...imageFields,
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
@@ -179,6 +182,7 @@ export default function UploadPage() {
           recipeIngredients: dishRecipeIngredients.trim(),
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
+          taggedUserName: storyTaggedUser.trim(),
           isPublic: dishIsPublic,
           ...imageFields,
           owner: user.uid,
@@ -314,13 +318,21 @@ export default function UploadPage() {
 
       <div className={showUploadForm ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-4"}>
         {showUploadForm ? (
+          <div className="w-full max-w-md mx-auto">
+            {directEntryMode ? (
+              <div className="mb-4 text-center">
+                <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-black">
+                  {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
+                </h1>
+              </div>
+            ) : null}
           <motion.div
-            className={`p-5 rounded-[1.75rem] w-full max-w-md mx-auto shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}
+            className={`p-5 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="flex items-center justify-between mb-5">
-              <div className="h-11 w-11" />
+              <div className={directEntryMode ? "h-11 w-0" : "h-11 w-11"} />
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
                   <span
@@ -339,14 +351,18 @@ export default function UploadPage() {
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={closeUploadFlow}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
+              {directEntryMode ? (
+                <div className="h-11 w-0" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={closeUploadFlow}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white text-black/70 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              )}
             </div>
 
             {uploadStep === 0 ? (
@@ -547,20 +563,23 @@ export default function UploadPage() {
                     />
                   ) : null}
                 </div>
+                <div className="mb-5">
+                  <p className="mb-2 text-sm font-medium text-black">
+                    {language === "it" ? "Tagga un utente" : "Tag a user"}
+                  </p>
+                  <input
+                    type="text"
+                    placeholder={language === "it" ? "Tagga un utente (opzionale)" : "Tag a user (optional)"}
+                    value={storyTaggedUser}
+                    onChange={(e) => setStoryTaggedUser(e.target.value)}
+                    className={`w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
+                    disabled={loadingUpload}
+                  />
+                </div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>
                 </div>
-                {storyMode ? (
-                  <input
-                    type="text"
-                    placeholder="Tag a user (optional)"
-                    value={storyTaggedUser}
-                    onChange={(e) => setStoryTaggedUser(e.target.value)}
-                    className={`mb-4 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
-                    disabled={loadingUpload}
-                  />
-                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
@@ -614,7 +633,7 @@ export default function UploadPage() {
                       {dishDescription ? (
                         <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
                       ) : null}
-                      {storyMode && storyTaggedUser.trim() ? (
+                      {storyTaggedUser.trim() ? (
                         <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
                           @{storyTaggedUser.trim().replace(/^@+/, "")}
                         </div>
@@ -686,6 +705,7 @@ export default function UploadPage() {
               ) : null}
             </div>
           </motion.div>
+          </div>
         ) : (
           <motion.div
             className="w-full max-w-md mx-auto pt-0"

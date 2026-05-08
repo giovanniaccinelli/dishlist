@@ -1319,7 +1319,7 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setProfileMapOpen(true)}
-          className="restaurant-accent-border flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
           aria-label="Open profile map"
         >
           <RestaurantMapIcon className="h-6 w-6 text-black" strokeWidth={2.15} />
@@ -2508,7 +2508,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setProfileMapOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                  className="restaurant-accent-border flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white text-black/55"
                   aria-label="Close profile map"
                 >
                   <X size={16} />

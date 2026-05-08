@@ -1153,6 +1153,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   >
                     {currentCard.name}
                   </button>
+                  {currentCard.taggedUserName ? (
+                    currentCard.taggedUserId ? (
+                      <Link
+                        data-no-drag="true"
+                        href={currentUser?.uid && currentCard.taggedUserId === currentUser.uid ? "/profile" : `/profile/${currentCard.taggedUserId}`}
+                        className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px] underline-offset-2 hover:underline`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        @{String(currentCard.taggedUserName).replace(/^@+/, "")}
+                      </Link>
+                    ) : (
+                      <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}>
+                        @{String(currentCard.taggedUserName).replace(/^@+/, "")}
+                      </div>
+                    )
+                  ) : null}
                   {currentCard.description || normalizedDishLink ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
                       {currentCard.description ? (

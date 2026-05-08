@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, CircleUserRound, Plus, Search, Send, X } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -23,6 +24,7 @@ import {
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
+import { db } from "../lib/firebase";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#E64646" },
@@ -43,6 +45,7 @@ export default function UploadPage() {
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [storyTaggedUser, setStoryTaggedUser] = useState("");
+  const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
   const [dishTags, setDishTags] = useState([]);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
@@ -64,6 +67,10 @@ export default function UploadPage() {
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
   const [restaurant, setRestaurant] = useState(null);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [tagUserPickerOpen, setTagUserPickerOpen] = useState(false);
+  const [taggableUsers, setTaggableUsers] = useState([]);
+  const [tagUserSearch, setTagUserSearch] = useState("");
+  const [tagUsersLoading, setTagUsersLoading] = useState(false);
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -91,6 +98,26 @@ export default function UploadPage() {
     setUploadStep(0);
     setTargetDishlistId(nextTargetDishlistId);
   }, []);
+
+  useEffect(() => {
+    if (!tagUserPickerOpen) return;
+    let active = true;
+    (async () => {
+      setTagUsersLoading(true);
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        const usersList = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((u) => u.id !== user?.uid);
+        if (active) setTaggableUsers(usersList);
+      } finally {
+        if (active) setTagUsersLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [tagUserPickerOpen, user?.uid]);
 
   useEffect(() => {
     if (loading) return;
@@ -158,6 +185,7 @@ export default function UploadPage() {
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
           taggedUserName: storyTaggedUser.trim(),
+          taggedUserId: storyTaggedUserId || "",
           ...imageFields,
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
@@ -183,6 +211,7 @@ export default function UploadPage() {
           recipeMethod: dishRecipeMethod.trim(),
           tags: dishTags,
           taggedUserName: storyTaggedUser.trim(),
+          taggedUserId: storyTaggedUserId || "",
           isPublic: dishIsPublic,
           ...imageFields,
           owner: user.uid,
@@ -240,6 +269,10 @@ export default function UploadPage() {
     }
     cameraInputRef.current?.click();
   };
+
+  const filteredTaggableUsers = taggableUsers.filter((candidate) =>
+    (candidate.displayName || "").toLowerCase().includes(tagUserSearch.trim().toLowerCase())
+  );
 
   const goToNextStep = () => {
     if (uploadStep === 0 && !dishName.trim()) {
@@ -321,7 +354,7 @@ export default function UploadPage() {
           <div className="w-full max-w-md mx-auto">
             {directEntryMode ? (
               <div className="mb-4 text-center">
-                <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-black">
+                <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
                   {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
                 </h1>
               </div>
@@ -555,7 +588,7 @@ export default function UploadPage() {
                       placeholder="https://..."
                       value={dishLink}
                       onChange={(e) => setDishLink(e.target.value)}
-                      className={`mt-3 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
+                      className={`mt-3 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2`}
                       disabled={loadingUpload}
                       autoCapitalize="none"
                       autoCorrect="off"
@@ -567,14 +600,33 @@ export default function UploadPage() {
                   <p className="mb-2 text-sm font-medium text-black">
                     {language === "it" ? "Tagga un utente" : "Tag a user"}
                   </p>
-                  <input
-                    type="text"
-                    placeholder={language === "it" ? "Tagga un utente (opzionale)" : "Tag a user (optional)"}
-                    value={storyTaggedUser}
-                    onChange={(e) => setStoryTaggedUser(e.target.value)}
-                    className={`w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
-                    disabled={loadingUpload}
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTagUserPickerOpen(true)}
+                      className={`flex-1 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-left text-base text-black focus:outline-none focus:ring-2`}
+                      disabled={loadingUpload}
+                    >
+                      {storyTaggedUser
+                        ? `@${storyTaggedUser.replace(/^@+/, "")}`
+                        : language === "it"
+                          ? "Seleziona utente (opzionale)"
+                          : "Select user (optional)"}
+                    </button>
+                    {storyTaggedUser ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStoryTaggedUser("");
+                          setStoryTaggedUserId("");
+                        }}
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                        aria-label="Clear tagged user"
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-black">Tags</p>
@@ -790,6 +842,85 @@ export default function UploadPage() {
       </div>
 
       <AnimatePresence>
+        {tagUserPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[125] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+            onClick={() => setTagUserPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="w-full max-w-md rounded-[1.75rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-[1.35rem] font-semibold leading-none text-black">
+                    {language === "it" ? "Tagga un utente" : "Tag a user"}
+                  </h3>
+                  <p className="mt-2 text-sm text-black/58">
+                    {language === "it" ? "Cerca per nome" : "Search by name"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTagUserPickerOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                  aria-label="Close tag user picker"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder={language === "it" ? "Cerca utenti..." : "Search users..."}
+                value={tagUserSearch}
+                onChange={(e) => setTagUserSearch(e.target.value)}
+                className="w-full rounded-[1rem] border border-black/10 bg-white px-4 py-3 text-base text-black shadow-[0_10px_24px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-black/12"
+              />
+              <div className="mt-3 max-h-[52dvh] space-y-2 overflow-y-auto pr-1">
+                {tagUsersLoading ? (
+                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">
+                    {language === "it" ? "Caricamento..." : "Loading..."}
+                  </div>
+                ) : filteredTaggableUsers.length === 0 ? (
+                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">
+                    {language === "it" ? "Nessun utente trovato." : "No users found."}
+                  </div>
+                ) : (
+                  filteredTaggableUsers.map((candidate) => (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      onClick={() => {
+                        setStoryTaggedUser(candidate.displayName || "User");
+                        setStoryTaggedUserId(candidate.id);
+                        setTagUserPickerOpen(false);
+                        setTagUserSearch("");
+                      }}
+                      className="flex w-full items-center gap-3 rounded-[1.2rem] border border-black/8 bg-white px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-sm font-bold text-black/65">
+                        {candidate.photoURL ? (
+                          <img src={candidate.photoURL} alt={candidate.displayName || "User"} className="h-full w-full object-cover" />
+                        ) : (
+                          (candidate.displayName?.[0] || "U").toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-base font-semibold text-black">{candidate.displayName || "User"}</div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
         {mediaPickerOpen ? (
           <motion.div
             initial={{ opacity: 0 }}

@@ -449,7 +449,7 @@ export default function RestaurantMapView({
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                                   }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-black/68 via-black/14 to-transparent" />
+                                <div className="absolute inset-x-0 bottom-0 h-[54%] bg-gradient-to-t from-black/76 via-black/24 to-transparent" />
                                 <div className="absolute inset-x-0 bottom-0 px-2.5 py-2 text-white">
                                   <div className="truncate text-sm font-semibold">
                                     {user.dishes[0].name || "Untitled dish"}

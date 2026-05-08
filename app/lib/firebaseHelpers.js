@@ -1086,6 +1086,7 @@ function buildStoryPayload(userId, story) {
     recipeIngredients: story.recipeIngredients || "",
     recipeMethod: story.recipeMethod || "",
     taggedUserName: story.taggedUserName || "",
+    taggedUserId: story.taggedUserId || "",
     tags: normalizeTags(story.tags),
     restaurant: story.restaurant || null,
     cardURL: story.cardURL || story.imageURL || story.imageUrl || "",

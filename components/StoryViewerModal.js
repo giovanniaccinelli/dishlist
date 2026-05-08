@@ -655,9 +655,23 @@ export default function StoryViewerModal({
               </button>
             ) : null}
             {currentStory.taggedUserName ? (
-              <div className="mt-2 inline-flex items-center rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm">
+              <button
+                type="button"
+                data-no-story-pause="true"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (!currentStory.taggedUserId) return;
+                  onClose?.();
+                  router.push(currentUser?.uid && currentUser.uid === currentStory.taggedUserId ? "/profile" : `/profile/${currentStory.taggedUserId}`);
+                }}
+                className="mt-2 inline-flex items-center rounded-full border border-white/20 bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm"
+              >
                 @{String(currentStory.taggedUserName).replace(/^@+/, "")}
-              </div>
+              </button>
             ) : null}
             {currentStory.description ? (
               <p className="mt-2 text-sm text-white/80 line-clamp-3">

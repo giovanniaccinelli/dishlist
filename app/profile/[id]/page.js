@@ -948,7 +948,7 @@ export default function PublicProfile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="mx-auto flex w-full max-w-[25.5rem] max-h-[82dvh] flex-col overflow-hidden rounded-[1.6rem] bg-[#F6F6F2] p-3 shadow-2xl"
+              className="restaurant-accent-border mx-auto flex w-full max-w-[25.5rem] max-h-[82dvh] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}

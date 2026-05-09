@@ -1198,7 +1198,6 @@ export default function Profile() {
                     aria-label={t("English")}
                   >
                     🇬🇧
-                    {language === LANGUAGE_EN ? <span className="no-accent-border absolute -bottom-1 h-2 w-2 rounded-full bg-[#FFC247]" /> : null}
                   </button>
                   <button
                     type="button"
@@ -1215,7 +1214,6 @@ export default function Profile() {
                     aria-label={t("Italian")}
                   >
                     🇮🇹
-                    {language === LANGUAGE_IT ? <span className="no-accent-border absolute -bottom-1 h-2 w-2 rounded-full bg-[#FFC247]" /> : null}
                   </button>
                 </div>
               </div>

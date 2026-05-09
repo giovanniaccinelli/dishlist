@@ -390,7 +390,7 @@ export function LanguageProvider({ children }) {
             return stored === LANGUAGE_EN || stored === LANGUAGE_IT ? stored : remoteLanguage;
           });
         }
-        if (!cancelled && typeof data?.darkMode === "boolean") {
+        if (!cancelled && data?.darkMode === true) {
           setDarkModeState((prev) => {
             const stored = typeof window !== "undefined" ? window.localStorage.getItem(DARK_MODE_STORAGE_KEY) : "";
             return stored === "1" || stored === "true" || stored === "0" || stored === "false" ? prev : data.darkMode;

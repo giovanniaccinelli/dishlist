@@ -540,6 +540,7 @@ export default function Feed() {
             <DishModeFilterButton
               value={selectedDishMode}
               onSelect={setSelectedDishMode}
+              className="dish-mode-filter--large"
             />
           </div>
         ) : (

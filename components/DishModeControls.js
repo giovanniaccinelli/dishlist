@@ -84,6 +84,9 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const { t } = useLanguage();
   const [flashMessage, setFlashMessage] = useState("");
   const flashTimerRef = useRef(null);
+  const isLarge = className.includes("dish-mode-filter--large");
+  const buttonSizeClass = isLarge ? "!h-[3.25rem] !w-[3.65rem] !min-w-[3.65rem]" : "!h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem]";
+  const iconSizeClass = isLarge ? "h-[1.62rem] w-[1.62rem]" : "h-[1.38rem] w-[1.38rem]";
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
@@ -116,7 +119,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_COOKING)}
-        className="top-action-btn relative !h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+        className={`top-action-btn relative ${buttonSizeClass} rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter home dishes"
         style={{
           borderColor: "#F0A623",
@@ -124,12 +127,12 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           color: value === DISH_MODE_COOKING ? "#C78400" : "#D59A14",
         }}
       >
-        <CookingHomeIcon className="h-[1.38rem] w-[1.38rem]" strokeWidth={2.5} />
+        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.5} />
       </button>
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className="top-action-btn restaurant-accent-border relative !h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem] rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+        className={`top-action-btn restaurant-accent-border relative ${buttonSizeClass} rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter restaurant dishes"
         style={{
           borderColor: "#E64646",
@@ -137,7 +140,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           color: "#D53333",
         }}
       >
-        <RestaurantMapIcon className="h-[1.38rem] w-[1.38rem]" strokeWidth={2.5} />
+        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.5} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

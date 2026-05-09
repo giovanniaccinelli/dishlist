@@ -1327,14 +1327,9 @@ export default function Profile() {
                     : "border-black/30 bg-white text-black"
               }`}
               style={darkMode ? {
-                borderColor: active
-                  ? item.id === "saved"
-                    ? "#E64646"
-                    : item.id === "uploaded"
-                      ? "#E4B43F"
-                      : "#2BD36B"
-                  : "rgba(255,255,255,0.18)",
+                borderColor: active ? "currentColor" : "rgba(255,255,255,0.28)",
                 background: "transparent",
+                boxShadow: active ? "inset 0 0 0 2px currentColor" : "none",
               } : undefined}
             >
               {item.label}

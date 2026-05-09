@@ -418,8 +418,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
-  const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
-  const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
+  const currentCardIsRestaurant = isRestaurantDish(currentCard);
+  const hasIngredientsText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeIngredients || "").trim());
+  const hasMethodText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
@@ -1000,7 +1001,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
           <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"}`}>
             {darkMode ? (
-              <div className="flex min-w-0 items-center gap-2 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.78)]">
+              <div className="flex min-w-0 items-center gap-2 text-white">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
                   {currentCard.ownerPhotoURL ? (
                     <img
@@ -1017,18 +1018,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     <Link
                       data-no-drag="true"
                       href={`/profile/${currentCard.owner}`}
-                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
+                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline [text-shadow:0_1px_1px_rgba(0,0,0,0.72)]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {currentCard.ownerName || "Unknown"}
                     </Link>
                   ) : (
-                    <p className="truncate text-[0.98rem] font-semibold leading-tight">
+                    <p className="truncate text-[0.98rem] font-semibold leading-tight [text-shadow:0_1px_1px_rgba(0,0,0,0.72)]">
                       {currentCard.ownerName || "Unknown"}
                     </p>
                   )}
                   {uploadDateLabel ? (
-                    <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">
+                  <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75 [text-shadow:0_1px_1px_rgba(0,0,0,0.7)]">
                       {uploadDateLabel}
                     </div>
                   ) : null}
@@ -1105,6 +1106,45 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <Users size={13} strokeWidth={2.25} />
             <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
           </button>
+          {darkMode && hasAnyRecipeText ? (
+            <div
+              data-no-drag="true"
+              className="absolute left-5 z-40"
+              style={{ bottom: actionBottom }}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              onPointerMoveCapture={(e) => e.stopPropagation()}
+              onPointerUpCapture={(e) => e.stopPropagation()}
+            >
+              <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/64 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                <button
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowRecipe(false);
+                  }}
+                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
+                    !showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                  }`}
+                >
+                  dish
+                </button>
+                <button
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowRecipe(true);
+                  }}
+                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
+                    showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                  }`}
+                >
+                  recipe
+                </button>
+              </div>
+            </div>
+          ) : null}
           <motion.div
             className="absolute inset-0"
             style={{ transformStyle: "preserve-3d" }}
@@ -1150,44 +1190,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
-                  {darkMode && hasAnyRecipeText ? (
-                    <div
-                      data-no-drag="true"
-                      className="mb-2"
-                      onPointerDownCapture={(e) => e.stopPropagation()}
-                      onPointerMoveCapture={(e) => e.stopPropagation()}
-                      onPointerUpCapture={(e) => e.stopPropagation()}
-                    >
-                      <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/55 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                        <button
-                          data-no-drag="true"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setShowRecipe(false);
-                          }}
-                          className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                            !showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
-                          }`}
-                        >
-                          dish
-                        </button>
-                        <button
-                          data-no-drag="true"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setShowRecipe(true);
-                          }}
-                          className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                            showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
-                          }`}
-                        >
-                          recipe
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>

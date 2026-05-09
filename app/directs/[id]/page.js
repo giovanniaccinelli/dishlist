@@ -269,7 +269,7 @@ export default function DirectChat() {
                     >
                       <Link
                         href={`/dish/${m.dishId}?source=public&mode=single`}
-                        className={`pressable-card relative block w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
+                        className={`direct-dish-message ${isMine ? "direct-message--mine" : "direct-message--received"} pressable-card relative block w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
                           isMine
                             ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
                             : "border-black/10 bg-white"
@@ -343,7 +343,7 @@ export default function DirectChat() {
                     onDragEnd={() => {
                       setDragOffsets((prev) => ({ ...prev, [m.id]: 0 }));
                     }}
-                    className={`w-fit rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
+                    className={`direct-text-message ${isMine ? "direct-message--mine" : "direct-message--received"} w-fit rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
                       isMine
                         ? "ml-auto bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
                         : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"

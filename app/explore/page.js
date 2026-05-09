@@ -370,7 +370,7 @@ function CategoryTitle({ row, t }) {
   const displayTitle = toTitleCase(t(String(row.rawTag || row.title || "")));
   return (
     <div className="flex items-center gap-2">
-      <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
+      <span className={`explore-category-pill inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
         {displayTitle}
       </span>
       <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />

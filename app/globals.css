@@ -476,17 +476,40 @@ html.dark .profile-dishlist-tab--saved.profile-dishlist-tab--active {
   color: #ffd7d7 !important;
 }
 
-html.dark :where(
-  [class*="bg-[linear-gradient"],
-  [class*="bg-[rgba(255"],
-  [class*="bg-white/"],
-  [class*="bg-[#FF"],
-  [class*="bg-[#F7"],
-  [class*="bg-[#F6"],
-  [class*="bg-[#EA"]
-) {
-  background: rgba(18, 18, 18, 0.94) !important;
+html.dark .explore-category-pill {
+  background: transparent !important;
   background-image: none !important;
+}
+
+html.dark .people-preview-dish.default-accent-border {
+  border-color: #e4b43f !important;
+}
+
+html.dark .people-preview-dish.restaurant-accent-border {
+  border-color: #e64646 !important;
+}
+
+html.dark .people-follow-button {
+  background: rgba(18, 18, 18, 0.92) !important;
+  background-image: none !important;
+  color: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+html.dark .direct-text-message.direct-message--mine,
+html.dark .direct-dish-message.direct-message--mine {
+  background: #1f5f8d !important;
+  background-image: none !important;
+  border-color: rgba(95, 168, 242, 0.55) !important;
+  color: #ffffff !important;
+}
+
+html.dark .direct-text-message.direct-message--received,
+html.dark .direct-dish-message.direct-message--received {
+  background: #202020 !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 html.dark :where(input, textarea, select) {

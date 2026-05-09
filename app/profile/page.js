@@ -275,13 +275,20 @@ export default function Profile() {
     let cancelled = false;
     (async () => {
       try {
-        const [userSnap, uploaded, saved, toTry, custom] = await Promise.all([
-          getDoc(doc(db, "users", user.uid)),
-          getDishesFromFirestore(user.uid),
-          getSavedDishesFromFirestore(user.uid),
-          getToTryDishesFromFirestore(user.uid),
-          getCustomDishlistsForUser(user.uid),
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        const ownerCandidates = getProfileIdCandidates(user.uid, userSnap);
+        const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
+          Promise.all(ownerCandidates.map((candidateId) => getDishesFromFirestore(candidateId))),
+          Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
+          Promise.all(ownerCandidates.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
+          Promise.all(ownerCandidates.map((candidateId) => getCustomDishlistsForUser(candidateId))),
         ]);
+        const [uploaded, saved, toTry, custom] = [
+          mergeUniqueById(uploadedResults),
+          mergeUniqueById(savedResults),
+          mergeUniqueById(toTryResults),
+          mergeUniqueById(customResults),
+        ];
         if (cancelled) return;
         if (userSnap.exists()) {
           const data = userSnap.data() || {};

@@ -370,13 +370,13 @@ export default function Feed() {
   );
 
   useEffect(() => {
-    if (!userId || !followingDeck.length) {
+    if (!userId || !orderedFollowing.length) {
       setFollowingHasUpdate(false);
       return;
     }
     const viewed = new Set(viewedDishIds);
-    setFollowingHasUpdate(followingDeck.some((dish) => !viewed.has(dish.id)));
-  }, [userId, followingDeck, viewedDishIds]);
+    setFollowingHasUpdate(orderedFollowing.some((dish) => !viewed.has(dish.id)));
+  }, [userId, orderedFollowing, viewedDishIds]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);

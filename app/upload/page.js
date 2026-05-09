@@ -181,8 +181,8 @@ export default function UploadPage() {
           name: dishName.trim(),
           description: dishDescription.trim(),
           dishLink: getNormalizedDishLink(),
-          recipeIngredients: dishRecipeIngredients.trim(),
-          recipeMethod: dishRecipeMethod.trim(),
+          recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
+          recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
@@ -207,8 +207,8 @@ export default function UploadPage() {
           dishLink: getNormalizedDishLink(),
           dishMode,
           restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
-          recipeIngredients: dishRecipeIngredients.trim(),
-          recipeMethod: dishRecipeMethod.trim(),
+          recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
+          recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
@@ -273,6 +273,16 @@ export default function UploadPage() {
   const filteredTaggableUsers = taggableUsers.filter((candidate) =>
     (candidate.displayName || "").toLowerCase().includes(tagUserSearch.trim().toLowerCase())
   );
+  const isRestaurantUpload = dishMode === DISH_MODE_RESTAURANT;
+  const visibleUploadSteps = isRestaurantUpload
+    ? UPLOAD_STEP_PREVIEW.filter((step) => step.label !== "Recipe")
+    : UPLOAD_STEP_PREVIEW;
+
+  useEffect(() => {
+    if (isRestaurantUpload && uploadStep === 1) {
+      setUploadStep(2);
+    }
+  }, [isRestaurantUpload, uploadStep]);
 
   const goToNextStep = () => {
     if (uploadStep === 0 && !dishName.trim()) {
@@ -281,7 +291,10 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
-    setUploadStep((prev) => Math.min(prev + 1, 3));
+    setUploadStep((prev) => {
+      if (isRestaurantUpload && prev === 0) return 2;
+      return Math.min(prev + 1, 3);
+    });
   };
 
   const openDishlistPicker = async () => {
@@ -309,7 +322,10 @@ export default function UploadPage() {
   };
 
   const goToPreviousStep = () => {
-    setUploadStep((prev) => Math.max(prev - 1, 0));
+    setUploadStep((prev) => {
+      if (isRestaurantUpload && prev === 2) return 0;
+      return Math.max(prev - 1, 0);
+    });
   };
 
   const closeUploadFlow = () => {
@@ -377,7 +393,7 @@ export default function UploadPage() {
             <div className="flex items-center justify-between mb-5">
               <div className="h-11 w-11" />
               <div className="flex gap-2">
-                {[0, 1, 2, 3].map((step) => (
+                {(isRestaurantUpload ? [0, 2, 3] : [0, 1, 2, 3]).map((step) => (
                   <span
                     key={step}
                     className={`no-accent-border h-1.5 rounded-full transition-all ${
@@ -544,7 +560,7 @@ export default function UploadPage() {
               </>
             ) : null}
 
-            {uploadStep === 1 ? (
+            {uploadStep === 1 && !isRestaurantUpload ? (
               <>
                 <div className="mb-4 text-center">
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
@@ -796,8 +812,8 @@ export default function UploadPage() {
                     <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
                       Steps
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
-                      {UPLOAD_STEP_PREVIEW.map((step) => (
+                    <div className={`grid gap-3 ${isRestaurantUpload ? "grid-cols-3" : "grid-cols-4"}`}>
+                      {visibleUploadSteps.map((step) => (
                         <div key={step.label}>
                           <div
                             className="mb-2 h-1.5 rounded-full"

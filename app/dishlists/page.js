@@ -536,7 +536,7 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
+                          className={`people-follow-button mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
                             alreadyFollowing
                               ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
                               : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
@@ -553,7 +553,7 @@ export default function Dishlists() {
                       {previewCells.map((previewDish, idx) => (
                         <div
                           key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
-                          className={`aspect-square overflow-hidden rounded-lg border-2 ${
+                          className={`people-preview-dish aspect-square overflow-hidden rounded-lg border-2 ${
                             previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
                           } bg-neutral-100`}
                         >

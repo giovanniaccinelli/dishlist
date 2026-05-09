@@ -724,13 +724,11 @@ export default function PublicProfile() {
                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}
                 />
-                <div className="absolute inset-x-0 bottom-0 z-20 px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
-                  <div className="frosted-image-overlay rounded-[1.05rem] px-3 py-2.5">
-                    <div className="text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
-                      {dish.name || "Untitled dish"}
-                    </div>
-                    {renderDishCounters(dish)}
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                  <div className="text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+                    {dish.name || "Untitled dish"}
                   </div>
+                  {renderDishCounters(dish)}
                 </div>
                 <button
                   onClick={(event) => {

@@ -1114,7 +1114,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
-                  <div className="frosted-image-overlay inline-flex max-w-full items-center gap-2 mb-2 rounded-[1.15rem] px-3 py-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>
                       {currentCard.ownerPhotoURL ? (
                         <img
@@ -1141,63 +1141,61 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       </p>
                     )}
                   </div>
-                  <div className="frosted-image-overlay inline-flex max-w-full flex-col items-start rounded-[1.3rem] px-3.5 py-3">
-                    <button
-                      type="button"
-                      data-no-drag="true"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
-                      }}
-                      className="text-left text-2xl font-bold hover:underline"
-                    >
-                      {currentCard.name}
-                    </button>
-                    {currentCard.taggedUserName ? (
-                      currentCard.taggedUserId ? (
-                        <Link
-                          data-no-drag="true"
-                          href={currentUser?.uid && currentCard.taggedUserId === currentUser.uid ? "/profile" : `/profile/${currentCard.taggedUserId}`}
-                          className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px] underline-offset-2 hover:underline`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          @{String(currentCard.taggedUserName).replace(/^@+/, "")}
-                        </Link>
-                      ) : (
-                        <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}>
-                          @{String(currentCard.taggedUserName).replace(/^@+/, "")}
-                        </div>
-                      )
+                  <button
+                    type="button"
+                    data-no-drag="true"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
+                    }}
+                    className="text-left text-2xl font-bold hover:underline"
+                  >
+                    {currentCard.name}
+                  </button>
+                  {currentCard.taggedUserName ? (
+                    currentCard.taggedUserId ? (
+                      <Link
+                        data-no-drag="true"
+                        href={currentUser?.uid && currentCard.taggedUserId === currentUser.uid ? "/profile" : `/profile/${currentCard.taggedUserId}`}
+                        className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px] underline-offset-2 hover:underline`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        @{String(currentCard.taggedUserName).replace(/^@+/, "")}
+                      </Link>
+                    ) : (
+                      <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}>
+                        @{String(currentCard.taggedUserName).replace(/^@+/, "")}
+                      </div>
+                    )
+                  ) : null}
+                  {currentCard.description || normalizedDishLink ? (
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
+                    {currentCard.description ? (
+                      <p className="min-w-0 flex-1 line-clamp-2">
+                        {currentCard.description}
+                      </p>
                     ) : null}
-                    {currentCard.description || normalizedDishLink ? (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
-                      {currentCard.description ? (
-                        <p className="min-w-0 flex-1 line-clamp-2">
-                          {currentCard.description}
-                        </p>
-                      ) : null}
-                      {normalizedDishLink ? (
-                        <a
-                          href={normalizedDishLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          data-no-drag="true"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onPointerDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          className={`inline-flex shrink-0 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}
-                        >
-                          <span>Link</span>
-                          <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
-                        </a>
-                      ) : null}
-                    </div>
+                    {normalizedDishLink ? (
+                      <a
+                        href={normalizedDishLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-no-drag="true"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}
+                      >
+                        <span>Link</span>
+                        <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      </a>
                     ) : null}
                   </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

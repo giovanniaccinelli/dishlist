@@ -320,13 +320,11 @@ function DishPreview({ dish, title, t }) {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end">
-        <div className="frosted-image-overlay rounded-[0.95rem] px-2 py-1.5">
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
         <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>
         <div className="text-[10px] text-white/80">{t("saves:")} {Math.max(0, Number(dish.saves || 0))}</div>
-        </div>
       </div>
     </div>
   );

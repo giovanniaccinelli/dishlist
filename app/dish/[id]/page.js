@@ -34,7 +34,7 @@ import {
   updateDishAndSavedCopies,
   uploadDishImageVariants,
 } from "../../lib/firebaseHelpers";
-import { TAG_OPTIONS, getTagChipClass } from "../../lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
@@ -946,7 +946,7 @@ export default function DishDetail() {
                           key={tag}
                           type="button"
                           onClick={() => toggleEditTag(tag)}
-                          className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? active ? "border-[#F0A623]/60 bg-[#241C0B] text-[#FFE2A0]" : "border-white/14 bg-[#171717] text-white/62" : `${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
+                          className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? getDarkTagChipClass(tag, active) : `${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
                         >
                           {tag}
                         </button>

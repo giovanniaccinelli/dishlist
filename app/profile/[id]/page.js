@@ -294,7 +294,10 @@ export default function PublicProfile() {
       ? currentFollowing.filter((followId) => !profileIdCandidates.includes(followId))
       : Array.from(new Set([...currentFollowing, profileDocId]));
     await updateDoc(userRef, { followers: newFollowers });
-    await updateDoc(currentUserRef, { following: newFollowing });
+    await updateDoc(currentUserRef, {
+      following: newFollowing,
+      [`followingSince.${profileDocId}`]: isFollowing ? null : Date.now(),
+    });
     setProfileUser((prev) => (prev ? { ...prev, followers: newFollowers } : prev));
     setIsFollowing(!isFollowing);
   };
@@ -504,10 +507,14 @@ export default function PublicProfile() {
             {!isViewingOwnProfile ? (
               <button
                 onClick={handleFollow}
-                className={`h-[2.2rem] shrink-0 whitespace-nowrap px-2.5 py-0 rounded-full text-[0.64rem] font-semibold border transition ${
-                  isFollowing
-                    ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                    : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                className={`people-follow-button no-accent-border h-[2.2rem] shrink-0 whitespace-nowrap px-2.5 py-0 rounded-full text-[0.64rem] font-semibold border transition ${
+                  darkMode
+                    ? isFollowing
+                      ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
+                      : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
+                    : isFollowing
+                      ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                      : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
                 }`}
               >
                 {isFollowing ? t("Unfollow") : t("Follow")}
@@ -676,7 +683,11 @@ export default function PublicProfile() {
         <button
           type="button"
           onClick={() => setDishlistsOpen(true)}
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
+            darkMode
+              ? "border-white/22 bg-transparent text-white shadow-none"
+              : "border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          }`}
           aria-label="Open all dishlists"
         >
           <MoreHorizontal size={18} />
@@ -686,10 +697,14 @@ export default function PublicProfile() {
         <button
           type="button"
           onClick={() => setProfileMapOpen(true)}
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
+            darkMode
+              ? "border-white/22 bg-transparent text-white shadow-none"
+              : "border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          }`}
           aria-label="Open profile map"
         >
-          <RestaurantMapIcon className="h-7 w-7 text-black" strokeWidth={2.15} />
+          <RestaurantMapIcon className={`h-7 w-7 ${darkMode ? "text-white" : "text-black"}`} strokeWidth={2.15} />
         </button>
 </div>
 

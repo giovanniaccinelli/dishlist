@@ -1342,7 +1342,11 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setDishlistsOpen(true)}
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
+            darkMode
+              ? "border-white/22 bg-transparent text-white shadow-none"
+              : "border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          }`}
           aria-label="Open all dishlists"
         >
           <MoreHorizontal size={18} />
@@ -1352,10 +1356,14 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setProfileMapOpen(true)}
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
+            darkMode
+              ? "border-white/22 bg-transparent text-white shadow-none"
+              : "border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
+          }`}
           aria-label="Open profile map"
         >
-          <RestaurantMapIcon className="h-6 w-6 text-black" strokeWidth={2.15} />
+          <RestaurantMapIcon className={`h-6 w-6 ${darkMode ? "text-white" : "text-black"}`} strokeWidth={2.15} />
         </button>
 </div>
 

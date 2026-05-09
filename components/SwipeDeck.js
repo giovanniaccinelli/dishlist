@@ -1131,9 +1131,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                    !showRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
                   }`}
-                  style={!showRecipe ? { color: "#050505" } : undefined}
+                  style={!showRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   dish
                 </button>
@@ -1145,9 +1145,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                    showRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
                   }`}
-                  style={showRecipe ? { color: "#050505" } : undefined}
+                  style={showRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   recipe
                 </button>

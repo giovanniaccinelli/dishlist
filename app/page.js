@@ -36,10 +36,10 @@ import {
   DishModeFilterModal,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
-import { TAG_OPTIONS, getTagChipClass } from "./lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../components/LanguageProvider";
 
@@ -53,7 +53,7 @@ const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
   const { user, loading } = useAuth();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, darkMode } = useLanguage();
   const userId = user?.uid || null;
   const router = useRouter();
   const forYouDeckRef = useRef(null);
@@ -80,6 +80,7 @@ export default function Feed() {
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState([]);
+  const [followingSinceById, setFollowingSinceById] = useState({});
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [excludedTags, setExcludedTags] = useState([]);
@@ -201,20 +202,48 @@ export default function Feed() {
         let following = [];
 
         if (userId) {
-          const [followed, saved, toTry, uploaded] = await Promise.all([
+          const [followed, saved, toTry, uploaded, currentUserSnap] = await Promise.all([
             getFollowingForUser(userId),
             getSavedDishesFromFirestore(userId),
             getToTryDishesFromFirestore(userId),
             getDishesFromFirestore(userId),
+            getDoc(doc(db, "users", userId)),
           ]);
           nextFollowingIds = Array.from(new Set(followed || []));
           const followedSet = new Set(nextFollowingIds);
+          const userData = currentUserSnap.exists() ? currentUserSnap.data() : {};
+          const storedFollowingSince =
+            userData?.followingSince && typeof userData.followingSince === "object"
+              ? userData.followingSince
+              : {};
+          const now = Date.now();
+          const nextFollowingSince = nextFollowingIds.reduce((acc, followId) => {
+            const raw = storedFollowingSince[followId];
+            const rawMs =
+              typeof raw === "number"
+                ? raw
+                : raw?.toMillis
+                  ? raw.toMillis()
+                  : raw?.seconds
+                    ? raw.seconds * 1000
+                    : Number(raw || 0);
+            acc[followId] = Number.isFinite(rawMs) && rawMs > 0 ? rawMs : now;
+            return acc;
+          }, {});
+          const missingFollowSince = nextFollowingIds.some((followId) => !storedFollowingSince[followId]);
+          if (missingFollowSince) {
+            setDoc(doc(db, "users", userId), { followingSince: nextFollowingSince }, { merge: true }).catch((err) =>
+              console.error("Failed to backfill following timestamps:", err)
+            );
+          }
+          setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
           forYou = buildForYouFeed(publicItems, tagCounts, followedSet);
           following = sortNewest(publicItems.filter((dish) => followedSet.has(dish.owner)));
         } else {
           forYou = shuffleArray(sortNewest(publicItems));
           following = [];
+          setFollowingSinceById({});
         }
 
         setFollowingIds(nextFollowingIds);
@@ -223,6 +252,7 @@ export default function Feed() {
       } catch (err) {
         console.error("Failed to load feed dishes:", err);
         setFollowingIds([]);
+        setFollowingSinceById({});
         setForYouDeck([]);
         setFollowingDeck([]);
       } finally {
@@ -374,9 +404,23 @@ export default function Feed() {
       setFollowingHasUpdate(false);
       return;
     }
+    const getDishCreatedMs = (dish) => {
+      const raw = dish?.createdAt;
+      if (raw?.toMillis) return raw.toMillis();
+      if (raw?.seconds) return raw.seconds * 1000;
+      if (raw instanceof Date) return raw.getTime();
+      const numeric = Number(raw || 0);
+      return Number.isFinite(numeric) ? numeric : 0;
+    };
     const viewed = new Set(viewedDishIds);
-    setFollowingHasUpdate(orderedFollowing.some((dish) => !viewed.has(dish.id)));
-  }, [userId, orderedFollowing, viewedDishIds]);
+    setFollowingHasUpdate(
+      orderedFollowing.some((dish) => {
+        const followSince = Number(followingSinceById[dish?.owner] || 0);
+        if (!followSince) return false;
+        return getDishCreatedMs(dish) > followSince && !viewed.has(dish.id);
+      })
+    );
+  }, [userId, orderedFollowing, viewedDishIds, followingSinceById]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
@@ -797,7 +841,7 @@ export default function Feed() {
                           return next;
                         })
                       }
-                      className={`px-3 py-1 rounded-full text-xs border transition ${getTagChipClass(tag, enabled)}`}
+                      className={`px-3 py-1 rounded-full text-xs border transition ${darkMode ? getDarkTagChipClass(tag, enabled) : getTagChipClass(tag, enabled)}`}
                     >
                       {tag}
                     </button>

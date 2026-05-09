@@ -29,7 +29,7 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
-import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import {
@@ -674,7 +674,7 @@ export default function Explore() {
           {selectedTagsApplied.map((tag) => (
             <span
               key={tag}
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, true)}`}
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
             >
               {t(tag)}
               <button
@@ -724,7 +724,7 @@ export default function Explore() {
                     key={tag}
                     type="button"
                     onClick={() => toggleTagFilter(tag)}
-                    className={`px-3 py-1 rounded-full text-xs border ${getTagChipClass(tag, active)}`}
+                    className={`px-3 py-1 rounded-full text-xs border ${darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active)}`}
                   >
                     {t(tag)}
                   </button>

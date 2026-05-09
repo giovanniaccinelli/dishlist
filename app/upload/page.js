@@ -21,7 +21,7 @@ import {
   saveDishToSelectedDishlist,
   uploadDishImageVariants,
 } from "../lib/firebaseHelpers";
-import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
@@ -670,7 +670,7 @@ export default function UploadPage() {
                         key={tag}
                         type="button"
                         onClick={() => toggleTag(tag)}
-	                        className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? active ? "border-[#F0A623]/60 bg-[#241C0B] text-[#FFE2A0]" : "border-white/14 bg-[#171717] text-white/62" : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
+	                        className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? getDarkTagChipClass(tag, active) : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
                       >
                         {tag}
                       </button>
@@ -728,7 +728,7 @@ export default function UploadPage() {
                       {dishTags.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {dishTags.slice(0, 4).map((tag) => (
-	                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border-2 ${darkMode ? "border-[#F0A623]/55 bg-[#241C0B] text-[#FFE2A0]" : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, true)}`}`}>
+	                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border-2 ${darkMode ? getDarkTagChipClass(tag, true) : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, true)}`}`}>
                               {tag}
                             </span>
                           ))}
@@ -857,7 +857,7 @@ export default function UploadPage() {
                       {TAG_OPTIONS.slice(0, 10).map((tag) => (
                         <span
                           key={tag}
-                          className={`px-3 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}
+                          className={`px-3 py-1 rounded-full text-[11px] border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
                         >
                           {tag}
                         </span>

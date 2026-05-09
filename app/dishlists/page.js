@@ -320,11 +320,13 @@ export default function Dishlists() {
     if (!user) return alert("Log in first");
     const targetRef = doc(db, "users", userId);
     const currentRef = doc(db, "users", user.uid);
+    const followingSinceField = `followingSince.${userId}`;
     await updateDoc(targetRef, {
       followers: alreadyFollowing ? arrayRemove(user.uid) : arrayUnion(user.uid),
     });
     await updateDoc(currentRef, {
       following: alreadyFollowing ? arrayRemove(userId) : arrayUnion(userId),
+      [followingSinceField]: alreadyFollowing ? null : Date.now(),
     });
     const updateList = (list) =>
       list.map((u) => {

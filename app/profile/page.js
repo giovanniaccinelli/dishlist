@@ -1309,7 +1309,7 @@ export default function Profile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`profile-dishlist-tab no-accent-border profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
                 darkMode
                   ? active
                     ? item.id === "saved"

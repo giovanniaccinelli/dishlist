@@ -83,9 +83,10 @@ export function DishModeBadge({ dishMode, className = "" }) {
 export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect, className = "" }) {
   const { t, darkMode } = useLanguage();
   const [flashMessage, setFlashMessage] = useState("");
+  const [flashMode, setFlashMode] = useState(DISH_MODE_ALL);
   const flashTimerRef = useRef(null);
   const isLarge = className.includes("dish-mode-filter--large");
-  const useLargeSize = isLarge && !darkMode;
+  const useLargeSize = false;
   const buttonSizeClass = useLargeSize ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
   const iconSizeClass = useLargeSize ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
 
@@ -101,6 +102,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           ? t("Showing restaurant dishes")
           : t("Show all");
     setFlashMessage(nextMessage);
+    setFlashMode(mode);
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
     flashTimerRef.current = window.setTimeout(() => setFlashMessage(""), 1300);
   };
@@ -151,11 +153,17 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           >
             <div
               className={`max-w-[18rem] rounded-[1.15rem] border px-4 py-3 text-center text-[0.84rem] font-semibold leading-[1.15] shadow-[0_18px_40px_rgba(0,0,0,0.16)] backdrop-blur-xl ${
-                value === DISH_MODE_RESTAURANT
-                  ? "border-[#E64646]/20 bg-[linear-gradient(180deg,rgba(255,239,239,0.96)_0%,rgba(255,230,230,0.96)_100%)] text-[#B92E2E]"
-                  : value === DISH_MODE_COOKING
-                    ? "border-[#F0A623]/25 bg-[linear-gradient(180deg,rgba(255,248,226,0.97)_0%,rgba(255,241,198,0.97)_100%)] text-[#A66A00]"
-                    : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(246,246,242,0.97)_100%)] text-black/78"
+                darkMode
+                  ? flashMode === DISH_MODE_RESTAURANT
+                    ? "border-[#E64646]/35 bg-[#1F1010] text-[#FFB7B7]"
+                    : flashMode === DISH_MODE_COOKING
+                      ? "border-[#F0A623]/35 bg-[#211806] text-[#FFD986]"
+                      : "border-white/16 bg-[#151515] text-white/88"
+                  : flashMode === DISH_MODE_RESTAURANT
+                    ? "border-[#E64646]/20 bg-[linear-gradient(180deg,rgba(255,239,239,0.96)_0%,rgba(255,230,230,0.96)_100%)] text-[#B92E2E]"
+                    : flashMode === DISH_MODE_COOKING
+                      ? "border-[#F0A623]/25 bg-[linear-gradient(180deg,rgba(255,248,226,0.97)_0%,rgba(255,241,198,0.97)_100%)] text-[#A66A00]"
+                      : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(246,246,242,0.97)_100%)] text-black/78"
               }`}
             >
               {flashMessage}

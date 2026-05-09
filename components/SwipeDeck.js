@@ -1197,6 +1197,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {!showRecipe ? (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[43%] bg-gradient-to-t from-black/82 via-black/42 to-transparent" />
+              ) : null}
+              {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">

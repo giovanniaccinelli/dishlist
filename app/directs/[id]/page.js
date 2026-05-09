@@ -289,7 +289,7 @@ export default function DirectChat() {
                             e.currentTarget.src = DEFAULT_DISH_IMAGE;
                           }}
                         />
-                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 to-transparent px-3 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent px-3 py-2 text-white pointer-events-none flex h-[56%] flex-col justify-end gap-0.5">
                           <div className="text-[12px] font-semibold leading-tight truncate">
                             {dish?.name || "Dish"}
                           </div>

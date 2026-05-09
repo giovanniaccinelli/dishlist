@@ -37,7 +37,7 @@ export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
-  const { t, language } = useLanguage();
+  const { t, language, darkMode } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
@@ -386,7 +386,7 @@ export default function UploadPage() {
               </button>
             </div>
           <motion.div
-            className={`p-5 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}
+            className={`upload-step-modal p-5 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#101010] text-white" : dishMode === DISH_MODE_RESTAURANT ? "bg-[#FFFDFC]" : "bg-white"} my-0`}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -427,7 +427,7 @@ export default function UploadPage() {
             {uploadStep === 0 ? (
               <>
                 <div className="mb-4">
-                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
+                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {storyMode
                       ? language === "it"
                         ? "Titolo e foto della storia"
@@ -445,30 +445,30 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING || dishMode === DISH_MODE_RESTAURANT ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
-                          <div className="text-[13px] font-semibold leading-none text-black">Home</div>
-                          <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Recipe to cook at home</div>
+	                        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Home</div>
+	                        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Recipe to cook at home</div>
                         </div>
                       </div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+	                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
                       <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
                           <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
-                          <div className="text-[13px] font-semibold leading-none text-black">Restaurant</div>
-                          <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Suggestion to eat out</div>
+	                        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Restaurant</div>
+	                        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Suggestion to eat out</div>
                         </div>
                       </div>
                     </button>
@@ -507,10 +507,14 @@ export default function UploadPage() {
                       ? dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#FFE8E4]"
                         : "border-[#F59E0B] bg-[#FFF1CC]"
-                      : dishMode === DISH_MODE_RESTAURANT
-                        ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]"
-                        : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
-                  } flex items-center justify-center text-black/50 mb-4 cursor-pointer relative overflow-hidden`}
+	                      : darkMode
+	                        ? dishMode === DISH_MODE_RESTAURANT
+	                          ? "restaurant-accent-border bg-[#241313]"
+	                          : "border-[#F0A623] bg-[#211806]"
+	                        : dishMode === DISH_MODE_RESTAURANT
+	                          ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]"
+	                          : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"
+	                  } flex items-center justify-center ${darkMode ? "text-white/75" : "text-black/50"} mb-4 cursor-pointer relative overflow-hidden`}
                 >
                   <input
                     ref={libraryInputRef}
@@ -553,7 +557,7 @@ export default function UploadPage() {
                         <Camera size={28} />
                       </div>
                       <div className="text-sm font-medium">Add a photo or video</div>
-                      <div className="text-xs text-black/40">Optional</div>
+	                      <div className={`text-xs ${darkMode ? "text-white/45" : "text-black/40"}`}>Optional</div>
                     </div>
                   )}
                 </div>
@@ -588,7 +592,7 @@ export default function UploadPage() {
             {uploadStep === 2 ? (
               <>
                 <div className="mb-4">
-                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
+	                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {storyMode ? "Story details and tags" : "Description and tags"}
                   </h2>
                 </div>
@@ -666,7 +670,7 @@ export default function UploadPage() {
                         key={tag}
                         type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`px-3 py-1 rounded-full text-xs border-2 transition ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}
+	                        className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? active ? "border-[#F0A623]/60 bg-[#241C0B] text-[#FFE2A0]" : "border-white/14 bg-[#171717] text-white/62" : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
                       >
                         {tag}
                       </button>
@@ -679,11 +683,11 @@ export default function UploadPage() {
             {uploadStep === 3 ? (
               <>
                 <div className="mb-4">
-                  <h2 className="text-[1.75rem] leading-none font-semibold text-black">
+	                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {storyMode ? "Review and publish" : "Review and upload"}
                   </h2>
                 </div>
-                <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "default-accent-border bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} border-2 p-4 mb-5`}>
+	                <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : dishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}>
                       {preview ? (
@@ -709,7 +713,7 @@ export default function UploadPage() {
                     <div className="min-w-0">
                       <div className="text-lg font-semibold truncate">{dishName || "Untitled dish"}</div>
                       {dishDescription ? (
-                        <div className="mt-1 text-sm text-black/60 line-clamp-3">{dishDescription}</div>
+	                        <div className={`mt-1 text-sm line-clamp-3 ${darkMode ? "text-white/65" : "text-black/60"}`}>{dishDescription}</div>
                       ) : null}
                       {storyTaggedUser.trim() ? (
                         <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
@@ -724,7 +728,7 @@ export default function UploadPage() {
                       {dishTags.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {dishTags.slice(0, 4).map((tag) => (
-                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, true)}`}>
+	                            <span key={tag} className={`px-2.5 py-1 rounded-full text-[11px] border-2 ${darkMode ? "border-[#F0A623]/55 bg-[#241C0B] text-[#FFE2A0]" : `${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, true)}`}`}>
                               {tag}
                             </span>
                           ))}
@@ -960,40 +964,40 @@ export default function UploadPage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-md rounded-[1.75rem] border-2 border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[1.75rem] border-2 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] text-black"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-2 pb-3 pt-1 text-center">
-                <div className="text-[1.05rem] font-semibold text-black">Add media</div>
+                <div className={`text-[1.05rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Add media</div>
               </div>
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={openLibraryPicker}
-                  className="flex w-full items-center justify-between rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+	                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
                 >
                   <div>
-                    <div className="text-[0.98rem] font-semibold text-black">Photo library</div>
-                    <div className="mt-0.5 text-[0.8rem] text-black/48">Pick a photo or video</div>
+	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Photo library</div>
+	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Pick a photo or video</div>
                   </div>
-                  <Plus size={24} className="text-black/55" />
+	                  <Plus size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
                 </button>
                 <button
                   type="button"
                   onClick={openCameraPicker}
-                  className="flex w-full items-center justify-between rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+	                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
                 >
                   <div>
-                    <div className="text-[0.98rem] font-semibold text-black">Take photo</div>
-                    <div className="mt-0.5 text-[0.8rem] text-black/48">Open the camera</div>
+	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Take photo</div>
+	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Open the camera</div>
                   </div>
-                  <Camera size={24} className="text-black/55" />
+	                  <Camera size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
                 </button>
               </div>
               <button
                 type="button"
                 onClick={() => setMediaPickerOpen(false)}
-                className="mt-3 flex w-full items-center justify-center rounded-[1.2rem] border-2 border-black/10 bg-white px-4 py-3 text-[0.92rem] font-semibold text-black/70"
+	                className={`mt-3 flex w-full items-center justify-center rounded-[1.2rem] border-2 px-4 py-3 text-[0.92rem] font-semibold ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white/72" : "border-black/10 bg-white text-black/70"}`}
               >
                 Cancel
               </button>

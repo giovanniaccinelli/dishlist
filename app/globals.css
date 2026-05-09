@@ -486,6 +486,20 @@ html.dark .profile-dishlist-tab--saved.profile-dishlist-tab--active {
   box-shadow: inset 0 0 0 2px #e64646 !important;
 }
 
+html.dark .upload-step-modal .text-black,
+html.dark .edit-dish-modal .text-black {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.dark .upload-step-modal .text-black\/55,
+html.dark .upload-step-modal .text-black\/60,
+html.dark .upload-step-modal .text-black\/65,
+html.dark .edit-dish-modal .text-black\/55,
+html.dark .edit-dish-modal .text-black\/60,
+html.dark .edit-dish-modal .text-black\/65 {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
 html.dark .people-preview-dish.default-accent-border {
   border-color: #e4b43f !important;
 }

@@ -1137,26 +1137,28 @@ export default function Profile() {
             <Settings size={18} />
           </button>
           {profileOptionsOpen && (
-            <div className="absolute top-full right-0 mt-2 z-[90] bg-white border border-black/10 rounded-2xl shadow-lg p-2 w-56">
+            <div className={`absolute top-full right-0 mt-2 z-[90] rounded-2xl border p-2 w-56 shadow-lg ${
+              darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
+            }`}>
               <button
                 type="button"
                 onClick={() => {
                   setProfileOptionsOpen(false);
                   setEditProfileModal(true);
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
               >
                 {t("Edit Profile")}
               </button>
               <div className="px-3 pb-2 pt-1">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/38">
+                <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/38"}`}>
                   {t("Language")}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setLanguage(LANGUAGE_EN)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${language === LANGUAGE_EN ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${darkMode ? language === LANGUAGE_EN ? "border-white bg-white/12" : "border-white/16 bg-[#1D1D1D]" : language === LANGUAGE_EN ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
                     aria-label={t("English")}
                   >
                     🇬🇧
@@ -1164,7 +1166,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setLanguage(LANGUAGE_IT)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${language === LANGUAGE_IT ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${darkMode ? language === LANGUAGE_IT ? "border-white bg-white/12" : "border-white/16 bg-[#1D1D1D]" : language === LANGUAGE_IT ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
                     aria-label={t("Italian")}
                   >
                     🇮🇹
@@ -1174,7 +1176,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setDarkMode(!darkMode)}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-black/5"
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
               >
                 <span>{t("Dark mode")}</span>
                 <span className={`no-accent-border flex h-6 w-11 items-center rounded-full p-0.5 transition ${darkMode ? "bg-black" : "bg-black/12"}`}>
@@ -1188,11 +1190,11 @@ export default function Profile() {
                   setProfileOptionsOpen(false);
                   handleLogout();
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-black/5 text-sm"
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
               >
                 {t("Log Out")}
               </button>
-              <div className="my-1 h-px bg-black/8" />
+              <div className={`my-1 h-px ${darkMode ? "bg-white/10" : "bg-black/8"}`} />
               <button
                 type="button"
                 onClick={() => {

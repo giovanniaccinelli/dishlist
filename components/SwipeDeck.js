@@ -1078,7 +1078,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   ? "restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
                   : `max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`
                 }
-                style={{ border: "2px solid #E64646" }}
+                style={{ border: "2px solid #E64646", boxShadow: "inset 0 0 0 2px #E64646, 0 8px 22px rgba(0,0,0,0.28)" }}
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
                 {currentRestaurantLabel}

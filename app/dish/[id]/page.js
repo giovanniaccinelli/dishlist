@@ -737,7 +737,7 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className={`${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border-2 my-auto`}>
+          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border-2 my-auto`}>
             <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
@@ -785,15 +785,15 @@ export default function DishDetail() {
       setEditDishMode(DISH_MODE_COOKING);
       setEditRestaurant(null);
     }}
-    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING || editDishMode === DISH_MODE_RESTAURANT ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
+	    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
   >
     <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
       <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
         <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
-        <div className="text-[13px] font-semibold leading-none text-black">Home</div>
-        <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Recipe to cook at home</div>
+        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Home</div>
+        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Recipe to cook at home</div>
       </div>
     </div>
   </button>
@@ -801,15 +801,15 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
+	    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
   >
     <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
       <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
-        <div className="text-[13px] font-semibold leading-none text-black">Restaurant</div>
-        <div className="mt-1 text-[8.5px] leading-[1.15] text-black/55">Suggestion to eat out</div>
+        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Restaurant</div>
+        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Suggestion to eat out</div>
       </div>
     </div>
   </button>
@@ -832,7 +832,7 @@ export default function DishDetail() {
                   className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
-                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)]" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)]"} flex items-center justify-center text-black/50 mb-6 cursor-pointer relative overflow-hidden`}>
+                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-6 cursor-pointer relative overflow-hidden`}>
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -946,7 +946,7 @@ export default function DishDetail() {
                           key={tag}
                           type="button"
                           onClick={() => toggleEditTag(tag)}
-                          className={`px-3 py-1 rounded-full text-xs border-2 transition ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}
+                          className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? active ? "border-[#F0A623]/60 bg-[#241C0B] text-[#FFE2A0]" : "border-white/14 bg-[#171717] text-white/62" : `${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
                         >
                           {tag}
                         </button>
@@ -965,7 +965,7 @@ export default function DishDetail() {
                   </div>
                   <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review changes</h2>
                 </div>
-                <div className={`${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "default-accent-border bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} rounded-[2rem] border-2 p-4 mb-5`}>
+                <div className={`${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} rounded-[2rem] border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}>
                       {editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish) ? (
@@ -987,7 +987,7 @@ export default function DishDetail() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-lg font-semibold leading-tight">{editName || "Untitled dish"}</h3>
-                      <p className="text-sm text-black/65 mt-1 line-clamp-3">
+                      <p className={`text-sm mt-1 line-clamp-3 ${darkMode ? "text-white/65" : "text-black/65"}`}>
                         {editDescription || "No description"}
                       </p>
                     </div>

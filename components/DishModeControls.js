@@ -122,7 +122,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
         className={`dish-mode-control-btn dish-mode-control-btn--home ${value === DISH_MODE_COOKING ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
         aria-label="Filter home dishes"
         style={{
-          border: "4px solid #F0A623",
+          border: "2px solid #F0A623",
         }}
       >
         <CookingHomeIcon className={iconSizeClass} strokeWidth={2.05} />
@@ -133,7 +133,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
         className={`dish-mode-control-btn dish-mode-control-btn--restaurant ${value === DISH_MODE_RESTAURANT ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
         aria-label="Filter restaurant dishes"
         style={{
-          border: "4px solid #E64646",
+          border: "2px solid #E64646",
         }}
       >
         <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.05} />

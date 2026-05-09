@@ -86,7 +86,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const flashTimerRef = useRef(null);
   const isLarge = className.includes("dish-mode-filter--large");
   const buttonSizeClass = isLarge ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
-  const iconSizeClass = isLarge ? "h-[2.05rem] w-[2.05rem]" : "h-[1.72rem] w-[1.72rem]";
+  const iconSizeClass = isLarge ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
@@ -125,7 +125,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #F0A623",
         }}
       >
-        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.05} />
+        <CookingHomeIcon className={iconSizeClass} strokeWidth={1.55} />
       </button>
       <button
         type="button"
@@ -136,7 +136,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #E64646",
         }}
       >
-        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.05} />
+        <RestaurantMapIcon className={iconSizeClass} strokeWidth={1.55} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

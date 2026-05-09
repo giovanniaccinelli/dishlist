@@ -367,7 +367,6 @@ function CategoryTitle({ row, t, darkMode = false }) {
   };
   const Icon = decor.icon;
   const darkPillClass = getDarkTagChipClass(row.rawTag || row.title, true);
-  const darkIconClass = "text-white/72";
 
   const displayTitle = toTitleCase(t(String(row.rawTag || row.title || "")));
   return (
@@ -377,7 +376,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
       }`}>
         {displayTitle}
       </span>
-      <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${darkMode ? darkIconClass : decor.iconClass}`} />
+      <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />
     </div>
   );
 }
@@ -468,7 +467,7 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none">
+              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent px-2 py-2.5 text-white pointer-events-none flex min-h-[58%] flex-col justify-end">
                 <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>

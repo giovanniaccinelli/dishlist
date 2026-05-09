@@ -334,17 +334,17 @@ function DishPreview({ dish, title, t }) {
   );
 }
 
-function CategoryTitle({ row, t }) {
+function CategoryTitle({ row, t, darkMode = false }) {
   if (row.key.startsWith("restaurant-")) {
     return (
-      <span className="text-[1.28rem] font-bold tracking-tight text-black">{row.title}</span>
+      <span className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>{row.title}</span>
     );
   }
 
   if (row.key === "most-saved") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{toTitleCase(t(row.title))}</span>
+        <span className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>{toTitleCase(t(row.title))}</span>
         <Trophy size={22} strokeWidth={2.2} className="text-[#D7B443]" />
       </div>
     );
@@ -353,7 +353,7 @@ function CategoryTitle({ row, t }) {
   if (row.key === "trending") {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[1.28rem] font-bold tracking-tight text-black">{toTitleCase(t(row.title))}</span>
+        <span className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>{toTitleCase(t(row.title))}</span>
         <Flame size={22} strokeWidth={2.2} className="text-[#F26A21]" />
       </div>
     );
@@ -370,7 +370,12 @@ function CategoryTitle({ row, t }) {
   const displayTitle = toTitleCase(t(String(row.rawTag || row.title || "")));
   return (
     <div className="flex items-center gap-2">
-      <span className={`explore-category-pill inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
+      <span
+        className={`explore-category-pill no-accent-border inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${
+          darkMode ? "border-transparent bg-transparent text-white" : decor.pillClass
+        }`}
+        style={darkMode ? { background: "transparent", backgroundImage: "none", boxShadow: "none" } : undefined}
+      >
         {displayTitle}
       </span>
       <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />
@@ -378,7 +383,7 @@ function CategoryTitle({ row, t }) {
   );
 }
 
-function ExploreRow({ row, onExpand, t }) {
+function ExploreRow({ row, onExpand, t, darkMode = false }) {
   const { title, dishes } = row;
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
@@ -397,7 +402,7 @@ function ExploreRow({ row, onExpand, t }) {
             className="min-w-0 text-left"
             aria-label={`Open ${title} on map`}
           >
-            <CategoryTitle row={row} t={t} />
+            <CategoryTitle row={row} t={t} darkMode={darkMode} />
           </button>
         ) : (
           <button
@@ -406,7 +411,7 @@ function ExploreRow({ row, onExpand, t }) {
             className="min-w-0 text-left"
             aria-label={`Open ${title}`}
           >
-            <CategoryTitle row={row} t={t} />
+            <CategoryTitle row={row} t={t} darkMode={darkMode} />
           </button>
         )}
         {dishes.length > 3 ? (
@@ -431,7 +436,7 @@ function ExploreRow({ row, onExpand, t }) {
   );
 }
 
-function ExpandedCategoryModal({ row, onClose, t }) {
+function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
   if (!row) return null;
 
   return (
@@ -439,7 +444,7 @@ function ExpandedCategoryModal({ row, onClose, t }) {
       <div className="min-h-screen px-5 pt-1 pb-24 text-black">
         <div className="app-top-nav -mx-5 mb-6 px-5 flex items-center justify-between">
           <div className="min-w-0 pr-4">
-            <CategoryTitle row={row} t={t} />
+            <CategoryTitle row={row} t={t} darkMode={darkMode} />
           </div>
           <button
             type="button"
@@ -484,7 +489,7 @@ function ExpandedCategoryModal({ row, onClose, t }) {
 export default function Explore() {
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
@@ -756,12 +761,12 @@ export default function Explore() {
       ) : (
         <div>
           {categoryRows.map((row) => (
-            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} t={t} />
+            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} />
           ))}
         </div>
       )}
 
-      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} t={t} />
+      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} t={t} darkMode={darkMode} />
       <DishModeFilterModal
         open={dishModeFilterOpen}
         value={selectedDishMode}

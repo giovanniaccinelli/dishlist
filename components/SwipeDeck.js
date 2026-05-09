@@ -1018,18 +1018,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     <Link
                       data-no-drag="true"
                       href={`/profile/${currentCard.owner}`}
-                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline [text-shadow:0_1px_1px_rgba(0,0,0,0.72)]"
+                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
+                      style={{ textShadow: "0 1px 1px rgba(0,0,0,0.9), 1px 0 1px rgba(0,0,0,0.75), -1px 0 1px rgba(0,0,0,0.75), 0 -1px 1px rgba(0,0,0,0.62)" }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {currentCard.ownerName || "Unknown"}
                     </Link>
                   ) : (
-                    <p className="truncate text-[0.98rem] font-semibold leading-tight [text-shadow:0_1px_1px_rgba(0,0,0,0.72)]">
+                    <p
+                      className="truncate text-[0.98rem] font-semibold leading-tight"
+                      style={{ textShadow: "0 1px 1px rgba(0,0,0,0.9), 1px 0 1px rgba(0,0,0,0.75), -1px 0 1px rgba(0,0,0,0.75), 0 -1px 1px rgba(0,0,0,0.62)" }}
+                    >
                       {currentCard.ownerName || "Unknown"}
                     </p>
                   )}
                   {uploadDateLabel ? (
-                  <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75 [text-shadow:0_1px_1px_rgba(0,0,0,0.7)]">
+                  <div
+                    className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75"
+                    style={{ textShadow: "0 1px 1px rgba(0,0,0,0.82), 1px 0 1px rgba(0,0,0,0.65), -1px 0 1px rgba(0,0,0,0.65), 0 -1px 1px rgba(0,0,0,0.55)" }}
+                  >
                       {uploadDateLabel}
                     </div>
                   ) : null}
@@ -1072,6 +1079,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   ? "restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
                   : `max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`
                 }
+                style={darkMode ? { borderColor: "#E64646" } : undefined}
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
                 {currentRestaurantLabel}

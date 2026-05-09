@@ -432,6 +432,12 @@ export default function DishDetail() {
     setEditOpen(true);
   };
 
+  useEffect(() => {
+    if (editOpen && editDishMode === DISH_MODE_RESTAURANT && editStep === 1) {
+      setEditStep(2);
+    }
+  }, [editDishMode, editOpen, editStep]);
+
   const handleSaveEdit = async () => {
     if (!editingDish?.id || !userId) return;
     if (editingDish.owner !== userId) {
@@ -471,8 +477,8 @@ export default function DishDetail() {
         name: editName.trim(),
         description: editDescription.trim(),
         dishLink: editDishLink.trim(),
-        recipeIngredients: editRecipeIngredients.trim(),
-        recipeMethod: editRecipeMethod.trim(),
+        recipeIngredients: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeIngredients.trim(),
+        recipeMethod: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeMethod.trim(),
         tags: editTags,
         isPublic: editIsPublic,
         dishMode: editDishMode,
@@ -598,11 +604,17 @@ export default function DishDetail() {
       alert("Dish name is required.");
       return;
     }
-    setEditStep((prev) => Math.min(prev + 1, 3));
+    setEditStep((prev) => {
+      if (editDishMode === DISH_MODE_RESTAURANT && prev === 0) return 2;
+      return Math.min(prev + 1, 3);
+    });
   };
 
   const goToPreviousEditStep = () => {
-    setEditStep((prev) => Math.max(prev - 1, 0));
+    setEditStep((prev) => {
+      if (editDishMode === DISH_MODE_RESTAURANT && prev === 2) return 0;
+      return Math.max(prev - 1, 0);
+    });
   };
 
   if (loading || loadingDish) {
@@ -859,7 +871,7 @@ export default function DishDetail() {
               </>
             ) : null}
 
-            {editStep === 1 ? (
+            {editStep === 1 && editDishMode !== DISH_MODE_RESTAURANT ? (
               <>
                 <div className="mb-4 text-center">
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>

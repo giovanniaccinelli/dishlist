@@ -121,7 +121,7 @@ export default function PublicProfile() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [profileUser, setProfileUser] = useState(null);
   const [savedDishes, setSavedDishes] = useState([]);
@@ -646,13 +646,21 @@ export default function PublicProfile() {
               type="button"
               onClick={() => selectDishlist(item.id)}
               className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
-                active
-                  ? item.id === "saved"
-                    ? "border-[#D94A4A] bg-[linear-gradient(180deg,#FFE4E4_0%,#FFC4C4_100%)] text-[#7E1717] shadow-[0_10px_22px_rgba(217,74,74,0.18)]"
-                    : item.id === "uploaded"
-                      ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
-                      : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
-                  : "border-black/30 bg-white text-black"
+                darkMode
+                  ? active
+                    ? item.id === "saved"
+                      ? "border-[#E64646] bg-transparent text-[#FF7777] shadow-none"
+                      : item.id === "uploaded"
+                        ? "border-[#E4B43F] bg-transparent text-[#F2D46D] shadow-none"
+                        : "border-[#2BD36B] bg-transparent text-[#7CFFA3] shadow-none"
+                    : "border-white/18 bg-transparent text-white/58"
+                  : active
+                    ? item.id === "saved"
+                      ? "border-[#D94A4A] bg-[linear-gradient(180deg,#FFE4E4_0%,#FFC4C4_100%)] text-[#7E1717] shadow-[0_10px_22px_rgba(217,74,74,0.18)]"
+                      : item.id === "uploaded"
+                        ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
+                        : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
+                    : "border-black/30 bg-white text-black"
               }`}
             >
               {item.label}

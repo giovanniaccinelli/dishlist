@@ -373,9 +373,14 @@ html.dark .dish-mode-control-btn {
 }
 
 html.dark .dish-mode-filter--large .dish-mode-control-btn {
-  width: 3.62rem !important;
-  min-width: 3.62rem !important;
-  height: 3.28rem !important;
+  width: 3.45rem !important;
+  min-width: 3.45rem !important;
+  height: 3.1rem !important;
+}
+
+html.dark .dish-mode-filter--large .dish-mode-control-btn svg {
+  width: 1.9rem !important;
+  height: 1.9rem !important;
 }
 
 html.dark .dish-mode-control-btn--home.dish-mode-control-btn--selected {
@@ -456,7 +461,7 @@ html.dark .restaurant-accent-border {
 }
 
 html.dark .profile-dishlist-tab {
-  background: rgba(18, 18, 18, 0.84) !important;
+  background: transparent !important;
   background-image: none !important;
   color: rgba(255, 255, 255, 0.72) !important;
 }
@@ -487,13 +492,6 @@ html.dark .people-preview-dish.default-accent-border {
 
 html.dark .people-preview-dish.restaurant-accent-border {
   border-color: #e64646 !important;
-}
-
-html.dark .people-follow-button {
-  background: rgba(18, 18, 18, 0.92) !important;
-  background-image: none !important;
-  color: rgba(255, 255, 255, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.32) !important;
 }
 
 html.dark .direct-text-message.direct-message--mine,

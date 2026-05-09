@@ -13,6 +13,7 @@ import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, Users, X } from "lucide-react";
+import { useLanguage } from "../../../components/LanguageProvider";
 
 const readMarksKey = (userId) => `directs:readMarks:${userId}`;
 
@@ -56,6 +57,7 @@ const isSameDay = (left, right) => {
 export default function DirectChat() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { darkMode } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -270,9 +272,13 @@ export default function DirectChat() {
                       <Link
                         href={`/dish/${m.dishId}?source=public&mode=single`}
                         className={`direct-dish-message ${isMine ? "direct-message--mine" : "direct-message--received"} pressable-card relative block w-full overflow-hidden rounded-[1.45rem] border shadow-[0_14px_30px_rgba(0,0,0,0.08)] ${
-                          isMine
-                            ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
-                            : "border-black/10 bg-white"
+                          darkMode
+                            ? isMine
+                              ? "border-[#5FA8F2]/55 bg-[#163B5A] text-white"
+                              : "border-white/14 bg-[#202020] text-white"
+                            : isMine
+                              ? "border-[#C9D7E8] bg-[linear-gradient(180deg,#FDFEFE_0%,#EEF5FB_100%)]"
+                              : "border-black/10 bg-white"
                         }`}
                       >
                         <img
@@ -344,9 +350,13 @@ export default function DirectChat() {
                       setDragOffsets((prev) => ({ ...prev, [m.id]: 0 }));
                     }}
                     className={`direct-text-message ${isMine ? "direct-message--mine" : "direct-message--received"} w-fit rounded-[1.35rem] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
-                      isMine
-                        ? "ml-auto bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
-                        : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
+                      darkMode
+                        ? isMine
+                          ? "ml-auto border border-[#5FA8F2]/55 bg-[#1A5E91] text-white"
+                          : "border border-white/14 bg-[#202020] text-white/92"
+                        : isMine
+                          ? "ml-auto bg-[linear-gradient(135deg,#0F3D63_0%,#2B74B8_100%)] text-white"
+                          : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
                     }`}
                   >
                     <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>

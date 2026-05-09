@@ -81,12 +81,13 @@ export function DishModeBadge({ dishMode, className = "" }) {
 }
 
 export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect, className = "" }) {
-  const { t } = useLanguage();
+  const { t, darkMode } = useLanguage();
   const [flashMessage, setFlashMessage] = useState("");
   const flashTimerRef = useRef(null);
   const isLarge = className.includes("dish-mode-filter--large");
-  const buttonSizeClass = isLarge ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
-  const iconSizeClass = isLarge ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
+  const useLargeSize = isLarge && !darkMode;
+  const buttonSizeClass = useLargeSize ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
+  const iconSizeClass = useLargeSize ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);

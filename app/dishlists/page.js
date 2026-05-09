@@ -74,7 +74,7 @@ const mergeStoryStateByUser = (incomingList = [], existingList = []) => {
 
 export default function Dishlists() {
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const [users, setUsers] = useState([]);
@@ -536,10 +536,14 @@ export default function Dishlists() {
                             e.stopPropagation();
                             handleFollow(u.id, alreadyFollowing);
                           }}
-                          className={`people-follow-button mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
-                            alreadyFollowing
-                              ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                              : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                          className={`people-follow-button no-accent-border mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
+                            darkMode
+                              ? alreadyFollowing
+                                ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
+                                : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
+                              : alreadyFollowing
+                                ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
+                                : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
                           }`}
                         >
                           {alreadyFollowing ? t("Unfollow") : t("Follow")}
@@ -556,6 +560,7 @@ export default function Dishlists() {
                           className={`people-preview-dish aspect-square overflow-hidden rounded-lg border-2 ${
                             previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
                           } bg-neutral-100`}
+                          style={darkMode ? { borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" } : undefined}
                         >
                           {previewDish?.imageUrl ? (
                             <img

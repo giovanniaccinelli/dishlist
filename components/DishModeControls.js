@@ -119,13 +119,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_COOKING)}
-        className={`top-action-btn dish-mode-control-btn dish-mode-control-btn--home relative ${buttonSizeClass} rounded-full border-[10px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`dish-mode-control-btn dish-mode-control-btn--home ${value === DISH_MODE_COOKING ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
         aria-label="Filter home dishes"
         style={{
-          borderWidth: 10,
-          borderColor: "#F0A623",
-          background: value === DISH_MODE_COOKING ? "#FFF1C8" : "#FFFFFF",
-          color: value === DISH_MODE_COOKING ? "#C78400" : "#D59A14",
+          border: "10px solid #F0A623",
         }}
       >
         <CookingHomeIcon className={iconSizeClass} strokeWidth={2.7} />
@@ -133,13 +130,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className={`top-action-btn dish-mode-control-btn dish-mode-control-btn--restaurant relative ${buttonSizeClass} rounded-full border-[10px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`dish-mode-control-btn dish-mode-control-btn--restaurant ${value === DISH_MODE_RESTAURANT ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
         aria-label="Filter restaurant dishes"
         style={{
-          borderWidth: 10,
-          borderColor: "#E64646",
-          background: value === DISH_MODE_RESTAURANT ? "#FFE0E0" : "#FFFFFF",
-          color: "#D53333",
+          border: "10px solid #E64646",
         }}
       >
         <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.7} />

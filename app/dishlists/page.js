@@ -630,7 +630,9 @@ export default function Dishlists() {
             onClick={() => setStoryActionOpen(false)}
           >
             <motion.div
-              className="no-accent-border my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
+              className={`no-accent-border my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] p-4 shadow-2xl border ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-white"
+              }`}
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
@@ -640,7 +642,7 @@ export default function Dishlists() {
                 <button
                   type="button"
                   onClick={() => setStoryActionOpen(false)}
-                  className="text-sm text-black/55"
+                  className={`text-sm ${darkMode ? "text-white/55" : "text-black/55"}`}
                 >
                   Close
                 </button>
@@ -652,20 +654,22 @@ export default function Dishlists() {
                     setStoryActionOpen(false);
                     router.push("/upload?story=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(230,70,70,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#E64646] backdrop-blur-[6px]"
+                  className={`w-full min-h-[15.5rem] rounded-[2rem] px-8 py-8 text-left transition-transform hover:scale-[1.01] border-[3px] border-[#E64646] backdrop-blur-[6px] ${
+                    darkMode ? "bg-[#251111] text-white shadow-[0_18px_40px_rgba(230,70,70,0.14)]" : "bg-[rgba(255,255,255,0.72)] text-black shadow-[0_18px_40px_rgba(230,70,70,0.12)]"
+                  }`}
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-[2.15rem] font-semibold leading-none">Create dish</p>
-                        <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
+                        <p className="text-[2.15rem] font-semibold leading-none">{t("Upload dish")}</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>Post directly to your story.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                         <Plus size={32} />
                       </div>
                     </div>
                     <div>
-                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
                         Steps
                       </div>
                       <div className="grid grid-cols-4 gap-3">
@@ -677,7 +681,7 @@ export default function Dishlists() {
                         ].map((step) => (
                           <div key={step.label}>
                             <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
-                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                            <div className={`text-[0.72rem] font-medium ${darkMode ? "text-white/62" : "text-black/72"}`}>{step.label}</div>
                           </div>
                         ))}
                       </div>
@@ -690,19 +694,21 @@ export default function Dishlists() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(240,166,35,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                  className={`w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#F0A623] px-8 py-8 text-left transition-transform hover:scale-[1.01] backdrop-blur-[6px] ${
+                    darkMode ? "bg-[#241A09] text-white shadow-[0_18px_40px_rgba(240,166,35,0.14)]" : "bg-[rgba(255,255,255,0.72)] shadow-[0_18px_40px_rgba(240,166,35,0.12)]"
+                  }`}
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-[2.15rem] font-semibold leading-none text-black">Find dish</p>
-                        <p className="mt-4 text-base text-black/78">Choose an existing dish to share.</p>
+                        <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>Find dish</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/78"}`}>Choose an existing dish to share.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center shadow-md border-[2px] border-[#F0A623]/55 shrink-0 aspect-square">
                         <Search size={28} />
                       </div>
                     </div>
-                    <div className="space-y-2 text-sm text-black/65">
+                    <div className={`space-y-2 text-sm ${darkMode ? "text-white/58" : "text-black/65"}`}>
                       <p>Pick from your uploaded dishes or Favorites.</p>
                       <p>Share it instantly to your story.</p>
                     </div>

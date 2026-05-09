@@ -2524,7 +2524,7 @@ export default function Profile() {
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-[2.15rem] font-semibold leading-none">Create dish</p>
+                        <p className="text-[2.15rem] font-semibold leading-none">{t("Upload dish")}</p>
                         <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>Post directly to your story.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">

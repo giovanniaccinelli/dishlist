@@ -807,7 +807,7 @@ export default function UploadPage() {
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[1.9rem] font-semibold leading-[0.95]">Create dish</p>
+                      <p className="text-[1.9rem] font-semibold leading-[0.95]">{t("Upload dish")}</p>
                       <p className={`mt-4 text-base max-w-[17rem] ${darkMode ? "text-white/68" : "text-black/78"}`}>Post a new dish to your DishList.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">

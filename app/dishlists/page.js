@@ -498,13 +498,8 @@ export default function Dishlists() {
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        if (!(u.activeStories || []).length) return;
-                        const groups = visibleStoryGroups;
-                        const nextIndex = groups.findIndex((group) => group.ownerId === u.id);
-                        setStoryGroups(groups);
-                        setStoryGroupIndex(Math.max(nextIndex, 0));
-                        setStoriesOpen(true);
+                        e.preventDefault();
+                        router.push(`/profile/${encodeURIComponent(u.id)}`);
                       }}
                       className={`no-accent-border h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >

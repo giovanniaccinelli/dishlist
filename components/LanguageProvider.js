@@ -367,12 +367,7 @@ export function LanguageProvider({ children }) {
     if (stored === LANGUAGE_EN || stored === LANGUAGE_IT) {
       setLanguageState(stored);
     }
-    const storedDarkMode = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
-    if (storedDarkMode === "0" || storedDarkMode === "false") {
-      setDarkModeState(false);
-    } else {
-      setDarkModeState(true);
-    }
+    setDarkModeState(true);
   }, []);
 
   useEffect(() => {

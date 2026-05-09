@@ -975,20 +975,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   recipe
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setNoRecipeNoticeOpen(true);
-                }}
-                className={`inline-flex h-8 items-center rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 text-[13px] font-semibold leading-none text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
-              >
-                dish
-              </button>
-            )}
+            ) : null}
           </div>
           <div className="absolute top-4 left-4 z-30 flex max-w-[11.5rem] flex-col items-start gap-1.5">
             <div className="flex items-center gap-1.5">

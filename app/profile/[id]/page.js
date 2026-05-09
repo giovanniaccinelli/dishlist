@@ -724,7 +724,7 @@ export default function PublicProfile() {
       </div>
       <div className="grid grid-cols-2 gap-3">
         {(activeDishlist?.dishes || []).length === 0 ? (
-          <div className="col-span-2 bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
             {t("No dishes here.")}
           </div>
         ) : (

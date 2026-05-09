@@ -359,7 +359,7 @@ const LanguageContext = createContext({
 export function LanguageProvider({ children }) {
   const { user } = useAuth();
   const [language, setLanguageState] = useState(LANGUAGE_EN);
-  const [darkMode, setDarkModeState] = useState(false);
+  const [darkMode, setDarkModeState] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -368,7 +368,9 @@ export function LanguageProvider({ children }) {
       setLanguageState(stored);
     }
     const storedDarkMode = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
-    if (storedDarkMode === "1" || storedDarkMode === "true") {
+    if (storedDarkMode === "0" || storedDarkMode === "false") {
+      setDarkModeState(false);
+    } else {
       setDarkModeState(true);
     }
   }, []);
@@ -391,7 +393,7 @@ export function LanguageProvider({ children }) {
         if (!cancelled && typeof data?.darkMode === "boolean") {
           setDarkModeState((prev) => {
             const stored = typeof window !== "undefined" ? window.localStorage.getItem(DARK_MODE_STORAGE_KEY) : "";
-            return stored === "1" || stored === "true" ? prev : data.darkMode;
+            return stored === "1" || stored === "true" || stored === "0" || stored === "false" ? prev : data.darkMode;
           });
         }
       } catch (err) {

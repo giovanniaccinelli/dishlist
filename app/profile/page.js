@@ -1058,7 +1058,7 @@ export default function Profile() {
       ) : null}
       <div className="grid grid-cols-2 gap-3">
         {dishes.length === 0 ? (
-          <div className="col-span-2 bg-[#f0f0ea] rounded-xl h-32 flex items-center justify-center text-gray-500">
+          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
             No dishes here.
           </div>
         ) : (
@@ -1186,18 +1186,36 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setLanguage(LANGUAGE_EN)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${darkMode ? language === LANGUAGE_EN ? "border-white bg-white/12" : "border-white/16 bg-[#1D1D1D]" : language === LANGUAGE_EN ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${
+                      darkMode
+                        ? language === LANGUAGE_EN
+                          ? "border-[#FFC247] bg-[#2A210C] shadow-[0_0_0_2px_rgba(255,194,71,0.22)]"
+                          : "border-white/18 bg-[#1D1D1D] opacity-55"
+                        : language === LANGUAGE_EN
+                          ? "border-black bg-black/5 shadow-[0_0_0_2px_rgba(0,0,0,0.08)]"
+                          : "border-black/10 bg-white opacity-65"
+                    }`}
                     aria-label={t("English")}
                   >
                     🇬🇧
+                    {language === LANGUAGE_EN ? <span className="no-accent-border absolute -bottom-1 h-2 w-2 rounded-full bg-[#FFC247]" /> : null}
                   </button>
                   <button
                     type="button"
                     onClick={() => setLanguage(LANGUAGE_IT)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${darkMode ? language === LANGUAGE_IT ? "border-white bg-white/12" : "border-white/16 bg-[#1D1D1D]" : language === LANGUAGE_IT ? "border-black bg-black/5" : "border-black/10 bg-white"}`}
+                    className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${
+                      darkMode
+                        ? language === LANGUAGE_IT
+                          ? "border-[#FFC247] bg-[#2A210C] shadow-[0_0_0_2px_rgba(255,194,71,0.22)]"
+                          : "border-white/18 bg-[#1D1D1D] opacity-55"
+                        : language === LANGUAGE_IT
+                          ? "border-black bg-black/5 shadow-[0_0_0_2px_rgba(0,0,0,0.08)]"
+                          : "border-black/10 bg-white opacity-65"
+                    }`}
                     aria-label={t("Italian")}
                   >
                     🇮🇹
+                    {language === LANGUAGE_IT ? <span className="no-accent-border absolute -bottom-1 h-2 w-2 rounded-full bg-[#FFC247]" /> : null}
                   </button>
                 </div>
               </div>
@@ -1207,8 +1225,10 @@ export default function Profile() {
                 className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
               >
                 <span>{t("Dark mode")}</span>
-                <span className={`no-accent-border flex h-6 w-11 items-center rounded-full p-0.5 transition ${darkMode ? "bg-black" : "bg-black/12"}`}>
-                  <span className={`no-accent-border h-5 w-5 rounded-full bg-white shadow-sm transition ${darkMode ? "translate-x-5" : "translate-x-0"}`} />
+                <span className={`no-accent-border flex h-7 w-12 items-center rounded-full p-0.5 transition ${
+                  darkMode ? "bg-[#FFC247] shadow-[0_0_0_2px_rgba(255,194,71,0.18)]" : "bg-black/14"
+                }`}>
+                  <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${darkMode ? "translate-x-5 bg-black" : "translate-x-0 bg-white"}`} />
                 </span>
               </button>
 
@@ -2303,14 +2323,18 @@ export default function Profile() {
             }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+                darkMode
+                  ? "border-white/12 bg-[#111111] text-white"
+                  : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
+              }`}
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 18, opacity: 0 }}
               transition={{ type: "spring", stiffness: 280, damping: 26 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className={`mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
@@ -2387,14 +2411,18 @@ export default function Profile() {
             onClick={() => setRemovePreviewTarget(null)}
           >
             <motion.div
-              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+                darkMode
+                  ? "border-white/12 bg-[#111111] text-white"
+                  : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
+              }`}
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 18, opacity: 0 }}
               transition={{ type: "spring", stiffness: 280, damping: 26 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className={`mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">

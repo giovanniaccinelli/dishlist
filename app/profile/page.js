@@ -40,7 +40,7 @@ import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
 import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, Users, X } from "lucide-react";
-import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
@@ -2236,14 +2236,18 @@ export default function Profile() {
             onClick={() => setDishlistDeleteTarget(null)}
           >
             <motion.div
-              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)] px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+                darkMode
+                  ? "border-white/12 bg-[#111111] text-white"
+                  : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
+              }`}
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 18, opacity: 0 }}
               transition={{ type: "spring", stiffness: 280, damping: 26 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-black/12" />
+              <div className={`mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
@@ -2396,15 +2400,15 @@ export default function Profile() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
                     Remove Dish
                   </p>
-                  <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
+                  <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                     Choose how to remove it
                   </h3>
-                  <p className="mt-1 text-sm text-black/55">{removePreviewTarget.dish?.name || "dish"}</p>
+                  <p className={`mt-1 text-sm ${darkMode ? "text-white/55" : "text-black/55"}`}>{removePreviewTarget.dish?.name || "dish"}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setRemovePreviewTarget(null)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/60"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${darkMode ? "bg-white/8 text-white/70" : "bg-white text-black/60"}`}
                   aria-label="Close remove options"
                 >
                   <X size={18} />
@@ -2415,13 +2419,15 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => confirmDishPreviewRemove("list")}
-                    className={`flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${removalMeta.buttonClass}`}
+                    className={`flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${
+                      darkMode ? "border-white/12 bg-[#181818] text-white" : removalMeta.buttonClass
+                    }`}
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-black">
+                      <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                         Remove from {removalMeta.label} only
                       </div>
-                      <div className="mt-0.5 text-xs text-black/48">{removalMeta.description}</div>
+                      <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{removalMeta.description}</div>
                     </div>
                     <div className={`ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${removalMeta.iconClass}`}>
                       <Minus size={16} />
@@ -2431,11 +2437,13 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => confirmDishPreviewRemove("profile")}
-                  className="flex items-center justify-between rounded-[1.25rem] border border-[#D56A6A] bg-[#FFF1F1] px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
+                  className={`flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${
+                    darkMode ? "border-[#E64646]/55 bg-[#241111] text-white" : "border-[#D56A6A] bg-[#FFF1F1]"
+                  }`}
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-black">Remove from profile completely</div>
-                    <div className="mt-0.5 text-xs text-black/48">Delete it from your saved lists and profile</div>
+                    <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>Remove from profile completely</div>
+                    <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>Delete it from your saved lists and profile</div>
                   </div>
                   <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#C93A3A] bg-[#C93A3A] text-white">
                     <Trash2 size={16} />
@@ -2459,7 +2467,9 @@ export default function Profile() {
             onClick={() => setStoryActionOpen(false)}
           >
             <motion.div
-              className="no-accent-border my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-4 shadow-2xl border border-black/10"
+              className={`no-accent-border my-auto w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-[2rem] p-4 shadow-2xl border ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-white"
+              }`}
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
@@ -2469,7 +2479,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setStoryActionOpen(false)}
-                  className="text-sm text-black/55"
+                  className={`text-sm ${darkMode ? "text-white/55" : "text-black/55"}`}
                 >
                   Close
                 </button>
@@ -2481,27 +2491,29 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/upload?story=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-8 py-8 text-left shadow-[0_18px_40px_rgba(230,70,70,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#E64646] backdrop-blur-[6px]"
+                  className={`w-full min-h-[15.5rem] rounded-[2rem] px-8 py-8 text-left transition-transform hover:scale-[1.01] border-[3px] border-[#E64646] backdrop-blur-[6px] ${
+                    darkMode ? "bg-[#251111] text-white shadow-[0_18px_40px_rgba(230,70,70,0.14)]" : "bg-[rgba(255,255,255,0.72)] text-black shadow-[0_18px_40px_rgba(230,70,70,0.12)]"
+                  }`}
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-[2.15rem] font-semibold leading-none">Create dish</p>
-                        <p className="mt-4 text-base text-black/78">Post directly to your story.</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>Post directly to your story.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                         <Plus size={32} />
                       </div>
                     </div>
                     <div>
-                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
                         Steps
                       </div>
                       <div className="grid grid-cols-4 gap-3">
                         {STORY_CHOOSER_STEPS.map((step) => (
                           <div key={step.label}>
                             <div className="mb-2 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
-                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                            <div className={`text-[0.72rem] font-medium ${darkMode ? "text-white/62" : "text-black/72"}`}>{step.label}</div>
                           </div>
                         ))}
                       </div>
@@ -2514,27 +2526,29 @@ export default function Profile() {
                     setStoryActionOpen(false);
                     router.push("/dishes?storyPicker=1");
                   }}
-                  className="w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-8 py-8 text-left shadow-[0_18px_40px_rgba(240,166,35,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                  className={`w-full min-h-[15.5rem] rounded-[2rem] border-[3px] border-[#F0A623] px-8 py-8 text-left transition-transform hover:scale-[1.01] backdrop-blur-[6px] ${
+                    darkMode ? "bg-[#241A09] text-white shadow-[0_18px_40px_rgba(240,166,35,0.14)]" : "bg-[rgba(255,255,255,0.72)] shadow-[0_18px_40px_rgba(240,166,35,0.12)]"
+                  }`}
                 >
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-[2.15rem] font-semibold leading-none text-black">Find dish</p>
-                        <p className="mt-4 text-base text-black/60">Pick an existing dish for your story.</p>
+                        <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>Find dish</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/60"}`}>Pick an existing dish for your story.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">
                         <Search size={30} />
                       </div>
                     </div>
                     <div>
-                      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                      <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
                         Tags you can explore
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {TAG_OPTIONS.slice(0, 10).map((tag) => (
                           <span
                             key={tag}
-                            className={`px-3 py-1 rounded-full text-[11px] border ${getTagChipClass(tag, true)}`}
+                            className={`px-3 py-1 rounded-full text-[11px] border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
                           >
                             {tag}
                           </span>

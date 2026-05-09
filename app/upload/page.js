@@ -795,25 +795,27 @@ export default function UploadPage() {
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="mb-4 text-center">
-              <h2 className="text-[2.05rem] leading-[0.95] font-semibold text-black">Add a dish</h2>
+              <h2 className={`text-[2.05rem] leading-[0.95] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Add a dish</h2>
             </div>
             <div className="space-y-4">
               <button
                 onClick={openUploadFlow}
-                className="preserve-blue-border w-full min-h-[13rem] rounded-[2rem] bg-[rgba(255,255,255,0.72)] text-black px-6 py-6 text-left shadow-[0_18px_40px_rgba(66,143,223,0.12)] transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px]"
+                className={`preserve-blue-border w-full min-h-[13rem] rounded-[2rem] px-6 py-6 text-left transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px] ${
+                  darkMode ? "bg-[#101B29] text-white shadow-[0_18px_40px_rgba(95,168,242,0.14)]" : "bg-[rgba(255,255,255,0.72)] text-black shadow-[0_18px_40px_rgba(66,143,223,0.12)]"
+                }`}
               >
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[1.9rem] font-semibold leading-[0.95]">Create dish</p>
-                      <p className="mt-4 text-base text-black/78 max-w-[17rem]">Post a new dish to your DishList.</p>
+                      <p className={`mt-4 text-base max-w-[17rem] ${darkMode ? "text-white/68" : "text-black/78"}`}>Post a new dish to your DishList.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                       <Plus size={32} />
                     </div>
                   </div>
                   <div>
-                    <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                    <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
                       Steps
                     </div>
                     <div className={`grid gap-3 ${isRestaurantUpload ? "grid-cols-3" : "grid-cols-4"}`}>
@@ -823,7 +825,7 @@ export default function UploadPage() {
                             className="mb-2 h-1.5 rounded-full"
                             style={{ backgroundColor: step.color }}
                           />
-                          <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                          <div className={`text-[0.72rem] font-medium ${darkMode ? "text-white/62" : "text-black/72"}`}>{step.label}</div>
                         </div>
                       ))}
                     </div>
@@ -837,20 +839,22 @@ export default function UploadPage() {
                   if (targetDishlistId) params.set("targetList", targetDishlistId);
                   router.push(`/dishes?${params.toString()}`);
                 }}
-                className="preserve-green-border w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] bg-[rgba(255,255,255,0.72)] px-6 py-6 text-left shadow-[0_18px_40px_rgba(23,130,67,0.12)] transition-transform hover:scale-[1.01] backdrop-blur-[6px]"
+                className={`preserve-green-border w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] px-6 py-6 text-left transition-transform hover:scale-[1.01] backdrop-blur-[6px] ${
+                  darkMode ? "bg-[#102016] text-white shadow-[0_18px_40px_rgba(35,194,104,0.13)]" : "bg-[rgba(255,255,255,0.72)] shadow-[0_18px_40px_rgba(23,130,67,0.12)]"
+                }`}
               >
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[1.9rem] font-semibold leading-none text-black">Find dish</p>
-                      <p className="mt-4 text-base text-black/70 max-w-[15rem]">See if it already exists.</p>
+                      <p className={`text-[1.9rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>Find dish</p>
+                      <p className={`mt-4 text-base max-w-[15rem] ${darkMode ? "text-white/64" : "text-black/70"}`}>See if it already exists.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">
                       <Search size={30} />
                     </div>
                   </div>
                   <div>
-                    <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/55">
+                    <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
                       Tags you can explore
                     </div>
                     <div className="flex flex-wrap gap-2">

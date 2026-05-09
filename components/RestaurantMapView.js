@@ -370,7 +370,7 @@ export default function RestaurantMapView({
 
         {selectedGroup && mapState === "ready" ? (
           <div
-            className="absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden"
+            className="absolute inset-x-3 bottom-3 z-10 overflow-visible"
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
@@ -392,7 +392,7 @@ export default function RestaurantMapView({
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
                 transition={{ duration: 0.22, ease: "easeOut" }}
-                className="restaurant-accent-border absolute inset-0 flex h-full flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
+                className="restaurant-accent-border flex max-h-[22rem] flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
               >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -425,9 +425,11 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex flex-1 min-h-0 items-start gap-3 overflow-x-auto pb-1">
+                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                    >
                       {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 flex-col">
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 snap-start flex-col">
                           <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">
                             <Avatar user={user} />
                             <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">

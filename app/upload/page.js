@@ -353,22 +353,21 @@ export default function UploadPage() {
         {showUploadForm ? (
           <div className="w-full max-w-md mx-auto">
             <div className="mb-4 flex items-center justify-between">
+              {directEntryMode ? (
+                <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
+                  {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
+                </h1>
+              ) : (
+                <div className="h-11 w-11" />
+              )}
               <button
                 type="button"
                 onClick={closeUploadFlow}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-white/22 bg-black/18 text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)] backdrop-blur-sm"
                 aria-label="Close upload"
               >
-                <ArrowLeft size={18} />
+                <X size={18} />
               </button>
-              {directEntryMode ? (
-                <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
-                  {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
-                </h1>
-              ) : (
-                <div />
-              )}
-              <div className="h-11 w-11" />
             </div>
           <motion.div
             className={`p-5 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#FFFDFC]" : "default-accent-border bg-white"} my-0`}

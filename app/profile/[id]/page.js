@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   getAllDishlistsForUser,
   getCustomDishlistsForUser,
-  getDishesFromFirestore,
+  getUploadedDishesForUserAliases,
   getConversationId,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
@@ -197,7 +197,7 @@ export default function PublicProfile() {
       const candidateIds = getProfileIdCandidates(routeProfileId, userDoc);
 
       const results = await Promise.allSettled([
-        Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
+        getUploadedDishesForUserAliases(candidateIds),
         Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
@@ -209,7 +209,7 @@ export default function PublicProfile() {
 
       const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
       setProfileUser(nextProfileUser);
-      setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById(dishesRes.value) : []);
+      setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById([dishesRes.value]) : []);
       setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
       setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
       setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
@@ -980,7 +980,7 @@ export default function PublicProfile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="restaurant-accent-border mx-auto flex w-full max-w-[25.5rem] max-h-[82dvh] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
+              className="restaurant-accent-border mx-auto flex h-[calc(100dvh-7rem)] max-h-[calc(100dvh-7rem)] w-full max-w-[25.5rem] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
@@ -1006,7 +1006,7 @@ export default function PublicProfile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
-                className="h-[48vh] min-h-[26rem] max-h-[34rem]"
+                className="h-full min-h-0 flex-1 max-h-none"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profileDocId)}?list=uploaded`)}`}

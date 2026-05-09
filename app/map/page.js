@@ -90,7 +90,7 @@ function MapPageContent() {
         initialSelectedPlaceId={selectedPlaceId}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
-        className="mb-5 mx-auto h-[calc(100dvh-19rem)] min-h-[22rem] max-h-[28rem] max-w-[25rem]"
+        className="mb-5 mx-auto h-[calc(100dvh-14rem)] min-h-[28rem] max-h-none max-w-[25rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
       />
 

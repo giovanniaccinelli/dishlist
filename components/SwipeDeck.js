@@ -909,6 +909,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 nextVideoRef.current = node;
               },
             })}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent"
+              style={{ height: "56%" }}
+            />
           </motion.div>
         ) : null}
         <motion.div

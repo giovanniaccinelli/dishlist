@@ -548,6 +548,26 @@ export async function getDishesFromFirestore(userId) {
   });
 }
 
+export async function getUploadedDishesForUserAliases(userIds = []) {
+  const aliases = Array.from(
+    new Set(
+      userIds
+        .map((userId) => String(userId || "").trim())
+        .filter(Boolean)
+    )
+  );
+  if (!aliases.length) return [];
+
+  const snapshots = await Promise.all(
+    aliases.map((ownerId) => getDocs(query(collection(db, "dishes"), where("owner", "==", ownerId))))
+  );
+  const dishes = snapshots.flatMap((snapshot) =>
+    snapshot.docs.map((docSnap) => ({ ...docSnap.data(), id: docSnap.id }))
+  );
+  const unique = Array.from(new Map(dishes.filter((dish) => dish?.id).map((dish) => [dish.id, dish])).values());
+  return enrichWithOwnerPhotos(unique);
+}
+
 // Save a dish reference (by ID) to a user's saved dishes
 export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
   if (!userId || !dishId) throw new Error("Missing userId or dishId");

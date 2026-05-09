@@ -749,7 +749,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={openDishlistPicker}
-                  className={`w-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-3 rounded-full font-semibold hover:opacity-90 transition shadow-lg`}
+                  className="w-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white py-3 rounded-full font-semibold hover:brightness-105 transition shadow-[0_14px_30px_rgba(43,211,107,0.24)]"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
@@ -777,7 +777,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className={`w-14 h-14 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg`}
+                    className="w-14 h-14 rounded-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white flex items-center justify-center shadow-[0_14px_30px_rgba(43,211,107,0.24)] hover:brightness-105 transition"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >

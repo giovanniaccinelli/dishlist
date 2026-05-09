@@ -294,7 +294,7 @@ export default function RestaurantMapView({
   const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
 
   return (
-    <div className={`restaurant-accent-border h-[44vh] min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
+    <div className={`restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
         <div className="absolute inset-x-3 top-3 z-10">
           <div className="restaurant-accent-border overflow-hidden rounded-[1.2rem] border-2 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">

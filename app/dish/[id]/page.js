@@ -1019,7 +1019,7 @@ export default function DishDetail() {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className={`flex-1 py-3 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white font-semibold`}
+                    className="flex-1 py-3 rounded-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white font-semibold shadow-[0_14px_30px_rgba(43,211,107,0.22)] hover:brightness-105 transition"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}
@@ -1045,7 +1045,7 @@ export default function DishDetail() {
                 <button
                   type="button"
                   onClick={goToNextEditStep}
-                  className={`w-14 h-14 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg`}
+                  className="w-14 h-14 rounded-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white flex items-center justify-center shadow-[0_14px_30px_rgba(43,211,107,0.22)] hover:brightness-105 transition"
                 >
                   <ArrowRight size={20} />
                 </button>

@@ -14,6 +14,7 @@ import {
   deleteImageByUrl,
   saveDishToFirestore,
   getDishesFromFirestore,
+  getUploadedDishesForUserAliases,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   removeDishFromAllUsers,
@@ -240,7 +241,7 @@ export default function Profile() {
         const nextProfileUser = userDoc?.exists?.() ? { id: userDoc.id, ...userDoc.data() } : null;
         const candidateIds = getProfileIdCandidates(user.uid, userDoc);
         const results = await Promise.allSettled([
-          Promise.all(candidateIds.map((candidateId) => getDishesFromFirestore(candidateId))),
+          getUploadedDishesForUserAliases(candidateIds),
           Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
@@ -249,7 +250,7 @@ export default function Profile() {
         ]);
         const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
         setProfileUser(nextProfileUser);
-        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById(uploadedRes.value) : []);
+        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
         setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
         setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
@@ -278,13 +279,13 @@ export default function Profile() {
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const ownerCandidates = getProfileIdCandidates(user.uid, userSnap);
         const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
-          Promise.all(ownerCandidates.map((candidateId) => getDishesFromFirestore(candidateId))),
+          getUploadedDishesForUserAliases(ownerCandidates),
           Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getCustomDishlistsForUser(candidateId))),
         ]);
         const [uploaded, saved, toTry, custom] = [
-          mergeUniqueById(uploadedResults),
+          mergeUniqueById([uploadedResults]),
           mergeUniqueById(savedResults),
           mergeUniqueById(toTryResults),
           mergeUniqueById(customResults),
@@ -2540,7 +2541,7 @@ export default function Profile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="restaurant-accent-border mx-auto flex w-full max-w-[25.5rem] max-h-[82dvh] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
+              className="restaurant-accent-border mx-auto flex h-[calc(100dvh-7rem)] max-h-[calc(100dvh-7rem)] w-full max-w-[25.5rem] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
@@ -2566,7 +2567,7 @@ export default function Profile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
-                className="h-[48vh] min-h-[26rem] max-h-[34rem]"
+                className="h-full min-h-0 flex-1 max-h-none"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile?list=uploaded")}`}

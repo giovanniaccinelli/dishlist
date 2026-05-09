@@ -20,6 +20,7 @@ import {
   Sprout,
   Timer,
   Trophy,
+  Users,
   Wheat,
   X,
 } from "lucide-react";
@@ -308,7 +309,7 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title, t }) {
   return (
-    <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-[0_16px_34px_rgba(0,0,0,0.16),0_5px_12px_rgba(0,0,0,0.08)] ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+    <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <img
         src={getDishImageUrl(dish, "thumb")}
@@ -324,7 +325,10 @@ function DishPreview({ dish, title, t }) {
         <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>
-        <div className="text-[10px] text-white/80">{t("saves:")} {Math.max(0, Number(dish.saves || 0))}</div>
+        <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
+          <Users size={10} strokeWidth={2.2} />
+          <span>{Math.max(0, Number(dish.saves || 0))}</span>
+        </div>
       </div>
     </div>
   );
@@ -464,7 +468,10 @@ function ExpandedCategoryModal({ row, onClose, t }) {
                 <div className="text-[11px] font-semibold leading-tight truncate">
                   {dish.name || t("Untitled dish")}
                 </div>
-                <div className="text-[10px] text-white/80">{t("saves:")} {Math.max(0, Number(dish.saves || 0))}</div>
+                <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
+                  <Users size={10} strokeWidth={2.2} />
+                  <span>{Math.max(0, Number(dish.saves || 0))}</span>
+                </div>
               </div>
             </div>
           ))}

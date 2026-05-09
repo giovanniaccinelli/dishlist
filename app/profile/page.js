@@ -39,7 +39,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
-import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, X } from "lucide-react";
+import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -985,9 +985,10 @@ export default function Profile() {
           e.preventDefault();
           handleOpenSavers(dish);
         }}
-        className="pointer-events-auto text-left"
+        className="pointer-events-auto inline-flex items-center gap-1.5 text-left"
       >
-        saves: {Math.max(0, Number(dish.saves || 0))}
+        <Users size={13} strokeWidth={2.2} />
+        <span>{Math.max(0, Number(dish.saves || 0))}</span>
       </button>
     </div>
   );

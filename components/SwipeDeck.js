@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -212,7 +212,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   onAction,
   onRightSwipe,
   onSavesPress,
-  onSharePress,
   onTertiaryAction,
   actionOnRightSwipe = true,
   dismissOnAction = true,
@@ -414,8 +413,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const hasBottomActionRow =
     Boolean(resolvedSecondaryActionLabel) &&
     Boolean(tertiaryActionLabel) &&
-    Boolean(actionLabel) &&
-    typeof onSharePress === "function";
+    Boolean(actionLabel);
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
 
   const startCardVideo = useCallback((video) => {
@@ -1029,22 +1027,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </button>
             ) : null}
           </div>
-          {typeof onSharePress === "function" && !hasBottomActionRow && (
-            <button
-              type="button"
-              data-no-drag="true"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onSharePress(currentCard);
-              }}
-              className="add-action-btn absolute z-30 w-14 h-14"
-              style={{ bottom: actionBottom, right: actionLabel ? 96 : 24 }}
-              aria-label="Share dish"
-            >
-              <CornerUpRight size={24} strokeWidth={2.1} />
-            </button>
-          )}
           {tertiaryActionLabel && !hasBottomActionRow ? (
             <button
               type="button"
@@ -1065,9 +1047,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               e.preventDefault();
               if (typeof onSavesPress === "function") onSavesPress(currentCard);
             }}
-            className={`absolute top-4 right-4 z-30 inline-flex h-8 items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`}
+            className={`absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`}
           >
-            saves: {Math.max(0, Number(currentCard.saves || 0))}
+            <Users size={13} strokeWidth={2.25} />
+            <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
           </button>
           <motion.div
             className="absolute inset-0"
@@ -1354,12 +1337,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 }}
                 className={
                   actionClassName ||
-                  "add-action-btn no-accent-border w-20 h-20 text-[52px]"
+                  "add-action-btn no-accent-border w-14 h-14 text-[36px]"
                 }
                 aria-label="Action"
                 disabled={disabled}
               >
-                {actionLabel === "+" ? <Plus size={46} strokeWidth={2.15} /> : actionLabel}
+                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
               </button>
             </div>
           ) : null}
@@ -1460,19 +1443,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
               </button>
               <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onSharePress(currentCard);
-                }}
-                className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
-                aria-label="Share dish"
-              >
-                <CornerUpRight size={24} strokeWidth={2.1} />
-              </button>
-              <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
                   e.stopPropagation();
@@ -1501,11 +1471,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleActionPress(e);
                 }}
-                className={`add-action-btn action-btn-white-ring h-20 w-20 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[52px]"}`}
+                className={`add-action-btn action-btn-white-ring h-14 w-14 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[36px]"}`}
                 aria-label="Action"
                 disabled={disabled}
               >
-                {actionLabel === "+" ? <Plus size={46} strokeWidth={2.15} /> : actionLabel}
+                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
               </button>
             </div>
           ) : null}

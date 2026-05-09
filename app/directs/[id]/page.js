@@ -12,7 +12,7 @@ import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
-import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, Users, X } from "lucide-react";
 
 const readMarksKey = (userId) => `directs:readMarks:${userId}`;
 
@@ -287,8 +287,9 @@ export default function DirectChat() {
                           <div className="text-[12px] font-semibold leading-tight truncate">
                             {dish?.name || "Dish"}
                           </div>
-                          <div className="text-[10px] text-white/80">
-                            saves: {Math.max(0, Number(dish?.saves || 0))}
+                          <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
+                            <Users size={10} strokeWidth={2.2} />
+                            <span>{Math.max(0, Number(dish?.saves || 0))}</span>
                           </div>
                         </div>
                       </Link>

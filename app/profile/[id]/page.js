@@ -28,7 +28,7 @@ import {
   getAvatarTone,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { MoreHorizontal, Plus, Send, Shuffle, X } from "lucide-react";
+import { MoreHorizontal, Plus, Send, Shuffle, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
@@ -473,9 +473,10 @@ export default function PublicProfile() {
           e.preventDefault();
           handleOpenSavers(dish);
         }}
-        className="pointer-events-auto text-left"
+        className="pointer-events-auto inline-flex items-center gap-1.5 text-left"
       >
-        saves: {Math.max(0, Number(dish.saves || 0))}
+        <Users size={13} strokeWidth={2.2} />
+        <span>{Math.max(0, Number(dish.saves || 0))}</span>
       </button>
     </div>
   );

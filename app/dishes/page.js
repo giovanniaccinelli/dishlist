@@ -18,7 +18,7 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { CircleUserRound, Plus, Send } from "lucide-react";
+import { CircleUserRound, Plus, Send, Users } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -724,9 +724,10 @@ export default function Dishes() {
                       e.preventDefault();
                       handleOpenSavers(dish);
                     }}
-                    className="pointer-events-auto text-left self-start text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+                    className="pointer-events-auto inline-flex items-center gap-1.5 text-left self-start text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
                   >
-                    saves: {Math.max(0, Number(dish.saves || 0))}
+                    <Users size={13} strokeWidth={2.2} />
+                    <span>{Math.max(0, Number(dish.saves || 0))}</span>
                   </button>
                 </div>
                 <button

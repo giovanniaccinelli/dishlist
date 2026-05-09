@@ -122,6 +122,7 @@ export default function NotificationsManager() {
         onNotificationActionPerformed: (event) => {
           const target =
             event?.notification?.data?.url ||
+            event?.notification?.url ||
             event?.data?.url ||
             "/";
           window.location.href = target;

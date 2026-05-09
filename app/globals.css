@@ -386,6 +386,19 @@ html.dark .bottom-nav-shell {
   box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.5);
 }
 
+html.dark .explore-expand-btn {
+  background: rgba(18, 18, 18, 0.92) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32) !important;
+}
+
+html.dark .profile-shuffle-btn {
+  background: rgba(18, 18, 18, 0.94) !important;
+  color: #f7f7f7 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
 html.dark :where(
   .pressable-card,
   .card,

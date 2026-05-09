@@ -17,7 +17,7 @@ import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { dispatchPushEvent } from "../app/lib/pushClient";
-import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
+import { RestaurantMapIcon } from "./DishModeControls";
 
 function DeckAutoplayVideo({
   src,
@@ -199,6 +199,22 @@ function getSafeRestaurantLabel(dish) {
 
 function getSafeRestaurantPlaceId(dish) {
   return typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
+}
+
+function getRelativeUploadTime(value) {
+  const rawDate = value?.toDate?.() || value;
+  const date = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
+  const time = date?.getTime?.();
+  if (!time || Number.isNaN(time)) return "";
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
+  if (diffSeconds < 60) return "now";
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 const SwipeDeck = forwardRef(function SwipeDeck({
@@ -398,6 +414,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
+  const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
   const hasIngredientsText = Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = Boolean(String(currentCard?.recipeMethod || "").trim());
@@ -939,47 +956,42 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ×
             </motion.div>
           </motion.div>
-          <div
-            data-no-drag="true"
-            className="absolute top-4 left-1/2 z-30 -translate-x-1/2"
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onPointerMoveCapture={(e) => e.stopPropagation()}
-            onPointerUpCapture={(e) => e.stopPropagation()}
-          >
-            {hasAnyRecipeText ? (
-              <div className={`no-accent-border flex h-8 items-center gap-0.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 p-0.5 text-white`}>
-                <button
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShowRecipe(false);
-                  }}
-                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !showRecipe ? "bg-white text-black" : "text-white/80"
-                  }`}
-                >
-                  dish
-                </button>
-                <button
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShowRecipe(true);
-                  }}
-                  className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    showRecipe ? "bg-white text-black" : "text-white/80"
-                  }`}
-                >
-                  recipe
-                </button>
+          <div className="absolute top-4 left-4 z-30 flex max-w-[14.5rem] flex-col items-start gap-1.5">
+            <div className="flex min-w-0 items-center gap-2 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
+              <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
+                {currentCard.ownerPhotoURL ? (
+                  <img
+                    src={currentCard.ownerPhotoURL}
+                    alt={currentCard.ownerName || "User"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  (currentCard.ownerName?.[0] || "U").toUpperCase()
+                )}
               </div>
-            ) : null}
-          </div>
-          <div className="absolute top-4 left-4 z-30 flex max-w-[11.5rem] flex-col items-start gap-1.5">
+              <div className="min-w-0">
+                {currentCard.owner ? (
+                  <Link
+                    data-no-drag="true"
+                    href={`/profile/${currentCard.owner}`}
+                    className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {currentCard.ownerName || "Unknown"}
+                  </Link>
+                ) : (
+                  <p className="truncate text-[0.98rem] font-semibold leading-tight">
+                    {currentCard.ownerName || "Unknown"}
+                  </p>
+                )}
+                {uploadDateLabel ? (
+                  <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">
+                    {uploadDateLabel}
+                  </div>
+                ) : null}
+              </div>
+            </div>
             <div className="flex items-center gap-1.5">
-              {currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0 self-center" /> : null}
               {showStoryHistoryCounter ? (
                 <button
                   type="button"
@@ -989,7 +1001,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.preventDefault();
                     setStoryHistoryOpen(true);
                   }}
-                  className={`inline-flex h-8 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white self-center`}
+                  className="no-accent-border inline-flex h-8 items-center gap-1 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md self-center"
                   aria-label="Open story push history"
                 >
                   <StoryStatIcon size={12} />
@@ -1007,7 +1019,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
-                className={`max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`}
+                className="no-accent-border max-w-full truncate rounded-full bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
                 {currentRestaurantLabel}
@@ -1034,7 +1046,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               e.preventDefault();
               if (typeof onSavesPress === "function") onSavesPress(currentCard);
             }}
-            className={`absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`}
+            className="no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
           >
             <Users size={13} strokeWidth={2.25} />
             <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
@@ -1084,33 +1096,44 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>
-                      {currentCard.ownerPhotoURL ? (
-                        <img
-                          src={currentCard.ownerPhotoURL}
-                          alt={currentCard.ownerName || "User"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        (currentCard.ownerName?.[0] || "U").toUpperCase()
-                      )}
+                  {hasAnyRecipeText ? (
+                    <div
+                      data-no-drag="true"
+                      className="mb-2"
+                      onPointerDownCapture={(e) => e.stopPropagation()}
+                      onPointerMoveCapture={(e) => e.stopPropagation()}
+                      onPointerUpCapture={(e) => e.stopPropagation()}
+                    >
+                      <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/55 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                        <button
+                          data-no-drag="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setShowRecipe(false);
+                          }}
+                          className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
+                            !showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                          }`}
+                        >
+                          dish
+                        </button>
+                        <button
+                          data-no-drag="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setShowRecipe(true);
+                          }}
+                          className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
+                            showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
+                          }`}
+                        >
+                          recipe
+                        </button>
+                      </div>
                     </div>
-                    {currentCard.owner ? (
-                      <Link
-                        data-no-drag="true"
-                        href={`/profile/${currentCard.owner}`}
-                        className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {currentCard.ownerName || "Unknown"}
-                      </Link>
-                    ) : (
-                      <p className="text-lg font-semibold leading-none">
-                        {currentCard.ownerName || "Unknown"}
-                      </p>
-                    )}
-                  </div>
+                  ) : null}
                   <button
                     type="button"
                     data-no-drag="true"
@@ -1128,13 +1151,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       <Link
                         data-no-drag="true"
                         href={currentUser?.uid && currentCard.taggedUserId === currentUser.uid ? "/profile" : `/profile/${currentCard.taggedUserId}`}
-                        className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px] underline-offset-2 hover:underline`}
+                        className="no-accent-border mt-2 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md underline-offset-2 hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
                         @{String(currentCard.taggedUserName).replace(/^@+/, "")}
                       </Link>
                     ) : (
-                      <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}>
+                      <div className="no-accent-border mt-2 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
                         @{String(currentCard.taggedUserName).replace(/^@+/, "")}
                       </div>
                     )
@@ -1158,7 +1181,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         onPointerDown={(e) => {
                           e.stopPropagation();
                         }}
-                        className={`inline-flex shrink-0 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`}
+                        className="no-accent-border inline-flex shrink-0 items-center gap-1 rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
                       >
                         <span>Link</span>
                         <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />

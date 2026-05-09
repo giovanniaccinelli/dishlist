@@ -125,7 +125,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "10px solid #F0A623",
         }}
       >
-        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.7} />
+        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.05} />
       </button>
       <button
         type="button"
@@ -136,7 +136,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "10px solid #E64646",
         }}
       >
-        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.7} />
+        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.05} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

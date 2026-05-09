@@ -684,7 +684,7 @@ export default function PublicProfile() {
         <h2 className="text-xl font-semibold">{activeDishlist?.name || "All dishes"}</h2>
         <button
           onClick={() => openShuffleDeck(activeDishlist?.id || "all_dishes")}
-          className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
+          className="profile-shuffle-btn inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
           disabled={(activeDishlist?.dishes || []).length === 0}
         >
           <Shuffle size={14} />

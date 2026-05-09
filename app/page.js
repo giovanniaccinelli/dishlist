@@ -616,7 +616,7 @@ export default function Feed() {
         >
           <ChevronLeft size={21} strokeWidth={2.8} />
         </button>
-        <div className="relative mx-auto flex items-end gap-10 border-b border-black/12">
+        <div className="feed-tab-switcher relative mx-auto flex items-end gap-10 border-b border-black/12">
           <button
             type="button"
             onClick={() => handleFeedTabChange("following")}
@@ -629,7 +629,7 @@ export default function Feed() {
               <span className="no-accent-border absolute -top-0.5 -right-3 w-2.5 h-2.5 rounded-full bg-[#E64646]" />
             ) : null}
             {activeFeed === "following" ? (
-              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
+              <span className="feed-tab-active-underline absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
             ) : null}
           </button>
           <button
@@ -641,7 +641,7 @@ export default function Feed() {
           >
             {t("For you")}
             {activeFeed === "for_you" ? (
-              <span className="absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
+              <span className="feed-tab-active-underline absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-black" />
             ) : null}
           </button>
         </div>

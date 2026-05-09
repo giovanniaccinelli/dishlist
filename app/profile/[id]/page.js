@@ -645,7 +645,7 @@ export default function PublicProfile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
                 active
                   ? item.id === "saved"
                     ? "border-[#D94A4A] bg-[linear-gradient(180deg,#FFE4E4_0%,#FFC4C4_100%)] text-[#7E1717] shadow-[0_10px_22px_rgba(217,74,74,0.18)]"

@@ -1000,7 +1000,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
           <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"}`}>
             {darkMode ? (
-              <div className="flex min-w-0 items-center gap-2 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
+              <div className="flex min-w-0 items-center gap-2 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.78)]">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
                   {currentCard.ownerPhotoURL ? (
                     <img
@@ -1068,7 +1068,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
                 className={darkMode
-                  ? "no-accent-border max-w-full truncate rounded-full bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                  ? "restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
                   : `max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`
                 }
                 aria-label={`Open ${currentRestaurantLabel} on map`}

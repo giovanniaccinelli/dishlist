@@ -45,7 +45,7 @@ export default function BottomNav() {
           const wrapperClass = "bottom-nav-item";
           const accentClass = getAccent(item.label);
           const iconClass = item.prominent
-            ? `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
+            ? `bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
                 active ? "scale-105" : ""
               }`
             : `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
@@ -64,7 +64,7 @@ export default function BottomNav() {
                 <div
                   className={
                     item.prominent
-                      ? "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                      ? "bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
                       : "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
                   }
                 >

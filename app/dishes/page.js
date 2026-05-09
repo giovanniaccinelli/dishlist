@@ -705,7 +705,8 @@ export default function Dishes() {
                     e.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}
                 />
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                <div className="absolute inset-x-0 bottom-0 z-20 px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
+                  <div className="frosted-image-overlay rounded-[1.05rem] px-3 py-2.5 flex flex-col justify-end gap-1">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -728,6 +729,7 @@ export default function Dishes() {
                   >
                     saves: {Math.max(0, Number(dish.saves || 0))}
                   </button>
+                  </div>
                 </div>
                 <button
                   onClick={(e) => {

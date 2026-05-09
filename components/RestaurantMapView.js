@@ -449,15 +449,17 @@ export default function RestaurantMapView({
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                                   }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                                  <div className="truncate text-sm font-semibold">
-                                    {user.dishes[0].name || "Untitled dish"}
-                                  </div>
-                                  {(user.dishes?.length || 0) > 1 ? (
-                                    <div className="mt-0.5 text-[10px] text-white/80">
-                                      +{user.dishes.length - 1} more here
+                                <div className="absolute inset-x-0 bottom-0 z-20 px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end">
+                                  <div className="frosted-image-overlay rounded-[0.95rem] px-2.5 py-2">
+                                    <div className="truncate text-sm font-semibold">
+                                      {user.dishes[0].name || "Untitled dish"}
                                     </div>
-                                  ) : null}
+                                    {(user.dishes?.length || 0) > 1 ? (
+                                      <div className="mt-0.5 text-[10px] text-white/80">
+                                        +{user.dishes.length - 1} more here
+                                      </div>
+                                    ) : null}
+                                  </div>
                                 </div>
                               </div>
                             </button>

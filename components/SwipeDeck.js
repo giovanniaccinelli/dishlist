@@ -1078,7 +1078,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   ? "restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
                   : `max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`
                 }
-                style={darkMode ? { borderColor: "#E64646" } : undefined}
+                style={{ border: "2px solid #E64646" }}
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
                 {currentRestaurantLabel}
@@ -1197,7 +1197,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {!showRecipe ? (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[43%] bg-gradient-to-t from-black/82 via-black/42 to-transparent" />
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent"
+                  style={{ height: "56%" }}
+                />
               ) : null}
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>

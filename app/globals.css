@@ -464,7 +464,7 @@ html.dark .profile-dishlist-tab {
   background-image: none !important;
   border-width: 2px !important;
   border-style: solid !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.28);
   color: rgba(255, 255, 255, 0.72) !important;
 }
 

@@ -40,6 +40,7 @@ import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
+import { useLanguage } from "../../../components/LanguageProvider";
 function StoryActionIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 26 24" fill="none" aria-hidden="true">
@@ -65,6 +66,7 @@ export default function DishDetail() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { darkMode } = useLanguage();
 
   const source = searchParams.get("source") || "saved";
   const mode = searchParams.get("mode") || "single";
@@ -735,7 +737,7 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className={`${editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)] restaurant-accent-border" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)] default-accent-border"} rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border-2 my-auto`}>
+          <div className={`${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border-2 my-auto`}>
             <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (

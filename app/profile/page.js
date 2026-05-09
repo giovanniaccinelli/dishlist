@@ -1309,7 +1309,7 @@ export default function Profile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`profile-dishlist-tab no-accent-border profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
                 darkMode
                   ? active
                     ? item.id === "saved"
@@ -1326,6 +1326,16 @@ export default function Profile() {
                         : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                     : "border-black/30 bg-white text-black"
               }`}
+              style={darkMode ? {
+                borderColor: active
+                  ? item.id === "saved"
+                    ? "#E64646"
+                    : item.id === "uploaded"
+                      ? "#E4B43F"
+                      : "#2BD36B"
+                  : "rgba(255,255,255,0.18)",
+                background: "transparent",
+              } : undefined}
             >
               {item.label}
             </button>
@@ -1823,7 +1833,7 @@ export default function Profile() {
           <motion.div
             className="fixed inset-0 z-[88] overflow-y-auto"
             style={{
-              background: "#FFF8EF",
+              background: darkMode ? "#050505" : "#FFF8EF",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1831,7 +1841,7 @@ export default function Profile() {
             onClick={() => setDishlistsOpen(false)}
           >
             <motion.div
-              className="min-h-screen w-full px-4 pb-28 pt-24"
+              className={`min-h-screen w-full px-4 pb-28 pt-24 ${darkMode ? "text-white" : "text-black"}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1843,7 +1853,9 @@ export default function Profile() {
                   setDishlistsOpen(false);
                   setDishlistsEditMode(false);
                 }}
-                className="fixed right-5 top-[calc(env(safe-area-inset-top,0px)+2.9rem)] z-[89] flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                className={`fixed right-5 top-[calc(env(safe-area-inset-top,0px)+2.9rem)] z-[89] flex h-11 w-11 items-center justify-center rounded-full border shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+                  darkMode ? "border-white/12 bg-[#202020] text-white" : "border-black/10 bg-white/92 text-black"
+                }`}
                 aria-label="Close dishlists"
               >
                 <X size={18} />
@@ -1851,10 +1863,10 @@ export default function Profile() {
               <div className="mx-auto w-full max-w-3xl">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
                     Dishlists
                   </div>
-                  <h3 className="mt-2 text-[1.9rem] leading-none font-bold text-black">Your DishLists</h3>
+                  <h3 className={`mt-2 text-[1.9rem] leading-none font-bold ${darkMode ? "text-white" : "text-black"}`}>Your DishLists</h3>
                 </div>
                 <button
                   type="button"
@@ -1862,7 +1874,9 @@ export default function Profile() {
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
                     dishlistsEditMode
                       ? "border border-[#D56A6A] bg-[#FFF1F1] text-[#B34747]"
-                      : "border border-black/10 bg-white text-black/70"
+                      : darkMode
+                        ? "border border-white/12 bg-[#202020] text-white/70"
+                        : "border border-black/10 bg-white text-black/70"
                   }`}
                 >
                   <Pencil size={14} />
@@ -1875,7 +1889,9 @@ export default function Profile() {
                     .sort(() => Math.random() - 0.5)
                     .slice(0, 4);
                   return (
-                    <div key={dishlist.id} className="rounded-[1.5rem] border border-black/10 bg-white p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]">
+                    <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
+                      darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
+                    }`}>
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <button
                           type="button"
@@ -1884,9 +1900,9 @@ export default function Profile() {
                             setDishlistsOpen(false);
                             setDishlistsEditMode(false);
                           }}
-                          className="min-w-0 flex-1 text-left"
+                          className="no-accent-border min-w-0 flex-1 bg-transparent text-left"
                         >
-                          <div className="truncate pr-1 text-[1rem] font-bold text-black">{dishlist.name}</div>
+                          <div className={`truncate pr-1 text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
                         </button>
                         {dishlistsEditMode && dishlist.type === "custom" ? (
                           <div className="flex shrink-0 items-center gap-1.5">
@@ -1935,7 +1951,8 @@ export default function Profile() {
                               key={`${dishlist.id}-${dish.id}-${index}`}
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
-                              className={`aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
+                              className={`no-accent-border aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
+                              style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
                               loading="lazy"
                               decoding="async"
                               onError={(event) => {
@@ -1945,7 +1962,7 @@ export default function Profile() {
                             ) : (
                             <div
                               key={`${dishlist.id}-empty-${index}`}
-                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 bg-black/6"
+                              className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
                             />
                             );
                           })}
@@ -1957,7 +1974,9 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleOpenCreateDishlist}
-                  className="min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#2BD36B]/55 bg-[#F3FFF7] p-3 text-left"
+                  className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#2BD36B]/55 p-3 text-left ${
+                    darkMode ? "bg-[#102817]" : "bg-[#F3FFF7]"
+                  }`}
                 >
                   <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#176A37]">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2BD36B] text-white">

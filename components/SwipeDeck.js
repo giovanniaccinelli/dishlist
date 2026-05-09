@@ -909,7 +909,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 nextVideoRef.current = node;
               },
             })}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </motion.div>
         ) : null}
         <motion.div
@@ -1134,6 +1133,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     !showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
                   }`}
+                  style={!showRecipe ? { color: "#050505" } : undefined}
                 >
                   dish
                 </button>
@@ -1147,6 +1147,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     showRecipe ? "bg-[#FFC247] text-black" : "text-white/76"
                   }`}
+                  style={showRecipe ? { color: "#050505" } : undefined}
                 >
                   recipe
                 </button>
@@ -1195,7 +1196,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-hidden="true"
                 />
               ) : null}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               {!showRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   {!darkMode ? (
@@ -1298,7 +1298,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
 
             <div
-              className={`absolute inset-0 bg-white text-black p-6 pt-16 overflow-hidden ${showRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
+              className={`absolute inset-0 p-6 pt-16 overflow-hidden ${
+                darkMode ? "bg-[#101010] text-white" : "bg-white text-black"
+              } ${showRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
               <button
@@ -1316,15 +1318,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 style={{ bottom: `${recipeContentBottom}px` }}
               >
                 <div className="mb-5 shrink-0">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
                     Recipe
                   </div>
                   <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   {!hasAnyRecipeText ? (
-                    <div className="flex min-h-0 flex-1 items-center justify-center rounded-[1.6rem] border border-black/8 bg-[linear-gradient(180deg,#FFFDFC_0%,#F7F2E8_100%)] px-6 py-8 text-center shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
-                      <div className="text-[1.65rem] font-bold tracking-tight text-black/42">
+                    <div className={`flex min-h-0 flex-1 items-center justify-center rounded-[1.6rem] border px-6 py-8 text-center shadow-[0_12px_30px_rgba(0,0,0,0.04)] ${
+                      darkMode ? "border-white/10 bg-[#1A1A1A]" : "border-black/8 bg-[linear-gradient(180deg,#FFFDFC_0%,#F7F2E8_100%)]"
+                    }`}>
+                      <div className={`text-[1.65rem] font-bold tracking-tight ${darkMode ? "text-white/42" : "text-black/42"}`}>
                         No recipe provided
                       </div>
                     </div>
@@ -1333,10 +1337,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={ingredientsPanelRef}
                     data-no-drag="true"
-                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative`}
+                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative ${
+                      darkMode ? "bg-[#1A1A1A] text-white" : "bg-white"
+                    }`}
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Ingredients</h3>
+                      <h3 className={`text-[13px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/45"}`}>Ingredients</h3>
                       {recipePanelOverflow.ingredients ? (
                         <button
                           type="button"
@@ -1358,7 +1364,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("ingredients");
                           }}
-                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} bg-[#F7F5EF] text-black/65`}
+                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
+                            darkMode ? "bg-[#242424] text-white/70" : "bg-[#F7F5EF] text-black/65"
+                          }`}
                           style={{ touchAction: "manipulation" }}
                           aria-label="Open ingredients full screen"
                         >
@@ -1366,7 +1374,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         </button>
                       ) : null}
                     </div>
-                    <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
+                    <p className={`text-sm leading-6 whitespace-pre-wrap ${darkMode ? "text-white/78" : "text-black/80"}`}>
                       {currentCard.recipeIngredients}
                     </p>
                   </div>
@@ -1375,10 +1383,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div
                     ref={methodPanelRef}
                     data-no-drag="true"
-                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} bg-white px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative`}
+                    className={`min-h-0 flex-1 rounded-[1.4rem] border-2 ${restaurantAccentBorder} px-4 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.04)] overflow-hidden relative ${
+                      darkMode ? "bg-[#1A1A1A] text-white" : "bg-white"
+                    }`}
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black/45">Method</h3>
+                      <h3 className={`text-[13px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/45"}`}>Method</h3>
                       {recipePanelOverflow.method ? (
                         <button
                           type="button"
@@ -1400,7 +1410,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("method");
                           }}
-                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} bg-[#F7F5EF] text-black/65`}
+                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
+                            darkMode ? "bg-[#242424] text-white/70" : "bg-[#F7F5EF] text-black/65"
+                          }`}
                           style={{ touchAction: "manipulation" }}
                           aria-label="Open method full screen"
                         >
@@ -1408,7 +1420,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         </button>
                       ) : null}
                     </div>
-                    <p className="text-sm leading-6 text-black/80 whitespace-pre-wrap">
+                    <p className={`text-sm leading-6 whitespace-pre-wrap ${darkMode ? "text-white/78" : "text-black/80"}`}>
                       {currentCard.recipeMethod}
                     </p>
                   </div>
@@ -1511,7 +1523,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           )}
 
           {hasBottomActionRow ? (
-            <div className="absolute left-4 right-4 z-30 flex items-center justify-between" style={{ bottom: actionBottom }}>
+            <div className="absolute left-4 right-4 z-30 flex items-center justify-end gap-3" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -1753,7 +1765,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             onClick={closeRecipePanelModal}
           >
             <motion.div
-              className="relative w-full max-w-md max-h-[68vh] overflow-hidden rounded-[30px] border border-black/10 bg-[linear-gradient(180deg,#FCFAF4_0%,#F7F2E8_100%)] text-black shadow-[0_30px_80px_rgba(0,0,0,0.24)]"
+              className={`relative w-full max-w-md max-h-[68vh] overflow-hidden rounded-[30px] border shadow-[0_30px_80px_rgba(0,0,0,0.24)] ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-[linear-gradient(180deg,#FCFAF4_0%,#F7F2E8_100%)] text-black"
+              }`}
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -1765,7 +1779,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <div className="flex max-h-[68vh] min-h-0 flex-col px-5 pb-5 pt-4">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
                     Recipe
                   </div>
                   <h3 className="mt-1 text-[1.6rem] font-bold leading-none">
@@ -1775,18 +1789,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <button
                   type="button"
                   onClick={closeRecipePanelModal}
-                  className="w-11 h-11 rounded-[1.1rem] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center"
+                  className={`w-11 h-11 rounded-[1.1rem] border shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center ${
+                    darkMode ? "border-white/12 bg-[#202020] text-white" : "border-black/10 bg-white"
+                  }`}
                   aria-label="Close full screen recipe panel"
                 >
                   <X size={18} />
                 </button>
               </div>
               <div
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.7rem] border border-black/8 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.08)] touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className={`min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.7rem] border px-5 py-5 shadow-[0_18px_40px_rgba(0,0,0,0.08)] touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+                  darkMode ? "border-white/10 bg-[#1A1A1A]" : "border-black/8 bg-white"
+                }`}
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
                 <div className="mb-4 text-xl font-bold leading-tight">{currentCard?.name}</div>
-                <p className="text-sm leading-7 text-black/80 whitespace-pre-wrap">
+                <p className={`text-sm leading-7 whitespace-pre-wrap ${darkMode ? "text-white/80" : "text-black/80"}`}>
                   {recipePanelModal === "ingredients"
                     ? currentCard?.recipeIngredients || "No ingredients provided."
                     : currentCard?.recipeMethod || "No method provided."}

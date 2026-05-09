@@ -370,12 +370,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
   const displayTitle = toTitleCase(t(String(row.rawTag || row.title || "")));
   return (
     <div className="flex items-center gap-2">
-      <span
-        className={`explore-category-pill no-accent-border inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${
-          darkMode ? "border-transparent bg-transparent text-white" : decor.pillClass
-        }`}
-        style={darkMode ? { background: "transparent", backgroundImage: "none", boxShadow: "none" } : undefined}
-      >
+      <span className={`explore-category-pill no-accent-border inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${decor.pillClass}`}>
         {displayTitle}
       </span>
       <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />
@@ -399,7 +394,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
               if (!row.placeId) return;
               window.location.href = `/map?placeId=${encodeURIComponent(row.placeId)}`;
             }}
-            className="min-w-0 text-left"
+            className="no-accent-border min-w-0 bg-transparent text-left"
             aria-label={`Open ${title} on map`}
           >
             <CategoryTitle row={row} t={t} darkMode={darkMode} />
@@ -408,7 +403,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
           <button
             type="button"
             onClick={onExpand}
-            className="min-w-0 text-left"
+            className="no-accent-border min-w-0 bg-transparent text-left"
             aria-label={`Open ${title}`}
           >
             <CategoryTitle row={row} t={t} darkMode={darkMode} />

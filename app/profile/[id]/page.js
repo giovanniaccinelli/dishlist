@@ -645,7 +645,7 @@ export default function PublicProfile() {
               key={item.id}
               type="button"
               onClick={() => selectDishlist(item.id)}
-              className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`profile-dishlist-tab no-accent-border profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
                 darkMode
                   ? active
                     ? item.id === "saved"
@@ -662,6 +662,16 @@ export default function PublicProfile() {
                         : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
                     : "border-black/30 bg-white text-black"
               }`}
+              style={darkMode ? {
+                borderColor: active
+                  ? item.id === "saved"
+                    ? "#E64646"
+                    : item.id === "uploaded"
+                      ? "#E4B43F"
+                      : "#2BD36B"
+                  : "rgba(255,255,255,0.18)",
+                background: "transparent",
+              } : undefined}
             >
               {item.label}
             </button>
@@ -831,14 +841,14 @@ export default function PublicProfile() {
       <AnimatePresence>
         {dishlistsOpen && (
           <motion.div
-            className="fixed inset-0 z-[88] bg-[#F6F6F2] overflow-y-auto"
+            className={`fixed inset-0 z-[88] overflow-y-auto ${darkMode ? "bg-[#050505]" : "bg-[#F6F6F2]"}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setDishlistsOpen(false)}
           >
             <motion.div
-              className="min-h-screen w-full px-4 pb-28 pt-24"
+              className={`min-h-screen w-full px-4 pb-28 pt-24 ${darkMode ? "text-white" : "text-black"}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -847,14 +857,14 @@ export default function PublicProfile() {
               <div className="mx-auto w-full max-w-3xl">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
                     Dishlists
                   </div>
-                  <h3 className="mt-2 text-[1.7rem] leading-none font-semibold text-black">
+                  <h3 className={`mt-2 text-[1.7rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {profileUser.displayName || "User"}&apos;s lists
                   </h3>
                 </div>
-                <button type="button" onClick={() => setDishlistsOpen(false)} className="text-sm text-black/55">
+                <button type="button" onClick={() => setDishlistsOpen(false)} className={`text-sm ${darkMode ? "text-white/65" : "text-black/55"}`}>
                   Close
                 </button>
               </div>
@@ -871,9 +881,11 @@ export default function PublicProfile() {
                         selectDishlist(dishlist.id);
                         setDishlistsOpen(false);
                       }}
-                      className="rounded-[1.5rem] border border-black/10 bg-[#FBF8F1] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)]"
+                      className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
+                        darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-[#FBF8F1]"
+                      }`}
                     >
-                      <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                      <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {Array.from({ length: 4 }).map((_, index) => {
                           const dish = preview[index];
@@ -882,7 +894,8 @@ export default function PublicProfile() {
                               key={`${dishlist.id}-${dish.id}-${index}`}
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
-                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 object-cover"
+                              className={`no-accent-border aspect-square w-full rounded-[0.85rem] border-2 object-cover ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
+                              style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
                               loading="lazy"
                               decoding="async"
                               onError={(event) => {
@@ -892,7 +905,7 @@ export default function PublicProfile() {
                           ) : (
                             <div
                               key={`${dishlist.id}-empty-${index}`}
-                              className="aspect-square w-full rounded-[0.85rem] border border-black/10 bg-black/6"
+                              className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
                             />
                           );
                         })}

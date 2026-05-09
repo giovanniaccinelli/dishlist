@@ -557,10 +557,10 @@ export default function Dishlists() {
                       {previewCells.map((previewDish, idx) => (
                         <div
                           key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
-                          className={`people-preview-dish aspect-square overflow-hidden rounded-lg border-2 ${
+                          className={`people-preview-dish no-accent-border aspect-square overflow-hidden rounded-lg border-2 ${
                             previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
                           } bg-neutral-100`}
-                          style={darkMode ? { borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" } : undefined}
+                          style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
                         >
                           {previewDish?.imageUrl ? (
                             <img

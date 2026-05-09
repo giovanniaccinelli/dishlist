@@ -370,7 +370,7 @@ export default function RestaurantMapView({
 
         {selectedGroup && mapState === "ready" ? (
           <div
-            className="absolute inset-x-3 bottom-3 z-10 max-h-[22rem] overflow-hidden"
+            className="absolute inset-x-3 bottom-3 top-[5.5rem] z-10 overflow-hidden"
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
@@ -425,7 +425,7 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex flex-1 min-h-0 items-stretch gap-3 overflow-x-auto pb-1">
+                    <div className="mt-3 flex flex-1 min-h-0 items-start gap-3 overflow-x-auto pb-1">
                       {selectedGroup.users.map((user) => (
                         <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 flex-col">
                           <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">

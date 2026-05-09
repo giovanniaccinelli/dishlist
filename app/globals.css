@@ -301,6 +301,104 @@
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.35rem);
 }
 
+html.dark,
+html.dark body {
+  background: #050505 !important;
+  color: #f7f7f7 !important;
+}
+
+html.dark .app-background-surface {
+  background: #050505 !important;
+}
+
+html.dark :where(.text-black, [class*="text-black/"]) {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.dark :where(.text-gray-500, .text-gray-600, .text-black\/45, .text-black\/50, .text-black\/55, .text-black\/60, .text-black\/65, .text-black\/70, .text-black\/72, .text-black\/78) {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+html.dark :where(.bg-white, .bg-white\/80, .bg-white\/82, .bg-white\/85, .bg-white\/90, .bg-white\/92, .bg-white\/94, .bg-white\/95, .bg-white\/96, .bg-white\/98),
+html.dark :where([class*="bg-[#FFF"], [class*="bg-[#F7"], [class*="bg-[#F6"], [class*="bg-[#FB"], [class*="bg-[#EFE"]) {
+  background: rgba(18, 18, 18, 0.92) !important;
+  background-image: none !important;
+}
+
+html.dark :where([class*="bg-black/5"], [class*="bg-black/[0.03]"], [class*="bg-black/[0.04]"], [class*="bg-black/6"], [class*="bg-black/10"], [class*="bg-black/12"]) {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .app-top-nav {
+  color: #f7f7f7;
+}
+
+html.dark .top-action-btn {
+  background: rgba(14, 14, 14, 0.92) !important;
+  color: #f7f7f7 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), 0 2px 10px rgba(255, 255, 255, 0.03);
+}
+
+html.dark .dish-mode-control-btn--home {
+  border-color: #f0a623 !important;
+  color: #f0a623 !important;
+}
+
+html.dark .dish-mode-control-btn--restaurant {
+  border-color: #e64646 !important;
+  color: #e64646 !important;
+}
+
+html.dark .dish-mode-control-btn {
+  background: rgba(18, 18, 18, 0.96) !important;
+}
+
+html.dark .bottom-nav-shell {
+  border-top-color: rgba(255, 255, 255, 0.09);
+  background: rgba(5, 5, 5, 0.92);
+  box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.5);
+}
+
+html.dark :where(
+  .pressable-card,
+  .card,
+  button[class*="rounded"],
+  a[class*="rounded"],
+  input[class*="rounded"],
+  textarea[class*="rounded"],
+  select[class*="rounded"],
+  div[class*="rounded"][class*="bg"],
+  div[class*="rounded"][class*="border"],
+  span[class*="rounded"][class*="bg"],
+  span[class*="rounded"][class*="border"]
+):not(.no-accent-border):not(.dish-card-shell):not(.dish-mode-control-btn) {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+html.dark :where(input, textarea, select) {
+  background: rgba(18, 18, 18, 0.94) !important;
+  color: #f7f7f7 !important;
+  caret-color: #f0a623;
+}
+
+html.dark :where(input, textarea, select)::placeholder {
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+
+html.dark .dish-card-shell {
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.56), 0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+html.dark .dish-card-shell--default,
+html.dark .dish-card-shell--restaurant {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+html.dark :where(.shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, [class*="shadow-["]) {
+  --tw-shadow-color: rgba(0, 0, 0, 0.55) !important;
+}
+
 .bottom-nav-floating-action {
   bottom: calc(var(--app-bottom-nav-height) + 1rem);
 }

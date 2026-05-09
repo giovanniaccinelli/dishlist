@@ -137,7 +137,7 @@ function mergeStoryStats(groups = []) {
 
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, darkMode, setDarkMode, t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
   const pathname = usePathname();
@@ -1164,6 +1164,16 @@ export default function Profile() {
                   </button>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setDarkMode(!darkMode)}
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-black/5"
+              >
+                <span>{t("Dark mode")}</span>
+                <span className={`no-accent-border flex h-6 w-11 items-center rounded-full p-0.5 transition ${darkMode ? "bg-black" : "bg-black/12"}`}>
+                  <span className={`no-accent-border h-5 w-5 rounded-full bg-white shadow-sm transition ${darkMode ? "translate-x-5" : "translate-x-0"}`} />
+                </span>
+              </button>
 
               <button
                 type="button"

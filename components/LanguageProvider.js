@@ -8,6 +8,7 @@ import { useAuth } from "../app/lib/auth";
 export const LANGUAGE_EN = "en";
 export const LANGUAGE_IT = "it";
 const LANGUAGE_STORAGE_KEY = "dishlist-language";
+const DARK_MODE_STORAGE_KEY = "dishlist-dark-mode";
 const TEXT_ATTRIBUTES = ["placeholder", "aria-label", "title", "value"];
 const textNodeOriginals = new WeakMap();
 const elementAttrOriginals = new WeakMap();
@@ -29,6 +30,7 @@ const translations = {
     "Log Out": "Esci",
     "Delete Account": "Elimina account",
     Language: "Lingua",
+    "Dark mode": "Modalita scura",
     English: "Inglese",
     Italian: "Italiano",
     followers: "follower",
@@ -349,18 +351,25 @@ function applyTranslationsToDocument(language) {
 const LanguageContext = createContext({
   language: LANGUAGE_EN,
   setLanguage: () => {},
+  darkMode: false,
+  setDarkMode: () => {},
   t: (value) => value,
 });
 
 export function LanguageProvider({ children }) {
   const { user } = useAuth();
   const [language, setLanguageState] = useState(LANGUAGE_EN);
+  const [darkMode, setDarkModeState] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (stored === LANGUAGE_EN || stored === LANGUAGE_IT) {
       setLanguageState(stored);
+    }
+    const storedDarkMode = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
+    if (storedDarkMode === "1" || storedDarkMode === "true") {
+      setDarkModeState(true);
     }
   }, []);
 
@@ -371,15 +380,22 @@ export function LanguageProvider({ children }) {
     (async () => {
       try {
         const snap = await getDoc(doc(db, "users", user.uid));
-        const remoteLanguage = snap.exists() ? snap.data()?.language : "";
+        const data = snap.exists() ? snap.data() : {};
+        const remoteLanguage = data?.language || "";
         if (!cancelled && (remoteLanguage === LANGUAGE_EN || remoteLanguage === LANGUAGE_IT)) {
           setLanguageState((prev) => {
             const stored = typeof window !== "undefined" ? window.localStorage.getItem(LANGUAGE_STORAGE_KEY) : "";
             return stored === LANGUAGE_EN || stored === LANGUAGE_IT ? stored : remoteLanguage;
           });
         }
+        if (!cancelled && typeof data?.darkMode === "boolean") {
+          setDarkModeState((prev) => {
+            const stored = typeof window !== "undefined" ? window.localStorage.getItem(DARK_MODE_STORAGE_KEY) : "";
+            return stored === "1" || stored === "true" ? prev : data.darkMode;
+          });
+        }
       } catch (err) {
-        console.warn("Failed to load language preference:", err);
+        console.warn("Failed to load user preferences:", err);
       }
     })();
 
@@ -397,6 +413,16 @@ export function LanguageProvider({ children }) {
     }
   }, [language]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(DARK_MODE_STORAGE_KEY, darkMode ? "1" : "0");
+    }
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", darkMode);
+      document.documentElement.style.colorScheme = darkMode ? "dark" : "light";
+    }
+  }, [darkMode]);
+
   useEffect(() => applyTranslationsToDocument(language), [language]);
 
   const setLanguage = async (nextLanguage) => {
@@ -410,15 +436,28 @@ export function LanguageProvider({ children }) {
     }
   };
 
+  const setDarkMode = async (nextDarkMode) => {
+    const enabled = Boolean(nextDarkMode);
+    setDarkModeState(enabled);
+    if (!user?.uid) return;
+    try {
+      await setDoc(doc(db, "users", user.uid), { darkMode: enabled }, { merge: true });
+    } catch (err) {
+      console.warn("Failed to persist dark mode preference:", err);
+    }
+  };
+
   const value = useMemo(
     () => ({
       language,
       setLanguage,
+      darkMode,
+      setDarkMode,
       t: (input) => {
         return translateString(String(input ?? ""), language);
       },
     }),
-    [language]
+    [darkMode, language]
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

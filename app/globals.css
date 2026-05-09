@@ -219,6 +219,17 @@
   border-color: var(--app-accent-border) !important;
   border-width: 2px !important;
   border-style: solid !important;
+}
+
+:where(
+  .pressable-card,
+  .card,
+  button[class*="rounded"],
+  a[class*="rounded"],
+  input[class*="rounded"],
+  textarea[class*="rounded"],
+  select[class*="rounded"]
+):not(.no-accent-border):not(.dish-card-shell) {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 

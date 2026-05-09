@@ -119,9 +119,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_COOKING)}
-        className={`top-action-btn relative ${buttonSizeClass} rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`top-action-btn relative ${buttonSizeClass} rounded-full border-[4px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter home dishes"
         style={{
+          borderWidth: 4,
           borderColor: "#F0A623",
           background: value === DISH_MODE_COOKING ? "#FFF1C8" : "#FFFFFF",
           color: value === DISH_MODE_COOKING ? "#C78400" : "#D59A14",
@@ -132,9 +133,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className={`top-action-btn restaurant-accent-border relative ${buttonSizeClass} rounded-full border-2 shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`top-action-btn restaurant-accent-border relative ${buttonSizeClass} rounded-full border-[4px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter restaurant dishes"
         style={{
+          borderWidth: 4,
           borderColor: "#E64646",
           background: value === DISH_MODE_RESTAURANT ? "#FFE0E0" : "#FFFFFF",
           color: "#D53333",

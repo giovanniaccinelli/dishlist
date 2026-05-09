@@ -670,7 +670,7 @@ export default function Feed() {
             actionOnRightSwipe={false}
             dismissOnAction={false}
             actionLabel="+"
-            actionClassName="add-action-btn w-14 h-14 text-[36px]"
+            actionClassName="add-action-btn w-20 h-20 text-[52px]"
             onSecondaryAction={selectedDishMode === DISH_MODE_RESTAURANT ? handleOpenRestaurantMap : undefined}
             secondaryActionLabel={
               selectedDishMode === DISH_MODE_RESTAURANT
@@ -729,7 +729,7 @@ export default function Feed() {
               actionOnRightSwipe={false}
               dismissOnAction={false}
               actionLabel="+"
-              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionClassName="add-action-btn w-20 h-20 text-[52px]"
               onSecondaryAction={selectedDishMode === DISH_MODE_RESTAURANT ? handleOpenRestaurantMap : undefined}
               secondaryActionLabel={
                 selectedDishMode === DISH_MODE_RESTAURANT

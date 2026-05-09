@@ -141,6 +141,15 @@
   border-color: #e64646 !important;
 }
 
+.explore-row,
+.explore-row > div {
+  box-shadow: none !important;
+}
+
+.explore-row .explore-dish-preview {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16), 0 5px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
 :where(
   .pressable-card,
   .card,

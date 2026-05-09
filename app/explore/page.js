@@ -308,7 +308,7 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title, t }) {
   return (
-    <div className={`pressable-card relative w-full bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+    <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-[0_16px_34px_rgba(0,0,0,0.16),0_5px_12px_rgba(0,0,0,0.08)] ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <img
         src={getDishImageUrl(dish, "thumb")}
@@ -381,8 +381,8 @@ function ExploreRow({ row, onExpand, t }) {
   const isRestaurantRow = row.key.startsWith("restaurant-");
 
   return (
-    <section className="mb-6" style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}>
-      <div className="mb-2.5 flex items-center justify-between">
+    <section className="explore-row no-accent-border mb-6 shadow-none" style={{ contentVisibility: "auto", containIntrinsicSize: "180px", boxShadow: "none" }}>
+      <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
         {isRestaurantRow ? (
           <button
             type="button"
@@ -409,14 +409,14 @@ function ExploreRow({ row, onExpand, t }) {
           <button
             type="button"
             onClick={onExpand}
-            className="w-10 h-10 rounded-[1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] flex items-center justify-center"
+            className="no-accent-border w-10 h-10 rounded-[1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] flex items-center justify-center"
             aria-label={`Open ${title}`}
           >
             <ChevronRight size={18} />
           </button>
         ) : null}
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="no-accent-border flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory shadow-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish) => (
           <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
             <DishPreview dish={dish} title={title} t={t} />

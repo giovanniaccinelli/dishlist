@@ -1354,12 +1354,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 }}
                 className={
                   actionClassName ||
-                  "add-action-btn no-accent-border w-16 h-16 text-[40px]"
+                  "add-action-btn no-accent-border w-20 h-20 text-[52px]"
                 }
                 aria-label="Action"
                 disabled={disabled}
               >
-                {actionLabel === "+" ? <Plus size={34} strokeWidth={2.1} /> : actionLabel}
+                {actionLabel === "+" ? <Plus size={46} strokeWidth={2.15} /> : actionLabel}
               </button>
             </div>
           ) : null}
@@ -1501,11 +1501,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   } catch {}
                   handleActionPress(e);
                 }}
-                className={`add-action-btn action-btn-white-ring h-16 w-16 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[40px]"}`}
+                className={`add-action-btn action-btn-white-ring h-20 w-20 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[52px]"}`}
                 aria-label="Action"
                 disabled={disabled}
               >
-                {actionLabel === "+" ? <Plus size={34} strokeWidth={2.1} /> : actionLabel}
+                {actionLabel === "+" ? <Plus size={46} strokeWidth={2.15} /> : actionLabel}
               </button>
             </div>
           ) : null}

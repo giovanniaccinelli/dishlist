@@ -13,7 +13,6 @@ import {
   uploadProfileImage,
   deleteImageByUrl,
   saveDishToFirestore,
-  getDishesFromFirestore,
   getUploadedDishesForUserAliases,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
@@ -329,6 +328,11 @@ export default function Profile() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [profileOptionsOpen]);
 
+  const loadOwnUploadedDishes = async () => {
+    if (!user?.uid) return [];
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    return getUploadedDishesForUserAliases(getProfileIdCandidates(user.uid, userSnap));
+  };
 
 
   useEffect(() => {
@@ -503,8 +507,28 @@ export default function Profile() {
           dishName: dishName || "",
         });
       }
-      const updatedDishes = await getDishesFromFirestore(user.uid);
-      setUploadedDishes(updatedDishes);
+      setUploadedDishes((prev) =>
+        mergeUniqueById([
+          [
+            {
+              id: dishId,
+              name: dishName,
+              description: dishDescription || "",
+              dishMode: DISH_MODE_COOKING,
+              recipeIngredients: dishRecipeIngredients || "",
+              recipeMethod: dishRecipeMethod || "",
+              tags: dishTags,
+              isPublic: dishIsPublic,
+              ...imageFields,
+              owner: user.uid,
+              ownerName: user.displayName || "Anonymous",
+              ownerPhotoURL: effectiveProfilePhotoURL || "",
+              createdAt: new Date(),
+            },
+          ],
+          prev,
+        ])
+      );
       setDishName("");
       setDishDescription("");
       setDishRecipeIngredients("");
@@ -531,7 +555,7 @@ export default function Profile() {
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image
     );
     await removeDishFromAllUsers(dish.id);
-    const refreshedUploaded = await getDishesFromFirestore(user.uid);
+    const refreshedUploaded = await loadOwnUploadedDishes();
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
     setUploadedDishes(refreshedUploaded);
     setSavedDishes(refreshedSaved);
@@ -703,7 +727,7 @@ export default function Profile() {
       await removeDishFromAllUsers(dish.id);
     }
     const [refreshedUploaded, refreshedSaved, refreshedToTry] = await Promise.all([
-      getDishesFromFirestore(user.uid),
+      loadOwnUploadedDishes(),
       getSavedDishesFromFirestore(user.uid),
       getToTryDishesFromFirestore(user.uid),
     ]);
@@ -844,7 +868,10 @@ export default function Profile() {
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
-        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+        dishes:
+          unfilteredActiveDishlist.id === "uploaded"
+            ? (unfilteredActiveDishlist.dishes || [])
+            : (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
@@ -2541,7 +2568,7 @@ export default function Profile() {
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="restaurant-accent-border mx-auto flex h-[calc(100dvh-7rem)] max-h-[calc(100dvh-7rem)] w-full max-w-[25.5rem] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
+              className="restaurant-accent-border mx-auto flex h-[calc(100dvh-12rem)] max-h-[calc(100dvh-12rem)] w-full max-w-[25.5rem] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}

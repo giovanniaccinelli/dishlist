@@ -89,7 +89,15 @@ export default function BottomNav() {
               className={wrapperClass}
             >
               <div className={iconClass}>
-                <Icon size={item.prominent ? 26 : 22} />
+                {item.label === "profile" && user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || "Profile"}
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <Icon size={item.prominent ? 26 : 22} />
+                )}
               </div>
               {item.prominent ? (
                 <span className="mt-1 invisible">upload</span>

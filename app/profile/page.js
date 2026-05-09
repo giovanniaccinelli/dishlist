@@ -150,7 +150,7 @@ export default function Profile() {
   const [customDishlists, setCustomDishlists] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
-  const [activeDishlistId, setActiveDishlistId] = useState("saved");
+  const [activeDishlistId, setActiveDishlistId] = useState("all_dishes");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
@@ -402,10 +402,10 @@ export default function Profile() {
   useEffect(() => {
     if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
-    setActiveDishlistId("saved");
+    setActiveDishlistId("all_dishes");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      params.set("list", "saved");
+      params.set("list", "all_dishes");
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, [activeDishlistId, customDishlists]);
@@ -424,7 +424,7 @@ export default function Profile() {
   };
 
   const buildProfileReturnTo = () => {
-    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "saved")}`;
+    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "all_dishes")}`;
   };
 
   const getProfileAddTargetListId = () => {
@@ -816,7 +816,6 @@ export default function Profile() {
   );
 
   const allDishlists = [
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -824,6 +823,7 @@ export default function Profile() {
       dishes: sortDishlistDishes(allDishesCollection),
       count: allDishesCollection.length,
     },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: uploadedDishes.length },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
@@ -885,7 +885,7 @@ export default function Profile() {
     setCreateDishlistStep(0);
     setNewDishlistName("");
     setSelectedDishIds([]);
-    setCreateSourceDishlistId(allDishlists[0]?.id || "saved");
+    setCreateSourceDishlistId(allDishlists[0]?.id || "all_dishes");
     setCreateDishSearch("");
     setCreateDishlistOpen(true);
   };
@@ -946,7 +946,7 @@ export default function Profile() {
     }
     await refreshCustomDishlists(user.uid);
     if (activeDishlistId === dishlistDeleteTarget.id) {
-      selectDishlist("saved");
+      selectDishlist("all_dishes");
     }
     setDishlistDeleteTarget(null);
     setDishlistsEditMode(false);
@@ -1282,9 +1282,9 @@ export default function Profile() {
 
       <div className="mb-2 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: "Favorites" },
-          { id: "uploaded", label: "Uploaded" },
           { id: "all_dishes", label: "All dishes" },
+          { id: "uploaded", label: "Uploaded" },
+          { id: "saved", label: "Favorites" },
         ].map((item) => {
           const active = activeDishlistId === item.id;
           return (
@@ -1328,10 +1328,10 @@ export default function Profile() {
 </div>
 
       <DishGrid
-        title={activeDishlist?.name || "Favorites"}
+        title={activeDishlist?.name || "All dishes"}
         dishes={activeDishlist?.dishes || []}
         allowDelete={false}
-        source={activeDishlist?.id || "saved"}
+        source={activeDishlist?.id || "all_dishes"}
         onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
       />
 

@@ -128,7 +128,7 @@ export default function PublicProfile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
   const [dishes, setDishes] = useState([]);
-  const [activeDishlistId, setActiveDishlistId] = useState("saved");
+  const [activeDishlistId, setActiveDishlistId] = useState("all_dishes");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -256,10 +256,10 @@ export default function PublicProfile() {
   useEffect(() => {
     if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
-    setActiveDishlistId("saved");
+    setActiveDishlistId("all_dishes");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      params.set("list", "saved");
+      params.set("list", "all_dishes");
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, [activeDishlistId, customDishlists]);
@@ -273,7 +273,7 @@ export default function PublicProfile() {
   };
 
   const buildProfileReturnTo = () => {
-    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "saved")}`;
+    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "all_dishes")}`;
   };
 
   // Follow/Unfollow handler
@@ -431,7 +431,6 @@ export default function PublicProfile() {
   );
 
   const allDishlists = [
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -439,6 +438,7 @@ export default function PublicProfile() {
       dishes: sortDishlistDishes(allDishesCollection),
       count: allDishesCollection.length,
     },
+    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
     { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: dishes.length },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
@@ -635,9 +635,9 @@ export default function PublicProfile() {
 
       <div className="mb-2 flex items-center justify-center gap-2">
         {[
-          { id: "saved", label: t("Favorites") },
-          { id: "uploaded", label: t("Uploaded") },
           { id: "all_dishes", label: t("All dishes") },
+          { id: "uploaded", label: t("Uploaded") },
+          { id: "saved", label: t("Favorites") },
         ].map((item) => {
           const active = activeDishlistId === item.id;
           return (
@@ -681,9 +681,9 @@ export default function PublicProfile() {
 </div>
 
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{activeDishlist?.name || "Favorites"}</h2>
+        <h2 className="text-xl font-semibold">{activeDishlist?.name || "All dishes"}</h2>
         <button
-          onClick={() => openShuffleDeck(activeDishlist?.id || "saved")}
+          onClick={() => openShuffleDeck(activeDishlist?.id || "all_dishes")}
           className="inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
           disabled={(activeDishlist?.dishes || []).length === 0}
         >
@@ -709,7 +709,7 @@ export default function PublicProfile() {
                     const returnParam = encodeURIComponent(buildProfileReturnTo());
                     return activeDishlist?.type === "custom"
                       ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "saved"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
+                      : `/dish/${dish.id}?source=${activeDishlist?.id || "all_dishes"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
                   })()}
                   className="absolute inset-0 z-10"
                 >

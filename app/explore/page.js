@@ -416,7 +416,7 @@ function ExploreRow({ row, onExpand, t }) {
             className="no-accent-border w-10 h-10 rounded-[1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] flex items-center justify-center"
             aria-label={`Open ${title}`}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={18} className="rotate-90" />
           </button>
         ) : null}
       </div>

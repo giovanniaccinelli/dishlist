@@ -85,8 +85,8 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const [flashMessage, setFlashMessage] = useState("");
   const flashTimerRef = useRef(null);
   const isLarge = className.includes("dish-mode-filter--large");
-  const buttonSizeClass = isLarge ? "!h-[3.25rem] !w-[3.65rem] !min-w-[3.65rem]" : "!h-[2.85rem] !w-[3.15rem] !min-w-[3.15rem]";
-  const iconSizeClass = isLarge ? "h-[1.62rem] w-[1.62rem]" : "h-[1.38rem] w-[1.38rem]";
+  const buttonSizeClass = isLarge ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
+  const iconSizeClass = isLarge ? "h-[2.05rem] w-[2.05rem]" : "h-[1.72rem] w-[1.72rem]";
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
@@ -119,30 +119,30 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_COOKING)}
-        className={`top-action-btn dish-mode-control-btn relative ${buttonSizeClass} rounded-full border-[8px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`top-action-btn dish-mode-control-btn dish-mode-control-btn--home relative ${buttonSizeClass} rounded-full border-[10px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter home dishes"
         style={{
-          borderWidth: 8,
+          borderWidth: 10,
           borderColor: "#F0A623",
           background: value === DISH_MODE_COOKING ? "#FFF1C8" : "#FFFFFF",
           color: value === DISH_MODE_COOKING ? "#C78400" : "#D59A14",
         }}
       >
-        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.5} />
+        <CookingHomeIcon className={iconSizeClass} strokeWidth={2.7} />
       </button>
       <button
         type="button"
         onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className={`top-action-btn dish-mode-control-btn relative ${buttonSizeClass} rounded-full border-[8px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
+        className={`top-action-btn dish-mode-control-btn dish-mode-control-btn--restaurant relative ${buttonSizeClass} rounded-full border-[10px] shadow-[0_10px_24px_rgba(0,0,0,0.08)]`}
         aria-label="Filter restaurant dishes"
         style={{
-          borderWidth: 8,
+          borderWidth: 10,
           borderColor: "#E64646",
           background: value === DISH_MODE_RESTAURANT ? "#FFE0E0" : "#FFFFFF",
           color: "#D53333",
         }}
       >
-        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.5} />
+        <RestaurantMapIcon className={iconSizeClass} strokeWidth={2.7} />
       </button>
       <AnimatePresence>
         {flashMessage ? (
@@ -152,7 +152,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
             className="pointer-events-none fixed inset-x-4 z-[120] flex justify-center"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 5.15rem)" }}
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 7.25rem)" }}
           >
             <div
               className={`max-w-[18rem] rounded-[1.15rem] border px-4 py-3 text-center text-[0.84rem] font-semibold leading-[1.15] shadow-[0_18px_40px_rgba(0,0,0,0.16)] backdrop-blur-xl ${

@@ -285,8 +285,16 @@
 }
 
 .dish-mode-control-btn {
-  border-width: 8px !important;
+  border-width: 10px !important;
   border-style: solid !important;
+}
+
+.dish-mode-control-btn--home {
+  border-color: #f0a623 !important;
+}
+
+.dish-mode-control-btn--restaurant {
+  border-color: #e64646 !important;
 }
 
 .bottom-nav-spacer {

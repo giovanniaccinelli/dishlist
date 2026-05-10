@@ -519,6 +519,7 @@ export default function Profile() {
     const params = new URLSearchParams(window.location.search);
     const queryDishlistId = params.get("list");
     if (!queryDishlistId) return;
+    setSelectedDishMode(DISH_MODE_ALL);
     setActiveDishlistId(queryDishlistId);
   }, []);
 
@@ -540,6 +541,7 @@ export default function Profile() {
   }, [createDishlistOpen, createDishlistStep]);
 
   const selectDishlist = (dishlistId) => {
+    if (dishlistId !== "overview") setSelectedDishMode(DISH_MODE_ALL);
     setActiveDishlistId(dishlistId);
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -1107,7 +1109,7 @@ export default function Profile() {
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
     (dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
-  const getDishlistPreviewDishes = (dishlist) => getVisibleDishlistDishes(dishlist).slice(0, 4);
+  const getDishlistPreviewDishes = (dishlist) => (dishlist?.dishes || []).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist

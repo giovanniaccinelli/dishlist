@@ -135,22 +135,22 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto bg-transparent text-black px-4 pt-8 pb-4">
-      <div className="max-w-xl mx-auto flex flex-col">
-        <div className="flex items-center gap-3 mb-3 mt-2">
+    <div className="h-[100dvh] overflow-y-auto bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1.1rem)] text-white">
+      <div className="mx-auto flex min-h-full max-w-xl flex-col justify-start">
+        <div className="mb-4 flex items-center gap-3">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />
-          <h1 className="text-[1.8rem] font-bold leading-none">DishList</h1>
+          <h1 className="text-[1.8rem] font-bold leading-none text-white">DishList</h1>
         </div>
 
         <motion.div
-          className="bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF9EF_100%)] rounded-[1.75rem] p-4 shadow-[0_20px_56px_rgba(0,0,0,0.08)] border border-black/10 flex flex-col"
+          className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] flex-col overflow-y-auto rounded-[1.75rem] border border-white/10 bg-[#101010] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.48)]"
           initial={{ scale: 0.97, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
           {step === 0 ? (
             <>
               <div className="mb-3">
-                <h2 className="text-[1.85rem] leading-[0.96] font-semibold text-black">
+                <h2 className="text-[1.7rem] leading-[0.96] font-semibold text-white">
                   Save your first 3 dishes
                 </h2>
               </div>
@@ -159,29 +159,29 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="preserve-blue-border w-full min-h-[11rem] rounded-[1.6rem] bg-[rgba(255,255,255,0.72)] text-black px-5 py-4 text-left shadow-[0_16px_34px_rgba(230,70,70,0.12)] border-[2px] border-[#E64646] backdrop-blur-[6px]"
+                  className="preserve-blue-border w-full rounded-[1.4rem] border-[2px] border-[#E64646] bg-[#1A1111] px-4 py-3.5 text-left text-white shadow-[0_16px_34px_rgba(230,70,70,0.16)]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="flex h-full flex-col justify-between gap-3">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[1.65rem] font-semibold leading-[0.96]">Got a few in mind?</p>
+                        <p className="text-[1.35rem] font-semibold leading-[0.96]">Got a few in mind?</p>
                         <div className="h-10 w-10 rounded-[0.95rem] bg-[#E64646] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(230,70,70,0.24)] shrink-0">
                           <PenLine size={18} />
                         </div>
                       </div>
-                      <p className="mt-3 text-[0.95rem] leading-5 text-black/78 max-w-[16rem]">
+                      <p className="mt-2 text-[0.88rem] leading-5 text-white/68 max-w-[17rem]">
                         Start by adding three dishes you already know you want in your DishList.
                       </p>
                     </div>
                     <div>
-                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-black/55">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
                         Steps
                       </div>
                       <div className="grid grid-cols-3 gap-2.5">
                         {ONBOARDING_STEP_PREVIEW.map((step) => (
                           <div key={step.label}>
                             <div className="mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
-                            <div className="text-[0.72rem] font-medium text-black/72">{step.label}</div>
+                            <div className="text-[0.72rem] font-medium text-white/62">{step.label}</div>
                           </div>
                         ))}
                       </div>
@@ -192,29 +192,29 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleBrowseFeed}
-                  className="preserve-green-border w-full min-h-[11rem] rounded-[1.6rem] border-[2px] border-[#F0A623] bg-[rgba(255,255,255,0.72)] px-5 py-4 text-left shadow-[0_16px_34px_rgba(240,166,35,0.12)] backdrop-blur-[6px]"
+                  className="preserve-green-border w-full rounded-[1.4rem] border-[2px] border-[#F0A623] bg-[#1D1708] px-4 py-3.5 text-left text-white shadow-[0_16px_34px_rgba(240,166,35,0.16)]"
                 >
-                  <div className="flex h-full flex-col justify-between gap-4">
+                  <div className="flex h-full flex-col justify-between gap-3">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[1.65rem] font-semibold leading-none">Swipe on the feed</p>
+                        <p className="text-[1.35rem] font-semibold leading-none">Swipe on the feed</p>
                         <div className="h-10 w-10 rounded-[0.95rem] bg-[#F0A623] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(240,166,35,0.24)] shrink-0">
                           <Hand size={18} />
                         </div>
                       </div>
-                      <p className="mt-3 text-[0.95rem] leading-5 text-black/62 max-w-[16rem]">
+                      <p className="mt-2 text-[0.88rem] leading-5 text-white/62 max-w-[17rem]">
                         Start swiping right away. After your third save, we ask you to create the profile.
                       </p>
                     </div>
                     <div>
-                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-black/55">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
                         Tags you can explore
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {["fit", "high protein", "veg", "easy", "comfort", "spicy", "quick", "budget"].map((tag) => (
                           <span
                             key={tag}
-                            className={`px-3 py-1 rounded-full text-[11px] border ${tag === "high protein" ? "bg-[#E6F7EA] text-[#14532D] border-[#7BD49B]" : tag === "spicy" ? "bg-[#FFE6E1] text-[#9A3412] border-[#F4A090]" : tag === "comfort" ? "bg-[#FFF1D6] text-[#8A5A00] border-[#EAC46A]" : "bg-white/80 text-black/70 border-black/10"}`}
+                            className={`px-3 py-1 rounded-full text-[11px] border ${tag === "high protein" ? "bg-[#102817] text-[#D9FFE3] border-[#2BD36B]" : tag === "spicy" ? "bg-[#2A1212] text-[#FFD5D5] border-[#E64646]" : tag === "comfort" ? "bg-[#241A09] text-[#FFE2A0] border-[#F0A623]" : "bg-white/8 text-white/68 border-white/12"}`}
                           >
                             {tag}
                           </span>
@@ -227,7 +227,7 @@ export default function Onboarding() {
 
               <button
                 onClick={handleSkip}
-                className="mt-3 w-full rounded-[1.25rem] border border-black/12 bg-white px-5 py-3 text-[0.95rem] font-semibold text-black/72 hover:text-black shadow-sm"
+                className="mt-3 w-full rounded-[1.15rem] border border-white/10 bg-white/8 px-5 py-3 text-[0.95rem] font-semibold text-white/72 shadow-sm"
               >
                 Skip for now
               </button>
@@ -240,21 +240,21 @@ export default function Onboarding() {
                     <span
                       key={bar}
                       className={`h-1.5 rounded-full transition-all ${
-                        bar < step ? (bar == 0 ? "w-10 bg-[#E85D75]" : bar == 1 ? "w-10 bg-[#F59E0B]" : "w-10 bg-[#2BD36B]") : "w-7 bg-black/10"
+                        bar < step ? (bar == 0 ? "w-10 bg-[#E85D75]" : bar == 1 ? "w-10 bg-[#F59E0B]" : "w-10 bg-[#2BD36B]") : "w-7 bg-white/14"
                       }`}
                     />
                   ))}
                 </div>
-                <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
+                <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white/38">
                   Dish {step} of 3
                 </div>
               </div>
 
               <div className="mb-4">
-                <h2 className="text-[1.8rem] leading-none font-semibold mt-1 text-black">
+                <h2 className="text-[1.55rem] leading-none font-semibold mt-1 text-white">
                   Name a dish
                 </h2>
-                <p className="mt-2 text-sm text-black/60">You can add an image later.</p>
+                <p className="mt-2 text-sm text-white/55">You can add an image later.</p>
               </div>
 
               <input
@@ -274,11 +274,11 @@ export default function Onboarding() {
                   });
                 }}
                 placeholder={`Dish ${step}`}
-                className="w-full p-3.5 rounded-full bg-white/90 border border-[#D8C090] focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20"
+                className="w-full rounded-full border border-white/12 bg-[#181818] p-3.5 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#E85D75]/25"
               />
 
               <div className="mt-4">
-                <p className="text-sm font-semibold text-black/70 mb-3">Some ideas</p>
+                <p className="text-sm font-semibold text-white/68 mb-3">Some ideas</p>
                 <div className="grid grid-cols-2 gap-3">
                   {ideaDishes.map((dish) => (
                     <button
@@ -297,7 +297,7 @@ export default function Onboarding() {
                           return next;
                         });
                       }}
-                      className="relative overflow-hidden rounded-[1.25rem] bg-white/85 border border-black/8 shadow-sm text-left"
+                      className="relative overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#181818] text-left shadow-sm"
                     >
                       <div className="aspect-[0.9] overflow-hidden">
                         <img
@@ -315,7 +315,7 @@ export default function Onboarding() {
                   ))}
                 </div>
                 {!ideasLoading && !ideaDishes.length ? (
-                  <p className="mt-3 text-sm text-black/45">No ideas yet.</p>
+                  <p className="mt-3 text-sm text-white/45">No ideas yet.</p>
                 ) : null}
               </div>
 
@@ -328,7 +328,7 @@ export default function Onboarding() {
                     setError("");
                     setStep((prev) => (prev > 1 ? prev - 1 : 0));
                   }}
-                  className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center bg-white shadow-sm"
+                  className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center bg-white/8 text-white shadow-sm"
                   aria-label="Previous step"
                 >
                   <ArrowLeft size={20} />

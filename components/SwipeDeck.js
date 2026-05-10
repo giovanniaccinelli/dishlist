@@ -259,7 +259,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   showStoryHistoryCounter = false,
 }, ref) {
   const router = useRouter();
-  const { darkMode } = useLanguage();
+  const { darkMode, t } = useLanguage();
   const SWIPE_EJECT_THRESHOLD = 70;
 
   const [deck, setDeck] = useState([]);
@@ -282,6 +282,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [comments, setComments] = useState([]);
   const [dishCommentCount, setDishCommentCount] = useState(0);
   const [recipeCommentCount, setRecipeCommentCount] = useState(0);
+  const [recipePreviewComment, setRecipePreviewComment] = useState(null);
   const [commentsScope, setCommentsScope] = useState("dish");
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -391,6 +392,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setComments([]);
     setDishCommentCount(0);
     setRecipeCommentCount(0);
+    setRecipePreviewComment(null);
     setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
@@ -401,6 +403,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       ]);
       setDishCommentCount(Array.isArray(dishItems) ? dishItems.length : 0);
       setRecipeCommentCount(Array.isArray(recipeItems) ? recipeItems.length : 0);
+      setRecipePreviewComment(Array.isArray(recipeItems) ? recipeItems[0] || null : null);
     })();
   }, [currentCard?.id, onCardViewed]);
 
@@ -631,6 +634,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
+      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -645,6 +649,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
+      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -1442,6 +1447,41 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   </div>
                   ) : null}
                 </div>
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openComments("recipe");
+                  }}
+                  className={`mt-3 flex w-full items-center gap-3 rounded-[1.25rem] border-2 ${restaurantAccentBorder} px-3 py-2.5 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
+                    darkMode ? "bg-[#181818] text-white" : "bg-white text-black"
+                  }`}
+                  aria-label="Open recipe comments"
+                >
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-white/10 text-white" : "bg-black/6 text-black"}`}>
+                    <MessageCircle size={18} strokeWidth={2.1} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className={`text-[10px] font-bold uppercase tracking-[0.16em] ${darkMode ? "text-white/40" : "text-black/40"}`}>
+                      {t("Comments")}
+                    </div>
+                    {recipePreviewComment ? (
+                      <div className={`mt-0.5 truncate text-[13px] ${darkMode ? "text-white/82" : "text-black/78"}`}>
+                        <span className="font-semibold">{recipePreviewComment.userName || "User"}:</span>{" "}
+                        {recipePreviewComment.text}
+                      </div>
+                    ) : (
+                      <div className={`mt-0.5 text-[13px] font-semibold ${darkMode ? "text-white/72" : "text-black/65"}`}>{t("Be the first to comment")}</div>
+                    )}
+                  </div>
+                  {recipeCommentCount > 0 ? (
+                    <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${darkMode ? "bg-white/10 text-white" : "bg-black/6 text-black"}`}>
+                      {recipeCommentCount}
+                    </span>
+                  ) : null}
+                </button>
               </div>
             </div>
           </motion.div>

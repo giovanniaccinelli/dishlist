@@ -1198,8 +1198,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {!showRecipe ? (
                 <div
-                  className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/88 via-black/46 via-48% to-transparent"
-                  style={{ height: "38%" }}
+                  className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/92 via-black/62 via-48% to-transparent"
+                  style={{ height: "46%" }}
                 />
               ) : null}
               {!showRecipe ? (

@@ -261,6 +261,7 @@ export default function Profile() {
   const [storyPushStats, setStoryPushStats] = useState({});
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [dishCardActionReady, setDishCardActionReady] = useState(false);
+  const [dishCardStoryConfirmId, setDishCardStoryConfirmId] = useState("");
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -788,9 +789,11 @@ export default function Profile() {
   useEffect(() => {
     if (!dishCardActionTarget) {
       setDishCardActionReady(false);
+      setDishCardStoryConfirmId("");
       return undefined;
     }
     setDishCardActionReady(false);
+    setDishCardStoryConfirmId("");
     const timer = window.setTimeout(() => setDishCardActionReady(true), 450);
     return () => window.clearTimeout(timer);
   }, [dishCardActionTarget?.dish?.id]);
@@ -913,16 +916,17 @@ export default function Profile() {
 
   const openShuffleDeck = (source) => {
     const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
-    const pool =
+    const sourceDishlist =
       source === "uploaded"
-        ? uploadedDishes
+        ? allDishlists.find((dishlist) => dishlist.id === "uploaded")
         : source === "all_dishes"
-          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || []
-        : source === "to_try"
-          ? toTryDishes
-          : source === "saved"
-            ? savedDishes
-            : customDishlist?.dishes || [];
+          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")
+          : source === "to_try"
+            ? allDishlists.find((dishlist) => dishlist.id === "to_try")
+            : source === "saved"
+              ? allDishlists.find((dishlist) => dishlist.id === "saved")
+              : customDishlist;
+    const pool = (sourceDishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
     if (!pool.length) {
       alert("No dishes to shuffle.");
       return;
@@ -3042,6 +3046,11 @@ export default function Profile() {
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
+                    const dishId = dishCardActionTarget.dish?.id || "";
+                    if (dishCardStoryConfirmId !== dishId) {
+                      setDishCardStoryConfirmId(dishId);
+                      return;
+                    }
                     handlePublishDishCardStory(dishCardActionTarget.dish);
                   }}
                   disabled={!dishCardActionReady}
@@ -3055,7 +3064,7 @@ export default function Profile() {
                         : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
                   }`}
                 >
-                  <span>{t("Add to story")}</span>
+                  <span>{dishCardStoryConfirmId === dishCardActionTarget.dish?.id ? t("Confirm story") : t("Add to story")}</span>
                   <StoryStatIcon size={17} />
                 </button>
                 {profileIdCandidates.includes(dishCardActionTarget.dish?.owner) ? (

@@ -175,6 +175,7 @@ const translations = {
     Rating: "Valutazione",
     "Dish actions": "Azioni piatto",
     "Add to story": "Lo sto mangiando",
+    "Confirm story": "Conferma storia",
     "Edit dish": "Modifica piatto",
     "Manage dishlists": "Gestisci DishList",
     "Move to DishList": "Sposta in DishList",

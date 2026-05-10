@@ -554,16 +554,17 @@ export default function PublicProfile() {
 
   const openShuffleDeck = (source) => {
     const customDishlist = customDishlists.find((dishlist) => dishlist.id === source);
-    const pool =
+    const sourceDishlist =
       source === "uploaded"
-        ? dishes
+        ? allDishlists.find((dishlist) => dishlist.id === "uploaded")
         : source === "all_dishes"
-          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || []
-        : source === "to_try"
-          ? toTryDishes
-          : source === "saved"
-            ? savedDishes
-            : customDishlist?.dishes || [];
+          ? allDishlists.find((dishlist) => dishlist.id === "all_dishes")
+          : source === "to_try"
+            ? allDishlists.find((dishlist) => dishlist.id === "to_try")
+            : source === "saved"
+              ? allDishlists.find((dishlist) => dishlist.id === "saved")
+              : customDishlist;
+    const pool = (sourceDishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
     if (!pool.length) {
       alert(t("No dishes to shuffle."));
       return;

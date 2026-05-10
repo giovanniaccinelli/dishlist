@@ -32,7 +32,6 @@ import {
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   updateCustomDishlistName,
-  publishDishAsStory,
   getAvatarTone,
   isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
@@ -265,8 +264,6 @@ export default function Profile() {
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
-  const [dishCardActionReady, setDishCardActionReady] = useState(false);
-  const [dishCardStoryConfirmId, setDishCardStoryConfirmId] = useState("");
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -787,29 +784,6 @@ export default function Profile() {
     setToast("Dish deleted");
     setTimeout(() => setToast(""), 1200);
   };
-
-  const handlePublishDishCardStory = async (dish) => {
-    const guard = dishActionPointerGuardRef.current;
-    if (!dishCardActionReady || dishCardStoryConfirmId !== dish?.id || (guard?.dishId === dish?.id && Date.now() < guard.until)) return;
-    if (!user?.uid || !dish?.id) return;
-    const ok = await publishDishAsStory(user.uid, dish);
-    setDishCardActionTarget(null);
-    setToastVariant(ok ? "success" : "error");
-    setToast(ok ? "Story posted" : "Story failed");
-    setTimeout(() => setToast(""), 1200);
-  };
-
-  useEffect(() => {
-    if (!dishCardActionTarget) {
-      setDishCardActionReady(false);
-      setDishCardStoryConfirmId("");
-      return undefined;
-    }
-    setDishCardActionReady(false);
-    setDishCardStoryConfirmId("");
-    const timer = window.setTimeout(() => setDishCardActionReady(true), 450);
-    return () => window.clearTimeout(timer);
-  }, [dishCardActionTarget?.dish?.id]);
 
   const handleRemoveSavedDish = async (dish) => {
     const ok = await removeSavedDishFromUser(user.uid, dish.id);
@@ -3209,47 +3183,6 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onPointerUp={(event) => event.stopPropagation()}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const dishId = dishCardActionTarget.dish?.id || "";
-                    setDishCardStoryConfirmId(dishId);
-                  }}
-                  disabled={!dishCardActionReady}
-                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
-                    !dishCardActionReady
-                      ? darkMode
-                        ? "border-white/10 bg-white/6 text-white/35"
-                        : "border-black/8 bg-black/4 text-black/35"
-                      : darkMode
-                        ? "border-[#38BDF8]/45 bg-[#0D2634] text-white"
-                        : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
-                  }`}
-                >
-                  <span>{t("Add to story")}</span>
-                  <StoryStatIcon size={17} />
-                </button>
-                {dishCardStoryConfirmId === dishCardActionTarget.dish?.id ? (
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      handlePublishDishCardStory(dishCardActionTarget.dish);
-                    }}
-                    disabled={!dishCardActionReady}
-                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
-                      darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-[#D9FFE3]" : "border-[#2BD36B]/45 bg-[#EAF7EE] text-[#165D32]"
-                    }`}
-                  >
-                    <span>{t("Confirm story")}</span>
-                    <StoryStatIcon size={17} />
-                  </button>
-                ) : null}
                 {profileIdCandidates.includes(dishCardActionTarget.dish?.owner) ? (
                   <button
                     type="button"

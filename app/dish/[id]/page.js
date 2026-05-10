@@ -24,7 +24,6 @@ import {
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getUsersWhoSavedDish,
-  publishDishAsStory,
   removeDishFromAllUsers,
   removeDishFromCustomDishlist,
   removeDishFromToTry,
@@ -43,25 +42,6 @@ import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMap
 import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import { useLanguage } from "../../../components/LanguageProvider";
-function StoryActionIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 26 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.9" />
-      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.9" opacity="0.88" />
-      <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
-      <path d="M0.2 3.55V6.2" stroke="#2BD36B" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
-      <path
-        d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08"
-        stroke="#2BD36B"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-      />
-      <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.9" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -441,6 +421,14 @@ export default function DishDetail() {
     setEditOpen(true);
   };
 
+  const closeEditModal = () => {
+    setEditOpen(false);
+    setEditingDish(null);
+    if (openEditOnLoad && returnTo) {
+      router.push(returnTo);
+    }
+  };
+
   useEffect(() => {
     if (!openEditOnLoad || editOpen || loadingDish || !dish || dish.owner !== userId) return;
     openEditModal(dish);
@@ -523,6 +511,9 @@ export default function DishDetail() {
       setPageToastVariant("success");
       setPageToast("Dish updated");
       setTimeout(() => setPageToast(""), 1200);
+      if (openEditOnLoad && returnTo) {
+        router.push(returnTo);
+      }
     } catch (err) {
       console.error("Failed to update dish:", err);
       setPageToastVariant("error");
@@ -581,24 +572,6 @@ export default function DishDetail() {
     }
     setShareDish(dishCard);
     setShareOpen(true);
-  };
-
-  const handleAddToStory = async (dishCard) => {
-    if (!userId) {
-      setPageToastVariant("neutral");
-      setPageToast("Please sign in");
-      setTimeout(() => setPageToast(""), 1200);
-      return false;
-    }
-    const ok = await publishDishAsStory(userId, dishCard);
-    if (ok) {
-      const stats = await getStoryPushStatsForUser(userId);
-      setStoryPushStats(stats);
-    }
-    setPageToastVariant(ok ? "success" : "error");
-    setPageToast(ok ? "Story published" : "Story failed");
-    setTimeout(() => setPageToast(""), 1200);
-    return ok;
   };
 
   const openProfileCardActions = (dishCard) => {
@@ -812,20 +785,6 @@ export default function DishDetail() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const target = profileCardActionsDish;
-                    setProfileCardActionsDish(null);
-                    handleAddToStory(target);
-                  }}
-                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
-                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
-                  }`}
-                >
-                  <span>{t("Add to story")}</span>
-                  <StoryActionIcon />
-                </button>
                 {profileCardActionsDish?.owner === userId && !isForeignProfileContext && !isPublicSource ? (
                   <button
                     type="button"
@@ -913,7 +872,7 @@ export default function DishDetail() {
               </div>
               <button
                 type="button"
-                onClick={() => setEditOpen(false)}
+                onClick={closeEditModal}
                 className={`w-10 h-10 shrink-0 rounded-[1rem] border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/90 text-black/60 hover:text-black`}
                 aria-label="Close edit modal"
               >
@@ -1179,7 +1138,7 @@ export default function DishDetail() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditOpen(false)}
+                    onClick={closeEditModal}
                     className={`flex-1 py-3 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
                     disabled={savingEdit}
                   >

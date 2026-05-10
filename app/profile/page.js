@@ -107,6 +107,55 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
+function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value }) {
+  return (
+    <div className="grid grid-cols-2 gap-1.5">
+      {Array.from({ length: 4 }).map((_, index) => {
+        const dish = preview[index];
+        if (!dish) {
+          return (
+            <div
+              key={`${dishlist.id}-empty-${index}`}
+              className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
+            />
+          );
+        }
+        const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+        const borderColor = isRestaurant ? "#E64646" : "#E4B43F";
+        const accentClass = isRestaurant ? "restaurant-accent-border" : "default-accent-border";
+        if (!hasDishMedia(dish)) {
+          return (
+            <div
+              key={`${dishlist.id}-${dish.id}-${index}`}
+              className={`no-accent-border flex aspect-square w-full items-end overflow-hidden rounded-[0.85rem] border-2 p-2 text-left text-[10px] font-bold leading-tight ${accentClass} ${
+                darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"
+              }`}
+              style={{ borderColor }}
+            >
+              <span className="line-clamp-3">{dish.name || t("Untitled dish")}</span>
+            </div>
+          );
+        }
+        return (
+          <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
+            <img
+              src={getDishImageUrl(dish, "thumb")}
+              alt={dish.name || dishlist.name}
+              className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${accentClass} object-cover`}
+              style={{ borderColor }}
+              loading="lazy"
+              decoding="async"
+              onError={(event) => {
+                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+              }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function getProfileIdCandidates(routeId, userDoc) {
   const data = userDoc?.data?.() || userDoc || {};
   const rawAppleSub = String(data.appleSub || "").trim();
@@ -1690,9 +1739,6 @@ export default function Profile() {
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
               const preview = getDishlistPreviewDishes(dishlist);
-              const mediaPreview = preview.filter(hasDishMedia);
-              const noImageOnlyPreview = preview.length > 0 && mediaPreview.length === 0;
-              const displayPreview = noImageOnlyPreview ? preview : mediaPreview;
               return (
                 <button
                   key={dishlist.id}
@@ -1713,41 +1759,8 @@ export default function Profile() {
                       <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
                       <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
                     </div>
-                  ) : noImageOnlyPreview ? (
-                    <div
-                      className={`no-accent-border rounded-[0.95rem] border-2 px-3 py-2 text-[12px] font-bold leading-tight ${
-                        String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
-                      } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
-                      style={{ borderColor: String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                    >
-                      <div className="truncate">{displayPreview[0]?.name || t("Untitled dish")}</div>
-                    </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {Array.from({ length: 4 }).map((_, index) => {
-                        const dish = displayPreview[index];
-                        return dish ? (
-                          <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                            <img
-                              src={getDishImageUrl(dish, "thumb")}
-                              alt={dish.name || dishlist.name}
-                              className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
-                              style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(event) => {
-                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            key={`${dishlist.id}-empty-${index}`}
-                            className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
-                          />
-                        );
-                      })}
-                    </div>
+                    <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
                   )}
                   <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                 </button>
@@ -2567,9 +2580,6 @@ export default function Profile() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
                   const preview = getDishlistPreviewDishes(dishlist);
-                  const mediaPreview = preview.filter(hasDishMedia);
-                  const noImageOnlyPreview = preview.length > 0 && mediaPreview.length === 0;
-                  const displayPreview = noImageOnlyPreview ? preview : mediaPreview;
                   return (
                     <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
                       darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
@@ -2625,42 +2635,7 @@ export default function Profile() {
                         }}
                         className="block w-full"
                       >
-                        {noImageOnlyPreview ? (
-                          <div
-                            className={`no-accent-border rounded-[0.95rem] border-2 px-3 py-2 text-left text-[12px] font-bold leading-tight ${
-                              String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
-                            } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
-                            style={{ borderColor: String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                          >
-                            <div className="truncate">{displayPreview[0]?.name || t("Untitled dish")}</div>
-                          </div>
-                        ) : (
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {Array.from({ length: 4 }).map((_, index) => {
-                            const dish = displayPreview[index];
-                            return dish ? (
-                            <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                              <img
-                                src={getDishImageUrl(dish, "thumb")}
-                                alt={dish.name || dishlist.name}
-                                className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
-                                style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                                loading="lazy"
-                                decoding="async"
-                                onError={(event) => {
-                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                  }}
-                                />
-                            </div>
-                            ) : (
-                            <div
-                              key={`${dishlist.id}-empty-${index}`}
-                              className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
-                            />
-                            );
-                          })}
-                        </div>
-                        )}
+                        <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
                       </button>
                     </div>
                   );
@@ -2802,30 +2777,7 @@ export default function Profile() {
                             }`}
                           >
                             <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
-                            <div className="grid grid-cols-2 gap-1.5">
-                              {Array.from({ length: 4 }).map((_, index) => {
-                                const dish = preview[index];
-                                return dish ? (
-                                  <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                                    <img
-                                      src={getDishImageUrl(dish, "thumb")}
-                                      alt={dish.name || dishlist.name}
-                                      className={`h-full w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
-                                      loading="lazy"
-                                      decoding="async"
-                                      onError={(event) => {
-                                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                      }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div
-                                    key={`${dishlist.id}-empty-${index}`}
-                                    className={`aspect-square w-full rounded-[0.85rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`}
-                                  />
-                                );
-                              })}
-                            </div>
+                            <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
                           </button>
                         );
                       })}

@@ -62,7 +62,7 @@ const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
   { label: "Details", color: "#F59E0B" },
   { label: "Recipe", color: "#23C268" },
-  { label: "Story", color: "#8B5CF6" },
+  { label: "Story", color: "#38BDF8" },
 ];
 
 function StoryStatIcon({ size = 10 }) {
@@ -339,6 +339,16 @@ export default function Profile() {
     setRemovePhoto(false);
     setNewPhotoPreview(effectiveProfilePhotoURL);
   }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL, profileMeta.bio]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("settings") !== "1") return;
+    setProfileOptionsOpen(true);
+    params.delete("settings");
+    const query = params.toString();
+    window.history.replaceState({}, "", query ? `/profile?${query}` : "/profile");
+  }, []);
 
   useEffect(() => {
     if (!user) return undefined;

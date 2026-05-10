@@ -24,7 +24,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { ChevronLeft, ChevronRight, Send, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, Settings, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import {
@@ -597,6 +597,13 @@ export default function Feed() {
           >
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          </Link>
+          <Link
+            href={userId ? "/profile?settings=1" : "/?auth=1"}
+            className="top-action-btn"
+            aria-label="Open settings"
+          >
+            <Settings size={18} />
           </Link>
         </div>
       </div>

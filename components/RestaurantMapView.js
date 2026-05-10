@@ -210,23 +210,8 @@ export default function RestaurantMapView({
       return;
     }
 
-    mapRef.current.fitBounds(bounds, 56);
-    const listener = window.google.maps.event.addListenerOnce(mapRef.current, "bounds_changed", () => {
-      const currentZoom = mapRef.current.getZoom();
-      if (currentZoom < 5) {
-        mapRef.current.setZoom(5);
-        return;
-      }
-      if (currentZoom > 12) {
-        mapRef.current.setZoom(12);
-      }
-    });
-
-    return () => {
-      if (listener) {
-        window.google.maps.event.removeListener(listener);
-      }
-    };
+    mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
+    mapRef.current.setZoom(5);
   }, [groups, mapState]);
 
   const openDish = (dish) => {

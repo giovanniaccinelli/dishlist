@@ -751,11 +751,12 @@ export default function DishDetail() {
                           ? "w-10 bg-[#F59E0B]"
                           : step === 2
                             ? "w-10 bg-[#23C268]"
-                            : "w-10 bg-[#8B5CF6]"
+                            : "w-10 bg-[#38BDF8]"
                       : darkMode
-                        ? "w-7 border border-white/75 bg-white/16"
-                        : "w-7 border border-white bg-[#C9C9C2]"
+                        ? "w-7 bg-white/16"
+                        : "w-7 bg-[#C9C9C2]"
                   }`}
+                  style={step > editStep ? { boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.92)" } : undefined}
                   />
                 ))}
               </div>

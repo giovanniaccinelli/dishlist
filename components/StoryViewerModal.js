@@ -520,11 +520,11 @@ export default function StoryViewerModal({
             style={{ top: "calc(var(--app-top-nav-offset) + 0.2rem)" }}
           >
             {currentStories.map((story, idx) => (
-              <div key={story.id || idx} className="no-accent-border h-1 flex-1 rounded-full bg-white/25 overflow-hidden">
+              <div key={story.id || idx} className="story-progress-track no-accent-border h-1 flex-1 rounded-full overflow-hidden">
                 {idx < storyIndex ? (
-                  <div className="no-accent-border h-full w-full rounded-full bg-white" />
+                  <div className="story-progress-fill no-accent-border h-full w-full rounded-full" />
                 ) : idx === storyIndex ? (
-                  <div className="no-accent-border h-full rounded-full bg-white" style={{ width: progressWidth }} />
+                  <div className="story-progress-fill no-accent-border h-full rounded-full" style={{ width: progressWidth }} />
                 ) : (
                   <div className="no-accent-border h-full w-0 rounded-full bg-transparent" />
                 )}

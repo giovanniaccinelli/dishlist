@@ -524,6 +524,14 @@ html.dark .direct-dish-message.direct-message--received {
   color: rgba(255, 255, 255, 0.92) !important;
 }
 
+.story-progress-track {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.story-progress-fill {
+  background: #ffffff !important;
+}
+
 html.dark :where(input, textarea, select) {
   background: rgba(18, 18, 18, 0.94) !important;
   color: #f7f7f7 !important;

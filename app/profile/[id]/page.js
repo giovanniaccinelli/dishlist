@@ -98,6 +98,24 @@ function getProfileIdCandidates(routeId, userDoc) {
   ]);
 }
 
+function profileDocMatchesId(routeId, userDoc) {
+  const data = userDoc?.data?.() || userDoc || {};
+  const routeValue = String(routeId || "").trim();
+  if (!routeValue) return false;
+  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
+  const rawAppleSub = String(data.appleSub || "").trim();
+  const actualIds = uniqueNonEmpty([
+    userDoc?.id,
+    data.uid,
+    data.userId,
+    data.appleUserId,
+    data.authUid,
+    rawAppleSub,
+    rawAppleSub ? `apple:${rawAppleSub}` : "",
+  ]);
+  return actualIds.includes(routeValue) || Boolean(routeAppleSub && rawAppleSub === routeAppleSub);
+}
+
 function getProfileDocScore(routeId, userDoc) {
   const data = userDoc?.data?.() || {};
   const routeValue = String(routeId || "").trim();
@@ -221,10 +239,10 @@ export default function PublicProfile() {
           console.error("Direct profile fetch failed:", error);
         }
         try {
-          const snapshot = await getDocs(collection(db, "users"));
-          snapshot.docs.forEach((docSnap) => {
-            if (getProfileIdCandidates(routeProfileId, docSnap).includes(routeProfileId)) matches.push(docSnap);
-          });
+            const snapshot = await getDocs(collection(db, "users"));
+            snapshot.docs.forEach((docSnap) => {
+              if (profileDocMatchesId(routeProfileId, docSnap)) matches.push(docSnap);
+            });
         } catch (error) {
           console.error("Public profile alias scan failed:", error);
         }

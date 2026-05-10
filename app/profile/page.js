@@ -121,6 +121,24 @@ function getProfileIdCandidates(routeId, userDoc) {
   ]);
 }
 
+function profileDocMatchesId(routeId, userDoc) {
+  const data = userDoc?.data?.() || userDoc || {};
+  const routeValue = String(routeId || "").trim();
+  if (!routeValue) return false;
+  const routeAppleSub = routeValue.startsWith("apple:") ? routeValue.slice(6) : "";
+  const rawAppleSub = String(data.appleSub || "").trim();
+  const actualIds = uniqueNonEmpty([
+    userDoc?.id,
+    data.uid,
+    data.userId,
+    data.appleUserId,
+    data.authUid,
+    rawAppleSub,
+    rawAppleSub ? `apple:${rawAppleSub}` : "",
+  ]);
+  return actualIds.includes(routeValue) || Boolean(routeAppleSub && rawAppleSub === routeAppleSub);
+}
+
 function getProfileDocScore(routeId, userDoc) {
   const data = userDoc?.data?.() || {};
   const routeValue = String(routeId || "").trim();
@@ -284,7 +302,7 @@ export default function Profile() {
           try {
             const snapshot = await getDocs(collection(db, "users"));
             snapshot.docs.forEach((docSnap) => {
-              if (getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) matches.push(docSnap);
+              if (profileDocMatchesId(user.uid, docSnap)) matches.push(docSnap);
             });
           } catch (error) {
             console.error("Own-profile alias scan failed:", error);

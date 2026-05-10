@@ -39,7 +39,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
-import { Minus, MoreHorizontal, Pencil, Plus, Search, Settings, Send, Shuffle, Trash2, Users, X } from "lucide-react";
+import { ChevronLeft, ListChecks, Minus, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -88,6 +88,14 @@ function uniqueNonEmpty(values = []) {
         .filter(Boolean)
     )
   );
+}
+
+function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
+  if (id === "saved") return <Trophy className={`${className} text-[#F2D46D]`} strokeWidth={2.1} />;
+  if (id === "to_try") return <NotebookText className={`${className} text-[#38BDF8]`} strokeWidth={2.1} />;
+  if (id === "uploaded") return <Upload className={`${className} text-[#F2A23A]`} strokeWidth={2.1} />;
+  if (id === "all_dishes") return <ListChecks className={`${className} text-[#2BD36B]`} strokeWidth={2.1} />;
+  return null;
 }
 
 function getProfileIdCandidates(routeId, userDoc) {
@@ -203,6 +211,7 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
+  const dishlistDetailSwipeRef = useRef(null);
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =
     profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "");
@@ -436,6 +445,24 @@ export default function Profile() {
     }
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const handleDishlistDetailPointerDown = (event) => {
+    if (showingDishlistOverview) return;
+    dishlistDetailSwipeRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handleDishlistDetailPointerUp = (event) => {
+    const start = dishlistDetailSwipeRef.current;
+    dishlistDetailSwipeRef.current = null;
+    if (!start || showingDishlistOverview) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = Math.abs(event.clientY - start.y);
+    if (deltaX > 120 && deltaY < 80) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectDishlist("overview");
+    }
   };
 
   const buildProfileReturnTo = () => {
@@ -996,7 +1023,7 @@ export default function Profile() {
     }
     await refreshCustomDishlists(user.uid);
     if (activeDishlistId === dishlistDeleteTarget.id) {
-      selectDishlist("all_dishes");
+      selectDishlist("overview");
     }
     setDishlistDeleteTarget(null);
     setDishlistsEditMode(false);
@@ -1152,12 +1179,7 @@ export default function Profile() {
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[104px_1fr_104px] items-center px-4 pb-1.5 relative">
         <div className="flex min-w-[104px] items-center justify-start" />
-        <div className="flex items-center justify-center">
-          <DishModeFilterButton
-            value={selectedDishMode}
-            onSelect={setSelectedDishMode}
-          />
-        </div>
+        <div className="flex items-center justify-center" />
         <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-2">
           <button
             type="button"
@@ -1270,11 +1292,25 @@ export default function Profile() {
       </div>
 
       {showingDishlistOverview ? (
+        <div className="mb-4 flex justify-center px-2">
+          <button
+            type="button"
+            onClick={() => setProfileMapOpen(true)}
+            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border px-5 py-3.5 text-sm font-bold shadow-[0_14px_34px_rgba(230,70,70,0.16)] ${
+              darkMode ? "border-[#E64646]/70 bg-[#211111] text-white" : "border-[#E64646]/55 bg-[#FFF1F1] text-[#7E1717]"
+            }`}
+          >
+            <RestaurantMapIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
+            {t("Restaurants")}
+          </button>
+        </div>
+      ) : null}
+
+      {showingDishlistOverview ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               ...allDishlists.filter((dishlist) => dishlist.type === "system"),
-              { id: "profile_map", name: "Map", type: "map", count: uploadedRestaurantGroups.length, dishes: [] },
               ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
@@ -1288,7 +1324,10 @@ export default function Profile() {
                     darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
                   }`}
                 >
-                  <div className={`mb-2 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                    <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
+                  </div>
                   {isMap ? (
                     <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
                       darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
@@ -1343,26 +1382,60 @@ export default function Profile() {
           </div>
         </div>
       ) : (
-        <>
-          <div className="mb-3 px-2">
+        <div
+          onPointerDown={handleDishlistDetailPointerDown}
+          onPointerUp={handleDishlistDetailPointerUp}
+          onPointerCancel={() => {
+            dishlistDetailSwipeRef.current = null;
+          }}
+        >
+          <div
+            className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-2"
+          >
             <button
               type="button"
               onClick={() => selectDishlist("overview")}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold ${
                 darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
               }`}
             >
-              Back
+              <ChevronLeft size={16} />
+              {t("Back")}
             </button>
+            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
+            <div className="flex justify-end">
+              {activeDishlist?.type === "custom" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDishlistRenameTarget(activeDishlist);
+                    setDishlistRenameValue(activeDishlist.name || "");
+                  }}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+                    darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
+                  }`}
+                  aria-label="Edit dishlist"
+                >
+                  <Pencil size={16} />
+                </button>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+            </div>
           </div>
           <DishGrid
-            title={activeDishlist?.name || "All dishes"}
+            title={
+              <span className="inline-flex items-center gap-2">
+                {activeDishlist?.name || "All dishes"}
+                <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
+              </span>
+            }
             dishes={activeDishlist?.dishes || []}
             allowDelete={false}
             source={activeDishlist?.id || "all_dishes"}
             onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
           />
-        </>
+        </div>
       )}
 
       {/* Add Dish button */}
@@ -2175,7 +2248,9 @@ export default function Profile() {
             }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[2rem] border border-black/10 bg-white p-4 shadow-[0_30px_80px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[2rem] border p-4 shadow-[0_30px_80px_rgba(0,0,0,0.18)] ${
+                darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
+              }`}
               initial={{ y: 18, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 12, opacity: 0 }}
@@ -2183,17 +2258,17 @@ export default function Profile() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
                     New Dishlist
                   </div>
-                  <h3 className="mt-2 text-[1.7rem] leading-none font-semibold text-black">
+                  <h3 className={`mt-2 text-[1.7rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {createDishlistStep === 0 ? "Name it" : "Add dishes"}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setCreateDishlistOpen(false)}
-                  className="text-sm text-black/55"
+                  className={`text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}
                 >
                   Close
                 </button>
@@ -2206,11 +2281,13 @@ export default function Profile() {
                     value={newDishlistName}
                     onChange={(event) => setNewDishlistName(event.target.value)}
                     placeholder="Dishlist name"
-                    className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                    className={`w-full rounded-full border px-4 py-3 focus:outline-none focus:ring-2 ${
+                      darkMode ? "border-white/12 bg-[#1B1B1B] text-white placeholder:text-white/35 focus:ring-white/10" : "border-black/10 bg-[#F7F4ED] text-black focus:ring-black/10"
+                    }`}
                   />
                   {popularDishlistNames.length ? (
                     <div className="mt-4">
-                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/42">
+                      <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/42"}`}>
                         Popular names
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -2243,14 +2320,16 @@ export default function Profile() {
               ) : (
                 <>
                   <div className="max-h-[58vh] overflow-y-auto pr-1">
-                    <div className="mb-4 flex items-center gap-2 rounded-[1.15rem] border border-black/10 bg-white px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)]">
-                      <Search size={16} className="shrink-0 text-black/40" />
+                    <div className={`mb-4 flex items-center gap-2 rounded-[1.15rem] border px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)] ${
+                      darkMode ? "border-white/12 bg-[#1B1B1B]" : "border-black/10 bg-white"
+                    }`}>
+                      <Search size={16} className={`shrink-0 ${darkMode ? "text-white/42" : "text-black/40"}`} />
                       <input
                         type="text"
                         value={createDishSearch}
                         onChange={(e) => setCreateDishSearch(e.target.value)}
                         placeholder="Search your dishes"
-                        className="min-w-0 flex-1 bg-transparent text-base text-black placeholder:text-black/35 focus:outline-none"
+                        className={`min-w-0 flex-1 bg-transparent text-base focus:outline-none ${darkMode ? "text-white placeholder:text-white/35" : "text-black placeholder:text-black/35"}`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -2263,10 +2342,16 @@ export default function Profile() {
                             type="button"
                             onClick={() => setCreateSourceDishlistId(dishlist.id)}
                             className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
-                              selected ? "border-[#2BD36B] bg-[#F4FFF7]" : "border-black/10 bg-white"
+                              selected
+                                ? darkMode
+                                  ? "border-[#2BD36B] bg-[#102817] text-white"
+                                  : "border-[#2BD36B] bg-[#F4FFF7] text-black"
+                                : darkMode
+                                  ? "border-white/12 bg-[#1A1A1A] text-white"
+                                  : "border-black/10 bg-white text-black"
                             }`}
                           >
-                            <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                            <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
                             <div className="grid grid-cols-2 gap-1.5">
                               {Array.from({ length: 4 }).map((_, index) => {
                                 const dish = preview[index];
@@ -2285,7 +2370,7 @@ export default function Profile() {
                                 ) : (
                                   <div
                                     key={`${dishlist.id}-empty-${index}`}
-                                    className="aspect-square w-full rounded-[0.85rem] bg-black/6"
+                                    className={`aspect-square w-full rounded-[0.85rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`}
                                   />
                                 );
                               })}
@@ -2296,7 +2381,7 @@ export default function Profile() {
                     </div>
                     {createSourceDishlist ? (
                       <div className="mt-5">
-                        <div className="mb-2 text-sm font-semibold text-black">
+                        <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                           {createDishSearchTerm ? "Search results" : createSourceDishlist.name}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -2325,7 +2410,7 @@ export default function Profile() {
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                                   }}
                                 />
-                                <div className="px-2 py-1.5 text-[11px] font-semibold text-black truncate">
+                                <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode ? "bg-[#151515] text-white" : "text-black"}`}>
                                   {dish.name || "Untitled dish"}
                                 </div>
                               </button>
@@ -2481,7 +2566,21 @@ export default function Profile() {
                 placeholder="Dishlist name"
                 className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
               />
-              <div className="mt-4 flex justify-end gap-2">
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDishlistDeleteTarget(dishlistRenameTarget);
+                    setDishlistRenameTarget(null);
+                    setDishlistRenameValue("");
+                  }}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+                    darkMode ? "border-[#E64646]/45 bg-[#2A1212] text-[#FFD5D5]" : "border-[#D56A6A] bg-[#FFF1F1] text-[#B34747]"
+                  }`}
+                >
+                  Delete
+                </button>
+                <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -2500,6 +2599,7 @@ export default function Profile() {
                   <Pencil size={15} />
                   Save
                 </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

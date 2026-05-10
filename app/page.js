@@ -74,7 +74,7 @@ export default function Feed() {
   const [dishlistPickerVariant, setDishlistPickerVariant] = useState("sheet");
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [guestMode, setGuestMode] = useState(null);
@@ -477,7 +477,7 @@ export default function Feed() {
         (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["to_try", "all_dishes"]);
+      setSelectedDishlistIds(["all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }

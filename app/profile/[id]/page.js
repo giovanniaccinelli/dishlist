@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
@@ -28,7 +28,7 @@ import {
   getAvatarTone,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { MoreHorizontal, Plus, Send, Shuffle, Users, X } from "lucide-react";
+import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
@@ -68,6 +68,14 @@ function uniqueNonEmpty(values = []) {
         .filter(Boolean)
     )
   );
+}
+
+function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
+  if (id === "saved") return <Trophy className={`${className} text-[#F2D46D]`} strokeWidth={2.1} />;
+  if (id === "to_try") return <NotebookText className={`${className} text-[#38BDF8]`} strokeWidth={2.1} />;
+  if (id === "uploaded") return <Upload className={`${className} text-[#F2A23A]`} strokeWidth={2.1} />;
+  if (id === "all_dishes") return <ListChecks className={`${className} text-[#2BD36B]`} strokeWidth={2.1} />;
+  return null;
 }
 
 function getProfileIdCandidates(routeId, userDoc) {
@@ -145,7 +153,7 @@ export default function PublicProfile() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
@@ -153,6 +161,7 @@ export default function PublicProfile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
+  const dishlistDetailSwipeRef = useRef(null);
   const viewedAllStories =
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
@@ -278,6 +287,24 @@ export default function PublicProfile() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
+  const handleDishlistDetailPointerDown = (event) => {
+    if (showingDishlistOverview) return;
+    dishlistDetailSwipeRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handleDishlistDetailPointerUp = (event) => {
+    const start = dishlistDetailSwipeRef.current;
+    dishlistDetailSwipeRef.current = null;
+    if (!start || showingDishlistOverview) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = Math.abs(event.clientY - start.y);
+    if (deltaX > 120 && deltaY < 80) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectDishlist("overview");
+    }
+  };
+
   const buildProfileReturnTo = () => {
     return activeDishlistId && activeDishlistId !== "overview"
       ? `${pathname}?list=${encodeURIComponent(activeDishlistId)}`
@@ -323,7 +350,7 @@ export default function PublicProfile() {
         (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["to_try", "all_dishes"]);
+      setSelectedDishlistIds(["all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -542,9 +569,7 @@ export default function PublicProfile() {
               </button>
             ) : null}
           </div>
-          <div className="flex items-center justify-end">
-            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} className="shrink-0" />
-          </div>
+          <div className="flex items-center justify-end" />
           <div className="flex h-[2.4rem] w-[2.4rem] items-center justify-end">
             <button
               type="button"
@@ -662,11 +687,25 @@ export default function PublicProfile() {
       </div>
 
       {showingDishlistOverview ? (
+        <div className="mb-4 flex justify-center px-2">
+          <button
+            type="button"
+            onClick={() => setProfileMapOpen(true)}
+            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border px-5 py-3.5 text-sm font-bold shadow-[0_14px_34px_rgba(230,70,70,0.16)] ${
+              darkMode ? "border-[#E64646]/70 bg-[#211111] text-white" : "border-[#E64646]/55 bg-[#FFF1F1] text-[#7E1717]"
+            }`}
+          >
+            <RestaurantMapIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
+            {t("Restaurants")}
+          </button>
+        </div>
+      ) : null}
+
+      {showingDishlistOverview ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               ...allDishlists.filter((dishlist) => dishlist.type === "system"),
-              { id: "profile_map", name: "Map", type: "map", count: uploadedRestaurantGroups.length, dishes: [] },
               ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
@@ -680,7 +719,10 @@ export default function PublicProfile() {
                     darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
                   }`}
                 >
-                  <div className={`mb-2 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                    <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
+                  </div>
                   {isMap ? (
                     <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
                       darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
@@ -721,17 +763,34 @@ export default function PublicProfile() {
           </div>
         </div>
       ) : (
-        <>
-          <div className="mb-3 flex items-center justify-between">
+        <div
+          onPointerDown={handleDishlistDetailPointerDown}
+          onPointerUp={handleDishlistDetailPointerUp}
+          onPointerCancel={() => {
+            dishlistDetailSwipeRef.current = null;
+          }}
+        >
+          <div
+            className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
+          >
             <button
               type="button"
               onClick={() => selectDishlist("overview")}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold ${
                 darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
               }`}
             >
+              <ChevronLeft size={16} />
               {t("Back")}
             </button>
+            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
+            <span className="h-10 w-10 justify-self-end" aria-hidden="true" />
+          </div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
+              {activeDishlist?.name || "All dishes"}
+              <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
+            </h2>
             <button
               onClick={() => openShuffleDeck(activeDishlist?.id || "all_dishes")}
               className="profile-shuffle-btn inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
@@ -741,7 +800,6 @@ export default function PublicProfile() {
               {t("Shuffle")}
             </button>
           </div>
-          <h2 className="mb-3 text-xl font-semibold">{activeDishlist?.name || "All dishes"}</h2>
           <div className="grid grid-cols-2 gap-3">
         {(activeDishlist?.dishes || []).length === 0 ? (
           <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
@@ -798,7 +856,7 @@ export default function PublicProfile() {
           </AnimatePresence>
         )}
           </div>
-        </>
+        </div>
       )}
 
 

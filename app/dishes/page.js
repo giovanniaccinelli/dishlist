@@ -147,7 +147,7 @@ export default function Dishes() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
   const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
@@ -461,10 +461,7 @@ export default function Dishes() {
         (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      const nextSelectedIds =
-        targetDishlistId !== "all_dishes" && targetDishlistId !== "uploaded"
-          ? [targetDishlistId, "all_dishes"]
-          : ["to_try", "all_dishes"];
+      const nextSelectedIds = ["all_dishes"];
       setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);

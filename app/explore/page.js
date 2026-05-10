@@ -161,12 +161,14 @@ function FriedIcon({ className = "" }) {
 function DeliveryScooterIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M4.5 13.8h7.4l2-4.2h3.2c1.4 0 2.5 1.1 2.5 2.5v1.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.2 9.2h5.9l-1.2 4.6H5.4l1.8-4.6Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
-      <path d="M15.3 9.6V6.8h2.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="7" cy="17" r="2.1" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="18" cy="17" r="2.1" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M9.1 17h6.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M4.2 13.7h8.7l2.1-4h2.2c1.6 0 2.9 1.3 2.9 2.9v1.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.2 8.2h6.9v5.5H4.8l1.4-5.5Z" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
+      <path d="M15.3 9.7V7h3.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.1 6.1h6.4" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.78" />
+      <circle cx="7.1" cy="17" r="2.15" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="18" cy="17" r="2.15" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M9.3 17h6.5" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M6.3 17h1.6M17.2 17h1.6" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
     </svg>
   );
 }
@@ -197,10 +199,9 @@ function AmericanFlagIcon({ className = "" }) {
 function RiceIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M5.6 13.2h12.8l-1.2 4.2a3 3 0 0 1-2.9 2.2H9.7a3 3 0 0 1-2.9-2.2l-1.2-4.2Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
-      <ellipse cx="12" cy="12.8" rx="6.7" ry="2.3" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M8.4 10.2c.6-1.2 1.4-1.8 2.3-1.8.8 0 1.2.6 1.3 1.7" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M12.6 9.8c.5-1.3 1.3-2 2.3-2 .8 0 1.3.5 1.5 1.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <ellipse cx="12" cy="12" rx="3.4" ry="8.2" fill="#FFFFFF" stroke="currentColor" strokeWidth="1.25" transform="rotate(38 12 12)" />
+      <ellipse cx="9.2" cy="14.1" rx="2.1" ry="5.1" fill="#FFFFFF" stroke="currentColor" strokeWidth="1.05" transform="rotate(58 9.2 14.1)" opacity="0.95" />
+      <ellipse cx="14.9" cy="9.7" rx="1.75" ry="4.6" fill="#FFFFFF" stroke="currentColor" strokeWidth="1.05" transform="rotate(39 14.9 9.7)" opacity="0.9" />
     </svg>
   );
 }

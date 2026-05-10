@@ -32,7 +32,7 @@ import AuthPromptModal from "../../../components/AuthPromptModal";
 import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
-import { isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
+import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -877,6 +877,9 @@ export default function PublicProfile() {
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
               const preview = getDishlistPreviewDishes(dishlist);
+              const mediaPreview = preview.filter(hasDishMedia);
+              const noImageOnlyPreview = preview.length > 0 && mediaPreview.length === 0;
+              const displayPreview = noImageOnlyPreview ? preview : mediaPreview;
               return (
                 <button
                   key={dishlist.id}
@@ -897,10 +900,19 @@ export default function PublicProfile() {
                       <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
                       <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
                     </div>
+                  ) : noImageOnlyPreview ? (
+                    <div
+                      className={`no-accent-border rounded-[0.95rem] border-2 px-3 py-2 text-[12px] font-bold leading-tight ${
+                        String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                      } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
+                      style={{ borderColor: String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
+                    >
+                      <div className="truncate">{displayPreview[0]?.name || t("Untitled dish")}</div>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-1.5">
                       {Array.from({ length: 4 }).map((_, index) => {
-                        const dish = preview[index];
+                        const dish = displayPreview[index];
                         return dish ? (
                           <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
                             <img
@@ -1147,6 +1159,9 @@ export default function PublicProfile() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
                   const preview = getDishlistPreviewDishes(dishlist);
+                  const mediaPreview = preview.filter(hasDishMedia);
+                  const noImageOnlyPreview = preview.length > 0 && mediaPreview.length === 0;
+                  const displayPreview = noImageOnlyPreview ? preview : mediaPreview;
                   return (
                     <button
                       key={dishlist.id}
@@ -1160,9 +1175,19 @@ export default function PublicProfile() {
                       }`}
                     >
                       <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
+                      {noImageOnlyPreview ? (
+                        <div
+                          className={`no-accent-border rounded-[0.95rem] border-2 px-3 py-2 text-left text-[12px] font-bold leading-tight ${
+                            String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                          } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
+                          style={{ borderColor: String(displayPreview[0]?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
+                        >
+                          <div className="truncate">{displayPreview[0]?.name || t("Untitled dish")}</div>
+                        </div>
+                      ) : (
                       <div className="grid grid-cols-2 gap-1.5">
                         {Array.from({ length: 4 }).map((_, index) => {
-                          const dish = preview[index];
+                          const dish = displayPreview[index];
                           return dish ? (
                             <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
                               <img
@@ -1185,6 +1210,7 @@ export default function PublicProfile() {
                           );
                         })}
                       </div>
+                      )}
                     </button>
                   );
                 })}

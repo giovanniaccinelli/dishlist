@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { Plus, Search, Send } from "lucide-react";
@@ -121,13 +122,15 @@ export default function Dishlists() {
       const seenDishIds = new Set();
 
       const pushPreviewDish = (dishData) => {
-        const imageUrl = getDishImageUrl(dishData, "thumb");
         const dishId = String(dishData?.id || "");
-        if (!imageUrl || !dishId || seenDishIds.has(dishId) || previewDishes.length >= 4) return;
+        if (!dishId || seenDishIds.has(dishId) || previewDishes.length >= 4) return;
+        const hasMedia = hasDishMedia(dishData);
         seenDishIds.add(dishId);
         previewDishes.push({
           id: dishId,
-          imageUrl,
+          name: dishData?.name || "",
+          imageUrl: hasMedia ? getDishImageUrl(dishData, "thumb") : "",
+          hasMedia,
           dishMode: String(dishData?.dishMode || "").toLowerCase(),
           rating: Number(dishData?.rating || 0),
         });
@@ -185,11 +188,13 @@ export default function Dishlists() {
             .slice(0, 4)
             .map((dish) => ({
               id: dish.id,
-              imageUrl: getDishImageUrl(dish, "thumb"),
+              name: dish?.name || "",
+              imageUrl: hasDishMedia(dish) ? getDishImageUrl(dish, "thumb") : "",
+              hasMedia: hasDishMedia(dish),
               dishMode: String(dish?.dishMode || "").toLowerCase(),
               rating: Number(dish?.rating || 0),
             }))
-            .filter((dish) => dish.imageUrl);
+            .filter((dish) => dish.id);
 
           return {
             ...userItem,
@@ -489,8 +494,11 @@ export default function Dishlists() {
               const isMe = user?.uid === u.id;
               const profileHref = isMe ? "/profile" : `/profile/${encodeURIComponent(u.id)}`;
               const alreadyFollowing = u.followers?.includes(user?.uid);
+              const previewMediaDishes = (u.previewDishes || []).filter((dish) => dish?.hasMedia !== false && dish?.imageUrl);
+              const previewNoImageDishes = (u.previewDishes || []).filter((dish) => dish?.hasMedia === false);
+              const showNoImagePreviewBar = previewNoImageDishes.length > 0 && previewMediaDishes.length === 0;
               const previewCells = Array.from({ length: 4 }, (_, idx) => (
-                u.previewDishes?.[idx] || { imageUrl: "", dishMode: "" }
+                previewMediaDishes[idx] || { imageUrl: "", dishMode: "" }
               ));
               const hasAnyDishes = (u.profileDishCount || 0) > 0;
               const avatarTone = getAvatarTone(u.displayName || "");
@@ -558,32 +566,43 @@ export default function Dishlists() {
                   </div>
 
                   {hasAnyDishes ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {previewCells.map((previewDish, idx) => (
-                        <div
-                          key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
-                          className={`people-preview-dish no-accent-border relative aspect-square overflow-hidden rounded-lg border-2 ${
-                            previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
-                          } bg-neutral-100`}
-                          style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
-                        >
-                          {previewDish?.imageUrl ? (
-                            <img
-                              src={previewDish.imageUrl}
-                              alt="Dish preview"
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-white" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    showNoImagePreviewBar ? (
+                      <div
+                        className={`no-accent-border rounded-[0.9rem] border-2 px-3 py-2 text-left text-[12px] font-bold leading-tight ${
+                          previewNoImageDishes[0]?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                        } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
+                        style={{ borderColor: previewNoImageDishes[0]?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
+                      >
+                        <div className="truncate">{previewNoImageDishes[0]?.name || t("Untitled dish")}</div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {previewCells.map((previewDish, idx) => (
+                          <div
+                            key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
+                            className={`people-preview-dish no-accent-border relative aspect-square overflow-hidden rounded-lg border-2 ${
+                              previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                            } bg-neutral-100`}
+                            style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
+                          >
+                            {previewDish?.imageUrl ? (
+                              <img
+                                src={previewDish.imageUrl}
+                                alt="Dish preview"
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-white" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )
                   ) : null}
 
                 </div>

@@ -614,7 +614,7 @@ export default function Feed() {
       {!userId && guestMode === "feed" && (
         <div className="px-5">
           <div className="bg-white border border-black/10 rounded-2xl px-4 py-3 text-sm text-black/70">
-            Add up to three dishes to your DishList. We’ll ask you to create an account after the third.
+            {t("Add up to three dishes to your DishList. We'll ask you to create an account after the third.")}
           </div>
         </div>
       )}

@@ -139,6 +139,7 @@ const translations = {
     "Save your first 3 dishes": "Salva i tuoi primi 3 piatti",
     "Start by adding three dishes you already know you want in your DishList.": "Inizia aggiungendo tre piatti che sai gi\u00e0 di volere nella tua DishList.",
     "Start swiping right away. After your third save, we ask you to create the profile.": "Inizia subito a scorrere. Dopo il terzo salvataggio ti chiediamo di creare il profilo.",
+    "Add up to three dishes to your DishList. We'll ask you to create an account after the third.": "Aggiungi fino a tre piatti alla tua DishList. Dopo il terzo ti chiederemo di creare un account.",
     Steps: "Passi",
     "Dish 1": "Piatto 1",
     "Dish 2": "Piatto 2",

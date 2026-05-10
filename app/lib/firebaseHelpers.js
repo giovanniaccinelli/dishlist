@@ -1442,47 +1442,8 @@ export async function markConversationAsRead(conversationId, userId) {
 // Get dishes saved by user
 export async function getSavedDishesFromFirestore(userId) {
   return cachedRead(`user:${userId}:saved`, async () => {
-  const userRef = doc(db, "users", userId);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return [];
-
-  const savedDishIds = new Set(userSnap.data().savedDishes || []);
   const savedSub = await getDocs(collection(db, "users", userId, "saved"));
-  const results = [];
-  const missing = [];
-  savedSub.docs.forEach((d) => {
-    const data = d.data();
-    savedDishIds.add(d.id);
-    if (data) {
-      results.push({ id: d.id, ...data });
-    }
-  });
-
-  for (const id of savedDishIds) {
-    if (results.find((r) => r.id === id)) continue;
-    const dishSnap = await getDoc(doc(db, "dishes", id));
-    if (dishSnap.exists()) {
-      const data = dishSnap.data();
-      results.push({ id: dishSnap.id, ...data });
-    } else {
-      missing.push(id);
-      try {
-        await deleteDoc(doc(db, "users", userId, "saved", id));
-      } catch (err) {
-        console.error("Failed to delete stale saved doc:", err);
-      }
-    }
-  }
-
-  if (missing.length > 0) {
-    try {
-      await updateDoc(userRef, {
-        savedDishes: arrayRemove(...missing),
-      });
-    } catch (err) {
-      console.warn("Failed to clean savedDishes array, continuing:", err);
-    }
-  }
+  const results = savedSub.docs.map((d) => ({ id: d.id, ...d.data() }));
   // Always hydrate save counts and core fields from canonical dishes/{id}
   // so UI reflects the true global state across users.
   const canonicalSnaps = await Promise.all(

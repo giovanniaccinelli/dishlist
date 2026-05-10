@@ -89,7 +89,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const useLargeSize = false;
   const buttonSizeClass = useLargeSize ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
   const iconSizeClass = useLargeSize ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
-  const restaurantIconSizeClass = useLargeSize ? "h-[1.78rem] w-[1.78rem]" : "h-[1.36rem] w-[1.36rem]";
+  const restaurantIconSizeClass = useLargeSize ? "h-[1.2rem] w-[1.2rem]" : "h-[1.05rem] w-[1.05rem]";
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
@@ -140,7 +140,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #E64646",
         }}
       >
-        <RestaurantForkKnifeIcon className={restaurantIconSizeClass} strokeWidth={1.65} />
+        <RestaurantForkKnifeIcon className={restaurantIconSizeClass} strokeWidth={1.55} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

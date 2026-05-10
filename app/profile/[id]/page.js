@@ -282,7 +282,7 @@ export default function PublicProfile() {
     return () => {
       cancelled = true;
     };
-  }, [profileDocId]);
+  }, [profileDocId, savedDishes.length, toTryDishes.length, dishes.length, customDishlists.length]);
 
   useEffect(() => {
     if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;

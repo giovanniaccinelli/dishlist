@@ -161,6 +161,7 @@ export default function Profile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
   const [canonicalDishlists, setCanonicalDishlists] = useState([]);
+  const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
@@ -225,7 +226,7 @@ export default function Profile() {
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
   const profileIdCandidates = getProfileIdCandidates(user?.uid, profileUser);
-  const profileDocId = profileUser?.id || user?.uid || "";
+  const profileDocId = profileOwnerId || profileUser?.id || user?.uid || "";
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -255,6 +256,7 @@ export default function Profile() {
 
         const userDoc = await loadUserDoc();
         const nextProfileUser = userDoc?.exists?.() ? { id: userDoc.id, ...userDoc.data() } : null;
+        setProfileOwnerId(nextProfileUser?.id || user.uid);
         const candidateIds = getProfileIdCandidates(user.uid, userDoc);
         const results = await Promise.allSettled([
           getUploadedDishesForUserAliases(candidateIds),
@@ -309,6 +311,7 @@ export default function Profile() {
         if (cancelled) return;
         if (userSnap.exists()) {
           const data = userSnap.data() || {};
+          setProfileOwnerId((prev) => prev || userSnap.id);
           setProfileMeta((prev) => ({
             ...prev,
             followers: Array.isArray(data.followers) ? data.followers : [],
@@ -366,7 +369,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [profileDocId]);
+  }, [profileDocId, savedDishes.length, toTryDishes.length, uploadedDishes.length, customDishlists.length]);
 
   useEffect(() => {
     if (!editProfileModal) return;
@@ -1255,7 +1258,7 @@ export default function Profile() {
                   </div>
                   {renderDishCounters(dish)}
                 </div>
-                {(allowDelete || onRemovePreview || dish?.owner === user?.uid) && (
+                {(allowDelete || onRemovePreview || profileIdCandidates.includes(dish?.owner)) && (
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -2877,7 +2880,7 @@ export default function Profile() {
                   <span>{t("Add to story")}</span>
                   <StoryStatIcon size={17} />
                 </button>
-                {dishCardActionTarget.dish?.owner === user?.uid ? (
+                {profileIdCandidates.includes(dishCardActionTarget.dish?.owner) ? (
                   <button
                     type="button"
                     onClick={() => {

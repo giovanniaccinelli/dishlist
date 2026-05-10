@@ -34,6 +34,7 @@ import MapPreview from "../../components/MapPreview";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
+  DISH_MODE_COOKING,
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
@@ -388,7 +389,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
         <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
           <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
             <div className="flex items-center gap-2">
-              <span className="explore-category-pill no-accent-border inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-1.5 text-[1.05rem] font-semibold text-white">
+              <span className="explore-category-pill no-accent-border inline-flex items-center rounded-full border border-transparent bg-transparent px-0 py-1.5 text-[1.35rem] font-bold leading-none text-white">
                 {t(title)}
               </span>
               <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
@@ -595,7 +596,7 @@ export default function Explore() {
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     if (selectedDishMode === DISH_MODE_RESTAURANT) {
-      return getRestaurantDishGroups(modePool)
+      const restaurantRows = getRestaurantDishGroups(modePool)
         .map((group) => ({
           key: `restaurant-${group.placeId}`,
           title: group.name,
@@ -606,15 +607,26 @@ export default function Explore() {
           totalSaves: (group.dishes || []).reduce((sum, dish) => sum + Math.max(0, Number(dish?.saves || 0)), 0),
         }))
         .sort((a, b) => b.totalCount - a.totalCount || b.totalSaves - a.totalSaves || a.title.localeCompare(b.title));
+      return [
+        {
+          key: "map",
+          type: "map",
+          title: "Mappa",
+          dishes: [{}],
+        },
+        ...restaurantRows,
+      ];
     }
 
     const rows = [];
-    rows.push({
-      key: "map",
-      type: "map",
-      title: "Mappa",
-      dishes: [{}],
-    });
+    if (selectedDishMode !== DISH_MODE_COOKING) {
+      rows.push({
+        key: "map",
+        type: "map",
+        title: "Mappa",
+        dishes: [{}],
+      });
+    }
     rows.push({
       key: "most-saved",
       title: "Most Saved",

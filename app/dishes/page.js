@@ -147,8 +147,8 @@ export default function Dishes() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved"]);
-  const [targetDishlistId, setTargetDishlistId] = useState("saved");
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
+  const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
@@ -281,7 +281,7 @@ export default function Dishes() {
     const params = new URLSearchParams(window.location.search);
     setStoryPicker(params.get("storyPicker") === "1");
     setSearch(params.get("q") || "");
-    setTargetDishlistId(params.get("targetList") || "saved");
+    setTargetDishlistId(params.get("targetList") || "to_try");
   }, []);
 
   const usingGlobalFilter = search.trim().length > 0 || selectedTagsApplied.length > 0;
@@ -458,13 +458,13 @@ export default function Dishes() {
     setDishlistsLoading(true);
     try {
       const nextLists = (await getAllDishlistsForUser(user.uid)).filter(
-        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+        (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
       const nextSelectedIds =
         targetDishlistId !== "all_dishes" && targetDishlistId !== "uploaded"
-          ? [targetDishlistId]
-          : ["saved"];
+          ? [targetDishlistId, "all_dishes"]
+          : ["to_try", "all_dishes"];
       setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);
@@ -787,6 +787,7 @@ export default function Dishes() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={selectedDishlistIds}
+        lockedIds={["all_dishes"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

@@ -791,10 +791,16 @@ export async function getAllDishlistsForUser(userId) {
     ...toTry,
     ...custom.flatMap((dishlist) => dishlist.dishes || []),
   ]);
+  const savedIds = new Set(saved.map((dish) => dish?.id).filter(Boolean));
+  const toTryCollection = dedupeDishArray([
+    ...toTry,
+    ...allDishes.filter((dish) => dish?.id && !savedIds.has(dish.id)),
+  ]);
   return [
-    makeSystemDishlist("saved", "Favorites", saved),
-    makeSystemDishlist("all_dishes", "All dishes", allDishes),
+    makeSystemDishlist("saved", "Your Classics", saved),
+    makeSystemDishlist("to_try", "To Try", toTryCollection),
     makeSystemDishlist("uploaded", "Uploaded", uploaded),
+    makeSystemDishlist("all_dishes", "All dishes", allDishes),
     ...custom,
   ];
 }
@@ -833,7 +839,7 @@ export async function createCustomDishlist(userId, name, initialDishes = []) {
 export async function getPopularCustomDishlistNames(max = 8) {
   try {
     const snapshot = await getDocs(collectionGroup(db, "dishlists"));
-    const reserved = new Set(["top picks", "all dishes", "uploaded"]);
+    const reserved = new Set(["top picks", "favorites", "your classics", "to try", "all dishes", "uploaded"]);
     const counts = new Map();
 
     snapshot.docs.forEach((dishlistDoc) => {

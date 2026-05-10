@@ -150,7 +150,7 @@ export default function Profile() {
   const [customDishlists, setCustomDishlists] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
-  const [activeDishlistId, setActiveDishlistId] = useState("all_dishes");
+  const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
@@ -409,13 +409,14 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (activeDishlistId === "saved" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
+    if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
-    setActiveDishlistId("all_dishes");
+    setActiveDishlistId("overview");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      params.set("list", "all_dishes");
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      params.delete("list");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
   }, [activeDishlistId, customDishlists]);
 
@@ -428,17 +429,24 @@ export default function Profile() {
     setActiveDishlistId(dishlistId);
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    params.set("list", dishlistId);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    if (dishlistId === "overview") {
+      params.delete("list");
+    } else {
+      params.set("list", dishlistId);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
   const buildProfileReturnTo = () => {
-    return `${pathname}?list=${encodeURIComponent(activeDishlistId || "all_dishes")}`;
+    return activeDishlistId && activeDishlistId !== "overview"
+      ? `${pathname}?list=${encodeURIComponent(activeDishlistId)}`
+      : pathname;
   };
 
   const getProfileAddTargetListId = () => {
-    if (!activeDishlist?.id) return "saved";
-    if (activeDishlist.id === "all_dishes") return "saved";
+    if (!activeDishlist?.id) return "to_try";
+    if (activeDishlist.id === "all_dishes") return "to_try";
     return activeDishlist.id;
   };
 
@@ -843,8 +851,19 @@ export default function Profile() {
         .map((dish) => [dish.id, dish])
     ).values()
   );
+  const savedDishIds = new Set(savedDishes.map((dish) => dish?.id).filter(Boolean));
+  const toTryCollection = Array.from(
+    new Map(
+      [...toTryDishes, ...allDishesCollection.filter((dish) => dish?.id && !savedDishIds.has(dish.id))]
+        .filter((dish) => dish?.id)
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
 
   const allDishlists = [
+    { id: "saved", name: "Your Classics", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: sortDishlistDishes(toTryCollection), count: toTryCollection.length },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: uploadedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -852,16 +871,15 @@ export default function Profile() {
       dishes: sortDishlistDishes(allDishesCollection),
       count: allDishesCollection.length,
     },
-    { id: "saved", name: "Favorites", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(uploadedDishes), count: uploadedDishes.length },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: sortDishlistDishes(dishlist.dishes || []),
     })),
   ];
 
+  const showingDishlistOverview = activeDishlistId === "overview";
   const unfilteredActiveDishlist =
-    allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
+    showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
@@ -925,8 +943,8 @@ export default function Profile() {
   const getRemovalTargetMeta = (source) => {
     if (source === "saved") {
       return {
-        label: "Favorites",
-        description: "Remove it from Favorites only",
+        label: "Your Classics",
+        description: "Remove it from Your Classics only",
         buttonClass: "border-[#D8C66A] bg-[#FFFBE7]",
         iconClass: "border-[#D0B74A] bg-[#D0B74A] text-white",
       };
@@ -1251,81 +1269,101 @@ export default function Profile() {
         ) : null}
       </div>
 
-      <div className="mb-2 flex items-center justify-center gap-2">
-        {[
-          { id: "all_dishes", label: "All dishes" },
-          { id: "uploaded", label: "Uploaded" },
-          { id: "saved", label: "Favorites" },
-        ].map((item) => {
-          const active = activeDishlistId === item.id;
-          return (
+      {showingDishlistOverview ? (
+        <div className="mx-auto w-full max-w-3xl px-2 pb-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              ...allDishlists.filter((dishlist) => dishlist.type === "system"),
+              { id: "profile_map", name: "Map", type: "map", count: uploadedRestaurantGroups.length, dishes: [] },
+              ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
+            ].map((dishlist) => {
+              const isMap = dishlist.type === "map";
+              const preview = [...(dishlist.dishes || [])].slice(0, 4);
+              return (
+                <button
+                  key={dishlist.id}
+                  type="button"
+                  onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
+                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${
+                    darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
+                  }`}
+                >
+                  <div className={`mb-2 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                  {isMap ? (
+                    <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
+                      darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
+                    }`}>
+                      <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+                      <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {Array.from({ length: 4 }).map((_, index) => {
+                        const dish = preview[index];
+                        return dish ? (
+                          <img
+                            key={`${dishlist.id}-${dish.id}-${index}`}
+                            src={getDishImageUrl(dish, "thumb")}
+                            alt={dish.name || dishlist.name}
+                            className={`no-accent-border aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
+                            style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(event) => {
+                              event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                            }}
+                          />
+                        ) : (
+                          <div
+                            key={`${dishlist.id}-empty-${index}`}
+                            className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
+                </button>
+              );
+            })}
             <button
-              key={item.id}
               type="button"
-              onClick={() => selectDishlist(item.id)}
-              className={`profile-dishlist-tab profile-dishlist-tab--${item.id} ${active ? "profile-dishlist-tab--active" : ""} rounded-full border-2 px-3 py-2.5 text-[13px] font-semibold transition ${
-                darkMode
-                  ? active
-                    ? item.id === "saved"
-                      ? "border-[#E64646] bg-transparent text-[#FF7777] shadow-none"
-                      : item.id === "uploaded"
-                        ? "border-[#E4B43F] bg-transparent text-[#F2D46D] shadow-none"
-                        : "border-[#2BD36B] bg-transparent text-[#7CFFA3] shadow-none"
-                    : "border-white/18 bg-transparent text-white/58"
-                  : active
-                    ? item.id === "saved"
-                      ? "border-[#D94A4A] bg-[linear-gradient(180deg,#FFE4E4_0%,#FFC4C4_100%)] text-[#7E1717] shadow-[0_10px_22px_rgba(217,74,74,0.18)]"
-                      : item.id === "uploaded"
-                        ? "border-[#D5B647] bg-[linear-gradient(180deg,#FFF8D9_0%,#F7E8A8_100%)] text-[#3F3100] shadow-[0_10px_22px_rgba(213,182,71,0.18)]"
-                        : "border-[#1E8A4C] bg-[linear-gradient(180deg,#F4FFF7_0%,#DDF6E5_100%)] text-[#176A37] shadow-[0_10px_22px_rgba(43,211,107,0.16)]"
-                    : "border-black/30 bg-white text-black"
+              onClick={handleOpenCreateDishlist}
+              className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#2BD36B]/55 p-3 text-left ${
+                darkMode ? "bg-[#102817]" : "bg-[#F3FFF7]"
               }`}
-              style={darkMode ? {
-                borderColor: active ? "currentColor" : "rgba(255,255,255,0.28)",
-                background: "transparent",
-                boxShadow: active ? "inset 0 0 0 2px currentColor" : "none",
-              } : undefined}
             >
-              {item.label}
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#2BD36B]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2BD36B] text-black">
+                  <Plus size={22} />
+                </div>
+                <div className="text-sm font-semibold">{t("Create dishlist")}</div>
+              </div>
             </button>
-          );
-        })}
-        
-        <button
-          type="button"
-          onClick={() => setDishlistsOpen(true)}
-          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
-            darkMode
-              ? "border-white/22 bg-transparent text-white shadow-none"
-              : "border-black/35 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
-          }`}
-          aria-label="Open all dishlists"
-        >
-          <MoreHorizontal size={18} />
-        </button>
-      </div>
-      <div className="mb-4 flex justify-center">
-        <button
-          type="button"
-          onClick={() => setProfileMapOpen(true)}
-          className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-2 ${
-            darkMode
-              ? "border-white/22 bg-transparent text-white shadow-none"
-              : "border-black/30 bg-white text-black shadow-[0_12px_26px_rgba(0,0,0,0.12)]"
-          }`}
-          aria-label="Open profile map"
-        >
-          <RestaurantMapIcon className={`h-6 w-6 ${darkMode ? "text-white" : "text-black"}`} strokeWidth={2.15} />
-        </button>
-</div>
-
-      <DishGrid
-        title={activeDishlist?.name || "All dishes"}
-        dishes={activeDishlist?.dishes || []}
-        allowDelete={false}
-        source={activeDishlist?.id || "all_dishes"}
-        onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
-      />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-3 px-2">
+            <button
+              type="button"
+              onClick={() => selectDishlist("overview")}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+                darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
+              }`}
+            >
+              Back
+            </button>
+          </div>
+          <DishGrid
+            title={activeDishlist?.name || "All dishes"}
+            dishes={activeDishlist?.dishes || []}
+            allowDelete={false}
+            source={activeDishlist?.id || "all_dishes"}
+            onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
+          />
+        </>
+      )}
 
       {/* Add Dish button */}
       <motion.button

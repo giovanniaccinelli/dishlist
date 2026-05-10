@@ -3,6 +3,20 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Lock, Plus, Star } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+
+const PICKER_ORDER = ["saved", "to_try", "uploaded"];
+
+function orderPickerLists(lists = []) {
+  const systemRank = new Map(PICKER_ORDER.map((id, index) => [id, index]));
+  return [...lists].sort((a, b) => {
+    if (a.id === "all_dishes") return 1;
+    if (b.id === "all_dishes") return -1;
+    const aRank = systemRank.has(a.id) ? systemRank.get(a.id) : 50;
+    const bRank = systemRank.has(b.id) ? systemRank.get(b.id) : 50;
+    return aRank - bRank;
+  });
+}
 
 export default function DishlistPickerModal({
   open,
@@ -19,23 +33,29 @@ export default function DishlistPickerModal({
   onSelect,
   onConfirm,
   confirmLabel = "Save",
+  variant = "sheet",
+  dishPreview = null,
 }) {
   const { darkMode } = useLanguage();
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
+  const orderedLists = orderPickerLists(lists);
+  const isSwipeCard = variant === "swipe";
 
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
+          className={`fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex justify-center p-4 ${isSwipeCard ? "items-center" : "items-end"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className={`no-accent-border w-full max-w-md rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+            className={`no-accent-border flex w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+              isSwipeCard ? "min-h-[74vh] max-h-[82vh]" : ""
+            } ${
               darkMode
                 ? "border-white/12 bg-[#101010] text-white"
                 : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
@@ -65,18 +85,40 @@ export default function DishlistPickerModal({
                 Close
               </button>
             </div>
+            {dishPreview ? (
+              <div className={`mb-4 flex items-center gap-3 rounded-[1.35rem] border p-2.5 ${
+                darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
+              }`}>
+                <img
+                  src={getDishImageUrl(dishPreview, "thumb")}
+                  alt={dishPreview?.name || dishName}
+                  className="h-16 w-16 rounded-[1rem] object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+                <div className="min-w-0">
+                  <div className={`text-xs font-semibold uppercase tracking-[0.14em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
+                    Just swiped
+                  </div>
+                  <div className={`truncate text-base font-bold ${darkMode ? "text-white" : "text-black"}`}>
+                    {dishPreview?.name || dishName}
+                  </div>
+                </div>
+              </div>
+            ) : null}
             {loading ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
                 Loading dishlists...
               </div>
-            ) : lists.length === 0 ? (
+            ) : orderedLists.length === 0 ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
                 No dishlists yet.
               </div>
             ) : (
               <>
-                <div className="flex max-h-[52vh] flex-col gap-2 overflow-y-auto pr-1">
-                  {lists.map((dishlist) => {
+                <div className={`flex flex-1 flex-col gap-2 overflow-y-auto pr-1 ${isSwipeCard ? "min-h-0" : "max-h-[52vh]"}`}>
+                  {orderedLists.map((dishlist) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
                     return (
@@ -130,14 +172,18 @@ export default function DishlistPickerModal({
                   })}
                 </div>
                 {mode === "multiple" ? (
-                  <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className={`sticky bottom-0 mt-4 flex items-center justify-between gap-3 border-t pt-4 ${
+                    darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
+                  }`}>
                     <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
                       {selectedIds.length} selected
                     </div>
                     <button
                       type="button"
                       onClick={onConfirm}
-                      className={`rounded-full px-5 py-3 text-sm font-semibold ${darkMode ? "bg-white text-black" : "bg-black text-white"}`}
+                      className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_14px_32px_rgba(43,211,107,0.22)] ${
+                        darkMode ? "bg-[#2BD36B] text-black" : "bg-[#111111] text-white"
+                      }`}
                     >
                       {confirmLabel}
                     </button>

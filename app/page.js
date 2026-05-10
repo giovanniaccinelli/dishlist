@@ -10,7 +10,6 @@ import { FeedLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
-  addDishToToTryList,
   createDishForUser,
   getAllDishesFromFirestore,
   getAllDishlistsForUser,
@@ -72,9 +71,10 @@ export default function Feed() {
   const [shareDish, setShareDish] = useState(null);
   const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
+  const [dishlistPickerVariant, setDishlistPickerVariant] = useState("sheet");
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved", "all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [guestMode, setGuestMode] = useState(null);
@@ -445,7 +445,7 @@ export default function Feed() {
     });
   };
 
-  const handleAdd = async (dishToAdd) => {
+  const handleAdd = async (dishToAdd, variant = "sheet") => {
     if (!userId) {
       if (guestMode === "feed") {
         const nextIds = Array.from(new Set([...guestSavedIds, dishToAdd.id])).slice(0, 3);
@@ -469,6 +469,7 @@ export default function Feed() {
       return { skipToast: true };
     }
     setDishlistPickerDish(dishToAdd);
+    setDishlistPickerVariant(variant);
     setDishlistPickerOpen(true);
     setDishlistsLoading(true);
     try {
@@ -476,7 +477,7 @@ export default function Feed() {
         (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["saved", "all_dishes"]);
+      setSelectedDishlistIds(["to_try", "all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -490,7 +491,7 @@ export default function Feed() {
       return false;
     }
     if (!dishToAdd?.id) return;
-    await addDishToToTryList(userId, dishToAdd.id, dishToAdd);
+    return handleAdd(dishToAdd, "swipe");
   };
 
   const handleResetFeed = async (feedType) => {
@@ -882,6 +883,7 @@ export default function Feed() {
         onClose={() => {
           setDishlistPickerOpen(false);
           setDishlistPickerDish(null);
+          setDishlistPickerVariant("sheet");
         }}
         lists={dishlists}
         dishName={dishlistPickerDish?.name || "dish"}
@@ -898,6 +900,8 @@ export default function Feed() {
         onConfirm={handleDishlistSelect}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
+        variant={dishlistPickerVariant}
+        dishPreview={dishlistPickerVariant === "swipe" ? dishlistPickerDish : null}
       />
       <AnimatePresence>
         {aboutOpen ? (

@@ -702,7 +702,7 @@ export default function Dishlists() {
                       </div>
                     </div>
                     <div className={`space-y-2 text-sm ${darkMode ? "text-white/58" : "text-black/65"}`}>
-                      <p>Pick from your uploaded dishes or Favorites.</p>
+                      <p>Pick from your uploaded dishes or Your Classics.</p>
                       <p>Share it instantly to your story.</p>
                     </div>
                   </div>

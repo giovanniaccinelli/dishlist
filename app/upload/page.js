@@ -61,8 +61,8 @@ export default function UploadPage() {
   const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "saved"]);
-  const [targetDishlistId, setTargetDishlistId] = useState("saved");
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["uploaded", "all_dishes"]);
+  const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
   const [restaurant, setRestaurant] = useState(null);
@@ -80,7 +80,7 @@ export default function UploadPage() {
       return;
     }
     const params = new URLSearchParams();
-    if (targetDishlistId && targetDishlistId !== "saved") {
+    if (targetDishlistId && targetDishlistId !== "to_try") {
       params.set("list", targetDishlistId);
     }
     router.replace(`/profile${params.toString() ? `?${params.toString()}` : ""}`);
@@ -91,7 +91,7 @@ export default function UploadPage() {
     const params = new URLSearchParams(window.location.search);
     const nextStoryMode = params.get("story") === "1";
     const nextDirectMode = params.get("direct") === "1";
-    const nextTargetDishlistId = params.get("targetList") || "saved";
+    const nextTargetDishlistId = params.get("targetList") || "to_try";
     setStoryMode(nextStoryMode);
     setDirectEntryMode(nextDirectMode);
     setShowUploadForm(nextStoryMode || nextDirectMode);
@@ -305,15 +305,11 @@ export default function UploadPage() {
     setDishlistPickerOpen(true);
     setDishlistsLoading(true);
     try {
-      const nextLists = (await getAllDishlistsForUser(user.uid)).filter(
-        (dishlist) => dishlist.id !== "all_dishes"
-      );
+      const nextLists = await getAllDishlistsForUser(user.uid);
       setDishlists(nextLists);
-      const nextSelectedIds = ["uploaded"];
+      const nextSelectedIds = ["uploaded", "all_dishes"];
       if (targetDishlistId !== "all_dishes" && targetDishlistId !== "uploaded") {
         nextSelectedIds.push(targetDishlistId);
-      } else {
-        nextSelectedIds.push("saved");
       }
       setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
@@ -1029,7 +1025,7 @@ export default function UploadPage() {
         loading={dishlistsLoading}
         mode="multiple"
         selectedIds={selectedDishlistIds}
-        lockedIds={["uploaded"]}
+        lockedIds={["uploaded", "all_dishes"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

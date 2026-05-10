@@ -108,7 +108,7 @@ export default function DishDetail() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["saved", "all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["to_try", "all_dishes"]);
   const [lockedDishlistIds, setLockedDishlistIds] = useState([]);
   const [initialDeckIndex, setInitialDeckIndex] = useState(0);
   const activeDeckRef = useRef(null);
@@ -264,8 +264,8 @@ export default function DishDetail() {
         (dishlist) => dishlist.id !== "uploaded"
       );
       setDishlists(nextLists);
-      setSelectedDishlistIds(["saved", "all_dishes"]);
-      setLockedDishlistIds(["saved", "all_dishes"]);
+      setSelectedDishlistIds(["to_try", "all_dishes"]);
+      setLockedDishlistIds(["all_dishes"]);
     } finally {
       setDishlistsLoading(false);
     }

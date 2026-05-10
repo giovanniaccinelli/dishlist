@@ -26,7 +26,6 @@ import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForU
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
-import DishRatingBadge from "../../components/DishRatingBadge";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -568,7 +567,6 @@ export default function Dishlists() {
                           } bg-neutral-100`}
                           style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
                         >
-                          <DishRatingBadge dish={previewDish} className="left-1 top-1 scale-[0.9]" />
                           {previewDish?.imageUrl ? (
                             <img
                               src={previewDish.imageUrl}

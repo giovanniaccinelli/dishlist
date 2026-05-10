@@ -8,6 +8,7 @@ import { collection, getDocs, limit, query } from "firebase/firestore";
 import { useAuth } from "../lib/auth";
 import { db } from "../lib/firebase";
 import { getDishImageUrl } from "../lib/dishImage";
+import { useLanguage } from "../../components/LanguageProvider";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -23,6 +24,7 @@ const ONBOARDING_STEP_PREVIEW = [
 export default function Onboarding() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [names, setNames] = useState(["", "", ""]);
   const [selectedDishIds, setSelectedDishIds] = useState([null, null, null]);
@@ -86,7 +88,7 @@ export default function Onboarding() {
   const persistNamesAndEnter = () => {
     const cleaned = names.map((name) => name.trim());
     if (cleaned.some((name) => !name)) {
-      setError("Enter all 3 dishes.");
+      setError(t("Enter all 3 dishes."));
       return;
     }
     if (typeof window !== "undefined") {
@@ -101,7 +103,7 @@ export default function Onboarding() {
 
   const handleContinueName = () => {
     if (!currentName.trim()) {
-      setError("Enter a dish name.");
+      setError(t("Enter a dish name."));
       return;
     }
     setError("");
@@ -151,7 +153,7 @@ export default function Onboarding() {
             <>
               <div className="mb-3">
                 <h2 className="text-[1.7rem] leading-[0.96] font-semibold text-white">
-                  Save your first 3 dishes
+                  {t("Save your first 3 dishes")}
                 </h2>
               </div>
 
@@ -164,24 +166,24 @@ export default function Onboarding() {
                   <div className="flex h-full flex-col justify-between gap-3">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[1.35rem] font-semibold leading-[0.96]">Got a few in mind?</p>
+                        <p className="text-[1.35rem] font-semibold leading-[0.96]">{t("Got a few in mind?")}</p>
                         <div className="h-10 w-10 rounded-[0.95rem] bg-[#E64646] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(230,70,70,0.24)] shrink-0">
                           <PenLine size={18} />
                         </div>
                       </div>
                       <p className="mt-2 text-[0.88rem] leading-5 text-white/68 max-w-[17rem]">
-                        Start by adding three dishes you already know you want in your DishList.
+                        {t("Start by adding three dishes you already know you want in your DishList.")}
                       </p>
                     </div>
                     <div>
                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
-                        Steps
+                        {t("Steps")}
                       </div>
                       <div className="grid grid-cols-3 gap-2.5">
                         {ONBOARDING_STEP_PREVIEW.map((step) => (
                           <div key={step.label}>
                             <div className="mb-1.5 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
-                            <div className="text-[0.72rem] font-medium text-white/62">{step.label}</div>
+                            <div className="text-[0.72rem] font-medium text-white/62">{t(step.label)}</div>
                           </div>
                         ))}
                       </div>
@@ -197,18 +199,18 @@ export default function Onboarding() {
                   <div className="flex h-full flex-col justify-between gap-3">
                     <div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[1.35rem] font-semibold leading-none">Swipe on the feed</p>
+                        <p className="text-[1.35rem] font-semibold leading-none">{t("Swipe on the feed")}</p>
                         <div className="h-10 w-10 rounded-[0.95rem] bg-[#F0A623] text-white flex items-center justify-center shadow-[0_10px_24px_rgba(240,166,35,0.24)] shrink-0">
                           <Hand size={18} />
                         </div>
                       </div>
                       <p className="mt-2 text-[0.88rem] leading-5 text-white/62 max-w-[17rem]">
-                        Start swiping right away. After your third save, we ask you to create the profile.
+                        {t("Start swiping right away. After your third save, we ask you to create the profile.")}
                       </p>
                     </div>
                     <div>
                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
-                        Tags you can explore
+                        {t("Tags you can explore")}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {["fit", "high protein", "veg", "easy", "comfort", "spicy", "quick", "budget"].map((tag) => (
@@ -216,7 +218,7 @@ export default function Onboarding() {
                             key={tag}
                             className={`px-3 py-1 rounded-full text-[11px] border ${tag === "high protein" ? "bg-[#102817] text-[#D9FFE3] border-[#2BD36B]" : tag === "spicy" ? "bg-[#2A1212] text-[#FFD5D5] border-[#E64646]" : tag === "comfort" ? "bg-[#241A09] text-[#FFE2A0] border-[#F0A623]" : "bg-white/8 text-white/68 border-white/12"}`}
                           >
-                            {tag}
+                            {t(tag)}
                           </span>
                         ))}
                       </div>
@@ -229,7 +231,7 @@ export default function Onboarding() {
                 onClick={handleSkip}
                 className="mt-3 w-full rounded-[1.15rem] border border-white/10 bg-white/8 px-5 py-3 text-[0.95rem] font-semibold text-white/72 shadow-sm"
               >
-                Skip for now
+                {t("Skip for now")}
               </button>
             </>
           ) : (
@@ -246,15 +248,15 @@ export default function Onboarding() {
                   ))}
                 </div>
                 <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white/38">
-                  Dish {step} of 3
+                  {t("Dish")} {step} {t("of")} 3
                 </div>
               </div>
 
               <div className="mb-4">
                 <h2 className="text-[1.55rem] leading-none font-semibold mt-1 text-white">
-                  Name a dish
+                  {t("Name a dish")}
                 </h2>
-                <p className="mt-2 text-sm text-white/55">You can add an image later.</p>
+                <p className="mt-2 text-sm text-white/55">{t("You can add an image later.")}</p>
               </div>
 
               <input
@@ -273,12 +275,12 @@ export default function Onboarding() {
                     return next;
                   });
                 }}
-                placeholder={`Dish ${step}`}
+                placeholder={`${t("Dish")} ${step}`}
                 className="w-full rounded-full border border-white/12 bg-[#181818] p-3.5 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#E85D75]/25"
               />
 
               <div className="mt-4">
-                <p className="text-sm font-semibold text-white/68 mb-3">Some ideas</p>
+                <p className="text-sm font-semibold text-white/68 mb-3">{t("Some ideas")}</p>
                 <div className="grid grid-cols-2 gap-3">
                   {ideaDishes.map((dish) => (
                     <button
@@ -315,7 +317,7 @@ export default function Onboarding() {
                   ))}
                 </div>
                 {!ideasLoading && !ideaDishes.length ? (
-                  <p className="mt-3 text-sm text-white/45">No ideas yet.</p>
+                  <p className="mt-3 text-sm text-white/45">{t("No ideas yet.")}</p>
                 ) : null}
               </div>
 
@@ -329,7 +331,7 @@ export default function Onboarding() {
                     setStep((prev) => (prev > 1 ? prev - 1 : 0));
                   }}
                   className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center bg-white/8 text-white shadow-sm"
-                  aria-label="Previous step"
+                    aria-label={t("Previous step")}
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -340,7 +342,7 @@ export default function Onboarding() {
                     onClick={handleContinueName}
                     disabled={!currentName.trim()}
                     className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
-                    aria-label="Continue"
+                    aria-label={t("Continue")}
                   >
                     <ArrowRight size={22} />
                   </button>
@@ -351,7 +353,7 @@ export default function Onboarding() {
                     disabled={trimmedNames.length !== 3}
                     className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
                   >
-                    Enter DishList
+                    {t("Enter DishList")}
                   </button>
                 )}
               </div>

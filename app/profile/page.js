@@ -1637,7 +1637,6 @@ export default function Profile() {
                         const dish = preview[index];
                         return dish ? (
                           <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                            <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
                             <img
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
@@ -2488,7 +2487,6 @@ export default function Profile() {
                             const dish = preview[index];
                             return dish ? (
                             <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                              <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
                               <img
                                 src={getDishImageUrl(dish, "thumb")}
                                 alt={dish.name || dishlist.name}
@@ -2655,7 +2653,6 @@ export default function Profile() {
                                 const dish = preview[index];
                                 return dish ? (
                                   <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                                    <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
                                     <img
                                       src={getDishImageUrl(dish, "thumb")}
                                       alt={dish.name || dishlist.name}
@@ -2701,7 +2698,6 @@ export default function Profile() {
                                 }`}
                                 style={selected ? { borderColor: "#2BD36B", boxShadow: "0 0 0 3px rgba(43,211,107,0.35)" } : undefined}
                               >
-                                <DishRatingBadge dish={dish} />
                                 <img
                                   src={getDishImageUrl(dish, "thumb")}
                                   alt={dish.name}

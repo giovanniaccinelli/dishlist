@@ -902,7 +902,6 @@ export default function PublicProfile() {
                         const dish = preview[index];
                         return dish ? (
                           <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                            <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
                             <img
                               src={getDishImageUrl(dish, "thumb")}
                               alt={dish.name || dishlist.name}
@@ -1151,7 +1150,6 @@ export default function PublicProfile() {
                           const dish = preview[index];
                           return dish ? (
                             <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
-                              <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
                               <img
                                 src={getDishImageUrl(dish, "thumb")}
                                 alt={dish.name || dishlist.name}

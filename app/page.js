@@ -34,7 +34,7 @@ import {
   DishModeFilterModal,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
@@ -49,6 +49,7 @@ const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
+const FEED_VIEWED_FIELD = "feedViewedDishIds";
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
@@ -58,6 +59,7 @@ export default function Feed() {
   const router = useRouter();
   const forYouDeckRef = useRef(null);
   const followingDeckRef = useRef(null);
+  const viewedDishIdsRef = useRef([]);
 
   const [activeFeed, setActiveFeed] = useState("for_you");
   const [forYouDeck, setForYouDeck] = useState([]);
@@ -84,6 +86,7 @@ export default function Feed() {
   const [followingSinceById, setFollowingSinceById] = useState({});
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
+  const [viewedHydrated, setViewedHydrated] = useState(false);
   const [excludedTags, setExcludedTags] = useState([]);
   const [draftExcludedTags, setDraftExcludedTags] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -122,6 +125,10 @@ export default function Feed() {
   };
 
   useEffect(() => {
+    viewedDishIdsRef.current = viewedDishIds;
+  }, [viewedDishIds]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (userId) return;
     const done = localStorage.getItem(DONE_KEY);
@@ -151,19 +158,45 @@ export default function Feed() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !userId) {
+    if (!userId) {
       setViewedDishIds([]);
+      viewedDishIdsRef.current = [];
+      setViewedHydrated(true);
       return;
     }
-    try {
-      const stored = JSON.parse(localStorage.getItem(viewedStorageKey(userId)) || "[]");
-      setViewedDishIds(Array.isArray(stored) ? stored : []);
-    } catch {
-      setViewedDishIds([]);
-    }
+    let cancelled = false;
+    setViewedHydrated(false);
+    (async () => {
+      const localIds = getStoredViewedDishIds();
+      let serverIds = [];
+      try {
+        const snap = await getDoc(doc(db, "users", userId));
+        const data = snap.exists() ? snap.data() || {} : {};
+        serverIds = Array.isArray(data[FEED_VIEWED_FIELD]) ? data[FEED_VIEWED_FIELD] : [];
+      } catch (err) {
+        console.error("Failed to load viewed feed dishes:", err);
+      }
+      if (cancelled) return;
+      const merged = Array.from(new Set([...localIds, ...serverIds].map(String).filter(Boolean)));
+      viewedDishIdsRef.current = merged;
+      setViewedDishIds(merged);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(viewedStorageKey(userId), JSON.stringify(merged));
+      }
+      if (localIds.some((id) => !serverIds.includes(id))) {
+        setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: merged }, { merge: true }).catch((err) =>
+          console.error("Failed to sync viewed feed dishes:", err)
+        );
+      }
+      setViewedHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   useEffect(() => {
+    if (userId && !viewedHydrated) return;
     const sortNewest = (items) =>
       items
         .slice()
@@ -216,7 +249,7 @@ export default function Feed() {
       setLoadingDishes(true);
       try {
         const allItems = await getAllDishesFromFirestore();
-        const seenIds = new Set(getStoredViewedDishIds());
+        const seenIds = new Set(viewedDishIdsRef.current);
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
         );
@@ -284,7 +317,7 @@ export default function Feed() {
         setLoadingDishes(false);
       }
     })();
-  }, [userId]);
+  }, [userId, viewedHydrated]);
 
   useEffect(() => {
     if (!userId) return;
@@ -460,9 +493,13 @@ export default function Feed() {
     setViewedDishIds((prev) => {
       if (prev.includes(dish.id)) return prev;
       const next = [...prev, dish.id];
+      viewedDishIdsRef.current = next;
       if (typeof window !== "undefined") {
         localStorage.setItem(viewedStorageKey(userId), JSON.stringify(next));
       }
+      setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: arrayUnion(dish.id) }, { merge: true }).catch((err) =>
+        console.error("Failed to save viewed feed dish:", err)
+      );
       return next;
     });
   };
@@ -521,7 +558,9 @@ export default function Feed() {
     try {
       if (typeof window !== "undefined" && userId) {
         localStorage.removeItem(viewedStorageKey(userId));
+        viewedDishIdsRef.current = [];
         setViewedDishIds([]);
+        await setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: [] }, { merge: true });
       }
       const items = await getAllDishesFromFirestore();
       const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));

@@ -1682,21 +1682,23 @@ export default function Profile() {
           </div>
 
           <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
-            <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
-            {profileRepresentativeTags.length ? (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {profileRepresentativeTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
-                      darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
-                    }`}
-                  >
-                    {t(tag)}
-                  </span>
-                ))}
-              </div>
-            ) : null}
+            <div className="ml-2">
+              <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
+              {profileRepresentativeTags.length ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {profileRepresentativeTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
+                        darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
+                      }`}
+                    >
+                      {t(tag)}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>

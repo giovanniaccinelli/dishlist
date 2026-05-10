@@ -2607,7 +2607,7 @@ export default function Profile() {
                         if (!newDishlistName.trim()) return;
                         setCreateDishlistStep(1);
                       }}
-                      className="rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
+                      className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)]"
                     >
                       Next
                     </button>
@@ -2736,7 +2736,7 @@ export default function Profile() {
                       type="button"
                       onClick={handleCreateDishlist}
                       disabled={creatingDishlist}
-                      className="rounded-full bg-[#2BD36B] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                      className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)] disabled:opacity-60"
                     >
                       {creatingDishlist ? "Creating..." : `Create (${selectedCreateDishes.length})`}
                     </button>

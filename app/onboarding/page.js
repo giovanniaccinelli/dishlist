@@ -341,7 +341,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={handleContinueName}
                     disabled={!currentName.trim()}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2BD36B] text-black shadow-[0_12px_28px_rgba(43,211,107,0.34)] disabled:opacity-40"
+                    className="flex h-14 w-14 items-center justify-center rounded-full border border-[#45C47A]/45 bg-[#1FA463] text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)] disabled:opacity-40"
                     aria-label={t("Continue")}
                   >
                     <ArrowRight size={22} />
@@ -351,7 +351,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={persistNamesAndEnter}
                     disabled={trimmedNames.length !== 3}
-                    className="rounded-full bg-[#2BD36B] px-6 py-3 font-semibold text-black shadow-[0_12px_28px_rgba(43,211,107,0.34)] disabled:opacity-40"
+                    className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-6 py-3 font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)] disabled:opacity-40"
                   >
                     {t("Enter DishList")}
                   </button>

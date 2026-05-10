@@ -136,10 +136,10 @@ export default function DishlistPickerModal({
                         className={`no-accent-border flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${
                           darkMode
                             ? selected
-                              ? "border-[#2BD36B] bg-[#163821] text-white"
+                              ? "border-[#45C47A] bg-[#12351F] text-white"
                               : "border-white/12 bg-[#181818] text-white"
                             : selected
-                              ? "border-[#2BD36B] bg-[#F4FFF7]"
+                              ? "border-[#1FA463] bg-[#F4FFF7]"
                               : "border-black/8 bg-white/90"
                         }`}
                       >
@@ -158,10 +158,10 @@ export default function DishlistPickerModal({
                           className={`no-accent-border ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${
                             darkMode
                               ? selected
-                                ? "border-[#2BD36B] bg-[#2BD36B] text-black"
+                                ? "border-[#45C47A] bg-[#1FA463] text-white"
                                 : "border-white/14 bg-[#242424] text-white/70"
                               : selected
-                                ? "border-[#2BD36B] bg-[#2BD36B] text-white"
+                                ? "border-[#1FA463] bg-[#1FA463] text-white"
                                 : "border-black/10 bg-[#F7F5EF] text-black/65"
                           }`}
                         >
@@ -181,8 +181,8 @@ export default function DishlistPickerModal({
                     <button
                       type="button"
                       onClick={onConfirm}
-                      className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_14px_32px_rgba(43,211,107,0.22)] ${
-                        darkMode ? "bg-[#2BD36B] text-black" : "bg-[#111111] text-white"
+                      className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
+                        darkMode ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
                       }`}
                     >
                       {confirmLabel}

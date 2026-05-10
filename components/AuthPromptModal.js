@@ -109,6 +109,15 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
           {mode === "login" ? (
             <>
               <button
+                onClick={() => {
+                  setMode("signup");
+                  setAuthError("");
+                }}
+                className="w-full rounded-[1.15rem] border border-[#45C47A]/45 bg-[#1FA463] py-3.5 font-bold text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)]"
+              >
+                {t("Create account")}
+              </button>
+              <button
                 onClick={async () => {
                   setAuthError("");
                   if (!email || !password) {
@@ -122,19 +131,10 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                     setAuthError(err?.message || t("Login failed."));
                   }
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-[1.15rem] border border-[#2BD36B]/45 bg-[#2BD36B] py-3.5 font-bold text-black shadow-[0_14px_30px_rgba(43,211,107,0.24)]"
+                className="flex w-full items-center justify-center gap-2 rounded-[1.15rem] border border-white/12 bg-[#181818] py-3.5 font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
               >
                 <Mail size={17} />
                 {t("Log in")}
-              </button>
-              <button
-                onClick={() => {
-                  setMode("signup");
-                  setAuthError("");
-                }}
-                className="w-full rounded-[1.15rem] border border-white/12 bg-white/7 py-3.5 font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
-              >
-                {t("Create account")}
               </button>
             </>
           ) : (
@@ -156,7 +156,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
                   setAuthError(err?.message || t("Create account failed."));
                 }
               }}
-              className="w-full rounded-[1.15rem] border border-[#2BD36B]/45 bg-[#2BD36B] py-3.5 font-bold text-black shadow-[0_14px_30px_rgba(43,211,107,0.24)]"
+              className="w-full rounded-[1.15rem] border border-[#45C47A]/45 bg-[#1FA463] py-3.5 font-bold text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)]"
             >
               {t("Create account")}
             </button>

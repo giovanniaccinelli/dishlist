@@ -377,7 +377,7 @@ export default function DishDetail() {
       return "inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/75 bg-black/22 text-white backdrop-blur-sm shadow-[0_10px_22px_rgba(0,0,0,0.18)]";
     }
     if (isToTrySource && !isForeignProfileContext) {
-      return "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[linear-gradient(135deg,#1C8B4A_0%,#2BD36B_100%)] text-white border border-[#18763F] text-xs font-bold uppercase tracking-[0.08em] shadow-[0_14px_35px_rgba(43,211,107,0.32)] leading-none text-center";
+      return "max-w-[132px] px-4 py-3 rounded-[1.2rem] bg-[#1FA463] text-white border border-[#45C47A]/45 text-xs font-bold uppercase tracking-[0.08em] shadow-[0_12px_26px_rgba(31,164,99,0.2)] leading-none text-center";
     }
     return undefined;
   };
@@ -1182,7 +1182,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="flex-1 py-3 rounded-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white font-semibold shadow-[0_14px_30px_rgba(43,211,107,0.22)] hover:brightness-105 transition"
+                    className="flex-1 rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] py-3 font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}
@@ -1208,7 +1208,7 @@ export default function DishDetail() {
                 <button
                   type="button"
                   onClick={goToNextEditStep}
-                  className="w-14 h-14 rounded-full border-2 border-[#2BD36B] bg-[linear-gradient(135deg,#0B5E30_0%,#15984B_48%,#2BD36B_100%)] text-white flex items-center justify-center shadow-[0_14px_30px_rgba(43,211,107,0.22)] hover:brightness-105 transition"
+                  className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
                 >
                   <ArrowRight size={20} />
                 </button>

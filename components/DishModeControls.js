@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Utensils, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "./LanguageProvider";
 
@@ -31,17 +31,7 @@ export function RestaurantMapIcon({ className = "", strokeWidth = 1.9 }) {
 }
 
 export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.9 }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M6.2 3.8v6.1" />
-      <path d="M8.5 3.8v6.1" />
-      <path d="M10.8 3.8v6.1" />
-      <path d="M6.2 9.9c0 1.45 1.05 2.55 2.3 2.55s2.3-1.1 2.3-2.55" />
-      <path d="M8.5 12.45v7.75" />
-      <path d="M16.7 3.9c-1.65 1.55-2.55 3.65-2.55 6.25v2.25h4.85" />
-      <path d="M16.7 3.9v16.3" />
-    </svg>
-  );
+  return <Utensils className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
 }
 
 export function dishModeMatches(dish, selectedMode) {

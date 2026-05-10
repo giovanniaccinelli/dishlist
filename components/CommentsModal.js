@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Send, X } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
@@ -21,7 +20,6 @@ export default function CommentsModal({
   setReplyTo,
 }) {
   const { t, darkMode } = useLanguage();
-  const [expanded, setExpanded] = useState(false);
   const replyName = replyTo?.userName || "User";
   const orderedComments = (() => {
     const safe = Array.isArray(comments) ? comments : [];
@@ -52,7 +50,7 @@ export default function CommentsModal({
   })();
 
   const hasText = Boolean(newComment.trim());
-  const compact = orderedComments.length <= 2 && !expanded;
+  const compact = orderedComments.length <= 2;
 
   return (
     <AnimatePresence>
@@ -65,7 +63,7 @@ export default function CommentsModal({
           onClick={onClose}
         >
           <motion.div
-            className={`flex ${expanded ? "h-[calc(100dvh-1rem)]" : compact ? "max-h-[62dvh] min-h-[18rem]" : "h-[78dvh]"} w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border shadow-[0_28px_80px_rgba(0,0,0,0.24)] sm:rounded-[1.7rem] ${
+            className={`flex ${compact ? "max-h-[62dvh] min-h-[18rem]" : "h-[78dvh]"} w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border shadow-[0_28px_80px_rgba(0,0,0,0.24)] sm:rounded-[1.7rem] ${
               darkMode
                 ? "border-white/12 bg-[#171717] text-white"
                 : "border-black/8 bg-white text-black"
@@ -87,16 +85,6 @@ export default function CommentsModal({
                 <div className={`mt-1 text-xs ${darkMode ? "text-white/42" : "text-black/42"}`}>{orderedComments.length} {t("comments")}</div>
               </div>
               <div className="flex items-center gap-2">
-                {orderedComments.length > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((value) => !value)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold ${darkMode ? "bg-white/10 text-white/70" : "bg-black/6 text-black/65"}`}
-                    aria-label={expanded ? "Shrink comments" : "Show more comments"}
-                  >
-                    {expanded ? "⌄" : "⌃"}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   onClick={onClose}

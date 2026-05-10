@@ -456,10 +456,16 @@ export default function DirectChat() {
                       type="button"
                       onClick={() => setPickerDishlistId(dishlist.id)}
                       className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
-                        selected ? "border-[#2BD36B] bg-[#F4FFF7]" : "border-black/10 bg-white"
+                        selected
+                          ? darkMode
+                            ? "border-[#2BD36B] bg-[#102817] text-white"
+                            : "border-[#2BD36B] bg-[#F4FFF7] text-black"
+                          : darkMode
+                            ? "border-white/12 bg-[#1A1A1A] text-white"
+                            : "border-black/10 bg-white text-black"
                       }`}
                     >
-                      <div className="mb-2 truncate text-sm font-semibold text-black">{dishlist.name}</div>
+                      <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {Array.from({ length: 4 }).map((_, index) => {
                           const dish = preview[index];

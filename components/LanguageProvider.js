@@ -81,7 +81,7 @@ const translations = {
     "Showing home dishes": "Stai vedendo i piatti Home",
     "Showing restaurant dishes": "Stai vedendo i piatti Ristorante",
     "Eat in": "A casa",
-    "Eat out": "A ristorante",
+    "Eat out": "Al ristorante",
     "Load more": "Carica altro",
     Dish: "Piatto",
     dish: "piatto",

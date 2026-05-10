@@ -308,6 +308,40 @@ export default function PublicProfile() {
     }
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined" || activeDishlistId === "overview") return undefined;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+
+    const handleTouchStart = (event) => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTime = Date.now();
+    };
+
+    const handleTouchEnd = (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - startX;
+      const deltaY = Math.abs(touch.clientY - startY);
+      const elapsed = Date.now() - startTime;
+      if (deltaX > 90 && deltaY < 90 && elapsed < 900) {
+        event.preventDefault();
+        selectDishlist("overview");
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { capture: true, passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { capture: true, passive: false });
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart, true);
+      window.removeEventListener("touchend", handleTouchEnd, true);
+    };
+  }, [activeDishlistId]);
+
   const buildProfileReturnTo = () => {
     return activeDishlistId && activeDishlistId !== "overview"
       ? `${pathname}?list=${encodeURIComponent(activeDishlistId)}`

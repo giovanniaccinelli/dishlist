@@ -29,6 +29,7 @@ import {
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   updateCustomDishlistName,
+  publishDishAsStory,
   getAvatarTone,
   isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
@@ -39,7 +40,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
-import { ChevronLeft, ListChecks, Minus, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
@@ -201,6 +202,7 @@ export default function Profile() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -468,6 +470,40 @@ export default function Profile() {
     }
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined" || activeDishlistId === "overview") return undefined;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+
+    const handleTouchStart = (event) => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTime = Date.now();
+    };
+
+    const handleTouchEnd = (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - startX;
+      const deltaY = Math.abs(touch.clientY - startY);
+      const elapsed = Date.now() - startTime;
+      if (deltaX > 90 && deltaY < 90 && elapsed < 900) {
+        event.preventDefault();
+        selectDishlist("overview");
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { capture: true, passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { capture: true, passive: false });
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart, true);
+      window.removeEventListener("touchend", handleTouchEnd, true);
+    };
+  }, [activeDishlistId]);
+
   const buildProfileReturnTo = () => {
     return activeDishlistId && activeDishlistId !== "overview"
       ? `${pathname}?list=${encodeURIComponent(activeDishlistId)}`
@@ -596,6 +632,15 @@ export default function Profile() {
     setSavedDishes(refreshedSaved);
     setToastVariant("success");
     setToast("Dish deleted");
+    setTimeout(() => setToast(""), 1200);
+  };
+
+  const handlePublishDishCardStory = async (dish) => {
+    if (!user?.uid || !dish?.id) return;
+    const ok = await publishDishAsStory(user.uid, dish);
+    setDishCardActionTarget(null);
+    setToastVariant(ok ? "success" : "error");
+    setToast(ok ? "Story posted" : "Story failed");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -1146,20 +1191,25 @@ export default function Profile() {
                   </div>
                   {renderDishCounters(dish)}
                 </div>
-                {(allowDelete || onRemovePreview) && (
+                {(allowDelete || onRemovePreview || dish?.owner === user?.uid) && (
                   <button
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (onRemovePreview) {
-                        onRemovePreview(dish);
-                      } else {
-                        handleDeleteDish(dish);
-                      }
+                      setDishCardActionTarget({
+                        dish,
+                        allowDelete,
+                        onRemovePreview,
+                        source,
+                        listId: activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id,
+                      });
                     }}
-                    className="absolute top-2 right-2 z-20 bg-black text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 group-active:opacity-100 focus:opacity-100 transition"
+                    className={`absolute top-2 right-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition ${
+                      darkMode ? "border-white/12 bg-black/70 text-white" : "border-black/8 bg-white/92 text-black"
+                    }`}
+                    aria-label="Dish actions"
                   >
-                    Remove
+                    <MoreHorizontal size={18} strokeWidth={2.4} />
                   </button>
                 )}
               </motion.div>
@@ -2707,6 +2757,115 @@ export default function Profile() {
           </motion.div>
             );
           })()
+        ) : null}
+      </AnimatePresence>
+      <AnimatePresence>
+        {dishCardActionTarget ? (
+          <motion.div
+            className="fixed inset-0 z-[93] bg-black/50 backdrop-blur-sm flex items-end justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDishCardActionTarget(null)}
+          >
+            <motion.div
+              className={`w-full max-w-md rounded-[1.7rem] border p-4 shadow-[0_24px_70px_rgba(0,0,0,0.32)] ${
+                darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
+              }`}
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <img
+                  src={getDishImageUrl(dishCardActionTarget.dish, "thumb")}
+                  alt={dishCardActionTarget.dish?.name || "Dish"}
+                  className="h-14 w-14 rounded-[1rem] object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-bold">{dishCardActionTarget.dish?.name || "Untitled dish"}</div>
+                  <div className={`text-xs ${darkMode ? "text-white/50" : "text-black/50"}`}>{t("Dish actions")}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDishCardActionTarget(null)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full ${darkMode ? "bg-white/10 text-white/70" : "bg-black/6 text-black/60"}`}
+                  aria-label="Close dish actions"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {dishCardActionTarget.dish?.owner === user?.uid ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const returnParam = encodeURIComponent(buildProfileReturnTo());
+                      const dishId = dishCardActionTarget.dish?.id;
+                      setDishCardActionTarget(null);
+                      router.push(`/dish/${dishId}?source=uploaded&mode=single&returnTo=${returnParam}`);
+                    }}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/8 bg-black/4 text-black"
+                    }`}
+                  >
+                    <span>{t("Edit dish")}</span>
+                    <Pencil size={16} />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => handlePublishDishCardStory(dishCardActionTarget.dish)}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                  }`}
+                >
+                  <span>{t("Add to story")}</span>
+                  <StoryStatIcon size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const returnParam = encodeURIComponent(buildProfileReturnTo());
+                    const dishId = dishCardActionTarget.dish?.id;
+                    setDishCardActionTarget(null);
+                    router.push(`/dish/${dishId}?mode=single&returnTo=${returnParam}`);
+                  }}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-white" : "border-[#2BD36B]/45 bg-[#F4FFF7] text-black"
+                  }`}
+                >
+                  <span>{t("Manage dishlists")}</span>
+                  <ListChecks size={16} />
+                </button>
+                {dishCardActionTarget.onRemovePreview || dishCardActionTarget.allowDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = dishCardActionTarget;
+                      setDishCardActionTarget(null);
+                      if (target.onRemovePreview) {
+                        target.onRemovePreview(target.dish);
+                      } else if (target.allowDelete) {
+                        handleDeleteDish(target.dish);
+                      }
+                    }}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-[#E64646]/45 bg-[#2A1212] text-[#FFD5D5]" : "border-[#E64646]/35 bg-[#FFF1F1] text-[#B34747]"
+                    }`}
+                  >
+                    <span>{dishCardActionTarget.allowDelete ? t("Delete") : t("Remove")}</span>
+                    <Trash2 size={16} />
+                  </button>
+                ) : null}
+              </div>
+            </motion.div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
       <AppToast message={toast} variant={toastVariant} />

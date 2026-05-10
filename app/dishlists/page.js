@@ -23,7 +23,7 @@ import {
 import { db } from "../lib/firebase";
 import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
-import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
+import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -237,6 +237,7 @@ export default function Dishlists() {
       ]);
       const usersList = snapshot.docs.map((docSnap) => ({
         ...docSnap.data(),
+        photoURL: normalizeProfilePhotoURL(docSnap.data()?.photoURL || ""),
         id: docSnap.id,
       }));
       const fastPreviewUsers = attachPreviewData(usersList, allDishes);
@@ -343,7 +344,7 @@ export default function Dishlists() {
       .map((u) => ({
         ownerId: u.id,
         ownerName: u.displayName || "User",
-        ownerPhotoURL: u.photoURL || "",
+        ownerPhotoURL: normalizeProfilePhotoURL(u.photoURL || ""),
         stories: u.activeStories || [],
       }));
   }, [allUsersPool, filteredUsers, search, user?.uid, users]);

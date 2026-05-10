@@ -27,6 +27,7 @@ import {
   saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
   getAvatarTone,
+  normalizeProfilePhotoURL,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
@@ -265,6 +266,7 @@ export default function PublicProfile() {
     activeStories.length > 0 &&
     activeStories.every((story) => !user?.uid || (story.viewedBy || []).includes(user.uid));
   const avatarTone = getAvatarTone(profileUser?.displayName || "");
+  const profilePhotoURL = normalizeProfilePhotoURL(profileUser?.photoURL || "");
   const profileIdCandidates = getProfileIdCandidates(routeProfileId, profileUser);
   const profileDocId = profileUser?.id || routeProfileId;
   const profileAliasKey = profileAliasIds.join("|");
@@ -660,14 +662,41 @@ export default function PublicProfile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
-  const sortDishlistDishes = (dishesList) =>
-    [...(dishesList || [])].sort(
-      (a, b) =>
-        getStoryPushCount(b) - getStoryPushCount(a) ||
-        Number(b?.saves || 0) - Number(a?.saves || 0)
+  const getDishTimeMs = (value) => {
+    if (!value) return 0;
+    if (typeof value === "number") return value;
+    if (value instanceof Date) return value.getTime();
+    if (value?.toMillis) return value.toMillis();
+    if (value?.seconds) return value.seconds * 1000;
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const getAddedTime = (dish) =>
+    Math.max(
+      getDishTimeMs(dish?.addedAt),
+      getDishTimeMs(dish?.savedAt),
+      getDishTimeMs(dish?.updatedAt),
+      getDishTimeMs(dish?.createdAt)
     );
+  const sortDishlistDishes = (dishesList, dishlistId = "") =>
+    [...(dishesList || [])].sort((a, b) => {
+      if (dishlistId === "uploaded") {
+        return getDishTimeMs(b?.createdAt) - getDishTimeMs(a?.createdAt);
+      }
+      if (dishlistId === "to_try") {
+        return getAddedTime(b) - getAddedTime(a);
+      }
+      if (dishlistId === "all_dishes") {
+        return Number(b?.saves || 0) - Number(a?.saves || 0) || getAddedTime(b) - getAddedTime(a);
+      }
+      return (
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0) ||
+        getAddedTime(b) - getAddedTime(a)
+      );
+    });
   const normalizeProfileDishlist = (dishlist) => {
-    const dishes = sortDishlistDishes(dishlist?.dishes || []);
+    const dishes = sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "");
     return {
       ...dishlist,
       dishes,
@@ -715,7 +744,7 @@ export default function PublicProfile() {
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
     orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
-  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || []).slice(0, 4);
+  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist
@@ -801,7 +830,7 @@ export default function PublicProfile() {
                   id: profileAuthUid,
                   uid: profileAuthUid,
                   displayName: profileUser?.displayName || "",
-                  photoURL: profileUser?.photoURL || "",
+                  photoURL: profilePhotoURL,
                 };
                 const conversationId =
                   (await getOrCreateConversation(user, targetUser)) || getConversationId(user.uid, profileAuthUid);
@@ -838,11 +867,11 @@ export default function PublicProfile() {
               <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[3px]">
                 <div
                   className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-2xl font-bold overflow-hidden"
-                  style={profileUser.photoURL ? undefined : { backgroundColor: avatarTone.bg }}
+                  style={profilePhotoURL ? undefined : { backgroundColor: avatarTone.bg }}
                 >
-                  {profileUser.photoURL ? (
+                  {profilePhotoURL ? (
                     <img
-                      src={profileUser.photoURL}
+                      src={profilePhotoURL}
                       alt="Profile"
                       loading="lazy"
                       decoding="async"
@@ -1241,7 +1270,7 @@ export default function PublicProfile() {
         onClose={() => setStoriesOpen(false)}
         stories={activeStories}
         ownerName={profileUser.displayName || "User"}
-        ownerPhotoURL={profileUser.photoURL || ""}
+        ownerPhotoURL={profilePhotoURL}
         onViewed={handleStoryViewed}
         currentUser={user}
       />

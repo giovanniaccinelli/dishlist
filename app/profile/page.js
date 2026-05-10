@@ -35,6 +35,7 @@ import {
   publishDishAsStory,
   getAvatarTone,
   isDisplayNameTaken,
+  normalizeProfilePhotoURL,
 } from "../lib/firebaseHelpers";
 import { dispatchPushEvent } from "../lib/pushClient";
 import BottomNav from "../../components/BottomNav";
@@ -333,8 +334,9 @@ export default function Profile() {
   const dishlistDetailSwipeRef = useRef(null);
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
-  const effectiveProfilePhotoURL =
-    profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "");
+  const effectiveProfilePhotoURL = normalizeProfilePhotoURL(
+    profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "")
+  );
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
   const profileIdCandidates = getProfileIdCandidates(user?.uid, profileUser);
@@ -1214,14 +1216,41 @@ export default function Profile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
-  const sortDishlistDishes = (dishesList) =>
-    [...(dishesList || [])].sort(
-      (a, b) =>
-        getStoryPushCount(b) - getStoryPushCount(a) ||
-        Number(b?.saves || 0) - Number(a?.saves || 0)
+  const getDishTimeMs = (value) => {
+    if (!value) return 0;
+    if (typeof value === "number") return value;
+    if (value instanceof Date) return value.getTime();
+    if (value?.toMillis) return value.toMillis();
+    if (value?.seconds) return value.seconds * 1000;
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const getAddedTime = (dish) =>
+    Math.max(
+      getDishTimeMs(dish?.addedAt),
+      getDishTimeMs(dish?.savedAt),
+      getDishTimeMs(dish?.updatedAt),
+      getDishTimeMs(dish?.createdAt)
     );
+  const sortDishlistDishes = (dishesList, dishlistId = "") =>
+    [...(dishesList || [])].sort((a, b) => {
+      if (dishlistId === "uploaded") {
+        return getDishTimeMs(b?.createdAt) - getDishTimeMs(a?.createdAt);
+      }
+      if (dishlistId === "to_try") {
+        return getAddedTime(b) - getAddedTime(a);
+      }
+      if (dishlistId === "all_dishes") {
+        return Number(b?.saves || 0) - Number(a?.saves || 0) || getAddedTime(b) - getAddedTime(a);
+      }
+      return (
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0) ||
+        getAddedTime(b) - getAddedTime(a)
+      );
+    });
   const normalizeProfileDishlist = (dishlist) => {
-    const dishes = sortDishlistDishes(dishlist?.dishes || []);
+    const dishes = sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "");
     return {
       ...dishlist,
       dishes,
@@ -1269,7 +1298,7 @@ export default function Profile() {
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
     orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
-  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || []).slice(0, 4);
+  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist

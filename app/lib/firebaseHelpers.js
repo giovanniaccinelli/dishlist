@@ -148,6 +148,8 @@ function buildDishPayload(dishId, dishData = null) {
         ownerName: dishData.ownerName || "",
         ownerPhotoURL: dishData.ownerPhotoURL || "",
         saves: Math.max(0, Number(dishData.saves || 0)),
+        addedAt: dishData.addedAt || dishData.savedAt || null,
+        savedAt: dishData.savedAt || null,
         createdAt: dishData.createdAt || new Date(),
       }
     : { dishId, createdAt: new Date() };
@@ -186,6 +188,8 @@ async function hydrateDishPayload(dishId, payload) {
       ownerName: data.ownerName || payload?.ownerName || "",
       ownerPhotoURL: data.ownerPhotoURL || payload?.ownerPhotoURL || "",
       saves: Math.max(0, Number(data.saves ?? payload?.saves ?? 0)),
+      addedAt: payload?.addedAt || payload?.savedAt || null,
+      savedAt: payload?.savedAt || null,
       createdAt: data.createdAt || payload?.createdAt || new Date(),
     };
   } catch (err) {
@@ -263,6 +267,8 @@ async function mergeDishesWithCanonical(dishes = []) {
       ownerName: canonical.ownerName || dish.ownerName || "",
       ownerPhotoURL: canonical.ownerPhotoURL || dish.ownerPhotoURL || "",
       saves: Math.max(0, Number(canonical.saves ?? dish.saves ?? 0)),
+      addedAt: dish.addedAt || dish.savedAt || null,
+      savedAt: dish.savedAt || null,
       createdAt: canonical.createdAt || dish.createdAt || null,
     };
   });
@@ -280,6 +286,14 @@ function normalizeDisplayNameKey(name) {
   return String(name || "").trim().toLowerCase();
 }
 
+export function normalizeProfilePhotoURL(url = "") {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  const lower = value.toLowerCase();
+  if (lower.endsWith("/default.png") || lower.includes("default.png") || lower.includes("default-avatar")) return "";
+  return value;
+}
+
 export async function isDisplayNameTaken(displayName, excludeUid = "") {
   const normalized = normalizeDisplayNameKey(displayName);
   if (!normalized) return false;
@@ -295,18 +309,7 @@ export async function isDisplayNameTaken(displayName, excludeUid = "") {
 }
 
 export function getAvatarTone(name = "") {
-  const tones = [
-    { bg: "#FDE4D2", text: "#A34710" },
-    { bg: "#FFE8B8", text: "#8D5A00" },
-    { bg: "#F7E1A7", text: "#7A5A00" },
-    { bg: "#DDF4DA", text: "#1F6B34" },
-    { bg: "#DCEEFF", text: "#1F5F9C" },
-    { bg: "#E7E1FF", text: "#5A3EA6" },
-    { bg: "#FFDCE8", text: "#9C275C" },
-  ];
-  const source = String(name || "").trim().toUpperCase() || "U";
-  const hash = Array.from(source).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
-  return tones[hash % tones.length];
+  return { bg: "#1A1A1A", text: "#F5F5F5" };
 }
 
 function customDishlistsCollection(userId) {
@@ -360,7 +363,7 @@ async function enrichWithOwnerPhotos(items) {
     const userSnaps = await Promise.all(missingOwnerIds.map((uid) => getDoc(doc(db, "users", uid))));
     userSnaps.forEach((snap) => {
       ownerPhotoCache.set(snap.id, {
-        photoURL: snap.exists() ? snap.data()?.photoURL || "" : "",
+        photoURL: snap.exists() ? normalizeProfilePhotoURL(snap.data()?.photoURL || "") : "",
         cachedAt: now,
       });
     });
@@ -368,7 +371,7 @@ async function enrichWithOwnerPhotos(items) {
 
   return items.map((item) => ({
     ...item,
-    ownerPhotoURL: item.ownerPhotoURL || ownerPhotoCache.get(item.owner)?.photoURL || "",
+    ownerPhotoURL: normalizeProfilePhotoURL(item.ownerPhotoURL || ownerPhotoCache.get(item.owner)?.photoURL || ""),
   }));
 }
 
@@ -651,6 +654,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
 
   let payload = buildDishPayload(dishId, dishData);
   payload = await hydrateDishPayload(dishId, payload);
+  payload = { ...payload, savedAt: serverTimestamp(), addedAt: serverTimestamp() };
 
   // Persist the saved dish doc (source of truth) with a short verify + retry
   const savedRef = doc(db, "users", userId, "saved", dishId);
@@ -744,12 +748,13 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   if (!userId || !dishId) return false;
 
   const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
+  const savedPayload = { ...payload, savedAt: serverTimestamp(), addedAt: serverTimestamp() };
 
   const userRef = doc(db, "users", userId);
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
     await setDoc(userRef, { savedDishes: arrayUnion(dishId), toTryDishes: arrayRemove(dishId) }, { merge: true });
-    await setDoc(savedDocRef, payload, { merge: true });
+    await setDoc(savedDocRef, savedPayload, { merge: true });
     await deleteDoc(doc(db, "users", userId, "toTry", dishId));
     await syncDishSaveCount(dishId);
     clearReadCache(userId);
@@ -764,6 +769,7 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
   if (!userId || !dishId) return false;
 
   const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
+  const toTryPayload = { ...payload, addedAt: serverTimestamp() };
 
   const userRef = doc(db, "users", userId);
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
@@ -775,7 +781,7 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
       return true;
     }
     await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
-    await setDoc(toTryDocRef, payload, { merge: true });
+    await setDoc(toTryDocRef, toTryPayload, { merge: true });
     await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
@@ -1119,7 +1125,9 @@ export async function getUsersWhoSavedDish(dishId) {
   try {
     const userIds = await getUserIdsWithDishInAnyDishlist(dishId);
     const docs = await Promise.all(userIds.map((uid) => getDoc(doc(db, "users", uid))));
-    return docs.filter((snap) => snap.exists()).map((snap) => ({ id: snap.id, ...snap.data() }));
+    return docs
+      .filter((snap) => snap.exists())
+      .map((snap) => ({ id: snap.id, ...snap.data(), photoURL: normalizeProfilePhotoURL(snap.data()?.photoURL || "") }));
   } catch (err) {
     console.error("Failed to fetch users who saved dish:", err);
     return [];
@@ -1139,7 +1147,7 @@ export async function getUsersByIds(userIds = []) {
     const docs = await Promise.all(ids.map((uid) => getDoc(doc(db, "users", uid))));
     return docs
       .filter((snap) => snap.exists())
-      .map((snap) => ({ id: snap.id, ...snap.data() }));
+      .map((snap) => ({ id: snap.id, ...snap.data(), photoURL: normalizeProfilePhotoURL(snap.data()?.photoURL || "") }));
   } catch (err) {
     console.error("Failed to load users by ids:", err);
     return [];

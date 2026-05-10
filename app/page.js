@@ -111,6 +111,16 @@ export default function Feed() {
     return copy;
   };
 
+  const getStoredViewedDishIds = () => {
+    if (typeof window === "undefined" || !userId) return [];
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewedStorageKey(userId)) || "[]");
+      return Array.isArray(stored) ? stored.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (userId) return;
@@ -206,7 +216,10 @@ export default function Feed() {
       setLoadingDishes(true);
       try {
         const allItems = await getAllDishesFromFirestore();
-        const publicItems = allItems.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
+        const seenIds = new Set(getStoredViewedDishIds());
+        const publicItems = allItems.filter(
+          (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
+        );
 
         let nextFollowingIds = [];
         let forYou = [];
@@ -379,7 +392,10 @@ export default function Feed() {
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
         return getAllDishesFromFirestore().then((items) => {
-          const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
+          const seenIds = new Set(getStoredViewedDishIds());
+          const publicItems = items.filter(
+            (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
+          );
           const ordered = publicItems
             .slice()
             .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
@@ -503,6 +519,10 @@ export default function Feed() {
   const handleResetFeed = async (feedType) => {
     setLoadingDishes(true);
     try {
+      if (typeof window !== "undefined" && userId) {
+        localStorage.removeItem(viewedStorageKey(userId));
+        setViewedDishIds([]);
+      }
       const items = await getAllDishesFromFirestore();
       const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
       const ordered = publicItems

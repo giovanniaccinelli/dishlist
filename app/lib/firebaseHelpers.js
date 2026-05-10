@@ -309,7 +309,19 @@ export async function isDisplayNameTaken(displayName, excludeUid = "") {
 }
 
 export function getAvatarTone(name = "") {
-  return { bg: "#1A1A1A", text: "#F5F5F5" };
+  const tones = [
+    "#F4B942",
+    "#E85D75",
+    "#49C172",
+    "#45A6FF",
+    "#A78BFA",
+    "#F97316",
+    "#20C7A5",
+    "#EF4444",
+  ];
+  const source = String(name || "").trim().toUpperCase() || "U";
+  const hash = Array.from(source).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+  return { bg: undefined, text: tones[hash % tones.length] };
 }
 
 function customDishlistsCollection(userId) {

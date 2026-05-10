@@ -24,6 +24,7 @@ import {
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   getUsersWhoSavedDish,
+  publishDishAsStory,
   removeDishFromAllUsers,
   removeDishFromCustomDishlist,
   removeDishFromToTry,
@@ -574,6 +575,25 @@ export default function DishDetail() {
     setShareOpen(true);
   };
 
+  const handleAddToStory = async (dishCard) => {
+    if (!userId || !dishCard?.id) {
+      setPageToastVariant("neutral");
+      setPageToast("Please sign in");
+      setTimeout(() => setPageToast(""), 1200);
+      return false;
+    }
+    const ok = await publishDishAsStory(userId, dishCard);
+    if (ok) {
+      const stats = await getStoryPushStatsForUser(userId);
+      setStoryPushStats(stats);
+    }
+    setProfileCardActionsDish(null);
+    setPageToastVariant(ok ? "success" : "error");
+    setPageToast(ok ? "Story published" : "Story failed");
+    setTimeout(() => setPageToast(""), 1200);
+    return ok;
+  };
+
   const openProfileCardActions = (dishCard) => {
     if (!dishCard?.id) return false;
     setProfileCardActionsDish(dishCard);
@@ -785,6 +805,20 @@ export default function DishDetail() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleAddToStory(profileCardActionsDish);
+                  }}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                  }`}
+                >
+                  <span>{t("Add to story")}</span>
+                  <Camera size={16} />
+                </button>
                 {profileCardActionsDish?.owner === userId && !isForeignProfileContext && !isPublicSource ? (
                   <button
                     type="button"

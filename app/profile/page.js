@@ -32,6 +32,7 @@ import {
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   updateCustomDishlistName,
+  publishDishAsStory,
   getAvatarTone,
   isDisplayNameTaken,
 } from "../lib/firebaseHelpers";
@@ -782,6 +783,20 @@ export default function Profile() {
     setSavedDishes(refreshedSaved);
     setToastVariant("success");
     setToast("Dish deleted");
+    setTimeout(() => setToast(""), 1200);
+  };
+
+  const handleAddDishCardToStory = async (dish) => {
+    if (!user?.uid || !dish?.id) return;
+    const ok = await publishDishAsStory(user.uid, dish);
+    if (ok) {
+      getStoryPushStatsForUser(user.uid)
+        .then((stats) => setStoryPushStats(stats))
+        .catch((err) => console.warn("Failed to refresh story push stats:", err));
+    }
+    setDishCardActionTarget(null);
+    setToastVariant(ok ? "success" : "error");
+    setToast(ok ? "Story posted" : "Story failed");
     setTimeout(() => setToast(""), 1200);
   };
 
@@ -3183,6 +3198,20 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleAddDishCardToStory(dishCardActionTarget.dish);
+                  }}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                  }`}
+                >
+                  <span>{t("Add to story")}</span>
+                  <StoryStatIcon size={17} />
+                </button>
                 {profileIdCandidates.includes(dishCardActionTarget.dish?.owner) ? (
                   <button
                     type="button"

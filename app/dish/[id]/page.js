@@ -878,7 +878,7 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-4 w-full max-w-md max-h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1rem)] overflow-y-auto shadow-2xl border-2 my-auto`}>
+          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-4 w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl border-2 my-auto`}>
             <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (

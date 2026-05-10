@@ -28,6 +28,7 @@ import {
   removeDishFromToTry,
   removeDishFromCustomDishlist,
   removeSavedDishFromUser,
+  saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   updateCustomDishlistName,
@@ -48,6 +49,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
+import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -267,6 +269,11 @@ export default function Profile() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
   const [removePreviewTarget, setRemovePreviewTarget] = useState(null);
+  const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
+  const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
+  const [dishlistPickerLists, setDishlistPickerLists] = useState([]);
+  const [dishlistPickerLoading, setDishlistPickerLoading] = useState(false);
+  const [dishlistPickerSelectedIds, setDishlistPickerSelectedIds] = useState([]);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -963,6 +970,70 @@ export default function Profile() {
 
   const handleDishPreviewRemove = (dish, source) => {
     setRemovePreviewTarget({ dish, source });
+  };
+
+  const handleOpenDishlistPicker = async (dish) => {
+    if (!user?.uid || !dish?.id) return;
+    setDishlistPickerDish(dish);
+    setDishlistPickerOpen(true);
+    setDishlistPickerLoading(true);
+    try {
+      const lists = (await getAllDishlistsForUser(user.uid)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
+      const memberships = lists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
+        .map((dishlist) => dishlist.id);
+      setDishlistPickerLists(lists);
+      setDishlistPickerSelectedIds(memberships);
+    } finally {
+      setDishlistPickerLoading(false);
+    }
+  };
+
+  const handleConfirmDishlistPicker = async () => {
+    if (!user?.uid || !dishlistPickerDish?.id) return;
+    const selectedSet = new Set(dishlistPickerSelectedIds);
+    const persistDishlistIds = dishlistPickerSelectedIds.filter(
+      (dishlistId) => !(dishlistId === "to_try" && selectedSet.has("saved"))
+    );
+    const currentIds = new Set(
+      dishlistPickerLists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dishlistPickerDish.id))
+        .map((dishlist) => dishlist.id)
+    );
+    const nextIds = new Set(persistDishlistIds);
+    const addResults = await Promise.all(
+      persistDishlistIds.map((dishlistId) =>
+        saveDishToSelectedDishlist(user.uid, dishlistId, dishlistPickerDish)
+      )
+    );
+    const removeResults = await Promise.all(
+      Array.from(currentIds)
+        .filter((dishlistId) => !nextIds.has(dishlistId))
+        .map((dishlistId) => {
+          if (dishlistId === "saved") return removeSavedDishFromUser(user.uid, dishlistPickerDish.id);
+          if (dishlistId === "to_try") return removeDishFromToTry(user.uid, dishlistPickerDish.id);
+          return removeDishFromCustomDishlist(user.uid, dishlistId, dishlistPickerDish.id);
+        })
+    );
+    const ok = addResults.every(Boolean) && removeResults.every(Boolean);
+    setToast(ok ? "Added to DishList" : "Save failed");
+    setTimeout(() => setToast(""), 1200);
+    if (ok) {
+      setDishlistPickerOpen(false);
+      setDishlistPickerDish(null);
+      setDishlistPickerLists([]);
+      setDishlistPickerSelectedIds([]);
+      const [saved, toTry, custom] = await Promise.all([
+        getSavedDishesFromFirestore(user.uid),
+        getToTryDishesFromFirestore(user.uid),
+        getCustomDishlistsForUser(user.uid),
+      ]);
+      setSavedDishes(saved);
+      setToTryDishes(toTry);
+      setCustomDishlists(custom);
+    }
   };
 
   const confirmDishPreviewRemove = async (scope) => {
@@ -2864,10 +2935,10 @@ export default function Profile() {
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
-                    Remove Dish
+                    {t("Remove Dish")}
                   </p>
                   <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
-                    Choose how to remove it
+                    {t("Choose how to remove it")}
                   </h3>
                   <p className={`mt-1 text-sm ${darkMode ? "text-white/55" : "text-black/55"}`}>{removePreviewTarget.dish?.name || "dish"}</p>
                 </div>
@@ -2891,9 +2962,9 @@ export default function Profile() {
                   >
                     <div className="min-w-0">
                       <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                        Remove from {removalMeta.label} only
+                        {t("Remove from")} {t(removalMeta.label)} {t("only")}
                       </div>
-                      <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{removalMeta.description}</div>
+                      <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{t(removalMeta.description)}</div>
                     </div>
                     <div className={`ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${removalMeta.iconClass}`}>
                       <Minus size={16} />
@@ -2908,8 +2979,8 @@ export default function Profile() {
                   }`}
                 >
                   <div className="min-w-0">
-                    <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>Remove from profile completely</div>
-                    <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>Delete it from your saved lists and profile</div>
+                    <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Remove from profile completely")}</div>
+                    <div className={`mt-0.5 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{t("Delete it from your saved lists and profile")}</div>
                   </div>
                   <div className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#C93A3A] bg-[#C93A3A] text-white">
                     <Trash2 size={16} />
@@ -3007,10 +3078,9 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => {
-                    const returnParam = encodeURIComponent(buildProfileReturnTo());
-                    const dishId = dishCardActionTarget.dish?.id;
+                    const target = dishCardActionTarget.dish;
                     setDishCardActionTarget(null);
-                    router.push(`/dish/${dishId}?mode=single&returnTo=${returnParam}`);
+                    handleOpenDishlistPicker(target);
                   }}
                   className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
                     darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-white" : "border-[#2BD36B]/45 bg-[#F4FFF7] text-black"
@@ -3159,6 +3229,30 @@ export default function Profile() {
           setSelectedDishMode(mode);
           setDishModeFilterOpen(false);
         }}
+      />
+      <DishlistPickerModal
+        open={dishlistPickerOpen}
+        onClose={() => {
+          setDishlistPickerOpen(false);
+          setDishlistPickerDish(null);
+          setDishlistPickerLists([]);
+          setDishlistPickerSelectedIds([]);
+        }}
+        lists={dishlistPickerLists}
+        dishName={dishlistPickerDish?.name || "dish"}
+        mode="multiple"
+        selectedIds={dishlistPickerSelectedIds}
+        lockedIds={[]}
+        onToggle={(dishlist) =>
+          setDishlistPickerSelectedIds((prev) =>
+            prev.includes(dishlist.id)
+              ? prev.filter((id) => id !== dishlist.id)
+              : [...prev, dishlist.id]
+          )
+        }
+        onConfirm={handleConfirmDishlistPicker}
+        confirmLabel={t("Save dish")}
+        loading={dishlistPickerLoading}
       />
       <AnimatePresence>
         {profileMapOpen ? (

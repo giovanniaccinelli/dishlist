@@ -32,6 +32,7 @@ import AuthPromptModal from "../../../components/AuthPromptModal";
 import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
+import { isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -660,7 +661,7 @@ export default function PublicProfile() {
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
-    (dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
+    orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
   const getDishlistPreviewDishes = (dishlist) => (dishlist?.dishes || []).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
@@ -974,7 +975,20 @@ export default function PublicProfile() {
           </div>
         ) : (
           <AnimatePresence initial={false}>
-            {(activeDishlist?.dishes || []).map((dish, index) => (
+            {(activeDishlist?.dishes || []).map((dish, index) => {
+              if (isTextOnlyDish(dish)) {
+                return (
+                  <motion.div
+                    key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
+                    className={`pressable-card relative overflow-hidden rounded-[1.15rem] border-2 px-3 py-3 shadow-md ${
+                      String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                    } ${darkMode ? "bg-[#171717] text-white" : "bg-white text-black"}`}
+                  >
+                    <div className="truncate text-[15px] font-bold leading-tight">{dish.name || "Untitled dish"}</div>
+                  </motion.div>
+                );
+              }
+              return (
               <motion.div
                 key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
                 className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
@@ -1020,7 +1034,8 @@ export default function PublicProfile() {
                   <Plus size={16} strokeWidth={2.1} />
                 </button>
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         )}
           </div>

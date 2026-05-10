@@ -36,6 +36,7 @@ import {
 } from "../components/DishModeControls";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
+import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
@@ -200,7 +201,7 @@ export default function Feed() {
       setLoadingDishes(true);
       try {
         const allItems = await getAllDishesFromFirestore();
-        const publicItems = allItems.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
+        const publicItems = allItems.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
 
         let nextFollowingIds = [];
         let forYou = [];
@@ -372,7 +373,7 @@ export default function Feed() {
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
         return getAllDishesFromFirestore().then((items) => {
-          const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
+          const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
           const ordered = publicItems
             .slice()
             .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
@@ -497,7 +498,7 @@ export default function Feed() {
     setLoadingDishes(true);
     try {
       const items = await getAllDishesFromFirestore();
-      const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
+      const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
       const ordered = publicItems
         .slice()
         .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));

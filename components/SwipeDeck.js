@@ -16,6 +16,7 @@ import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import { isRecipeOnlyDish } from "../app/lib/dishContent";
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
@@ -352,12 +353,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
 
   useEffect(() => {
-    setShowRecipe(false);
+    setShowRecipe(isRecipeOnlyDish(currentCard));
     setRecipePanelModal(null);
     setNoRecipeNoticeOpen(false);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-  }, [currentCard?._key]);
+  }, [currentCard?._key, currentCard]);
 
   useEffect(() => {
     if (!showRecipe) {
@@ -423,6 +424,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const hasIngredientsText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
+  const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -928,12 +930,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         >
           {swipeAddEnabled && (
             <motion.div
-              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#2BD36B]/25"
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#1FA463]/24"
               style={{ opacity: rightCueOpacity }}
             >
               <motion.div
                 style={{ scale: rightCueScale }}
-                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-white/80 bg-[#2BD36B]/35 px-5 text-center backdrop-blur-sm"
+                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-white/80 bg-[#1FA463]/34 px-5 text-center backdrop-blur-sm"
               >
                 {typeof onRightSwipe === "function" ? (
                   <>
@@ -967,7 +969,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
             >
-              {hasAnyRecipeText ? (
+              {hasAnyRecipeText && !currentCardRecipeOnly ? (
                 <div className={`no-accent-border flex h-8 items-center gap-0.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 p-0.5 text-white`}>
                   <button
                     data-no-drag="true"
@@ -1114,7 +1116,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <Users size={13} strokeWidth={2.25} />
             <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
           </button>
-          {darkMode && hasAnyRecipeText ? (
+          {darkMode && hasAnyRecipeText && !currentCardRecipeOnly ? (
             <div
               data-no-drag="true"
               className="absolute left-5 z-40"
@@ -1165,7 +1167,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className={`absolute inset-0 ${showRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!showRecipe && hasAnyRecipeText ? (
+              {!showRecipe && hasAnyRecipeText && !currentCardRecipeOnly ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -1325,7 +1327,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  setShowRecipe(false);
+                  if (!currentCardRecipeOnly) setShowRecipe(false);
                 }}
                 aria-label="Close recipe view"
               />

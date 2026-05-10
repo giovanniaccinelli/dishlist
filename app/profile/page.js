@@ -46,6 +46,7 @@ import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/f
 import { ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { isTextOnlyDish, orderDishesForProfileList } from "../lib/dishContent";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
@@ -1184,7 +1185,7 @@ export default function Profile() {
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
-    (dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
+    orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
   const getDishlistPreviewDishes = (dishlist) => (dishlist?.dishes || []).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
@@ -1383,7 +1384,36 @@ export default function Profile() {
           </div>
         ) : (
           <AnimatePresence initial={false}>
-            {dishes.map((dish, index) => (
+            {dishes.map((dish, index) => {
+              const textOnly = isTextOnlyDish(dish);
+              const canEditTextOnly = profileIdCandidates.includes(dish?.owner);
+              if (textOnly) {
+                return (
+                  <motion.div
+                    key={`${dish.id}-${index}`}
+                    className={`pressable-card relative overflow-hidden rounded-[1.15rem] border-2 px-3 py-3 shadow-md ${
+                      String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
+                    } ${darkMode ? "bg-[#171717] text-white" : "bg-white text-black"}`}
+                  >
+                    <div className="truncate text-[15px] font-bold leading-tight">{dish.name || "Untitled dish"}</div>
+                    {canEditTextOnly ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const returnParam = encodeURIComponent(buildProfileReturnTo());
+                          router.push(`/dish/${dish.id}?source=uploaded&mode=single&returnTo=${returnParam}`);
+                        }}
+                        className={`mt-2 inline-flex rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
+                          darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-black/5 text-black"
+                        }`}
+                      >
+                        {t("Edit dish")}
+                      </button>
+                    ) : null}
+                  </motion.div>
+                );
+              }
+              return (
               <motion.div
                 key={`${dish.id}-${index}`}
                 className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
@@ -1455,7 +1485,8 @@ export default function Profile() {
                   </button>
                 )}
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         )}
       </div>
@@ -1665,12 +1696,12 @@ export default function Profile() {
             <button
               type="button"
               onClick={handleOpenCreateDishlist}
-              className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#2BD36B]/55 p-3 text-left ${
-                darkMode ? "bg-[#102817]" : "bg-[#F3FFF7]"
+              className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#45C47A]/55 p-3 text-left ${
+                darkMode ? "bg-[#12351F]" : "bg-[#F3FFF7]"
               }`}
             >
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#2BD36B]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2BD36B] text-black">
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#63D892]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1FA463] text-white">
                   <Plus size={22} />
                 </div>
                 <div className="text-sm font-semibold">{t("Create dishlist")}</div>
@@ -2640,8 +2671,8 @@ export default function Profile() {
                             className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
                               selected
                                 ? darkMode
-                                  ? "border-[#2BD36B] bg-[#102817] text-white"
-                                  : "border-[#2BD36B] bg-[#F4FFF7] text-black"
+                                  ? "border-[#45C47A] bg-[#12351F] text-white"
+                                  : "border-[#1FA463] bg-[#F4FFF7] text-black"
                                 : darkMode
                                   ? "border-white/12 bg-[#1A1A1A] text-white"
                                   : "border-black/10 bg-white text-black"
@@ -2691,12 +2722,12 @@ export default function Profile() {
                                 onClick={() => toggleDishSelection(dish)}
                                 className={`overflow-hidden rounded-[1rem] border-2 text-left ${
                                   selected
-                                    ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/55"
+                                    ? "border-[#45C47A] ring-2 ring-[#1FA463]/45"
                                     : String(dish?.dishMode || "").toLowerCase() === "restaurant"
                                       ? "restaurant-accent-border"
                                       : "default-accent-border"
                                 }`}
-                                style={selected ? { borderColor: "#2BD36B", boxShadow: "0 0 0 3px rgba(43,211,107,0.35)" } : undefined}
+                                style={selected ? { borderColor: "#45C47A", boxShadow: "0 0 0 3px rgba(31,164,99,0.26)" } : undefined}
                               >
                                 <img
                                   src={getDishImageUrl(dish, "thumb")}

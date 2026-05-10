@@ -27,7 +27,7 @@ export default function AuthPromptModal({ open, onClose, title = "Log in require
   if (!open) return null;
   const isSignup = mode === "signup";
   const inputClass =
-    "w-full rounded-[1.1rem] border border-white/10 bg-[#181818] px-4 py-3.5 text-white placeholder:text-white/34 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus:outline-none focus:ring-2 focus:ring-[#2BD36B]/35";
+    "w-full rounded-[1.1rem] border border-white/10 bg-[#181818] px-4 py-3.5 text-white placeholder:text-white/34 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus:outline-none focus:ring-2 focus:ring-[#1FA463]/35";
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/72 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-md sm:items-center">

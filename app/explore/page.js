@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   ChefHat,
@@ -37,7 +36,7 @@ import {
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
-  RestaurantMapIcon,
+  RestaurantForkKnifeIcon,
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -753,6 +752,19 @@ export default function Explore() {
           </div>
         )}
       </div>
+      <div className="mb-4 flex justify-center px-1">
+        <button
+          type="button"
+          onClick={() => router.push("/map")}
+          className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
+            darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
+          }`}
+          style={{ borderColor: "#E64646" }}
+        >
+          <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
+          {t("Restaurants")}
+        </button>
+      </div>
 
       {loading ? (
         <CategoryRowsLoading />
@@ -775,14 +787,6 @@ export default function Explore() {
         }}
       />
       <BottomNav />
-      <motion.button
-        type="button"
-        onClick={() => router.push("/map")}
-        className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
-        aria-label="Open restaurant map"
-      >
-        <RestaurantMapIcon className="h-6 w-6 text-white" />
-      </motion.button>
     </div>
   );
 }

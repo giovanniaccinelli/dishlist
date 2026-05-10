@@ -31,7 +31,7 @@ export function RestaurantMapIcon({ className = "", strokeWidth = 1.9 }) {
 }
 
 export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.9 }) {
-  return <Utensils className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
+  return <Utensils className={`scale-x-[0.86] ${className}`} strokeWidth={strokeWidth} aria-hidden="true" />;
 }
 
 export function dishModeMatches(dish, selectedMode) {
@@ -139,7 +139,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #E64646",
         }}
       >
-        <RestaurantForkKnifeIcon className={iconSizeClass} strokeWidth={1.55} />
+        <RestaurantForkKnifeIcon className={iconSizeClass} strokeWidth={1.45} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

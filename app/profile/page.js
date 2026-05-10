@@ -443,6 +443,9 @@ export default function Profile() {
     const params = new URLSearchParams(window.location.search);
     if (dishlistId === "overview") {
       params.delete("list");
+      const query = params.toString();
+      window.history.replaceState(window.history.state, "", query ? `${pathname}?${query}` : pathname);
+      return;
     } else {
       params.set("list", dishlistId);
     }
@@ -475,6 +478,7 @@ export default function Profile() {
     let startX = 0;
     let startY = 0;
     let startTime = 0;
+    let didReturn = false;
 
     const handleTouchStart = (event) => {
       const touch = event.touches?.[0];
@@ -485,6 +489,7 @@ export default function Profile() {
     };
 
     const handleTouchEnd = (event) => {
+      if (didReturn) return;
       const touch = event.changedTouches?.[0];
       if (!touch) return;
       const deltaX = touch.clientX - startX;
@@ -495,11 +500,25 @@ export default function Profile() {
         selectDishlist("overview");
       }
     };
+    const handleTouchMove = (event) => {
+      if (didReturn) return;
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - startX;
+      const deltaY = Math.abs(touch.clientY - startY);
+      if (deltaX > 42 && deltaY < 70) {
+        didReturn = true;
+        event.preventDefault();
+        selectDishlist("overview");
+      }
+    };
 
     window.addEventListener("touchstart", handleTouchStart, { capture: true, passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { capture: true, passive: false });
     window.addEventListener("touchend", handleTouchEnd, { capture: true, passive: false });
     return () => {
       window.removeEventListener("touchstart", handleTouchStart, true);
+      window.removeEventListener("touchmove", handleTouchMove, true);
       window.removeEventListener("touchend", handleTouchEnd, true);
     };
   }, [activeDishlistId]);
@@ -1354,7 +1373,7 @@ export default function Profile() {
             }`}
             style={{ borderColor: "#E64646" }}
           >
-            <RestaurantForkKnifeIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
+            <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
             {t("Restaurants")}
           </button>
         </div>
@@ -2183,9 +2202,7 @@ export default function Profile() {
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
-                  const preview = [...(dishlist.dishes || [])]
-                    .sort(() => Math.random() - 0.5)
-                    .slice(0, 4);
+                  const preview = [...(dishlist.dishes || [])].slice(0, 4);
                   return (
                     <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
                       darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
@@ -2388,7 +2405,7 @@ export default function Profile() {
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {allDishlists.map((dishlist) => {
-                        const preview = [...(dishlist.dishes || [])].sort(() => Math.random() - 0.5).slice(0, 4);
+                        const preview = [...(dishlist.dishes || [])].slice(0, 4);
                         const selected = dishlist.id === createSourceDishlist?.id;
                         return (
                           <button

@@ -448,7 +448,7 @@ export default function DirectChat() {
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {pickerDishlists.map((dishlist) => {
-                  const preview = [...(dishlist.dishes || [])].sort(() => Math.random() - 0.5).slice(0, 4);
+                  const preview = [...(dishlist.dishes || [])].slice(0, 4);
                   const selected = dishlist.id === activePickerDishlist?.id;
                   return (
                     <button

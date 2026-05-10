@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, ListChecks, MoreHorizontal, Pencil, X } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
@@ -66,7 +66,7 @@ export default function DishDetail() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { darkMode } = useLanguage();
+  const { darkMode, t } = useLanguage();
 
   const source = searchParams.get("source") || "saved";
   const mode = searchParams.get("mode") || "single";
@@ -111,6 +111,7 @@ export default function DishDetail() {
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
   const [lockedDishlistIds, setLockedDishlistIds] = useState([]);
   const [initialDeckIndex, setInitialDeckIndex] = useState(0);
+  const [profileCardActionsDish, setProfileCardActionsDish] = useState(null);
   const activeDeckRef = useRef(null);
 
   const shuffleArray = (arr) => {
@@ -582,6 +583,12 @@ export default function DishDetail() {
     return ok;
   };
 
+  const openProfileCardActions = (dishCard) => {
+    if (!dishCard?.id) return false;
+    setProfileCardActionsDish(dishCard);
+    return { skipToast: true };
+  };
+
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
     const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
@@ -678,8 +685,8 @@ export default function DishDetail() {
             preserveContinuity
             disabled={editOpen}
             currentUser={user}
-            onAction={shouldUseStoryActions ? handleAddToStory : shouldUsePublicActions ? handleAdd : handleRemove}
-            onSecondaryAction={canManageOwnDish || (isToTrySource && !isForeignProfileContext) ? (dishCard) => {
+            onAction={shouldUseStoryActions ? openProfileCardActions : shouldUsePublicActions ? handleAdd : handleRemove}
+            onSecondaryAction={!shouldUseStoryActions && (canManageOwnDish || (isToTrySource && !isForeignProfileContext)) ? (dishCard) => {
               if (dishCard?.owner === userId && !isForeignProfileContext && !isPublicSource) {
                 openEditModal(dishCard);
                 return;
@@ -691,14 +698,14 @@ export default function DishDetail() {
             } : undefined}
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
-            onTertiaryAction={!isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
+            onTertiaryAction={!shouldUseStoryActions && !isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
             onRightSwipe={enableProfileDeckNavigation ? undefined : shouldUsePublicActions ? handleRightSwipeToTry : undefined}
             actionOnRightSwipe={enableProfileDeckNavigation ? false : !shouldUsePublicActions}
             dismissOnAction={shouldUsePublicActions ? false : isPublicSource}
             dismissOnSecondaryAction={false}
             advanceOnAnySwipe={enableProfileDeckNavigation}
             onAuthRequired={() => alert("Please sign in to comment.")}
-            actionLabel={shouldUseStoryActions ? <StoryActionIcon /> : shouldUsePublicActions ? "+" : "Remove"}
+            actionLabel={shouldUseStoryActions ? <MoreHorizontal size={26} strokeWidth={2.35} /> : shouldUsePublicActions ? "+" : "Remove"}
             secondaryActionLabel={getSecondaryActionLabel}
             actionClassName={
               shouldUseStoryActions
@@ -707,7 +714,7 @@ export default function DishDetail() {
                   ? "add-action-btn w-14 h-14"
                   : "px-4 py-2 rounded-full bg-red-500 text-white text-sm font-semibold shadow-lg"
             }
-            tertiaryActionLabel={!isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
+            tertiaryActionLabel={!shouldUseStoryActions && !isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
             tertiaryActionClassName="add-action-btn w-14 h-14"
             secondaryActionClassName={getSecondaryActionClassName}
             actionToast={
@@ -729,6 +736,111 @@ export default function DishDetail() {
           />
         </div>
       </div>
+
+      <AnimatePresence>
+        {profileCardActionsDish ? (
+          <motion.div
+            className="fixed inset-0 z-[92] flex items-end justify-center bg-black/55 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setProfileCardActionsDish(null)}
+          >
+            <motion.div
+              className={`w-full max-w-md rounded-[1.7rem] border p-4 shadow-[0_26px_70px_rgba(0,0,0,0.35)] ${
+                darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
+              }`}
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <img
+                  src={getDishImageUrl(profileCardActionsDish, "thumb")}
+                  alt={profileCardActionsDish?.name || "Dish"}
+                  className="h-14 w-14 rounded-[1rem] object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-bold">{profileCardActionsDish?.name || "Untitled dish"}</div>
+                  <div className={`text-xs ${darkMode ? "text-white/50" : "text-black/50"}`}>{t("Dish actions")}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileCardActionsDish(null)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full ${darkMode ? "bg-white/10 text-white/70" : "bg-black/6 text-black/60"}`}
+                  aria-label="Close dish actions"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {profileCardActionsDish?.owner === userId && !isForeignProfileContext && !isPublicSource ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = profileCardActionsDish;
+                      setProfileCardActionsDish(null);
+                      openEditModal(target);
+                    }}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/8 bg-black/4 text-black"
+                    }`}
+                  >
+                    <span>{t("Edit dish")}</span>
+                    <Pencil size={16} />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = profileCardActionsDish;
+                    setProfileCardActionsDish(null);
+                    handleAddToStory(target);
+                  }}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                  }`}
+                >
+                  <span>{t("Add to story")}</span>
+                  <StoryActionIcon />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = profileCardActionsDish;
+                    setProfileCardActionsDish(null);
+                    handleManageDishlists(target);
+                  }}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-white" : "border-[#2BD36B]/45 bg-[#F4FFF7] text-black"
+                  }`}
+                >
+                  <span>{t("Manage dishlists")}</span>
+                  <ListChecks size={16} />
+                </button>
+                {isToTrySource && !isForeignProfileContext ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = profileCardActionsDish;
+                      setProfileCardActionsDish(null);
+                      handleUpgrade(target);
+                    }}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-[#F0A623]/45 bg-[#241A09] text-white" : "border-[#F0A623]/45 bg-[#FFF8E7] text-black"
+                    }`}
+                  >
+                    <span>{t("Move to DishList")}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                ) : null}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {editOpen && (
         <div

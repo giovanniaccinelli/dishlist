@@ -282,9 +282,6 @@ export default function RestaurantMapView({
   };
 
   const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
-  const isCompactRestaurantSheet =
-    selectedGroup?.users?.length === 1 && (selectedGroup.users[0]?.dishes?.length || 0) <= 1;
-
   return (
     <div className={`restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
@@ -362,9 +359,7 @@ export default function RestaurantMapView({
 
         {selectedGroup && mapState === "ready" ? (
           <div
-            className={`absolute bottom-3 z-10 overflow-visible ${
-              isCompactRestaurantSheet ? "left-1/2 w-[12rem] -translate-x-1/2" : "inset-x-3"
-            }`}
+            className="absolute inset-x-3 bottom-3 z-10 overflow-visible"
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
@@ -423,7 +418,7 @@ export default function RestaurantMapView({
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className={`flex shrink-0 snap-start flex-col ${isCompactRestaurantSheet ? "w-full" : "w-[10.4rem]"}`}>
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 snap-start flex-col">
                           <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">
                             <Avatar user={user} />
                             <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">

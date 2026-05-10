@@ -45,6 +45,7 @@ import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
 import { ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
+import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../lib/dishContent";
 import SaversModal from "../../components/SaversModal";
@@ -291,6 +292,7 @@ export default function Profile() {
   const profileDocId = profileOwnerId || profileUser?.id || user?.uid || "";
   const profileAliasKey = profileAliasIds.join("|");
   const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
+  const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -359,6 +361,7 @@ export default function Profile() {
             displayName: nextProfileUser.displayName || "",
             photoURL: nextProfileUser.photoURL || "",
             bio: nextProfileUser.bio || "",
+            representativeTags: normalizeRepresentativeTags(nextProfileUser.representativeTags),
           }));
         }
       })();
@@ -396,6 +399,7 @@ export default function Profile() {
             displayName: data.displayName || "",
             photoURL: data.photoURL || "",
             bio: data.bio || "",
+            representativeTags: normalizeRepresentativeTags(data.representativeTags),
           }));
         }
         setUploadedDishes(uploaded);
@@ -894,6 +898,30 @@ export default function Profile() {
     }
   };
 
+  const updateRepresentativeTags = async (nextTags) => {
+    if (!user?.uid) return;
+    const cleanedTags = normalizeRepresentativeTags(nextTags);
+    setProfileMeta((prev) => ({ ...prev, representativeTags: cleanedTags }));
+    try {
+      const targetProfileIds = Array.from(new Set([user.uid, profileDocId].filter(Boolean)));
+      await Promise.all(targetProfileIds.map((targetId) => setDoc(doc(db, "users", targetId), { representativeTags: cleanedTags }, { merge: true })));
+    } catch (err) {
+      console.error("Failed to update representative tags:", err);
+      setToastVariant("error");
+      setToast("Could not update tags");
+      setTimeout(() => setToast(""), 1400);
+    }
+  };
+
+  const toggleRepresentativeTag = (tag) => {
+    if (!TAG_OPTIONS.includes(tag)) return;
+    const active = selectedRepresentativeTags.includes(tag);
+    const nextTags = active
+      ? selectedRepresentativeTags.filter((item) => item !== tag)
+      : [...selectedRepresentativeTags, tag].slice(0, PROFILE_REPRESENTATIVE_TAG_LIMIT);
+    updateRepresentativeTags(nextTags);
+  };
+
   const handleLogout = async () => {
     await signOut(auth);
     router.replace("/");
@@ -1182,6 +1210,8 @@ export default function Profile() {
     })),
   ].map(normalizeProfileDishlist);
   const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
+  const profileRepresentativeTags = resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
@@ -1571,6 +1601,20 @@ export default function Profile() {
 
           <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
+            {profileRepresentativeTags.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {profileRepresentativeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
+                      darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
+                    }`}
+                  >
+                    {t(tag)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>
@@ -2049,6 +2093,45 @@ export default function Profile() {
                     <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${darkMode ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
                   </span>
                 </button>
+              </section>
+
+              <section className="mb-5">
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Representative tags")}
+                </div>
+                <div className={`no-accent-border rounded-[1.45rem] p-4 ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
+                  <div className={`text-sm leading-5 ${darkMode ? "text-white/58" : "text-black/54"}`}>
+                    {t("Choose up to 4 tags for your profile. Leave empty to use your most common dish tags.")}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {TAG_OPTIONS.map((tag) => {
+                      const active = selectedRepresentativeTags.includes(tag);
+                      const disabled = !active && selectedRepresentativeTags.length >= PROFILE_REPRESENTATIVE_TAG_LIMIT;
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleRepresentativeTag(tag)}
+                          disabled={disabled}
+                          className={`rounded-full border px-3 py-2 text-xs font-bold transition ${
+                            darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active)
+                          } ${disabled ? "opacity-35" : ""}`}
+                        >
+                          {t(tag)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateRepresentativeTags([])}
+                    className={`mt-3 text-sm font-semibold ${darkMode ? "text-white/62" : "text-black/54"}`}
+                  >
+                    {t("Use automatic tags")}
+                  </button>
+                </div>
               </section>
 
               <section>

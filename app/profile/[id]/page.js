@@ -33,6 +33,8 @@ import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upl
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
+import { resolveRepresentativeTags } from "../../lib/profileTags";
+import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -658,6 +660,8 @@ export default function PublicProfile() {
     })),
   ].map(normalizeProfileDishlist);
   const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
+  const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
@@ -805,6 +809,20 @@ export default function PublicProfile() {
 
           <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
             <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
+            {profileRepresentativeTags.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {profileRepresentativeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
+                      darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
+                    }`}
+                  >
+                    {t(tag)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.followers?.length || 0))}</div>

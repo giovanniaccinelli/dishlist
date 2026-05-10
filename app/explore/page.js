@@ -158,17 +158,16 @@ function FriedIcon({ className = "" }) {
   );
 }
 
-function DeliveryScooterIcon({ className = "" }) {
+function DeliveryBagIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M4.2 13.7h8.7l2.1-4h2.2c1.6 0 2.9 1.3 2.9 2.9v1.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.2 8.2h6.9v5.5H4.8l1.4-5.5Z" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
-      <path d="M15.3 9.7V7h3.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5.1 6.1h6.4" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.78" />
-      <circle cx="7.1" cy="17" r="2.15" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
-      <circle cx="18" cy="17" r="2.15" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M9.3 17h6.5" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M6.3 17h1.6M17.2 17h1.6" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M6.4 8.6h11.2l-1 10.1a2.2 2.2 0 0 1-2.2 2H9.6a2.2 2.2 0 0 1-2.2-2L6.4 8.6Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M9.1 8.6V7.4a2.9 2.9 0 0 1 5.8 0v1.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M9.4 12.8h5.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M10.7 15.8h2.6" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M4.1 11.2h2.1" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.75" />
+      <path d="M3.5 14.2h2.6" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.75" />
+      <path d="M4.4 17.2h2" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.75" />
     </svg>
   );
 }
@@ -388,7 +387,7 @@ const TAG_DECOR = {
   fresh: { icon: null, pillClass: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]" },
   asian: { icon: null, pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]" },
   fried: { icon: FriedIcon, iconClass: "text-[#C46A1A]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]" },
-  delivery: { icon: DeliveryScooterIcon, iconClass: "text-[#0EA5E9]", iconSize: "h-[1.55rem] w-[1.55rem]", pillClass: "bg-[#E0F2FE] text-[#075985] border-[#38BDF8]" },
+  delivery: { icon: DeliveryBagIcon, iconClass: "text-[#0EA5E9]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#E0F2FE] text-[#075985] border-[#38BDF8]" },
   dessert: { icon: DessertIcon, iconClass: "text-[#DB2777]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]" },
   american: { icon: AmericanFlagIcon, iconClass: "text-black/50", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#EF4444]" },
   rice: { icon: RiceIcon, iconClass: "text-[#C8A31B]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FEFCE8] text-[#713F12] border-[#FDE047]" },

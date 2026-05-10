@@ -15,6 +15,7 @@ import {
   saveDishToFirestore,
   getUploadedDishesForUserAliases,
   getAllDishlistsForUser,
+  getAllDishlistsForUserAliases,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   removeDishFromAllUsers,
@@ -120,6 +121,29 @@ function getProfileIdCandidates(routeId, userDoc) {
   ]);
 }
 
+function getProfileDocScore(routeId, userDoc) {
+  const data = userDoc?.data?.() || {};
+  const routeValue = String(routeId || "").trim();
+  const hasArray = (value) => (Array.isArray(value) && value.length ? 1 : 0);
+  return (
+    (String(userDoc?.id || "") === routeValue ? 4 : 0) +
+    (data.uid === routeValue ? 10 : 0) +
+    (data.authUid === routeValue ? 10 : 0) +
+    (data.userId === routeValue ? 8 : 0) +
+    (data.appleUserId === routeValue ? 8 : 0) +
+    (data.displayName ? 3 : 0) +
+    (data.photoURL ? 2 : 0) +
+    hasArray(data.followers) +
+    hasArray(data.following) +
+    hasArray(data.savedDishes) +
+    hasArray(data.toTryDishes)
+  );
+}
+
+function pickBestProfileDoc(routeId, docs = []) {
+  return [...docs].sort((a, b) => getProfileDocScore(routeId, b) - getProfileDocScore(routeId, a))[0] || null;
+}
+
 function mergeUniqueById(groups = []) {
   return Array.from(
     new Map(
@@ -163,6 +187,7 @@ export default function Profile() {
   const [canonicalDishlists, setCanonicalDishlists] = useState([]);
   const [canonicalDishlistsLoaded, setCanonicalDishlistsLoaded] = useState(false);
   const [profileOwnerId, setProfileOwnerId] = useState("");
+  const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
@@ -230,6 +255,8 @@ export default function Profile() {
   const avatarTone = getAvatarTone(effectiveDisplayName);
   const profileIdCandidates = getProfileIdCandidates(user?.uid, profileUser);
   const profileDocId = profileOwnerId || profileUser?.id || user?.uid || "";
+  const profileAliasKey = profileAliasIds.join("|");
+  const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -247,20 +274,32 @@ export default function Profile() {
     if (user) {
       (async () => {
         const loadUserDoc = async () => {
+          const matches = [];
           try {
             const direct = await getDoc(doc(db, "users", user.uid));
-            if (direct.exists()) return direct;
+            if (direct.exists()) matches.push(direct);
           } catch (error) {
             console.error("Direct own-profile fetch failed:", error);
           }
-          const snapshot = await getDocs(collection(db, "users"));
-          return snapshot.docs.find((docSnap) => getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) || null;
+          try {
+            const snapshot = await getDocs(collection(db, "users"));
+            snapshot.docs.forEach((docSnap) => {
+              if (getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) matches.push(docSnap);
+            });
+          } catch (error) {
+            console.error("Own-profile alias scan failed:", error);
+          }
+          return {
+            best: pickBestProfileDoc(user.uid, matches),
+            aliases: uniqueNonEmpty([user.uid, ...matches.flatMap((docSnap) => getProfileIdCandidates(user.uid, docSnap))]),
+          };
         };
 
-        const userDoc = await loadUserDoc();
+        const { best: userDoc, aliases } = await loadUserDoc();
         const nextProfileUser = userDoc?.exists?.() ? { id: userDoc.id, ...userDoc.data() } : null;
+        setProfileAliasIds(aliases.length ? aliases : [user.uid]);
         setProfileOwnerId(nextProfileUser?.id || user.uid);
-        const candidateIds = getProfileIdCandidates(user.uid, userDoc);
+        const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
         const results = await Promise.allSettled([
           getUploadedDishesForUserAliases(candidateIds),
           Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
@@ -293,12 +332,12 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid || !profileAliasIds.length) return;
     let cancelled = false;
     (async () => {
       try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
-        const ownerCandidates = getProfileIdCandidates(user.uid, userSnap);
+        const ownerCandidates = profileAliasIds;
         const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
           getUploadedDishesForUserAliases(ownerCandidates),
           Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
@@ -336,7 +375,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, profileAliasKey]);
 
   const loadOwnUploadedDishes = async () => {
     if (!user?.uid) return [];
@@ -355,7 +394,7 @@ export default function Profile() {
   }, [editProfileModal]);
 
   useEffect(() => {
-    if (!profileDocId) {
+    if (!canonicalProfileIds.length) {
       setCanonicalDishlists([]);
       setCanonicalDishlistsLoaded(false);
       return undefined;
@@ -364,7 +403,7 @@ export default function Profile() {
     setCanonicalDishlistsLoaded(false);
     (async () => {
       try {
-        const lists = await getAllDishlistsForUser(profileDocId);
+        const lists = await getAllDishlistsForUserAliases(canonicalProfileIds);
         if (!cancelled) {
           setCanonicalDishlists(lists);
           setCanonicalDishlistsLoaded(true);
@@ -380,7 +419,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [profileDocId, savedDishes.length, toTryDishes.length, uploadedDishes.length, customDishlists.length]);
+  }, [profileAliasKey, profileDocId, savedDishes.length, toTryDishes.length, uploadedDishes.length, customDishlists.length]);
 
   useEffect(() => {
     if (!editProfileModal) return;

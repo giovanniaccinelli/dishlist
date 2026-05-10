@@ -814,6 +814,72 @@ export async function getAllDishlistsForUser(userId) {
   ];
 }
 
+function mergeCustomDishlistsById(groups = []) {
+  const byId = new Map();
+  groups.flat().forEach((dishlist) => {
+    if (!dishlist?.id) return;
+    const existing = byId.get(dishlist.id);
+    if (!existing) {
+      byId.set(dishlist.id, { ...dishlist, dishes: dedupeDishArray(dishlist.dishes || []) });
+      return;
+    }
+    const dishes = dedupeDishArray([...(existing.dishes || []), ...(dishlist.dishes || [])]);
+    byId.set(dishlist.id, {
+      ...existing,
+      ...dishlist,
+      dishes,
+      dishIds: dishes.map((dish) => dish.id).filter(Boolean),
+      count: dishes.length,
+      createdAt: existing.createdAt || dishlist.createdAt || null,
+      updatedAt: existing.updatedAt || dishlist.updatedAt || null,
+    });
+  });
+  return Array.from(byId.values()).sort((a, b) => {
+    const aTime = a?.updatedAt?.seconds || a?.createdAt?.seconds || 0;
+    const bTime = b?.updatedAt?.seconds || b?.createdAt?.seconds || 0;
+    return bTime - aTime;
+  });
+}
+
+export async function getAllDishlistsForUserAliases(userIds = []) {
+  const aliases = Array.from(
+    new Set(
+      (Array.isArray(userIds) ? userIds : [userIds])
+        .map((userId) => String(userId || "").trim())
+        .filter(Boolean)
+    )
+  );
+  if (!aliases.length) return [];
+  if (aliases.length === 1) return getAllDishlistsForUser(aliases[0]);
+
+  const [savedGroups, toTryGroups, uploaded, customGroups] = await Promise.all([
+    Promise.all(aliases.map((userId) => getSavedDishesFromFirestore(userId))),
+    Promise.all(aliases.map((userId) => getToTryDishesFromFirestore(userId))),
+    getUploadedDishesForUserAliases(aliases),
+    Promise.all(aliases.map((userId) => getCustomDishlistsForUser(userId))),
+  ]);
+
+  const saved = dedupeDishArray(savedGroups.flat());
+  const toTry = dedupeDishArray(toTryGroups.flat());
+  const custom = mergeCustomDishlistsById(customGroups);
+  const allDishes = dedupeDishArray([
+    ...uploaded,
+    ...saved,
+    ...toTry,
+    ...custom.flatMap((dishlist) => dishlist.dishes || []),
+  ]);
+  const savedIds = new Set(saved.map((dish) => dish?.id).filter(Boolean));
+  const toTryCollection = dedupeDishArray(toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)));
+
+  return [
+    makeSystemDishlist("saved", "Your Classics", saved),
+    makeSystemDishlist("to_try", "To Try", toTryCollection),
+    makeSystemDishlist("uploaded", "Uploaded", uploaded),
+    makeSystemDishlist("all_dishes", "All dishes", allDishes),
+    ...custom,
+  ];
+}
+
 export async function createCustomDishlist(userId, name, initialDishes = []) {
   const cleanedName = normalizeDishlistName(name);
   if (!userId || !cleanedName) return null;

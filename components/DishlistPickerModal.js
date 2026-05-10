@@ -53,8 +53,8 @@ export default function DishlistPickerModal({
           onClick={onClose}
         >
           <motion.div
-            className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
-              isSwipeCard ? "h-[82vh]" : "max-h-[calc(100dvh-2rem)]"
+          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+              isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
                 ? "border-white/12 bg-[#101010] text-white"
@@ -66,8 +66,8 @@ export default function DishlistPickerModal({
             transition={{ type: "spring", stiffness: 280, damping: 26 }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className={`no-accent-border mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/14" : "bg-black/12"}`} />
-            <div className="mb-4 flex items-start justify-between gap-4">
+            <div className={`no-accent-border mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full ${darkMode ? "bg-white/14" : "bg-black/12"}`} />
+            <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
               <div>
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
                   {eyebrow}
@@ -86,7 +86,7 @@ export default function DishlistPickerModal({
               </button>
             </div>
             {dishPreview ? (
-              <div className={`mb-4 flex items-center gap-3 rounded-[1.35rem] border p-2.5 ${
+              <div className={`mb-4 flex shrink-0 items-center gap-3 rounded-[1.35rem] border p-2.5 ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>
                 <img
@@ -172,7 +172,7 @@ export default function DishlistPickerModal({
                   })}
                 </div>
                 {mode === "multiple" ? (
-                  <div className={`sticky bottom-0 mt-4 flex items-center justify-between gap-3 border-t pt-4 ${
+                  <div className={`sticky bottom-0 mt-4 flex shrink-0 items-center justify-between gap-3 border-t pt-4 ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
                     <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>

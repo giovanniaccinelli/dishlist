@@ -516,13 +516,6 @@ export default function PublicProfile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
-  const sortDishlistDishes = (dishesList) =>
-    [...(dishesList || [])].sort(
-      (a, b) =>
-        getStoryPushCount(b) - getStoryPushCount(a) ||
-        Number(b?.saves || 0) - Number(a?.saves || 0)
-    );
-
   const allDishesCollection = Array.from(
     new Map(
       [...dishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
@@ -541,19 +534,19 @@ export default function PublicProfile() {
   );
 
   const allDishlists = [
-    { id: "saved", name: "Your Classics", type: "system", dishes: sortDishlistDishes(savedDishes), count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: sortDishlistDishes(toTryCollection), count: toTryCollection.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: sortDishlistDishes(dishes), count: dishes.length },
+    { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
       type: "system",
-      dishes: sortDishlistDishes(allDishesCollection),
+      dishes: allDishesCollection,
       count: allDishesCollection.length,
     },
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
-      dishes: sortDishlistDishes(dishlist.dishes || []),
+      dishes: dishlist.dishes || [],
     })),
   ];
 

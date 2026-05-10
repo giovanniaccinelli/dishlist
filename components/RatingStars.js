@@ -11,6 +11,16 @@ export function RatingStars({ value = 0, onChange, size = "text-[1rem]", classNa
 
   const chooseRating = (event, index) => {
     if (!interactive) return;
+    const fullValue = index + 1;
+    const halfValue = index + 0.5;
+    if (rating === fullValue) {
+      onChange(halfValue);
+      return;
+    }
+    if (rating === halfValue) {
+      onChange(fullValue);
+      return;
+    }
     const rect = event.currentTarget.getBoundingClientRect();
     const half = event.clientX - rect.left < rect.width / 2 ? 0.5 : 1;
     onChange(index + half);
@@ -33,7 +43,7 @@ export function RatingStars({ value = 0, onChange, size = "text-[1rem]", classNa
             }`}
             aria-label={interactive ? `Set ${index + 1} stars` : undefined}
           >
-            <span className="text-white/24">★</span>
+            <span className={interactive ? "text-[#FFC247]/24" : "text-transparent"}>★</span>
             <span className="absolute inset-y-0 left-0 overflow-hidden text-[#FFC247]" style={{ width: `${fill * 100}%` }}>
               ★
             </span>

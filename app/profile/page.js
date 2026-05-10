@@ -254,6 +254,8 @@ export default function Profile() {
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [connectionsUsers, setConnectionsUsers] = useState([]);
   const [profileOptionsOpen, setProfileOptionsOpen] = useState(false);
+  const [representativeTagsDraft, setRepresentativeTagsDraft] = useState([]);
+  const [representativeTagsSaving, setRepresentativeTagsSaving] = useState(false);
   const [removePhoto, setRemovePhoto] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
@@ -467,6 +469,11 @@ export default function Profile() {
     setRemovePhoto(false);
     setNewPhotoPreview(effectiveProfilePhotoURL);
   }, [editProfileModal, user?.displayName, effectiveProfilePhotoURL, profileMeta.bio]);
+
+  useEffect(() => {
+    if (!profileOptionsOpen) return;
+    setRepresentativeTagsDraft(selectedRepresentativeTags);
+  }, [profileOptionsOpen, profileMeta.representativeTags]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -898,28 +905,36 @@ export default function Profile() {
     }
   };
 
-  const updateRepresentativeTags = async (nextTags) => {
-    if (!user?.uid) return;
-    const cleanedTags = normalizeRepresentativeTags(nextTags);
+  const saveRepresentativeTags = async () => {
+    if (!user?.uid || representativeTagsSaving) return;
+    const cleanedTags = normalizeRepresentativeTags(representativeTagsDraft);
+    setRepresentativeTagsSaving(true);
     setProfileMeta((prev) => ({ ...prev, representativeTags: cleanedTags }));
     try {
       const targetProfileIds = Array.from(new Set([user.uid, profileDocId].filter(Boolean)));
       await Promise.all(targetProfileIds.map((targetId) => setDoc(doc(db, "users", targetId), { representativeTags: cleanedTags }, { merge: true })));
+      setToastVariant("success");
+      setToast("Tags saved");
+      setTimeout(() => setToast(""), 1200);
     } catch (err) {
       console.error("Failed to update representative tags:", err);
       setToastVariant("error");
       setToast("Could not update tags");
       setTimeout(() => setToast(""), 1400);
+    } finally {
+      setRepresentativeTagsSaving(false);
     }
   };
 
   const toggleRepresentativeTag = (tag) => {
     if (!TAG_OPTIONS.includes(tag)) return;
-    const active = selectedRepresentativeTags.includes(tag);
-    const nextTags = active
-      ? selectedRepresentativeTags.filter((item) => item !== tag)
-      : [...selectedRepresentativeTags, tag].slice(0, PROFILE_REPRESENTATIVE_TAG_LIMIT);
-    updateRepresentativeTags(nextTags);
+    setRepresentativeTagsDraft((prev) => {
+      const cleaned = normalizeRepresentativeTags(prev);
+      const active = cleaned.includes(tag);
+      if (active) return cleaned.filter((item) => item !== tag);
+      if (cleaned.length >= PROFILE_REPRESENTATIVE_TAG_LIMIT) return cleaned;
+      return [...cleaned, tag];
+    });
   };
 
   const handleLogout = async () => {
@@ -2107,8 +2122,8 @@ export default function Profile() {
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {TAG_OPTIONS.map((tag) => {
-                      const active = selectedRepresentativeTags.includes(tag);
-                      const disabled = !active && selectedRepresentativeTags.length >= PROFILE_REPRESENTATIVE_TAG_LIMIT;
+                      const active = representativeTagsDraft.includes(tag);
+                      const disabled = !active && representativeTagsDraft.length >= PROFILE_REPRESENTATIVE_TAG_LIMIT;
                       return (
                         <button
                           key={tag}
@@ -2126,10 +2141,20 @@ export default function Profile() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => updateRepresentativeTags([])}
+                    onClick={() => setRepresentativeTagsDraft([])}
                     className={`mt-3 text-sm font-semibold ${darkMode ? "text-white/62" : "text-black/54"}`}
                   >
                     {t("Use automatic tags")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveRepresentativeTags}
+                    disabled={representativeTagsSaving}
+                    className={`mt-3 w-full rounded-full px-4 py-3 text-sm font-bold transition ${
+                      darkMode ? "bg-[#2BD36B] text-black" : "bg-[#111111] text-white"
+                    } ${representativeTagsSaving ? "opacity-60" : ""}`}
+                  >
+                    {representativeTagsSaving ? t("Saving...") : t("Save tags")}
                   </button>
                 </div>
               </section>

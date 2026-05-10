@@ -53,7 +53,10 @@ const translations = {
     "Representative tags": "Tag rappresentativi",
     "Choose up to 3 tags for your profile. Leave empty to use your most common dish tags.": "Scegli fino a 3 tag per il profilo. Lascia vuoto per usare quelli piu presenti nei tuoi piatti.",
     "Use automatic tags": "Usa tag automatici",
+    "Save tags": "Salva tag",
+    "Tags saved": "Tag salvati",
     "Could not update tags": "Impossibile aggiornare i tag",
+    "Saving...": "Salvataggio...",
     "Light mode": "Modalita chiara",
     "Save profile": "Salva profilo",
     "Display name": "Nome",
@@ -328,6 +331,7 @@ const translations = {
     winter: "inverno",
     gourmet: "gourmet",
     "date night": "date night",
+    pasta: "pasta",
   },
 };
 

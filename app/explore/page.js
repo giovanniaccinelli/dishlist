@@ -116,6 +116,20 @@ function PlateIcon({ className = "" }) {
   );
 }
 
+function PastaPlateIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <ellipse cx="12" cy="16.1" rx="7.8" ry="3.6" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M7.1 15.4c1.2-2.4 3-3.6 5.2-3.6 2.3 0 4 .9 4.8 2.7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M8.4 14.9c1.2 1.1 2.5 1.1 3.7 0 1.1-1 2.4-1.1 3.6 0" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M8.9 11.3c.8-1.9 1.8-3 3.2-3.4 1.7-.5 3.1.1 4.3 1.9" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M11.2 8.2 10.7 4" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M13 7.9 13.2 4" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M14.7 8.5 15.6 4.7" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function FancyPlateIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -278,6 +292,7 @@ const TAG_DECOR = {
   gourmet: { icon: ChefHat, iconClass: "text-[#8A6A46]", pillClass: "bg-[#F4ECE3] text-[#6D4C2F] border-[#D6C0A8]" },
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
   "date night": { icon: ClinkingGlassesIcon, iconClass: "text-[#B13D56]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
+  pasta: { icon: PastaPlateIcon, iconClass: "text-[#D99116]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {

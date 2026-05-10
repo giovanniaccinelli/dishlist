@@ -19,50 +19,67 @@ export const TAG_OPTIONS = [
   "winter",
   "gourmet",
   "date night",
+  "pasta",
 ];
 
-const TAG_COLOR_STYLES = [
-  "bg-[#DFF3FF] text-[#123B52]",
-  "bg-[#E9FBD8] text-[#1D4F1A]",
-  "bg-[#FFF2D9] text-[#6A3E00]",
-  "bg-[#FFE3EC] text-[#6A1A36]",
-  "bg-[#EDE8FF] text-[#33205D]",
-  "bg-[#E5F7F4] text-[#0F4D45]",
-];
+const TAG_COLOR_MAP = {
+  fit: "bg-[#DCFCE7] text-[#14532D] border-[#86EFAC]",
+  "high protein": "bg-[#FFE4D6] text-[#8A2C0D] border-[#FDBA74]",
+  veg: "bg-[#E0F2FE] text-[#075985] border-[#7DD3FC]",
+  vegan: "bg-[#D1FAE5] text-[#065F46] border-[#6EE7B7]",
+  light: "bg-[#F1F5F9] text-[#334155] border-[#CBD5E1]",
+  easy: "bg-[#EDE9FE] text-[#5B21B6] border-[#C4B5FD]",
+  quick: "bg-[#CCFBF1] text-[#115E59] border-[#5EEAD4]",
+  fancy: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]",
+  comfort: "bg-[#FEF3C7] text-[#92400E] border-[#FCD34D]",
+  "carb heavy": "bg-[#FFF7ED] text-[#9A3412] border-[#FDBA74]",
+  "low carb": "bg-[#E0F2FE] text-[#0C4A6E] border-[#38BDF8]",
+  spicy: "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]",
+  "late night": "bg-[#E0E7FF] text-[#3730A3] border-[#A5B4FC]",
+  cheat: "bg-[#FFE4E6] text-[#9F1239] border-[#FDA4AF]",
+  budget: "bg-[#ECFCCB] text-[#3F6212] border-[#BEF264]",
+  premium: "bg-[#FEF9C3] text-[#854D0E] border-[#FACC15]",
+  summer: "bg-[#FFEDD5] text-[#9A3412] border-[#FB923C]",
+  winter: "bg-[#DBEAFE] text-[#1E40AF] border-[#93C5FD]",
+  gourmet: "bg-[#F5F3FF] text-[#6D28D9] border-[#DDD6FE]",
+  "date night": "bg-[#FAE8FF] text-[#86198F] border-[#E879F9]",
+  pasta: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]",
+};
 
-const TAG_DARK_COLOR_STYLES = [
-  "border-[#5FA8F2]/70 bg-[#0C2236] text-[#B9DFFF]",
-  "border-[#2BD36B]/70 bg-[#0D2818] text-[#C8FFD8]",
-  "border-[#F0A623]/75 bg-[#2E2108] text-[#FFE0A3]",
-  "border-[#E64646]/70 bg-[#2A1111] text-[#FFC0C0]",
-  "border-[#B58CFF]/70 bg-[#201338] text-[#DDC9FF]",
-  "border-[#55D6C2]/70 bg-[#0B2925] text-[#C0FFF5]",
-  "border-[#FF7AB6]/70 bg-[#321322] text-[#FFC6DF]",
-  "border-[#D8D85A]/70 bg-[#29290E] text-[#FFFFA8]",
-  "border-[#8FD7AE]/70 bg-[#0E2A1D] text-[#D7FFE5]",
-  "border-[#FF8A5A]/70 bg-[#31180D] text-[#FFD2BD]",
-];
-
-const TAG_COLOR_MAP = TAG_OPTIONS.reduce((acc, tag, idx) => {
-  acc[tag] = TAG_COLOR_STYLES[idx % TAG_COLOR_STYLES.length];
-  return acc;
-}, {});
-
-const TAG_DARK_COLOR_MAP = TAG_OPTIONS.reduce((acc, tag, idx) => {
-  acc[tag] = TAG_DARK_COLOR_STYLES[idx % TAG_DARK_COLOR_STYLES.length];
-  return acc;
-}, {});
+const TAG_DARK_COLOR_MAP = {
+  fit: "border-[#22C55E]/75 bg-[#102818] text-[#BBF7D0]",
+  "high protein": "border-[#FB923C]/75 bg-[#321708] text-[#FED7AA]",
+  veg: "border-[#38BDF8]/75 bg-[#082436] text-[#BAE6FD]",
+  vegan: "border-[#34D399]/75 bg-[#08251A] text-[#A7F3D0]",
+  light: "border-[#94A3B8]/75 bg-[#181D24] text-[#E2E8F0]",
+  easy: "border-[#A78BFA]/75 bg-[#1D1535] text-[#DDD6FE]",
+  quick: "border-[#2DD4BF]/75 bg-[#082A27] text-[#99F6E4]",
+  fancy: "border-[#F472B6]/75 bg-[#321325] text-[#FBCFE8]",
+  comfort: "border-[#FBBF24]/75 bg-[#30220A] text-[#FDE68A]",
+  "carb heavy": "border-[#FDBA74]/75 bg-[#321A0A] text-[#FED7AA]",
+  "low carb": "border-[#0EA5E9]/75 bg-[#082234] text-[#BAE6FD]",
+  spicy: "border-[#EF4444]/75 bg-[#310F0F] text-[#FECACA]",
+  "late night": "border-[#818CF8]/75 bg-[#17183A] text-[#C7D2FE]",
+  cheat: "border-[#FB7185]/75 bg-[#35111A] text-[#FFE4E6]",
+  budget: "border-[#A3E635]/75 bg-[#1B2608] text-[#D9F99D]",
+  premium: "border-[#EAB308]/75 bg-[#2D2507] text-[#FEF08A]",
+  summer: "border-[#FB923C]/75 bg-[#321A0A] text-[#FED7AA]",
+  winter: "border-[#60A5FA]/75 bg-[#0A1E3A] text-[#BFDBFE]",
+  gourmet: "border-[#C084FC]/75 bg-[#241238] text-[#E9D5FF]",
+  "date night": "border-[#E879F9]/75 bg-[#2D1235] text-[#F5D0FE]",
+  pasta: "border-[#F59E0B]/80 bg-[#2F2107] text-[#FDE68A]",
+};
 
 export function getTagChipClass(tag, active) {
   if (!active) {
     return "bg-white text-black border-black/20";
   }
-  return `${TAG_COLOR_MAP[tag] || TAG_COLOR_STYLES[0]} border-transparent`;
+  return TAG_COLOR_MAP[tag] || TAG_COLOR_MAP.fit;
 }
 
 export function getDarkTagChipClass(tag, active) {
   if (!active) {
     return "border-white/14 bg-[#171717] text-white/62";
   }
-  return TAG_DARK_COLOR_MAP[tag] || TAG_DARK_COLOR_STYLES[0];
+  return TAG_DARK_COLOR_MAP[tag] || TAG_DARK_COLOR_MAP.fit;
 }

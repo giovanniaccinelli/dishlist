@@ -39,6 +39,7 @@ import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
+import { resolveRepresentativeTags } from "./lib/profileTags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { useLanguage } from "../components/LanguageProvider";
 
@@ -175,19 +176,23 @@ export default function Feed() {
       return counts;
     };
 
-    const buildForYouFeed = (items, tagCounts, followedOwners) => {
+    const buildForYouFeed = (items, tagCounts, followedOwners, representativeTags = []) => {
       if (!userId) return shuffleArray(sortNewest(items));
+      const representativeTagSet = new Set(
+        representativeTags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)
+      );
       const ranked = items
         .map((dish) => {
           const dishTags = Array.isArray(dish.tags)
             ? dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)
             : [];
           const overlap = dishTags.reduce((sum, tag) => sum + (tagCounts.get(tag) || 0), 0);
+          const representativeOverlap = dishTags.reduce((sum, tag) => sum + (representativeTagSet.has(tag) ? 1 : 0), 0);
           const followBoost = followedOwners.has(dish.owner) ? 4 : 0;
           const recency = dish?.createdAt?.seconds || 0;
           return {
             ...dish,
-            _rank: overlap * 10 + followBoost + recency / 1000000000,
+            _rank: representativeOverlap * 60 + overlap * 8 + followBoost + recency / 1000000000,
           };
         })
         .sort((a, b) => b._rank - a._rank)
@@ -244,7 +249,8 @@ export default function Feed() {
           }
           setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
-          forYou = buildForYouFeed(publicItems, tagCounts, followedSet);
+          const representativeTags = resolveRepresentativeTags(userData?.representativeTags, [...saved, ...toTry, ...uploaded]);
+          forYou = buildForYouFeed(publicItems, tagCounts, followedSet, representativeTags);
           following = sortNewest(publicItems.filter((dish) => followedSet.has(dish.owner)));
         } else {
           forYou = shuffleArray(sortNewest(publicItems));

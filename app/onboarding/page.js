@@ -252,11 +252,11 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              <div className="mb-4">
-                <h2 className="text-[1.55rem] leading-none font-semibold mt-1 text-white">
+              <div className="mb-3">
+                <h2 className="text-[1.42rem] leading-none font-semibold mt-1 text-white">
                   {t("Name a dish")}
                 </h2>
-                <p className="mt-2 text-sm text-white/55">{t("You can add an image later.")}</p>
+                <p className="mt-1.5 text-[13px] text-white/55">{t("You can add an image later.")}</p>
               </div>
 
               <input
@@ -276,12 +276,12 @@ export default function Onboarding() {
                   });
                 }}
                 placeholder={`${t("Dish")} ${step}`}
-                className="w-full rounded-full border border-white/12 bg-[#181818] p-3.5 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#E85D75]/25"
+                className="w-full rounded-full border border-white/12 bg-[#181818] px-3.5 py-3 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-[#E85D75]/25"
               />
 
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-white/68 mb-3">{t("Some ideas")}</p>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="mt-3">
+                <p className="mb-2 text-[13px] font-semibold text-white/68">{t("Some ideas")}</p>
+                <div className="grid grid-cols-3 gap-2">
                   {ideaDishes.map((dish) => (
                     <button
                       key={dish.id}
@@ -299,17 +299,17 @@ export default function Onboarding() {
                           return next;
                         });
                       }}
-                      className="relative overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#181818] text-left shadow-sm"
+                      className="relative overflow-hidden rounded-[0.95rem] border border-white/10 bg-[#181818] text-left shadow-sm"
                     >
-                      <div className="aspect-[0.9] overflow-hidden">
+                      <div className="aspect-square overflow-hidden">
                         <img
                           src={getDishImageUrl(dish, "thumb")}
                           alt={dish.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.72)_100%)] px-2 py-2">
-                        <div className="text-[11px] font-medium leading-tight text-white line-clamp-2">
+                      <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.76)_100%)] px-1.5 py-1.5">
+                        <div className="line-clamp-2 text-[10px] font-semibold leading-tight text-white">
                           {dish.name}
                         </div>
                       </div>
@@ -323,7 +323,7 @@ export default function Onboarding() {
 
               {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
 
-              <div className="mt-5 flex items-center justify-between">
+              <div className="mt-4 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => {
@@ -341,7 +341,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={handleContinueName}
                     disabled={!currentName.trim()}
-                    className="w-14 h-14 rounded-full bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white flex items-center justify-center shadow-lg disabled:opacity-40"
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2BD36B] text-black shadow-[0_12px_28px_rgba(43,211,107,0.34)] disabled:opacity-40"
                     aria-label={t("Continue")}
                   >
                     <ArrowRight size={22} />
@@ -351,7 +351,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={persistNamesAndEnter}
                     disabled={trimmedNames.length !== 3}
-                    className="rounded-full px-6 py-3 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white font-semibold shadow-lg disabled:opacity-40"
+                    className="rounded-full bg-[#2BD36B] px-6 py-3 font-semibold text-black shadow-[0_12px_28px_rgba(43,211,107,0.34)] disabled:opacity-40"
                   >
                     {t("Enter DishList")}
                   </button>

@@ -1,6 +1,6 @@
 import { TAG_OPTIONS } from "./tags";
 
-export const PROFILE_REPRESENTATIVE_TAG_LIMIT = 4;
+export const PROFILE_REPRESENTATIVE_TAG_LIMIT = 3;
 
 export function normalizeRepresentativeTags(tags = [], limit = PROFILE_REPRESENTATIVE_TAG_LIMIT) {
   if (!Array.isArray(tags)) return [];

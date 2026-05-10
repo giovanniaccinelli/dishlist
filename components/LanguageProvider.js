@@ -51,7 +51,7 @@ const translations = {
     "Google sign-in failed.": "Accesso con Google non riuscito.",
     Appearance: "Aspetto",
     "Representative tags": "Tag rappresentativi",
-    "Choose up to 4 tags for your profile. Leave empty to use your most common dish tags.": "Scegli fino a 4 tag per il profilo. Lascia vuoto per usare quelli piu presenti nei tuoi piatti.",
+    "Choose up to 3 tags for your profile. Leave empty to use your most common dish tags.": "Scegli fino a 3 tag per il profilo. Lascia vuoto per usare quelli piu presenti nei tuoi piatti.",
     "Use automatic tags": "Usa tag automatici",
     "Could not update tags": "Impossibile aggiornare i tag",
     "Light mode": "Modalita chiara",

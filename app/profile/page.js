@@ -2103,7 +2103,7 @@ export default function Profile() {
                 </div>
                 <div className={`no-accent-border rounded-[1.45rem] p-4 ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
                   <div className={`text-sm leading-5 ${darkMode ? "text-white/58" : "text-black/54"}`}>
-                    {t("Choose up to 4 tags for your profile. Leave empty to use your most common dish tags.")}
+                    {t("Choose up to 3 tags for your profile. Leave empty to use your most common dish tags.")}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {TAG_OPTIONS.map((tag) => {

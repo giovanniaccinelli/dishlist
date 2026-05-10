@@ -21,12 +21,14 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
+import { resolveRepresentativeTags } from "../lib/profileTags";
+import { getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -117,6 +119,15 @@ export default function Dishlists() {
       const savedDishIds = Array.isArray(u.savedDishes) ? u.savedDishes : [];
       const toTryDishIds = Array.isArray(u.toTryDishes) ? u.toTryDishes : [];
       const uploadedDishes = uploadedByOwner.get(u.id) || [];
+      const allProfileDishes = Array.from(
+        new Map(
+          [...savedDishIds, ...toTryDishIds]
+            .map((dishId) => dishById.get(dishId))
+            .concat(uploadedDishes)
+            .filter((dish) => dish?.id)
+            .map((dish) => [dish.id, dish])
+        ).values()
+      );
       const storyStats = storyStatsByUser.get(u.id) || {};
       const previewDishes = [];
       const seenDishIds = new Set();
@@ -147,6 +158,8 @@ export default function Dishlists() {
         ...u,
         previewDishes,
         previewImages: previewDishes.map((dish) => dish.imageUrl),
+        representativeTags: resolveRepresentativeTags(u.representativeTags, allProfileDishes),
+        representativeTagsOverride: u.representativeTags,
         activeStories: [],
         hasActiveStory: Boolean(u.hasActiveStory),
         profileDishCount: savedDishIds.length + toTryDishIds.length + uploadedDishes.length,
@@ -200,6 +213,7 @@ export default function Dishlists() {
             ...userItem,
             previewDishes,
             previewImages: previewDishes.map((dish) => dish.imageUrl),
+            representativeTags: resolveRepresentativeTags(userItem.representativeTagsOverride, allDishesDishlist?.dishes || []),
             profileDishCount: Number(allDishesDishlist?.count || allDishesDishlist?.dishes?.length || 0),
             activeStories: userItem.activeStories || [],
             hasActiveStory: userItem.hasActiveStory,
@@ -489,122 +503,97 @@ export default function Dishlists() {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-2 gap-3.5">
+          {/*
+            Previous people card note:
+            "Two-column profile cards with avatar, follow button, and a 2x2 dish preview grid/no-image preview bar.
+            Kept aside conceptually so the card layout can be restored from git if needed; current UI is intentionally row-based."
+          */}
+          <div className="flex flex-col gap-3">
             {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
               const profileHref = isMe ? "/profile" : `/profile/${encodeURIComponent(u.id)}`;
               const alreadyFollowing = u.followers?.includes(user?.uid);
-              const previewMediaDishes = (u.previewDishes || []).filter((dish) => dish?.hasMedia !== false && dish?.imageUrl);
-              const previewNoImageDishes = (u.previewDishes || []).filter((dish) => dish?.hasMedia === false);
-              const showNoImagePreviewBar = previewNoImageDishes.length > 0 && previewMediaDishes.length === 0;
-              const previewCells = Array.from({ length: 4 }, (_, idx) => (
-                previewMediaDishes[idx] || { imageUrl: "", dishMode: "" }
-              ));
-              const hasAnyDishes = (u.profileDishCount || 0) > 0;
               const avatarTone = getAvatarTone(u.displayName || "");
+              const representativeTags = Array.isArray(u.representativeTags) ? u.representativeTags.slice(0, 3) : [];
+              const viewedAllStories =
+                user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid));
               return (
                 <div
+                  role="button"
+                  tabIndex={0}
                   key={u.id}
-                  className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
-                  style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
+                  className={`no-accent-border flex w-full items-center gap-3 rounded-[1.35rem] p-3 text-left shadow-[0_14px_32px_rgba(0,0,0,0.12)] transition active:scale-[0.99] ${
+                    darkMode ? "bg-[#111111] text-white" : "bg-white text-black"
+                  }`}
                   onClick={() => router.push(profileHref)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+                    e.preventDefault();
+                    router.push(profileHref);
+                  }}
                 >
-                  <div className="mb-2.5 flex items-stretch gap-2.5">
+                  <div
+                    className={`no-accent-border h-14 w-14 shrink-0 rounded-full p-[2px] ${
+                      (u.activeStories || []).length ? (viewedAllStories ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"
+                    }`}
+                  >
+                    <div className="no-accent-border h-full w-full rounded-full bg-[#F6F6F2] p-[2px]">
+                      <div
+                        className="no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black/10 text-lg font-bold"
+                        style={u.photoURL ? undefined : { backgroundColor: avatarTone.bg }}
+                      >
+                        {u.photoURL ? (
+                          <img
+                            src={u.photoURL}
+                            alt="Profile"
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span style={{ color: avatarTone.text }}>{u.displayName?.[0] || "U"}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[1rem] font-bold leading-tight">{u.displayName || "User"}</div>
+                    {representativeTags.length ? (
+                      <div className="mt-2 flex min-h-[1.45rem] flex-wrap gap-1.5">
+                        {representativeTags.map((tag) => (
+                          <span
+                            key={`${u.id}-${tag}`}
+                            className={`inline-flex items-center rounded-full border px-2 py-1 text-[9px] font-bold leading-none ${
+                              darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
+                            }`}
+                          >
+                            {t(tag)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  {!isMe ? (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        router.push(profileHref);
+                        handleFollow(u.id, alreadyFollowing);
                       }}
-                      className={`no-accent-border h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
+                      className={`people-follow-button no-accent-border shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-bold transition ${
+                        darkMode
+                          ? alreadyFollowing
+                            ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
+                            : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
+                          : alreadyFollowing
+                            ? "border-[#D8C9AF] bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418]"
+                            : "border-[#C7E3CB] bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32]"
+                      }`}
                     >
-                      <div className="no-accent-border w-full h-full rounded-full bg-[#F6F6F2] p-[2px]">
-                        <div
-                          className="no-accent-border w-full h-full rounded-full bg-black/10 flex items-center justify-center text-lg font-bold overflow-hidden"
-                          style={u.photoURL ? undefined : { backgroundColor: avatarTone.bg }}
-                        >
-                          {u.photoURL ? (
-                            <img
-                              src={u.photoURL}
-                              alt="Profile"
-                              loading="lazy"
-                              decoding="async"
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span style={{ color: avatarTone.text }}>{u.displayName?.[0] || "U"}</span>
-                          )}
-                        </div>
-                      </div>
+                      {alreadyFollowing ? t("Unfollow") : t("Follow")}
                     </button>
-                    <div className="flex min-h-12 min-w-0 flex-1 flex-col justify-between">
-                      <div className="min-w-0 text-sm font-semibold leading-tight">
-                        <div className="line-clamp-2">{u.displayName || "User"}</div>
-                      </div>
-                      {!isMe && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleFollow(u.id, alreadyFollowing);
-                          }}
-                          className={`people-follow-button no-accent-border mr-1 whitespace-nowrap rounded-full px-2 py-1 text-[9px] font-semibold border transition self-start ${
-                            darkMode
-                              ? alreadyFollowing
-                                ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
-                                : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
-                              : alreadyFollowing
-                                ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                                : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
-                          }`}
-                        >
-                          {alreadyFollowing ? t("Unfollow") : t("Follow")}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {hasAnyDishes ? (
-                    showNoImagePreviewBar ? (
-                      <div
-                        className={`no-accent-border rounded-[0.9rem] border-2 px-3 py-2 text-left text-[12px] font-bold leading-tight ${
-                          previewNoImageDishes[0]?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
-                        } ${darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"}`}
-                        style={{ borderColor: previewNoImageDishes[0]?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
-                      >
-                        <div className="truncate">{previewNoImageDishes[0]?.name || t("Untitled dish")}</div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2">
-                        {previewCells.map((previewDish, idx) => (
-                          <div
-                            key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
-                            className={`people-preview-dish no-accent-border relative aspect-square overflow-hidden rounded-lg border-2 ${
-                              previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
-                            } bg-neutral-100`}
-                            style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
-                          >
-                            {previewDish?.imageUrl ? (
-                              <img
-                                src={previewDish.imageUrl}
-                                alt="Dish preview"
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-white" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )
                   ) : null}
-
                 </div>
               );
             })}

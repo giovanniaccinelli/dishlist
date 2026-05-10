@@ -161,6 +161,7 @@ export default function Profile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
   const [canonicalDishlists, setCanonicalDishlists] = useState([]);
+  const [canonicalDishlistsLoaded, setCanonicalDishlistsLoaded] = useState(false);
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
@@ -354,16 +355,24 @@ export default function Profile() {
   useEffect(() => {
     if (!profileDocId) {
       setCanonicalDishlists([]);
+      setCanonicalDishlistsLoaded(false);
       return undefined;
     }
     let cancelled = false;
+    setCanonicalDishlistsLoaded(false);
     (async () => {
       try {
         const lists = await getAllDishlistsForUser(profileDocId);
-        if (!cancelled) setCanonicalDishlists(lists);
+        if (!cancelled) {
+          setCanonicalDishlists(lists);
+          setCanonicalDishlistsLoaded(true);
+        }
       } catch (error) {
         console.error("Failed to load canonical own-profile dishlists:", error);
-        if (!cancelled) setCanonicalDishlists([]);
+        if (!cancelled) {
+          setCanonicalDishlists([]);
+          setCanonicalDishlistsLoaded(true);
+        }
       }
     })();
     return () => {
@@ -1017,7 +1026,7 @@ export default function Profile() {
       dishes: dishlist.dishes || [],
     })),
   ].map(normalizeProfileDishlist);
-  const allDishlists = (canonicalDishlists.length ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const unfilteredActiveDishlist =

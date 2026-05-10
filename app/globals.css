@@ -391,6 +391,13 @@ html.dark .dish-mode-filter--large .dish-mode-control-btn svg {
   height: 1.9rem !important;
 }
 
+.dish-mode-control-btn .dish-mode-restaurant-icon,
+html.dark .dish-mode-control-btn .dish-mode-restaurant-icon,
+html.dark .dish-mode-filter--large .dish-mode-control-btn .dish-mode-restaurant-icon {
+  width: 1.55rem !important;
+  height: 1.55rem !important;
+}
+
 html.dark .dish-mode-control-btn--home.dish-mode-control-btn--selected {
   background: rgba(240, 166, 35, 0.18) !important;
 }

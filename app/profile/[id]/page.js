@@ -137,6 +137,7 @@ export default function PublicProfile() {
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
   const [canonicalDishlists, setCanonicalDishlists] = useState([]);
+  const [canonicalDishlistsLoaded, setCanonicalDishlistsLoaded] = useState(false);
   const [dishes, setDishes] = useState([]);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -267,16 +268,24 @@ export default function PublicProfile() {
   useEffect(() => {
     if (!profileDocId) {
       setCanonicalDishlists([]);
+      setCanonicalDishlistsLoaded(false);
       return undefined;
     }
     let cancelled = false;
+    setCanonicalDishlistsLoaded(false);
     (async () => {
       try {
         const lists = await getAllDishlistsForUser(profileDocId);
-        if (!cancelled) setCanonicalDishlists(lists);
+        if (!cancelled) {
+          setCanonicalDishlists(lists);
+          setCanonicalDishlistsLoaded(true);
+        }
       } catch (error) {
         console.error("Failed to load canonical public-profile dishlists:", error);
-        if (!cancelled) setCanonicalDishlists([]);
+        if (!cancelled) {
+          setCanonicalDishlists([]);
+          setCanonicalDishlistsLoaded(true);
+        }
       }
     })();
     return () => {
@@ -585,7 +594,7 @@ export default function PublicProfile() {
       dishes: dishlist.dishes || [],
     })),
   ].map(normalizeProfileDishlist);
-  const allDishlists = (canonicalDishlists.length ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const unfilteredActiveDishlist =

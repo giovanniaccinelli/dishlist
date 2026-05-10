@@ -30,7 +30,6 @@ import {
   dishModeMatches,
   DISH_MODE_ALL,
   DISH_MODE_COOKING,
-  DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
   usePersistentDishMode,
@@ -540,11 +539,6 @@ export default function Feed() {
     setShareOpen(true);
   };
 
-  const handleOpenRestaurantMap = (dish) => {
-    const placeId = typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
-    router.push(placeId ? `/map?placeId=${encodeURIComponent(placeId)}` : "/map");
-  };
-
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
     const dishToAdd = dishlistPickerDish;
@@ -687,13 +681,6 @@ export default function Feed() {
             dismissOnAction={false}
             actionLabel="+"
             actionClassName="add-action-btn w-14 h-14 text-[36px]"
-            onSecondaryAction={selectedDishMode === DISH_MODE_RESTAURANT ? handleOpenRestaurantMap : undefined}
-            secondaryActionLabel={
-              selectedDishMode === DISH_MODE_RESTAURANT
-                ? (dish) => (String(dish?.dishMode || "").toLowerCase() === DISH_MODE_RESTAURANT ? "map" : null)
-                : null
-            }
-            secondaryActionClassName="add-action-btn action-btn-white-ring h-14 w-14"
             actionToast="Added to DishList"
             trackSwipes={false}
             onAuthRequired={() => setShowAuthPrompt(true)}
@@ -746,13 +733,6 @@ export default function Feed() {
               dismissOnAction={false}
               actionLabel="+"
               actionClassName="add-action-btn w-14 h-14 text-[36px]"
-              onSecondaryAction={selectedDishMode === DISH_MODE_RESTAURANT ? handleOpenRestaurantMap : undefined}
-              secondaryActionLabel={
-                selectedDishMode === DISH_MODE_RESTAURANT
-                  ? (dish) => (String(dish?.dishMode || "").toLowerCase() === DISH_MODE_RESTAURANT ? "map" : null)
-                  : null
-              }
-              secondaryActionClassName="add-action-btn action-btn-white-ring h-14 w-14"
               actionToast="Added to DishList"
               trackSwipes={false}
               onAuthRequired={() => setShowAuthPrompt(true)}

@@ -5,8 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../app/lib/firebase";
 import { getOrCreateConversation, sendMessage } from "../app/lib/firebaseHelpers";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ShareModal({ open, onClose, dish, currentUser }) {
+  const { t, darkMode } = useLanguage();
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -65,29 +67,33 @@ export default function ShareModal({ open, onClose, dish, currentUser }) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-5"
+            className={`w-full max-w-md max-h-[85vh] overflow-y-auto rounded-3xl border p-5 ${
+              darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/8 bg-white text-black"
+            }`}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-semibold text-black">Share Dish</h3>
-              <button onClick={onClose} className="text-sm text-black/60">
-                Close
+              <h3 className={`text-xl font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Share Dish")}</h3>
+              <button onClick={onClose} className={`text-sm ${darkMode ? "text-white/62" : "text-black/60"}`}>
+                {t("Close")}
               </button>
             </div>
             <input
               type="text"
-              placeholder="Search people..."
+              placeholder={t("Search people...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full p-3 mb-3 rounded-xl bg-[#F6F6F2] border border-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20"
+              className={`mb-3 w-full rounded-xl border p-3 focus:outline-none focus:ring-2 ${
+                darkMode ? "border-white/12 bg-[#1B1B1B] text-white placeholder:text-white/35 focus:ring-white/10" : "border-black/10 bg-[#F6F6F2] text-black focus:ring-black/20"
+              }`}
             />
             {loading ? (
-              <div className="text-black/60">Loading...</div>
+              <div className={darkMode ? "text-white/60" : "text-black/60"}>{t("Loading...")}</div>
             ) : filtered.length === 0 ? (
-              <div className="bg-[#f0f0ea] rounded-xl h-24 flex items-center justify-center text-gray-500">
-                No users found.
+              <div className={`flex h-24 items-center justify-center rounded-xl ${darkMode ? "bg-white/8 text-white/58" : "bg-[#f0f0ea] text-gray-500"}`}>
+                {t("No users found.")}
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
@@ -96,9 +102,11 @@ export default function ShareModal({ open, onClose, dish, currentUser }) {
                     key={u.id}
                     onClick={() => handleShare(u)}
                     disabled={sending}
-                    className="bg-white rounded-2xl p-4 shadow-md border border-black/5 flex items-center gap-3 text-left"
+                    className={`flex items-center gap-3 rounded-2xl border p-4 text-left shadow-md ${
+                      darkMode ? "border-white/10 bg-[#1A1A1A] text-white" : "border-black/5 bg-white text-black"
+                    }`}
                   >
-                    <div className="w-11 h-11 rounded-full bg-black/10 flex items-center justify-center text-lg font-bold text-black">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-full text-lg font-bold ${darkMode ? "bg-white/12 text-white" : "bg-black/10 text-black"}`}>
                       {u.photoURL ? (
                         <img src={u.photoURL} alt="Profile" className="w-11 h-11 rounded-full object-cover" />
                       ) : (
@@ -106,8 +114,8 @@ export default function ShareModal({ open, onClose, dish, currentUser }) {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-base font-semibold truncate text-black">{u.displayName || "User"}</div>
-                      <div className="text-xs text-black/60">Send dish</div>
+                      <div className={`truncate text-base font-semibold ${darkMode ? "text-white" : "text-black"}`}>{u.displayName || "User"}</div>
+                      <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/60"}`}>{t("Send dish")}</div>
                     </div>
                   </button>
                 ))}

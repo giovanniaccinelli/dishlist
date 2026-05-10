@@ -1299,9 +1299,10 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => setProfileMapOpen(true)}
-            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
+            className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
               darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
             }`}
+            style={{ borderColor: "#E64646" }}
           >
             <RestaurantForkKnifeIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
             {t("Restaurants")}
@@ -2397,11 +2398,12 @@ export default function Profile() {
                                 onClick={() => toggleDishSelection(dish)}
                                 className={`overflow-hidden rounded-[1rem] border-2 text-left ${
                                   selected
-                                    ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/35"
+                                    ? "border-[#2BD36B] ring-2 ring-[#2BD36B]/55"
                                     : String(dish?.dishMode || "").toLowerCase() === "restaurant"
                                       ? "restaurant-accent-border"
                                       : "default-accent-border"
                                 }`}
+                                style={selected ? { borderColor: "#2BD36B", boxShadow: "0 0 0 3px rgba(43,211,107,0.35)" } : undefined}
                               >
                                 <img
                                   src={getDishImageUrl(dish, "thumb")}

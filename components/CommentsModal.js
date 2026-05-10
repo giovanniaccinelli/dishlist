@@ -52,6 +52,7 @@ export default function CommentsModal({
   })();
 
   const hasText = Boolean(newComment.trim());
+  const compact = orderedComments.length <= 2 && !expanded;
 
   return (
     <AnimatePresence>
@@ -64,11 +65,17 @@ export default function CommentsModal({
           onClick={onClose}
         >
           <motion.div
-            className={`flex ${expanded ? "h-[calc(100dvh-1rem)]" : "h-[78dvh]"} w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border shadow-[0_28px_80px_rgba(0,0,0,0.24)] sm:rounded-[1.7rem] ${
+            className={`flex ${expanded ? "h-[calc(100dvh-1rem)]" : compact ? "max-h-[62dvh] min-h-[18rem]" : "h-[78dvh]"} w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border shadow-[0_28px_80px_rgba(0,0,0,0.24)] sm:rounded-[1.7rem] ${
               darkMode
-                ? "border-white/12 bg-[#090909] text-white"
+                ? "border-white/12 bg-[#171717] text-white"
                 : "border-black/8 bg-white text-black"
             }`}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 180 }}
+            dragElastic={{ top: 0.02, bottom: 0.28 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 90 || info.velocity.y > 650) onClose();
+            }}
             initial={{ y: 24, scale: 0.98, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 24, scale: 0.98, opacity: 0 }}

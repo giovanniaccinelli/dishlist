@@ -33,13 +33,13 @@ export function RestaurantMapIcon({ className = "", strokeWidth = 1.9 }) {
 export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.9 }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M7.2 3.9v7.2" />
-      <path d="M4.8 3.9v7.2" />
-      <path d="M9.6 3.9v7.2" />
-      <path d="M4.8 8.5h4.8" />
-      <path d="M7.2 11.1v9" />
-      <path d="M16.7 4.1c1.8 1.7 2.8 4.1 2.8 6.8v.5c0 1.4-.8 2.7-2 3.3" />
-      <path d="M16.7 4.1v16" />
+      <path d="M6.2 3.8v6.1" />
+      <path d="M8.5 3.8v6.1" />
+      <path d="M10.8 3.8v6.1" />
+      <path d="M6.2 9.9c0 1.45 1.05 2.55 2.3 2.55s2.3-1.1 2.3-2.55" />
+      <path d="M8.5 12.45v7.75" />
+      <path d="M16.7 3.9c-1.65 1.55-2.55 3.65-2.55 6.25v2.25h4.85" />
+      <path d="M16.7 3.9v16.3" />
     </svg>
   );
 }
@@ -107,9 +107,9 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const showFlashMessage = (mode) => {
     const nextMessage =
       mode === DISH_MODE_COOKING
-        ? t("Showing home dishes")
+        ? t("Eat in")
         : mode === DISH_MODE_RESTAURANT
-          ? t("Showing restaurant dishes")
+          ? t("Eat out")
           : t("Show all");
     setFlashMessage(nextMessage);
     setFlashMode(mode);

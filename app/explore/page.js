@@ -388,9 +388,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
         <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
           <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
             <div className="flex items-center gap-2">
-              <span className={`explore-category-pill no-accent-border inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${
-                darkMode ? "border-[#E64646]/45 bg-[#241010] text-[#FF7A7A]" : "border-[#E64646]/45 bg-[#FFF1F1] text-[#B33B3B]"
-              }`}>
+              <span className="explore-category-pill no-accent-border inline-flex items-center rounded-full border border-transparent bg-transparent px-4 py-1.5 text-[1.05rem] font-semibold text-white">
                 {t(title)}
               </span>
               <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />

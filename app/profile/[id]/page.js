@@ -136,6 +136,7 @@ export default function PublicProfile() {
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
+  const [canonicalDishlists, setCanonicalDishlists] = useState([]);
   const [dishes, setDishes] = useState([]);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -262,6 +263,26 @@ export default function PublicProfile() {
     if (!queryDishlistId) return;
     setActiveDishlistId(queryDishlistId);
   }, []);
+
+  useEffect(() => {
+    if (!profileDocId) {
+      setCanonicalDishlists([]);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const lists = await getAllDishlistsForUser(profileDocId);
+        if (!cancelled) setCanonicalDishlists(lists);
+      } catch (error) {
+        console.error("Failed to load canonical public-profile dishlists:", error);
+        if (!cancelled) setCanonicalDishlists([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileDocId]);
 
   useEffect(() => {
     if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
@@ -516,6 +537,21 @@ export default function PublicProfile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+  const sortDishlistDishes = (dishesList) =>
+    [...(dishesList || [])].sort(
+      (a, b) =>
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0)
+    );
+  const normalizeProfileDishlist = (dishlist) => {
+    const dishes = sortDishlistDishes(dishlist?.dishes || []);
+    return {
+      ...dishlist,
+      dishes,
+      dishIds: dishes.map((dish) => dish.id).filter(Boolean),
+      count: dishes.length,
+    };
+  };
   const allDishesCollection = Array.from(
     new Map(
       [...dishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
@@ -533,7 +569,7 @@ export default function PublicProfile() {
     ).values()
   );
 
-  const allDishlists = [
+  const localDishlists = [
     { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
     { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
     { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
@@ -548,7 +584,8 @@ export default function PublicProfile() {
       ...dishlist,
       dishes: dishlist.dishes || [],
     })),
-  ];
+  ].map(normalizeProfileDishlist);
+  const allDishlists = (canonicalDishlists.length ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const unfilteredActiveDishlist =

@@ -14,6 +14,7 @@ import {
   deleteImageByUrl,
   saveDishToFirestore,
   getUploadedDishesForUserAliases,
+  getAllDishlistsForUser,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   removeDishFromAllUsers,
@@ -159,6 +160,7 @@ export default function Profile() {
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
+  const [canonicalDishlists, setCanonicalDishlists] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
@@ -223,6 +225,7 @@ export default function Profile() {
   const hasStories = activeStories.length > 0;
   const avatarTone = getAvatarTone(effectiveDisplayName);
   const profileIdCandidates = getProfileIdCandidates(user?.uid, profileUser);
+  const profileDocId = profileUser?.id || user?.uid || "";
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -344,6 +347,26 @@ export default function Profile() {
       document.body.style.overflow = previousOverflow;
     };
   }, [editProfileModal]);
+
+  useEffect(() => {
+    if (!profileDocId) {
+      setCanonicalDishlists([]);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const lists = await getAllDishlistsForUser(profileDocId);
+        if (!cancelled) setCanonicalDishlists(lists);
+      } catch (error) {
+        console.error("Failed to load canonical own-profile dishlists:", error);
+        if (!cancelled) setCanonicalDishlists([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileDocId]);
 
   useEffect(() => {
     if (!editProfileModal) return;
@@ -943,6 +966,21 @@ export default function Profile() {
   };
 
   const getStoryPushCount = (dish) => Number(storyPushStats[dish?.id]?.count || 0);
+  const sortDishlistDishes = (dishesList) =>
+    [...(dishesList || [])].sort(
+      (a, b) =>
+        getStoryPushCount(b) - getStoryPushCount(a) ||
+        Number(b?.saves || 0) - Number(a?.saves || 0)
+    );
+  const normalizeProfileDishlist = (dishlist) => {
+    const dishes = sortDishlistDishes(dishlist?.dishes || []);
+    return {
+      ...dishlist,
+      dishes,
+      dishIds: dishes.map((dish) => dish.id).filter(Boolean),
+      count: dishes.length,
+    };
+  };
   const allDishesCollection = Array.from(
     new Map(
       [...uploadedDishes, ...savedDishes, ...toTryDishes, ...customDishlists.flatMap((dishlist) => dishlist.dishes || [])]
@@ -960,7 +998,7 @@ export default function Profile() {
     ).values()
   );
 
-  const allDishlists = [
+  const localDishlists = [
     { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
     { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
     { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
@@ -975,7 +1013,8 @@ export default function Profile() {
       ...dishlist,
       dishes: dishlist.dishes || [],
     })),
-  ];
+  ].map(normalizeProfileDishlist);
+  const allDishlists = (canonicalDishlists.length ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const unfilteredActiveDishlist =

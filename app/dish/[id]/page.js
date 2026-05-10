@@ -445,6 +445,12 @@ export default function DishDetail() {
     }
   }, [editDishMode, editOpen, editStep]);
 
+  useEffect(() => {
+    if (editOpen && editDishMode !== DISH_MODE_RESTAURANT && editRating !== 0) {
+      setEditRating(0);
+    }
+  }, [editDishMode, editOpen, editRating]);
+
   const handleSaveEdit = async () => {
     if (!editingDish?.id || !userId) return;
     if (editingDish.owner !== userId) {
@@ -487,7 +493,7 @@ export default function DishDetail() {
         recipeIngredients: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeIngredients.trim(),
         recipeMethod: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeMethod.trim(),
         tags: editTags,
-        rating: editRating,
+        rating: editDishMode === DISH_MODE_RESTAURANT ? editRating : 0,
         isPublic: editIsPublic,
         dishMode: editDishMode,
         restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,
@@ -1052,10 +1058,12 @@ export default function DishDetail() {
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
                   disabled={savingEdit}
                 />
-                <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                  <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>Rating</div>
-                  <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
-                </div>
+                {editDishMode === DISH_MODE_RESTAURANT ? (
+                  <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
+                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>Rating</div>
+                    <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
+                  </div>
+                ) : null}
                 <div className="mb-5">
                   <button
                     type="button"

@@ -186,7 +186,7 @@ export default function UploadPage() {
           recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
-          rating: dishRating,
+          rating: isRestaurantUpload ? dishRating : 0,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           ...imageFields,
@@ -213,7 +213,7 @@ export default function UploadPage() {
           recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
-          rating: dishRating,
+          rating: isRestaurantUpload ? dishRating : 0,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           isPublic: dishIsPublic,
@@ -282,6 +282,10 @@ export default function UploadPage() {
   const visibleUploadSteps = isRestaurantUpload
     ? UPLOAD_STEP_PREVIEW.filter((step) => step.label !== "Recipe")
     : UPLOAD_STEP_PREVIEW;
+
+  useEffect(() => {
+    if (!isRestaurantUpload && dishRating !== 0) setDishRating(0);
+  }, [dishRating, isRestaurantUpload]);
 
   useEffect(() => {
     if (isRestaurantUpload && uploadStep === 1) {
@@ -605,12 +609,14 @@ export default function UploadPage() {
                   rows={2}
                   disabled={loadingUpload}
                 />
-                <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                  <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                    {language === "it" ? "Valutazione" : "Rating"}
+                {isRestaurantUpload ? (
+                  <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
+                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                      {language === "it" ? "Valutazione" : "Rating"}
+                    </div>
+                    <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
                   </div>
-                  <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
-                </div>
+                ) : null}
                 <div className="mb-4">
                   <button
                     type="button"

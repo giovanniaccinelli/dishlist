@@ -1304,9 +1304,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       </div>
                     )
                   ) : null}
-                  <div className="mt-1 block">
-                    <RatingStars value={currentCard.rating} size="text-[1.05rem]" readOnly />
-                  </div>
+                  {currentCard?.dishMode === "restaurant" ? (
+                    <div className="mt-1 block">
+                      <RatingStars value={currentCard.rating} size="text-[1.05rem]" readOnly />
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

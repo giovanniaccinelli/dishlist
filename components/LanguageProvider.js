@@ -339,6 +339,11 @@ const translations = {
     fresh: "fresco",
     asian: "asiatico",
     fried: "fritto",
+    delivery: "delivery",
+    dessert: "dolce",
+    american: "americano",
+    rice: "riso",
+    "fast food": "fast food",
   },
 };
 

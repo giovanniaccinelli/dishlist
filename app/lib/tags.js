@@ -27,6 +27,11 @@ export const TAG_OPTIONS = [
   "fresh",
   "asian",
   "fried",
+  "delivery",
+  "dessert",
+  "american",
+  "rice",
+  "fast food",
 ];
 
 const TAG_COLOR_MAP = {
@@ -58,6 +63,11 @@ const TAG_COLOR_MAP = {
   fresh: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]",
   asian: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]",
   fried: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]",
+  delivery: "bg-[#E0F2FE] text-[#075985] border-[#38BDF8]",
+  dessert: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]",
+  american: "bg-[#DBEAFE] text-[#1E3A8A] border-[#EF4444]",
+  rice: "bg-[#FEFCE8] text-[#713F12] border-[#FDE047]",
+  "fast food": "bg-[#FFE4E6] text-[#9F1239] border-[#FB7185]",
 };
 
 const TAG_DARK_COLOR_MAP = {
@@ -89,6 +99,11 @@ const TAG_DARK_COLOR_MAP = {
   fresh: "border-[#34D399]/75 bg-[#08251A] text-[#A7F3D0]",
   asian: "border-[#F87171]/75 bg-[#341112] text-[#FECACA]",
   fried: "border-[#FB923C]/75 bg-[#321A0A] text-[#FED7AA]",
+  delivery: "border-[#38BDF8]/75 bg-[#082436] text-[#BAE6FD]",
+  dessert: "border-[#F472B6]/75 bg-[#321325] text-[#FBCFE8]",
+  american: "border-[#EF4444]/75 bg-[#0A1E3A] text-[#BFDBFE]",
+  rice: "border-[#FDE047]/75 bg-[#2A2407] text-[#FEF9C3]",
+  "fast food": "border-[#FB7185]/75 bg-[#35111A] text-[#FFE4E6]",
 };
 
 export function getTagChipClass(tag, active) {

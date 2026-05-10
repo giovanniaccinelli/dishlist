@@ -138,9 +138,81 @@ function ItalianFlagIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
       <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="#fff" />
-      <path d="M5.9 5.2h4.7v13.6H5.9a2.4 2.4 0 0 1-2.4-2.4V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#229246" />
-      <path d="M13.4 5.2h4.7a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4h-4.7V5.2Z" fill="#CE2B37" />
+      <path d="M5.9 5.2h4.25v13.6H5.9a2.4 2.4 0 0 1-2.4-2.4V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#229246" />
+      <path d="M13.85 5.2h4.25a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4h-4.25V5.2Z" fill="#CE2B37" />
       <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.28" />
+    </svg>
+  );
+}
+
+function FriedIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M7.1 8.2h9.8l-1.1 10.2a2 2 0 0 1-2 1.8H10.2a2 2 0 0 1-2-1.8L7.1 8.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M8.2 8.2 7.4 4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M11.1 8.2 10.8 3.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M14 8.2 14.4 3.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M16.7 8.2 17.5 4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9.2 12.2h5.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.9" />
+    </svg>
+  );
+}
+
+function DeliveryScooterIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.5 13.8h7.4l2-4.2h3.2c1.4 0 2.5 1.1 2.5 2.5v1.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.2 9.2h5.9l-1.2 4.6H5.4l1.8-4.6Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
+      <path d="M15.3 9.6V6.8h2.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="7" cy="17" r="2.1" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18" cy="17" r="2.1" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M9.1 17h6.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DessertIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6 11.2h12l-1.1 6.3a2.4 2.4 0 0 1-2.4 2H9.5a2.4 2.4 0 0 1-2.4-2L6 11.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M7.5 11.2c.8-2.5 2.3-3.8 4.5-3.8s3.7 1.3 4.5 3.8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <circle cx="12" cy="6.2" r="1.3" fill="currentColor" />
+      <path d="M8.8 14.3h6.4" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.85" />
+    </svg>
+  );
+}
+
+function AmericanFlagIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="#fff" />
+      <path d="M3.5 7.4h17M3.5 10h17M3.5 12.6h17M3.5 15.2h17M3.5 17.8h17" stroke="#B22234" strokeWidth="1.2" />
+      <path d="M5.9 5.2h6.1v6.7H3.5V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#3C3B6E" />
+      <path d="M5.2 7.1h.01M7.1 7.1h.01M9 7.1h.01M10.9 7.1h.01M6.1 9h.01M8 9h.01M9.9 9h.01" stroke="#fff" strokeWidth="1.1" strokeLinecap="round" />
+      <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.28" />
+    </svg>
+  );
+}
+
+function RiceIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.6 13.2h12.8l-1.2 4.2a3 3 0 0 1-2.9 2.2H9.7a3 3 0 0 1-2.9-2.2l-1.2-4.2Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
+      <ellipse cx="12" cy="12.8" rx="6.7" ry="2.3" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M8.4 10.2c.6-1.2 1.4-1.8 2.3-1.8.8 0 1.2.6 1.3 1.7" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M12.6 9.8c.5-1.3 1.3-2 2.3-2 .8 0 1.3.5 1.5 1.5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FastFoodIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.7 11.5h9.9c-.4-2.8-2.2-4.5-5-4.5s-4.5 1.7-4.9 4.5Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.65" />
+      <path d="M5.4 14.2h10.5" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M6.4 16.8h8.5" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M18.2 7.2h2.2l-1 12.1h-3l-1-12.1h2.8Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M16 4.4h3.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -314,7 +386,12 @@ const TAG_DECOR = {
   aesthetic: { icon: Camera, iconClass: "text-[#DB2777]", pillClass: "bg-[#FCE7F3] text-[#831843] border-[#F472B6]" },
   fresh: { icon: null, pillClass: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]" },
   asian: { icon: null, pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]" },
-  fried: { icon: null, pillClass: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]" },
+  fried: { icon: FriedIcon, iconClass: "text-[#C46A1A]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]" },
+  delivery: { icon: DeliveryScooterIcon, iconClass: "text-[#0EA5E9]", iconSize: "h-[1.55rem] w-[1.55rem]", pillClass: "bg-[#E0F2FE] text-[#075985] border-[#38BDF8]" },
+  dessert: { icon: DessertIcon, iconClass: "text-[#DB2777]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]" },
+  american: { icon: AmericanFlagIcon, iconClass: "text-black/50", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#EF4444]" },
+  rice: { icon: RiceIcon, iconClass: "text-[#C8A31B]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FEFCE8] text-[#713F12] border-[#FDE047]" },
+  "fast food": { icon: FastFoodIcon, iconClass: "text-[#E11D48]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FFE4E6] text-[#9F1239] border-[#FB7185]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {

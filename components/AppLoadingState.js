@@ -47,23 +47,19 @@ export function PeopleGridLoading({ searching = false }) {
   return (
     <div>
       {searching ? <div className="mb-3 text-sm font-medium text-black/45">Searching people...</div> : null}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-3">
         {Array.from({ length: searching ? 4 : 6 }).map((_, idx) => (
-          <div key={idx} className="overflow-hidden rounded-2xl border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
-            <div className="mb-3 flex items-start gap-3">
-              <PulseBlock className="h-10 w-10 rounded-full" />
-              <div className="min-w-0 flex-1 pt-1">
-                <PulseBlock className="mb-2 h-3.5 w-24 rounded-full" />
+          <div key={idx} className="flex items-center gap-3 rounded-[1.35rem] border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
+            <PulseBlock className="h-14 w-14 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1">
+              <PulseBlock className="mb-2 h-4 w-32 rounded-full" />
+              <div className="flex gap-1.5">
+                <PulseBlock className="h-5 w-14 rounded-full" />
+                <PulseBlock className="h-5 w-16 rounded-full" />
+                <PulseBlock className="h-5 w-12 rounded-full" />
               </div>
             </div>
-            <div className="mb-3 grid grid-cols-2 gap-2">
-              {Array.from({ length: 4 }).map((_, imageIdx) => (
-                <PulseBlock key={imageIdx} className="aspect-square rounded-lg" />
-              ))}
-            </div>
-            <div className="flex justify-end">
-              <PulseBlock className="h-8 w-20 rounded-full" />
-            </div>
+            <PulseBlock className="h-9 w-20 shrink-0 rounded-full" />
           </div>
         ))}
       </div>
@@ -73,23 +69,19 @@ export function PeopleGridLoading({ searching = false }) {
 
 export function PeopleInlineLoading() {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col gap-3">
       {Array.from({ length: 2 }).map((_, idx) => (
-        <div key={idx} className="overflow-hidden rounded-2xl border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
-          <div className="mb-3 flex items-start gap-3">
-            <PulseBlock className="h-10 w-10 rounded-full" />
-            <div className="min-w-0 flex-1 pt-1">
-              <PulseBlock className="mb-2 h-3.5 w-24 rounded-full" />
+        <div key={idx} className="flex items-center gap-3 rounded-[1.35rem] border border-black/6 bg-white/82 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.05)]">
+          <PulseBlock className="h-14 w-14 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1">
+            <PulseBlock className="mb-2 h-4 w-32 rounded-full" />
+            <div className="flex gap-1.5">
+              <PulseBlock className="h-5 w-14 rounded-full" />
+              <PulseBlock className="h-5 w-16 rounded-full" />
+              <PulseBlock className="h-5 w-12 rounded-full" />
             </div>
           </div>
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            {Array.from({ length: 4 }).map((_, imageIdx) => (
-              <PulseBlock key={imageIdx} className="aspect-square rounded-lg" />
-            ))}
-          </div>
-          <div className="flex justify-end">
-            <PulseBlock className="h-8 w-20 rounded-full" />
-          </div>
+          <PulseBlock className="h-9 w-20 shrink-0 rounded-full" />
         </div>
       ))}
     </div>

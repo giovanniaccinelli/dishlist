@@ -1043,12 +1043,15 @@ export default function Profile() {
   const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
+  const getVisibleDishlistDishes = (dishlist) =>
+    (dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
+  const getDishlistPreviewDishes = (dishlist) => getVisibleDishlistDishes(dishlist).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
-        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+        dishes: getVisibleDishlistDishes(unfilteredActiveDishlist),
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
@@ -1466,7 +1469,7 @@ export default function Profile() {
               ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
-              const preview = [...(dishlist.dishes || [])].slice(0, 4);
+              const preview = getDishlistPreviewDishes(dishlist);
               return (
                 <button
                   key={dishlist.id}
@@ -2285,7 +2288,7 @@ export default function Profile() {
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
-                  const preview = [...(dishlist.dishes || [])].slice(0, 4);
+                  const preview = getDishlistPreviewDishes(dishlist);
                   return (
                     <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
                       darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
@@ -2488,7 +2491,7 @@ export default function Profile() {
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {allDishlists.map((dishlist) => {
-                        const preview = [...(dishlist.dishes || [])].slice(0, 4);
+                        const preview = getDishlistPreviewDishes(dishlist);
                         const selected = dishlist.id === createSourceDishlist?.id;
                         return (
                           <button

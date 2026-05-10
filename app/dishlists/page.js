@@ -485,6 +485,7 @@ export default function Dishlists() {
           <div className="grid grid-cols-2 gap-3.5">
             {visibleUsers.map((u) => {
               const isMe = user?.uid === u.id;
+              const profileHref = isMe ? "/profile" : `/profile/${encodeURIComponent(u.id)}`;
               const alreadyFollowing = u.followers?.includes(user?.uid);
               const previewCells = Array.from({ length: 4 }, (_, idx) => (
                 u.previewDishes?.[idx] || { imageUrl: "", dishMode: "" }
@@ -496,14 +497,15 @@ export default function Dishlists() {
                   key={u.id}
                   className={`bg-white rounded-2xl p-2.5 shadow-md relative overflow-hidden cursor-pointer ${hasAnyDishes ? "" : "min-h-[5.8rem]"}`}
                   style={{ contentVisibility: "auto", containIntrinsicSize: hasAnyDishes ? "226px" : "96px" }}
-                  onClick={() => router.push(`/profile/${encodeURIComponent(u.id)}`)}
+                  onClick={() => router.push(profileHref)}
                 >
                   <div className="mb-2.5 flex items-stretch gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
-                        router.push(`/profile/${encodeURIComponent(u.id)}`);
+                        e.stopPropagation();
+                        router.push(profileHref);
                       }}
                       className={`no-accent-border h-12 w-12 shrink-0 rounded-full p-[2px] ${(u.activeStories || []).length ? ((user?.uid && (u.activeStories || []).every((story) => (story.viewedBy || []).includes(user.uid))) ? "bg-[#C6C6BF]" : "bg-[#2BD36B]") : "bg-transparent"}`}
                     >

@@ -597,12 +597,15 @@ export default function PublicProfile() {
   const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
 
   const showingDishlistOverview = activeDishlistId === "overview";
+  const getVisibleDishlistDishes = (dishlist) =>
+    (dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode));
+  const getDishlistPreviewDishes = (dishlist) => getVisibleDishlistDishes(dishlist).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
-        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+        dishes: getVisibleDishlistDishes(unfilteredActiveDishlist),
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
@@ -810,7 +813,7 @@ export default function PublicProfile() {
               ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
-              const preview = [...(dishlist.dishes || [])].slice(0, 4);
+              const preview = getDishlistPreviewDishes(dishlist);
               return (
                 <button
                   key={dishlist.id}
@@ -1064,7 +1067,7 @@ export default function PublicProfile() {
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {allDishlists.map((dishlist) => {
-                  const preview = [...(dishlist.dishes || [])].slice(0, 4);
+                  const preview = getDishlistPreviewDishes(dishlist);
                   return (
                     <button
                       key={dishlist.id}

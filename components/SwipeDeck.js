@@ -260,7 +260,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   showStoryHistoryCounter = false,
 }, ref) {
   const router = useRouter();
-  const { darkMode } = useLanguage();
+  const { darkMode, t } = useLanguage();
   const SWIPE_EJECT_THRESHOLD = 70;
 
   const [deck, setDeck] = useState([]);
@@ -283,6 +283,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [comments, setComments] = useState([]);
   const [dishCommentCount, setDishCommentCount] = useState(0);
   const [recipeCommentCount, setRecipeCommentCount] = useState(0);
+  const [recipePreviewComment, setRecipePreviewComment] = useState(null);
   const [commentsScope, setCommentsScope] = useState("dish");
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -392,6 +393,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setComments([]);
     setDishCommentCount(0);
     setRecipeCommentCount(0);
+    setRecipePreviewComment(null);
     setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
@@ -402,6 +404,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       ]);
       setDishCommentCount(Array.isArray(dishItems) ? dishItems.length : 0);
       setRecipeCommentCount(Array.isArray(recipeItems) ? recipeItems.length : 0);
+      setRecipePreviewComment(Array.isArray(recipeItems) ? recipeItems[0] || null : null);
     })();
   }, [currentCard?.id, onCardViewed]);
 
@@ -425,6 +428,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const hasMethodText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
+  const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -633,6 +637,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
+      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -647,6 +652,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
+      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -979,7 +985,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(false);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      !showRecipe ? "bg-white text-black" : "text-white/80"
+                      !visibleRecipe ? "bg-white text-black" : "text-white/80"
                     }`}
                   >
                     dish
@@ -992,7 +998,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(true);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      showRecipe ? "bg-white text-black" : "text-white/80"
+                      visibleRecipe ? "bg-white text-black" : "text-white/80"
                     }`}
                   >
                     recipe
@@ -1134,9 +1140,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !showRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
+                    !visibleRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
                   }`}
-                  style={!showRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={!visibleRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   dish
                 </button>
@@ -1148,9 +1154,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    showRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
+                    visibleRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
                   }`}
-                  style={showRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={visibleRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   recipe
                 </button>
@@ -1160,14 +1166,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           <motion.div
             className="absolute inset-0"
             style={{ transformStyle: "preserve-3d" }}
-            animate={{ rotateY: showRecipe ? 180 : 0 }}
+            animate={{ rotateY: visibleRecipe ? 180 : 0 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
           >
             <div
-              className={`absolute inset-0 ${showRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
+              className={`absolute inset-0 ${visibleRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!showRecipe && hasAnyRecipeText && !currentCardRecipeOnly ? (
+              {!visibleRecipe && hasAnyRecipeText && !currentCardRecipeOnly ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -1179,12 +1185,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {renderImage(currentCard, {
-                active: !showRecipe,
+                active: !visibleRecipe,
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },
               })}
-              {!showRecipe && isDishVideo(currentCard) ? (
+              {!visibleRecipe && isDishVideo(currentCard) ? (
                 <div
                   data-no-drag="true"
                   className="absolute inset-0 z-[11]"
@@ -1199,7 +1205,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-hidden="true"
                 />
               ) : null}
-              {!showRecipe ? (
+              {!visibleRecipe ? (
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{
@@ -1209,7 +1215,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   }}
                 />
               ) : null}
-              {!showRecipe ? (
+              {!visibleRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">
@@ -1318,7 +1324,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <div
               className={`absolute inset-0 p-6 pt-16 overflow-hidden ${
                 darkMode ? "bg-[#101010] text-white" : "bg-white text-black"
-              } ${showRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
+              } ${visibleRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
               <button
@@ -1443,6 +1449,57 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     </p>
                   </div>
                   ) : null}
+                  <button
+                    type="button"
+                    data-no-drag="true"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      openComments("recipe");
+                    }}
+                    className={`pointer-events-auto flex w-full shrink-0 items-center gap-3 rounded-[1.25rem] border-2 ${restaurantAccentBorder} px-3 py-3 text-left ${
+                      darkMode ? "bg-[#181818] text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    {recipePreviewComment ? (
+                      <>
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[12px] font-bold ${
+                          darkMode ? "bg-white/12 text-white/70" : "bg-black/10 text-black/70"
+                        }`}>
+                          {recipePreviewComment.userPhotoURL ? (
+                            <img
+                              src={recipePreviewComment.userPhotoURL}
+                              alt={recipePreviewComment.userName || "User"}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            recipePreviewComment.userName?.[0] || "U"
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className={`truncate text-[13px] leading-5 ${darkMode ? "text-white/82" : "text-black/78"}`}>
+                            <span className={`font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                              {recipePreviewComment.userName || "User"}
+                            </span>{" "}
+                            {recipePreviewComment.text}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className={`min-w-0 flex-1 text-[13px] font-semibold ${darkMode ? "text-white/76" : "text-black/70"}`}>
+                        {t("Comment on the recipe")}
+                      </div>
+                    )}
+                    {recipeCommentCount > 0 ? (
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+                        darkMode ? "bg-white/10 text-white" : "bg-black/6 text-black"
+                      }`}>
+                        {recipeCommentCount}
+                      </span>
+                    ) : null}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1648,24 +1705,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 disabled={disabled}
               >
                 {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
-              </button>
-            </div>
-          ) : null}
-
-          {showRecipe ? (
-            <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsBottom }}>
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  openComments("recipe");
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
-              >
-                <MessageCircle size={17} strokeWidth={2.1} />
-                {recipeCommentCount > 0 ? <span>{recipeCommentCount}</span> : null}
               </button>
             </div>
           ) : null}

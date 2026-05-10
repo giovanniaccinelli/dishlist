@@ -1401,7 +1401,7 @@ export default function Profile() {
                         type="button"
                         onClick={() => {
                           const returnParam = encodeURIComponent(buildProfileReturnTo());
-                          router.push(`/dish/${dish.id}?source=uploaded&mode=single&returnTo=${returnParam}`);
+                          router.push(`/dish/${dish.id}?source=uploaded&mode=single&edit=1&returnTo=${returnParam}`);
                         }}
                         className={`mt-2 inline-flex rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
                           darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-black/5 text-black"
@@ -3110,7 +3110,7 @@ export default function Profile() {
                       const returnParam = encodeURIComponent(buildProfileReturnTo());
                       const dishId = dishCardActionTarget.dish?.id;
                       setDishCardActionTarget(null);
-                      router.push(`/dish/${dishId}?source=uploaded&mode=single&returnTo=${returnParam}`);
+                      router.push(`/dish/${dishId}?source=uploaded&mode=single&edit=1&returnTo=${returnParam}`);
                     }}
                     className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
                       darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/8 bg-black/4 text-black"

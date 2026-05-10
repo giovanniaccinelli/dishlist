@@ -158,6 +158,7 @@ const translations = {
     "No comments yet": "Nessun commento ancora",
     Comments: "Commenti",
     "Recipe comments": "Commenti ricetta",
+    "Comment on the recipe": "Commenta la ricetta",
     "Story comments": "Commenti storia",
     "Start the conversation.": "Inizia la conversazione.",
     Link: "Link",

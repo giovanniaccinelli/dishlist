@@ -76,6 +76,7 @@ export default function DishDetail() {
   const listId = searchParams.get("listId");
   const returnTo = searchParams.get("returnTo");
   const deckIds = searchParams.get("deckIds") || "";
+  const openEditOnLoad = searchParams.get("edit") === "1";
   const dishId = Array.isArray(id) ? id[0] : id;
   const userId = user?.uid || null;
   const listOwnerId = profileId || userId;
@@ -439,6 +440,11 @@ export default function DishDetail() {
     setEditStep(0);
     setEditOpen(true);
   };
+
+  useEffect(() => {
+    if (!openEditOnLoad || editOpen || loadingDish || !dish || dish.owner !== userId) return;
+    openEditModal(dish);
+  }, [dish, editOpen, loadingDish, openEditOnLoad, userId]);
 
   useEffect(() => {
     if (editOpen && editDishMode === DISH_MODE_RESTAURANT && editStep === 1) {

@@ -46,9 +46,14 @@ function StoryStatIcon({ size = 10, className = "" }) {
 const INITIAL_USERS_LIMIT = 10;
 
 const getProfileDishCount = (user) => Number(user.profileDishCount ?? 0);
+const getPeopleOrder = (user) => Number.isFinite(user?._peopleOrder) ? user._peopleOrder : null;
 
 const sortUsersByProfileDishes = (usersList) =>
   usersList.slice().sort((a, b) => {
+    const aOrder = getPeopleOrder(a);
+    const bOrder = getPeopleOrder(b);
+    if (aOrder !== null && bOrder !== null && aOrder !== bOrder) return aOrder - bOrder;
+
     const profileDishDelta = getProfileDishCount(b) - getProfileDishCount(a);
     if (profileDishDelta !== 0) return profileDishDelta;
 
@@ -58,6 +63,12 @@ const sortUsersByProfileDishes = (usersList) =>
     return (a.displayName || "").localeCompare(b.displayName || "");
   });
 
+const stampPeopleOrder = (usersList) =>
+  usersList.map((item, index) => ({
+    ...item,
+    _peopleOrder: Number.isFinite(item?._peopleOrder) ? item._peopleOrder : index,
+  }));
+
 const mergeStoryStateByUser = (incomingList = [], existingList = []) => {
   const existingById = new Map((existingList || []).map((item) => [item.id, item]));
   return incomingList.map((item) => {
@@ -66,6 +77,7 @@ const mergeStoryStateByUser = (incomingList = [], existingList = []) => {
     const existingStories = Array.isArray(existing?.activeStories) ? existing.activeStories : [];
     return {
       ...item,
+      _peopleOrder: Number.isFinite(existing?._peopleOrder) ? existing._peopleOrder : item._peopleOrder,
       activeStories: incomingStories.length ? incomingStories : existingStories,
       hasActiveStory: Boolean(item.hasActiveStory || existing?.hasActiveStory || incomingStories.length || existingStories.length),
     };
@@ -208,7 +220,7 @@ export default function Dishlists() {
         id: docSnap.id,
       }));
       const fastPreviewUsers = attachPreviewData(usersList, allDishes);
-      const fastSortedUsers = sortUsersByProfileDishes(fastPreviewUsers);
+      const fastSortedUsers = stampPeopleOrder(sortUsersByProfileDishes(fastPreviewUsers));
       setUsers(fastSortedUsers);
       setAllUsersPool(fastSortedUsers);
       setVisibleUsersLimit(INITIAL_USERS_LIMIT);

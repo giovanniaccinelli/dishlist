@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users } from "lucide-react";
+import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users, MessageCircle } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -279,8 +279,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [comments, setComments] = useState([]);
-  const [dishPreviewComment, setDishPreviewComment] = useState(null);
-  const [recipePreviewComment, setRecipePreviewComment] = useState(null);
+  const [dishCommentCount, setDishCommentCount] = useState(0);
+  const [recipeCommentCount, setRecipeCommentCount] = useState(0);
   const [commentsScope, setCommentsScope] = useState("dish");
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -388,18 +388,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!currentCard?.id) return;
     onCardViewed?.(currentCard);
     setComments([]);
-    setDishPreviewComment(null);
-    setRecipePreviewComment(null);
+    setDishCommentCount(0);
+    setRecipeCommentCount(0);
     setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
     (async () => {
-      const [topDish, topRecipe] = await Promise.all([
-        getCommentsForDish(currentCard.id, 1, "dish"),
-        getCommentsForDish(currentCard.id, 1, "recipe"),
+      const [dishItems, recipeItems] = await Promise.all([
+        getCommentsForDish(currentCard.id, 50, "dish"),
+        getCommentsForDish(currentCard.id, 50, "recipe"),
       ]);
-      setDishPreviewComment(topDish?.[0] || null);
-      setRecipePreviewComment(topRecipe?.[0] || null);
+      setDishCommentCount(Array.isArray(dishItems) ? dishItems.length : 0);
+      setRecipeCommentCount(Array.isArray(recipeItems) ? recipeItems.length : 0);
     })();
   }, [currentCard?.id, onCardViewed]);
 
@@ -627,11 +627,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setNewComment("");
     setReplyTo(null);
     await loadComments(commentsScope);
-    const top = await getCommentsForDish(currentCard.id, 1, commentsScope);
+    const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
-      setRecipePreviewComment(top?.[0] || null);
+      setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
     } else {
-      setDishPreviewComment(top?.[0] || null);
+      setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
   };
 
@@ -641,11 +641,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const ok = await deleteCommentThread(currentCard.id, comment.id, commentsScope);
     if (!ok) return;
     await loadComments(commentsScope);
-    const top = await getCommentsForDish(currentCard.id, 1, commentsScope);
+    const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
-      setRecipePreviewComment(top?.[0] || null);
+      setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
     } else {
-      setDishPreviewComment(top?.[0] || null);
+      setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
   };
 
@@ -1441,7 +1441,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
 
           {actionLabel && !hasBottomActionRow ? (
-            <div className="absolute right-6 z-30" style={{ bottom: actionBottom }}>
+            <div className="absolute right-6 z-30 flex items-center gap-3" style={{ bottom: actionBottom }}>
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openComments("dish");
+                }}
+                className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                aria-label="Open comments"
+              >
+                <MessageCircle size={28} strokeWidth={2.15} />
+                <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span>
+              </button>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -1579,6 +1593,20 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
               </button>
               <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openComments("dish");
+                }}
+                className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                aria-label="Open comments"
+              >
+                <MessageCircle size={28} strokeWidth={2.15} />
+                <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span>
+              </button>
+              <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
                   e.stopPropagation();
@@ -1618,95 +1646,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
           {showRecipe ? (
             <div className="absolute left-5 right-5 z-30" style={{ bottom: tagsBottom }}>
-              {recipePreviewComment ? (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    openComments("recipe");
-                  }}
-                  className={`flex max-w-full items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-white px-2.5 py-2 text-left text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
-                >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-[9px] font-bold text-black/60">
-                    {recipePreviewComment.userPhotoURL ? (
-                      <img
-                        src={recipePreviewComment.userPhotoURL}
-                        alt={recipePreviewComment.userName || "User"}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      (recipePreviewComment.userName?.[0] || "U").toUpperCase()
-                    )}
-                  </span>
-                  <span className="min-w-0 truncate text-[11px] text-black/72">
-                    <span className="font-semibold text-black/62">{recipePreviewComment.userName || "User"}:</span>{" "}
-                    {recipePreviewComment.text}
-                  </span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    openComments("recipe");
-                  }}
-                  className={`inline-flex items-center rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
-                >
-                  Be the first to comment
-                </button>
-              )}
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  openComments("recipe");
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
+              >
+                <MessageCircle size={17} strokeWidth={2.1} />
+                <span>{recipeCommentCount}</span>
+              </button>
             </div>
           ) : null}
 
-          {!showRecipe ? (
-            <div className="absolute left-5 right-5 z-30" style={{ bottom: commentBottom }}>
-              {dishPreviewComment ? (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    openComments("dish");
-                  }}
-                  className="flex items-center gap-1.5 text-left text-xs text-white/90 underline-offset-2 hover:underline"
-                >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/18 text-[9px] font-bold text-white/88">
-                    {dishPreviewComment.userPhotoURL ? (
-                      <img
-                        src={dishPreviewComment.userPhotoURL}
-                        alt={dishPreviewComment.userName || "User"}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      (dishPreviewComment.userName?.[0] || "U").toUpperCase()
-                    )}
-                  </span>
-                  <span className="min-w-0 truncate text-[11px] text-white/88">
-                    <span className="font-semibold text-white/88">{dishPreviewComment.userName || "User"}:</span>{" "}
-                    {dishPreviewComment.text}
-                  </span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  data-no-drag="true"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    openComments("dish");
-                  }}
-                  className="text-xs text-white/70"
-                >
-                  Be the first to comment
-                </button>
-              )}
-            </div>
-          ) : null}
         </motion.div>
       </div>
 

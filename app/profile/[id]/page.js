@@ -39,6 +39,7 @@ import {
   DISH_MODE_ALL,
   DishModeFilterButton,
   DishModeFilterModal,
+  RestaurantForkKnifeIcon,
   RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../../components/DishModeControls";
@@ -284,7 +285,9 @@ export default function PublicProfile() {
       params.set("list", dishlistId);
     }
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    const navigate = dishlistId === "overview" ? router.replace : router.push;
+    navigate(nextUrl, { scroll: false });
   };
 
   const handleDishlistDetailPointerDown = (event) => {
@@ -691,11 +694,11 @@ export default function PublicProfile() {
           <button
             type="button"
             onClick={() => setProfileMapOpen(true)}
-            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border px-5 py-3.5 text-sm font-bold shadow-[0_14px_34px_rgba(230,70,70,0.16)] ${
-              darkMode ? "border-[#E64646]/70 bg-[#211111] text-white" : "border-[#E64646]/55 bg-[#FFF1F1] text-[#7E1717]"
+            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
+              darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
             }`}
           >
-            <RestaurantMapIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
+            <RestaurantForkKnifeIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
             {t("Restaurants")}
           </button>
         </div>
@@ -776,12 +779,12 @@ export default function PublicProfile() {
             <button
               type="button"
               onClick={() => selectDishlist("overview")}
-              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold ${
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
                 darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
               }`}
+              aria-label={t("Back")}
             >
               <ChevronLeft size={16} />
-              {t("Back")}
             </button>
             <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
             <span className="h-10 w-10 justify-self-end" aria-hidden="true" />

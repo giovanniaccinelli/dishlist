@@ -52,6 +52,7 @@ import {
   DISH_MODE_COOKING,
   DishModeFilterButton,
   DishModeFilterModal,
+  RestaurantForkKnifeIcon,
   RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../components/DishModeControls";
@@ -444,7 +445,9 @@ export default function Profile() {
       params.set("list", dishlistId);
     }
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    const navigate = dishlistId === "overview" ? router.replace : router.push;
+    navigate(nextUrl, { scroll: false });
   };
 
   const handleDishlistDetailPointerDown = (event) => {
@@ -1296,11 +1299,11 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => setProfileMapOpen(true)}
-            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border px-5 py-3.5 text-sm font-bold shadow-[0_14px_34px_rgba(230,70,70,0.16)] ${
-              darkMode ? "border-[#E64646]/70 bg-[#211111] text-white" : "border-[#E64646]/55 bg-[#FFF1F1] text-[#7E1717]"
+            className={`no-accent-border inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
+              darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
             }`}
           >
-            <RestaurantMapIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
+            <RestaurantForkKnifeIcon className="h-5 w-5 text-[#E64646]" strokeWidth={2.05} />
             {t("Restaurants")}
           </button>
         </div>
@@ -1395,12 +1398,12 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => selectDishlist("overview")}
-              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold ${
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
                 darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
               }`}
+              aria-label={t("Back")}
             >
               <ChevronLeft size={16} />
-              {t("Back")}
             </button>
             <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
             <div className="flex justify-end">
@@ -2540,11 +2543,11 @@ export default function Profile() {
               <div className={`mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40">
-                    Rename Dishlist
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
+                    {t("Rename Dishlist")}
                   </p>
-                  <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
-                    Edit the list name
+                  <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+                    {t("Edit the list name")}
                   </h3>
                 </div>
                 <button
@@ -2563,8 +2566,10 @@ export default function Profile() {
                 type="text"
                 value={dishlistRenameValue}
                 onChange={(event) => setDishlistRenameValue(event.target.value)}
-                placeholder="Dishlist name"
-                className="w-full rounded-full border border-black/10 bg-[#F7F4ED] px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                placeholder={t("Dishlist name")}
+                className={`w-full rounded-full border px-4 py-3 focus:outline-none focus:ring-2 ${
+                  darkMode ? "border-white/12 bg-[#1B1B1B] text-white placeholder:text-white/35 focus:ring-white/10" : "border-black/10 bg-[#F7F4ED] text-black focus:ring-black/10"
+                }`}
               />
               <div className="mt-4 flex items-center justify-between gap-2">
                 <button
@@ -2578,7 +2583,7 @@ export default function Profile() {
                     darkMode ? "border-[#E64646]/45 bg-[#2A1212] text-[#FFD5D5]" : "border-[#D56A6A] bg-[#FFF1F1] text-[#B34747]"
                   }`}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
                 <div className="flex justify-end gap-2">
                 <button
@@ -2589,7 +2594,7 @@ export default function Profile() {
                   }}
                   className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -2597,7 +2602,7 @@ export default function Profile() {
                   className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
                 >
                   <Pencil size={15} />
-                  Save
+                  {t("Save")}
                 </button>
                 </div>
               </div>

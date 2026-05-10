@@ -10,7 +10,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
-import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../components/DishModeControls";
+import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { useAuth } from "../lib/auth";
 import { dispatchPushEvent } from "../lib/pushClient";
@@ -460,7 +460,7 @@ export default function UploadPage() {
                     >
                       <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
-                          <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
+                          <RestaurantForkKnifeIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
                         <div className="min-w-0">
 	                        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Restaurant</div>

@@ -30,6 +30,20 @@ export function RestaurantMapIcon({ className = "", strokeWidth = 1.9 }) {
   );
 }
 
+export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.9 }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M7.2 3.9v7.2" />
+      <path d="M4.8 3.9v7.2" />
+      <path d="M9.6 3.9v7.2" />
+      <path d="M4.8 8.5h4.8" />
+      <path d="M7.2 11.1v9" />
+      <path d="M16.7 4.1c1.8 1.7 2.8 4.1 2.8 6.8v.5c0 1.4-.8 2.7-2 3.3" />
+      <path d="M16.7 4.1v16" />
+    </svg>
+  );
+}
+
 export function dishModeMatches(dish, selectedMode) {
   if (!selectedMode || selectedMode === DISH_MODE_ALL) return true;
   return String(dish?.dishMode || "").toLowerCase() === selectedMode;
@@ -71,11 +85,7 @@ export function DishModeBadge({ dishMode, className = "" }) {
     );
   }
   if (dishMode === DISH_MODE_RESTAURANT) {
-    return (
-      <span className={`restaurant-accent-border inline-flex items-center justify-center rounded-full border-2 bg-black/65 text-[#E64646] ${className}`}>
-        <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem]" strokeWidth={2.3} />
-      </span>
-    );
+    return null;
   }
   return null;
 }
@@ -139,7 +149,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #E64646",
         }}
       >
-        <RestaurantMapIcon className={iconSizeClass} strokeWidth={1.55} />
+        <RestaurantForkKnifeIcon className={iconSizeClass} strokeWidth={1.55} />
       </button>
       <AnimatePresence>
         {flashMessage ? (
@@ -221,7 +231,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 onClick={() => onSelect(DISH_MODE_RESTAURANT)}
                 className={`rounded-[1.45rem] border-2 px-4 py-4 text-center ${value === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
               >
-                <RestaurantMapIcon className="mx-auto h-8 w-8 text-[#E64646]" />
+                <RestaurantForkKnifeIcon className="mx-auto h-8 w-8 text-[#E64646]" />
                 <div className="mt-2 text-sm font-semibold text-black">Restaurant</div>
               </button>
             </div>

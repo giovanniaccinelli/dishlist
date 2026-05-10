@@ -141,8 +141,9 @@ export default function DishDetail() {
     const orderedSet = new Set(orderedDeckIds);
     const byId = new Map(normalizedItems.map((entry) => [entry.id, entry]));
     const ordered = orderedDeckIds.map((entryId) => byId.get(entryId)).filter(Boolean);
-    const remaining = normalizedItems.filter((entry) => !orderedSet.has(entry.id));
-    return [...ordered, ...remaining];
+    return ordered.length
+      ? ordered
+      : normalizedItems.filter((entry) => orderedSet.has(entry.id));
   };
 
   useEffect(() => {

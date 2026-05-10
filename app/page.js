@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
@@ -488,7 +488,7 @@ export default function Feed() {
     setActiveFeed(tab);
   };
 
-  const handleDishViewed = (dish) => {
+  const handleDishViewed = useCallback((dish) => {
     if (!userId || !dish?.id) return;
     setViewedDishIds((prev) => {
       if (prev.includes(dish.id)) return prev;
@@ -502,7 +502,7 @@ export default function Feed() {
       );
       return next;
     });
-  };
+  }, [userId]);
 
   const handleAdd = async (dishToAdd, variant = "sheet") => {
     if (!userId) {

@@ -269,7 +269,7 @@ export default function Profile() {
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
-  const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "" });
+  const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
@@ -547,6 +547,7 @@ export default function Profile() {
         displayName: data.displayName || "",
         photoURL: data.photoURL || "",
         bio: data.bio || "",
+        representativeTags: normalizeRepresentativeTags(data.representativeTags),
       });
       setProfileUser((prev) => (prev ? { ...prev, ...data, id: prev.id || user.uid } : { ...data, id: user.uid }));
     });
@@ -1293,7 +1294,10 @@ export default function Profile() {
   ].map(normalizeProfileDishlist);
   const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
-  const profileRepresentativeTags = resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
+  const profileRepresentativeTags =
+    profileMeta.representativeTags === null
+      ? []
+      : resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>

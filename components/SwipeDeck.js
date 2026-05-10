@@ -293,6 +293,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
+  const isEjectingRef = useRef(false);
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
   const dragX = useMotionValue(0);
@@ -442,6 +443,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel);
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
+
+  const setEjecting = (value) => {
+    isEjectingRef.current = value;
+    setIsEjecting(value);
+  };
+
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const startCardVideo = useCallback((video) => {
     if (!video) return () => {};
@@ -670,7 +678,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const goToPreviousCard = () => {
-    if (disabled || isEjecting || currentIndex <= 0) return;
+    if (disabled || isEjectingRef.current || currentIndex <= 0) return;
     setDeckEmpty(false);
     setShowRecipe(false);
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
@@ -678,20 +686,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const goToNextCardFromArrow = async () => {
-    if (disabled || isEjecting || !currentCard) return;
-    setIsEjecting(true);
+    if (disabled || isEjectingRef.current || !currentCard) return;
+    setEjecting(true);
     const targetX = -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
     try {
-      await animate(dragX, targetX, {
+      const controls = animate(dragX, targetX, {
         type: "spring",
-        stiffness: 280,
-        damping: 28,
+        stiffness: 360,
+        damping: 30,
         mass: 0.6,
-      }).finished;
+      });
+      await Promise.race([controls.finished, wait(240)]);
     } catch {}
     if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
     advanceCard();
-    setIsEjecting(false);
+    setEjecting(false);
     dragX.set(0);
   };
 
@@ -732,7 +741,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjectingRef.current) return;
     const card = currentCard;
     if (dismissOnAction) advanceCard();
     dragX.set(0);
@@ -742,7 +751,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleSecondaryActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjectingRef.current) return;
     if (typeof onSecondaryAction !== "function") return;
     const card = currentCard;
     if (dismissOnSecondaryAction) advanceCard();
@@ -772,7 +781,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleTertiaryActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjectingRef.current) return;
     if (typeof onTertiaryAction !== "function") return;
     const card = currentCard;
     if (dismissOnTertiaryAction) advanceCard();
@@ -797,10 +806,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const handleSwipeEnd = async (info, dish) => {
-    if (disabled || isEjecting) return;
+    if (disabled || isEjectingRef.current) return;
     if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
       const direction = info.offset.x > 0 ? 1 : -1;
-      setIsEjecting(true);
+      setEjecting(true);
       if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
         runAction(dish);
       }
@@ -829,15 +838,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
       try {
-        await animate(dragX, targetX, {
+        const controls = animate(dragX, targetX, {
           type: "spring",
-          stiffness: 280,
-          damping: 28,
+          stiffness: 360,
+          damping: 30,
           mass: 0.6,
-        }).finished;
+        });
+        await Promise.race([controls.finished, wait(240)]);
       } catch {}
       advanceCard();
-      setIsEjecting(false);
+      setEjecting(false);
       dragX.set(0);
       return;
     }

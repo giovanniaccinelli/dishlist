@@ -388,11 +388,11 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
       <section className="explore-row no-accent-border mb-6 shadow-none">
         <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
           <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 leading-none">
               <span className="explore-category-pill no-accent-border inline-flex items-center rounded-full border border-transparent bg-transparent px-0 py-1.5 text-[1.35rem] font-bold leading-none text-white">
                 {t(title)}
               </span>
-              <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+              <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 self-center text-[#E64646]" strokeWidth={2.05} />
             </div>
           </button>
         </div>

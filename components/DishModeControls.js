@@ -89,7 +89,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
   const useLargeSize = false;
   const buttonSizeClass = useLargeSize ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
   const iconSizeClass = useLargeSize ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
-  const restaurantIconSizeClass = isLarge ? "dish-mode-restaurant-icon h-[1.45rem] w-[1.45rem]" : `dish-mode-restaurant-icon ${iconSizeClass}`;
+  const restaurantIconSizeClass = `dish-mode-restaurant-icon ${iconSizeClass}`;
 
   useEffect(() => () => {
     if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);

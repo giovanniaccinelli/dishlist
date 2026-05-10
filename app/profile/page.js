@@ -244,14 +244,20 @@ export default function Profile() {
     if (user) {
       (async () => {
         const loadUserDoc = async () => {
+          let direct = null;
           try {
-            const direct = await getDoc(doc(db, "users", user.uid));
-            if (direct.exists()) return direct;
+            const directSnap = await getDoc(doc(db, "users", user.uid));
+            if (directSnap.exists()) direct = directSnap;
           } catch (error) {
             console.error("Direct own-profile fetch failed:", error);
           }
           const snapshot = await getDocs(collection(db, "users"));
-          return snapshot.docs.find((docSnap) => getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) || null;
+          return (
+            snapshot.docs.find((docSnap) => docSnap.id !== user.uid && getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) ||
+            direct ||
+            snapshot.docs.find((docSnap) => getProfileIdCandidates(user.uid, docSnap).includes(user.uid)) ||
+            null
+          );
         };
 
         const userDoc = await loadUserDoc();
@@ -294,7 +300,7 @@ export default function Profile() {
     let cancelled = false;
     (async () => {
       try {
-        const userSnap = await getDoc(doc(db, "users", user.uid));
+        const userSnap = profileDocId ? await getDoc(doc(db, "users", profileDocId)) : await getDoc(doc(db, "users", user.uid));
         const ownerCandidates = getProfileIdCandidates(user.uid, userSnap);
         const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
           getUploadedDishesForUserAliases(ownerCandidates),
@@ -333,7 +339,7 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, profileDocId]);
 
   const loadOwnUploadedDishes = async () => {
     if (!user?.uid) return [];
@@ -391,8 +397,8 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (!user) return undefined;
-    const userRef = doc(db, "users", user.uid);
+    if (!user || !profileDocId) return undefined;
+    const userRef = doc(db, "users", profileDocId);
     const unsubscribeUser = onSnapshot(userRef, (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
@@ -404,30 +410,30 @@ export default function Profile() {
         photoURL: data.photoURL || "",
         bio: data.bio || "",
       });
-      setProfileUser((prev) => (prev ? { ...prev, ...data, id: prev.id || user.uid } : { ...data, id: user.uid }));
+      setProfileUser((prev) => (prev ? { ...prev, ...data, id: prev.id || profileDocId } : { ...data, id: profileDocId }));
     });
 
-    const savedRef = collection(db, "users", user.uid, "saved");
+    const savedRef = collection(db, "users", profileDocId, "saved");
     const unsubscribeSaved = onSnapshot(savedRef, async () => {
-      const saved = await getSavedDishesFromFirestore(user.uid);
+      const saved = await getSavedDishesFromFirestore(profileDocId);
       setSavedDishes(saved);
     });
 
-    const toTryRef = collection(db, "users", user.uid, "toTry");
+    const toTryRef = collection(db, "users", profileDocId, "toTry");
     const unsubscribeToTry = onSnapshot(toTryRef, async () => {
-      const items = await getToTryDishesFromFirestore(user.uid);
+      const items = await getToTryDishesFromFirestore(profileDocId);
       setToTryDishes(items);
     });
 
-    const storiesRef = collection(db, "users", user.uid, "stories");
+    const storiesRef = collection(db, "users", profileDocId, "stories");
     const unsubscribeStories = onSnapshot(storiesRef, async () => {
-      const stories = await getActiveStoriesForUser(user.uid);
+      const stories = await getActiveStoriesForUser(profileDocId);
       setActiveStories(stories);
     });
 
-    const storyPushesRef = collection(db, "users", user.uid, "storyPushes");
+    const storyPushesRef = collection(db, "users", profileDocId, "storyPushes");
     const unsubscribeStoryPushes = onSnapshot(storyPushesRef, async () => {
-      const stats = await getStoryPushStatsForUser(user.uid);
+      const stats = await getStoryPushStatsForUser(profileDocId);
       setStoryPushStats(stats);
     });
 
@@ -438,7 +444,7 @@ export default function Profile() {
       unsubscribeStories();
       unsubscribeStoryPushes();
     };
-  }, [user]);
+  }, [user, profileDocId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

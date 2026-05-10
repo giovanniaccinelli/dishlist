@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Utensils, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "./LanguageProvider";
 
@@ -30,19 +30,8 @@ export function RestaurantMapIcon({ className = "", strokeWidth = 1.9 }) {
   );
 }
 
-export function RestaurantForkKnifeIcon({ className = "" }) {
-  return (
-    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      <g fill="currentColor">
-        <rect x="18" y="11" width="4.4" height="24" rx="2.2" />
-        <rect x="26" y="11" width="4.4" height="24" rx="2.2" />
-        <rect x="34" y="11" width="4.4" height="24" rx="2.2" />
-        <path d="M18 31.2h20.4v3.2c0 5.35-4.42 9.35-9.95 9.35S18 39.75 18 34.4v-3.2Z" />
-        <rect x="26.2" y="39.2" width="4.8" height="15" rx="2.4" />
-        <path d="M45.5 11.8c-5.05 2.9-7.55 8.35-7.55 16.35v11.2h8.9V54c0 .95.78 1.72 1.72 1.72h1.8c.95 0 1.73-.77 1.73-1.72V13.8c0-1.8-1.8-2.9-3.3-1.95l-3.3-.05Zm1.35 6.15v15.9h-4.05v-5.7c0-4.15 1.25-7.55 4.05-10.2Z" />
-      </g>
-    </svg>
-  );
+export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.95 }) {
+  return <Utensils className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
 }
 
 export function dishModeMatches(dish, selectedMode) {
@@ -150,7 +139,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           border: "2px solid #E64646",
         }}
       >
-        <RestaurantForkKnifeIcon className={iconSizeClass} strokeWidth={1.45} />
+        <RestaurantForkKnifeIcon className={iconSizeClass} strokeWidth={1.95} />
       </button>
       <AnimatePresence>
         {flashMessage ? (

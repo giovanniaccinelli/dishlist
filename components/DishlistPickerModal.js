@@ -54,7 +54,7 @@ export default function DishlistPickerModal({
         >
           <motion.div
             className={`no-accent-border flex w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
-              isSwipeCard ? "min-h-[74vh] max-h-[82vh]" : ""
+              isSwipeCard ? "min-h-[74vh] max-h-[82vh]" : "max-h-[82vh]"
             } ${
               darkMode
                 ? "border-white/12 bg-[#101010] text-white"

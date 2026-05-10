@@ -691,8 +691,14 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
   const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
 
   const userRef = doc(db, "users", userId);
+  const savedDocRef = doc(db, "users", userId, "saved", dishId);
   const toTryDocRef = doc(db, "users", userId, "toTry", dishId);
   try {
+    const savedSnap = await getDoc(savedDocRef);
+    if (savedSnap.exists()) {
+      await removeDishFromToTry(userId, dishId);
+      return true;
+    }
     await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
     await setDoc(toTryDocRef, payload, { merge: true });
     await syncDishSaveCount(dishId);
@@ -796,7 +802,6 @@ export async function getAllDishlistsForUser(userId) {
   const savedIds = new Set(saved.map((dish) => dish?.id).filter(Boolean));
   const toTryCollection = dedupeDishArray([
     ...toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)),
-    ...allDishes.filter((dish) => dish?.id && !savedIds.has(dish.id)),
   ]);
   return [
     makeSystemDishlist("saved", "Your Classics", saved),

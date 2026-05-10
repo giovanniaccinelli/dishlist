@@ -475,6 +475,13 @@ export default function Profile() {
 
   useEffect(() => {
     if (typeof window === "undefined" || activeDishlistId === "overview") return undefined;
+    const handlePopState = () => {
+      setActiveDishlistId("overview");
+      const params = new URLSearchParams(window.location.search);
+      params.delete("list");
+      const query = params.toString();
+      window.history.replaceState(window.history.state, "", query ? `${pathname}?${query}` : pathname);
+    };
     let startX = 0;
     let startY = 0;
     let startTime = 0;
@@ -513,15 +520,17 @@ export default function Profile() {
       }
     };
 
+    window.addEventListener("popstate", handlePopState);
     window.addEventListener("touchstart", handleTouchStart, { capture: true, passive: true });
     window.addEventListener("touchmove", handleTouchMove, { capture: true, passive: false });
     window.addEventListener("touchend", handleTouchEnd, { capture: true, passive: false });
     return () => {
+      window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("touchstart", handleTouchStart, true);
       window.removeEventListener("touchmove", handleTouchMove, true);
       window.removeEventListener("touchend", handleTouchEnd, true);
     };
-  }, [activeDishlistId]);
+  }, [activeDishlistId, pathname]);
 
   const buildProfileReturnTo = () => {
     return activeDishlistId && activeDishlistId !== "overview"
@@ -948,7 +957,8 @@ export default function Profile() {
   const savedDishIds = new Set(savedDishes.map((dish) => dish?.id).filter(Boolean));
   const toTryCollection = Array.from(
     new Map(
-      [...toTryDishes, ...allDishesCollection.filter((dish) => dish?.id && !savedDishIds.has(dish.id))]
+      toTryDishes
+        .filter((dish) => dish?.id && !savedDishIds.has(dish.id))
         .filter((dish) => dish?.id)
         .map((dish) => [dish.id, dish])
     ).values()

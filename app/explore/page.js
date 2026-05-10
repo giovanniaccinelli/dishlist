@@ -36,7 +36,7 @@ import {
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
-  RestaurantForkKnifeIcon,
+  RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -381,6 +381,43 @@ function CategoryTitle({ row, t, darkMode = false }) {
 
 function ExploreRow({ row, onExpand, t, darkMode = false }) {
   const { title, dishes } = row;
+  if (row.type === "map") {
+    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+    const mapSrc = key
+      ? `https://maps.googleapis.com/maps/api/staticmap?center=45.4642,9.19&zoom=12&size=640x220&scale=2&maptype=roadmap&key=${encodeURIComponent(key)}`
+      : "";
+    return (
+      <section className="explore-row no-accent-border mb-6 shadow-none">
+        <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
+          <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
+            <div className="flex items-center gap-2">
+              <span className={`explore-category-pill no-accent-border inline-flex items-center rounded-full border px-4 py-1.5 text-[1.05rem] font-semibold ${
+                darkMode ? "border-[#E64646]/45 bg-[#241010] text-[#FF7A7A]" : "border-[#E64646]/45 bg-[#FFF1F1] text-[#B33B3B]"
+              }`}>
+                {t(title)}
+              </span>
+              <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+            </div>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onExpand}
+          className={`no-accent-border relative block h-[11rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+            darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+          }`}
+          aria-label="Open map"
+        >
+          {mapSrc ? (
+            <img src={mapSrc} alt="Map preview" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+          ) : (
+            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(90deg, rgba(230,70,70,.18) 1px, transparent 1px), linear-gradient(rgba(230,70,70,.18) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        </button>
+      </section>
+    );
+  }
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
   const isRestaurantRow = row.key.startsWith("restaurant-");
@@ -582,6 +619,12 @@ export default function Explore() {
 
     const rows = [];
     rows.push({
+      key: "map",
+      type: "map",
+      title: "Mappa",
+      dishes: [{}],
+    });
+    rows.push({
       key: "most-saved",
       title: "Most Saved",
       dishes: [...modePool].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
@@ -642,6 +685,10 @@ export default function Explore() {
   }, [categoryRows]);
 
   const openExpandedRow = (row) => {
+    if (row?.type === "map") {
+      router.push("/map");
+      return;
+    }
     setExpandedRow(row);
     router.replace(buildExploreUrl({ category: row.key }), { scroll: false });
   };
@@ -752,20 +799,6 @@ export default function Explore() {
           </div>
         )}
       </div>
-      <div className="mb-4 flex justify-center px-1">
-        <button
-          type="button"
-          onClick={() => router.push("/map")}
-          className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
-            darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
-          }`}
-          style={{ borderColor: "#E64646" }}
-        >
-          <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
-          {t("Restaurants")}
-        </button>
-      </div>
-
       {loading ? (
         <CategoryRowsLoading />
       ) : (

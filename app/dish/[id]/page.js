@@ -26,6 +26,7 @@ import {
   getUsersWhoSavedDish,
   publishDishAsStory,
   removeDishFromAllUsers,
+  removeDishFromCustomDishlist,
   removeDishFromToTry,
   removeSavedDishFromUser,
   saveDishToSelectedDishlist,
@@ -287,7 +288,7 @@ export default function DishDetail() {
         .map((dishlist) => dishlist.id);
       setDishlists(nextLists);
       setSelectedDishlistIds(memberships);
-      setLockedDishlistIds(memberships);
+      setLockedDishlistIds([]);
     } finally {
       setDishlistsLoading(false);
     }
@@ -590,14 +591,32 @@ export default function DishDetail() {
   };
 
   const handleDishlistSelect = async () => {
-    if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
-    const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
-    const results = await Promise.all(
+    if (!userId || !dishlistPickerDish?.id) return;
+    const selectedSet = new Set(selectedDishlistIds);
+    const persistDishlistIds = selectedDishlistIds.filter(
+      (dishlistId) => dishlistId !== "all_dishes" && !(dishlistId === "to_try" && selectedSet.has("saved"))
+    );
+    const currentIds = new Set(
+      dishlists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dishlistPickerDish.id))
+        .map((dishlist) => dishlist.id)
+    );
+    const nextIds = new Set(persistDishlistIds);
+    const addResults = await Promise.all(
       persistDishlistIds.map((dishlistId) =>
         saveDishToSelectedDishlist(userId, dishlistId, dishlistPickerDish)
       )
     );
-    const ok = results.every(Boolean);
+    const removeResults = await Promise.all(
+      Array.from(currentIds)
+        .filter((dishlistId) => !nextIds.has(dishlistId))
+        .map((dishlistId) => {
+          if (dishlistId === "saved") return removeSavedDishFromUser(userId, dishlistPickerDish.id);
+          if (dishlistId === "to_try") return removeDishFromToTry(userId, dishlistPickerDish.id);
+          return removeDishFromCustomDishlist(userId, dishlistId, dishlistPickerDish.id);
+        })
+    );
+    const ok = addResults.every(Boolean) && removeResults.every(Boolean);
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Added to DishList" : "Save failed");
     setTimeout(() => setPageToast(""), 1200);
@@ -706,7 +725,7 @@ export default function DishDetail() {
             advanceOnAnySwipe={enableProfileDeckNavigation}
             onAuthRequired={() => alert("Please sign in to comment.")}
             actionLabel={shouldUseStoryActions ? <MoreHorizontal size={26} strokeWidth={2.35} /> : shouldUsePublicActions ? "+" : "Remove"}
-            secondaryActionLabel={getSecondaryActionLabel}
+            secondaryActionLabel={shouldUseStoryActions ? undefined : getSecondaryActionLabel}
             actionClassName={
               shouldUseStoryActions
                 ? "add-action-btn w-14 h-14 text-[#2BD36B]"
@@ -716,7 +735,7 @@ export default function DishDetail() {
             }
             tertiaryActionLabel={!shouldUseStoryActions && !isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
             tertiaryActionClassName="add-action-btn w-14 h-14"
-            secondaryActionClassName={getSecondaryActionClassName}
+            secondaryActionClassName={shouldUseStoryActions ? undefined : getSecondaryActionClassName}
             actionToast={
               shouldUseStoryActions
                 ? undefined

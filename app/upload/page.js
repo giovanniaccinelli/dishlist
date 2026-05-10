@@ -386,7 +386,7 @@ export default function UploadPage() {
               </button>
             </div>
           <motion.div
-            className={`upload-step-modal p-5 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#101010] text-white" : dishMode === DISH_MODE_RESTAURANT ? "bg-[#FFFDFC]" : "bg-white"} my-0`}
+            className={`upload-step-modal max-h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1rem)] overflow-y-auto p-4 rounded-[1.75rem] w-full shadow-[0_20px_55px_rgba(0,0,0,0.08)] border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#101010] text-white" : dishMode === DISH_MODE_RESTAURANT ? "bg-[#FFFDFC]" : "bg-white"} my-0`}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
@@ -404,8 +404,12 @@ export default function UploadPage() {
                             ? "w-10 bg-[#F59E0B]"
                             : step === 2
                               ? "w-10 bg-[#23C268]"
-                              : "w-10 bg-[#111111]"
-                        : "w-7 bg-black/10"
+                              : darkMode
+                                ? "w-10 bg-white"
+                                : "w-10 bg-[#111111]"
+                        : darkMode
+                          ? "w-7 bg-white/16"
+                          : "w-7 bg-black/10"
                     }`}
                   />
                 ))}
@@ -445,9 +449,9 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
-                    >
-                      <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+                    className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+                  >
+                      <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
@@ -460,9 +464,9 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-	                      className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+	                      className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
                     >
-                      <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+                      <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
                         <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
                           <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
                         </span>
@@ -502,7 +506,7 @@ export default function UploadPage() {
                   onClick={() => {
                     if (!loadingUpload && !preview) setMediaPickerOpen(true);
                   }}
-                  className={`w-full h-44 rounded-[1.65rem] border-2 border-dashed ${
+                  className={`w-full h-36 rounded-[1.65rem] border-2 border-dashed ${
                     dragActive
                       ? dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#FFE8E4]"
@@ -575,7 +579,7 @@ export default function UploadPage() {
                   value={dishRecipeIngredients}
                   onChange={(e) => setDishRecipeIngredients(e.target.value)}
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  rows={4}
+                  rows={3}
                   disabled={loadingUpload}
                 />
                 <textarea
@@ -600,11 +604,11 @@ export default function UploadPage() {
                   placeholder="Description"
                   value={dishDescription}
                   onChange={(e) => setDishDescription(e.target.value)}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white text-black mb-5 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
-                  rows={4}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
+                  rows={2}
                   disabled={loadingUpload}
                 />
-                <div className="mb-5">
+                <div className="mb-4">
                   <button
                     type="button"
                     onClick={() => setShowLinkField((prev) => !prev)}
@@ -626,7 +630,7 @@ export default function UploadPage() {
                     />
                   ) : null}
                 </div>
-                <div className="mb-5">
+                <div className="mb-4">
                   <p className="mb-2 text-sm font-medium text-black">
                     {language === "it" ? "Tagga un utente" : "Tag a user"}
                   </p>

@@ -315,19 +315,6 @@ export default function Profile() {
     };
   }, [user?.uid]);
 
-  useEffect(() => {
-    if (!profileOptionsOpen) return;
-
-    const handleOutsideClick = (event) => {
-      if (!profileOptionsRef.current?.contains(event.target)) {
-        setProfileOptionsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [profileOptionsOpen]);
-
   const loadOwnUploadedDishes = async () => {
     if (!user?.uid) return [];
     const userSnap = await getDoc(doc(db, "users", user.uid));
@@ -1158,103 +1145,12 @@ export default function Profile() {
           </button>
           <button
             type="button"
-            onClick={() => setProfileOptionsOpen((prev) => !prev)}
+            onClick={() => setProfileOptionsOpen(true)}
             className="top-action-btn"
             aria-label={t("Profile options")}
           >
             <Settings size={18} />
           </button>
-          {profileOptionsOpen && (
-            <div className={`absolute top-full right-0 mt-2 z-[90] rounded-2xl border p-2 w-56 shadow-lg ${
-              darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
-            }`}>
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileOptionsOpen(false);
-                  setEditProfileModal(true);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
-              >
-                {t("Edit Profile")}
-              </button>
-              <div className="px-3 pb-2 pt-1">
-                <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/38"}`}>
-                  {t("Language")}
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setLanguage(LANGUAGE_EN)}
-                    className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${
-                      darkMode
-                        ? language === LANGUAGE_EN
-                          ? "border-[#FFC247] bg-[#2A210C] shadow-[0_0_0_2px_rgba(255,194,71,0.22)]"
-                          : "border-white/18 bg-[#1D1D1D] opacity-55"
-                        : language === LANGUAGE_EN
-                          ? "border-black bg-black/5 shadow-[0_0_0_2px_rgba(0,0,0,0.08)]"
-                          : "border-black/10 bg-white opacity-65"
-                    }`}
-                    aria-label={t("English")}
-                  >
-                    🇬🇧
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLanguage(LANGUAGE_IT)}
-                    className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-[1.15rem] transition ${
-                      darkMode
-                        ? language === LANGUAGE_IT
-                          ? "border-[#FFC247] bg-[#2A210C] shadow-[0_0_0_2px_rgba(255,194,71,0.22)]"
-                          : "border-white/18 bg-[#1D1D1D] opacity-55"
-                        : language === LANGUAGE_IT
-                          ? "border-black bg-black/5 shadow-[0_0_0_2px_rgba(0,0,0,0.08)]"
-                          : "border-black/10 bg-white opacity-65"
-                    }`}
-                    aria-label={t("Italian")}
-                  >
-                    🇮🇹
-                  </button>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDarkMode(!darkMode)}
-                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
-              >
-                <span>{t("Dark mode")}</span>
-                <span className={`no-accent-border flex h-7 w-12 items-center rounded-full p-0.5 transition ${
-                  darkMode ? "bg-[#FFC247] shadow-[0_0_0_2px_rgba(255,194,71,0.18)]" : "bg-black/14"
-                }`}>
-                  <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${darkMode ? "translate-x-5 bg-black" : "translate-x-0 bg-white"}`} />
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileOptionsOpen(false);
-                  handleLogout();
-                }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm ${darkMode ? "hover:bg-white/8" : "hover:bg-black/5"}`}
-              >
-                {t("Log Out")}
-              </button>
-              <div className={`my-1 h-px ${darkMode ? "bg-white/10" : "bg-black/8"}`} />
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileOptionsOpen(false);
-                  setDeletePassword("");
-                  setDeleteAccountError("");
-                  setDeleteAccountModal(true);
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-sm font-medium text-red-600"
-              >
-                {t("Delete Account")}
-              </button>
-            </div>
-          )}
         </div>
       </div>
       <div className="mb-4">
@@ -1579,55 +1475,224 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
+      {/* Settings */}
+      <AnimatePresence>
+        {profileOptionsOpen && (
+          <motion.div
+            className={`fixed inset-0 z-[95] flex flex-col ${
+              darkMode ? "bg-[#050505] text-white" : "bg-[#F8F6F0] text-black"
+            }`}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 420, damping: 38 }}
+          >
+            <div className="app-top-nav flex items-center justify-between px-5 pb-3">
+              <button
+                type="button"
+                onClick={() => setProfileOptionsOpen(false)}
+                className={`no-accent-border flex h-11 w-11 items-center justify-center rounded-full ${
+                  darkMode ? "bg-white/8 text-white" : "bg-white text-black"
+                } shadow-[0_10px_28px_rgba(0,0,0,0.12)]`}
+                aria-label="Close settings"
+              >
+                <X size={19} />
+              </button>
+              <h2 className="text-[1.45rem] font-semibold leading-none">{t("Settings")}</h2>
+              <div className="h-11 w-11" />
+            </div>
+            <div className="bottom-nav-spacer flex-1 overflow-y-auto px-5 pb-8 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOptionsOpen(false);
+                  setEditProfileModal(true);
+                }}
+                className={`no-accent-border mb-5 flex w-full items-center gap-4 rounded-[1.6rem] p-4 text-left ${
+                  darkMode ? "bg-[#141414]" : "bg-white"
+                } shadow-[0_14px_34px_rgba(0,0,0,0.10)]`}
+              >
+                <div className="h-16 w-16 overflow-hidden rounded-full bg-black/10">
+                  {effectiveProfilePhotoURL ? (
+                    <img src={effectiveProfilePhotoURL} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xl font-bold">
+                      {(user?.displayName?.[0] || "U").toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[1.05rem] font-semibold">{user?.displayName || "User"}</div>
+                  <div className={`mt-1 text-sm ${darkMode ? "text-white/55" : "text-black/52"}`}>{t("Edit Profile")}</div>
+                </div>
+                <Pencil size={17} className={darkMode ? "text-white/55" : "text-black/45"} />
+              </button>
+
+              <section className="mb-5">
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Language")}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { code: LANGUAGE_EN, flag: "🇬🇧", label: t("English") },
+                    { code: LANGUAGE_IT, flag: "🇮🇹", label: t("Italian") },
+                  ].map((item) => {
+                    const active = language === item.code;
+                    return (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => setLanguage(item.code)}
+                        className={`no-accent-border flex items-center gap-3 rounded-[1.45rem] p-4 text-left transition ${
+                          active
+                            ? darkMode
+                              ? "bg-[#27200F] text-white ring-2 ring-[#FFC247]"
+                              : "bg-[#FFF3C7] text-black ring-2 ring-[#D7A51E]"
+                            : darkMode
+                              ? "bg-[#141414] text-white/62"
+                              : "bg-white text-black/62"
+                        }`}
+                      >
+                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/10 text-[1.45rem]">{item.flag}</span>
+                        <span className="font-semibold">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="mb-5">
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Appearance")}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`no-accent-border flex w-full items-center justify-between rounded-[1.45rem] p-4 text-left ${
+                    darkMode ? "bg-[#141414] text-white" : "bg-white text-black"
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">{t("Dark mode")}</div>
+                    <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                      {darkMode ? t("Dark mode") : t("Light mode")}
+                    </div>
+                  </div>
+                  <span className={`no-accent-border flex h-8 w-14 items-center rounded-full p-1 transition ${
+                    darkMode ? "bg-[#FFC247]" : "bg-black/14"
+                  }`}>
+                    <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${darkMode ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
+                  </span>
+                </button>
+              </section>
+
+              <section>
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Account")}
+                </div>
+                <div className={`no-accent-border overflow-hidden rounded-[1.45rem] ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileOptionsOpen(false);
+                      handleLogout();
+                    }}
+                    className="no-accent-border flex w-full items-center justify-between px-4 py-4 text-left font-semibold"
+                  >
+                    {t("Log Out")}
+                  </button>
+                  <div className={darkMode ? "h-px bg-white/8" : "h-px bg-black/8"} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileOptionsOpen(false);
+                      setDeletePassword("");
+                      setDeleteAccountError("");
+                      setDeleteAccountModal(true);
+                    }}
+                    className="no-accent-border flex w-full items-center justify-between px-4 py-4 text-left font-semibold text-[#E64646]"
+                  >
+                    {t("Delete Account")}
+                  </button>
+                </div>
+              </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Edit Profile Modal */}
       <AnimatePresence>
         {editProfileModal && (
           <motion.div
-            className="fixed inset-0 bg-black/45 backdrop-blur-md flex items-center justify-center z-[80] overflow-hidden p-2"
+            className={`fixed inset-0 z-[96] flex flex-col overflow-hidden ${
+              darkMode ? "bg-[#050505] text-white" : "bg-[#F8F6F0] text-black"
+            }`}
             onClick={() => {
               setEditProfileModal(false);
               setRemovePhoto(false);
             }}
           >
             <motion.div
-              className="w-full max-w-lg h-auto max-h-[calc(100dvh-0.75rem)] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#FFFDF8_0%,#FFF6E8_100%)] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.16)] flex flex-col"
+              className="flex h-full w-full flex-col overflow-hidden"
+              initial={{ y: 26, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 26, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                <div className="inline-flex items-center rounded-full bg-black/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                  Profile
-                </div>
-                <h2 className="mt-3 text-[2rem] leading-none font-semibold text-black">Edit profile</h2>
-                <p className="mt-3 text-sm text-black/58">Update your name, photo and bio.</p>
-                </div>
+              <div className="app-top-nav flex items-center justify-between px-5 pb-3">
                 <button
                   type="button"
                   onClick={() => {
                     setEditProfileModal(false);
                     setRemovePhoto(false);
                   }}
-                  className="w-10 h-10 shrink-0 rounded-[1rem] border border-black/10 bg-white/85 text-black/60 hover:text-black"
+                  className={`no-accent-border flex h-11 w-11 items-center justify-center rounded-full ${
+                    darkMode ? "bg-white/8 text-white" : "bg-white text-black"
+                  } shadow-[0_10px_28px_rgba(0,0,0,0.12)]`}
                   aria-label="Close"
                 >
-                  ×
+                  <X size={19} />
                 </button>
+                <h2 className="text-[1.35rem] font-semibold leading-none">{t("Edit profile")}</h2>
+                <div className="h-11 w-11" />
               </div>
 
-              <div className="space-y-5 overflow-y-auto pr-1 min-h-0 flex-1">
+              <div className="bottom-nav-spacer flex-1 overflow-y-auto px-5 pb-8 pt-2">
+              <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-black/72">Display name</label>
+                <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "bg-white/8 text-white/55" : "bg-black/6 text-black/45"
+                }`}>
+                  Profile
+                </div>
+                <h2 className="mt-3 text-[2rem] leading-none font-semibold">{t("Edit profile")}</h2>
+                <p className={`mt-3 text-sm ${darkMode ? "text-white/58" : "text-black/58"}`}>{t("Update your name, photo and bio.")}</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className={`mb-2 block text-sm font-medium ${darkMode ? "text-white/72" : "text-black/72"}`}>{t("Display name")}</label>
                   <input
                     type="text"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full rounded-full border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                    className={`w-full rounded-full border px-4 py-3 focus:outline-none focus:ring-2 ${
+                      darkMode ? "border-white/10 bg-[#141414] text-white focus:ring-white/10" : "border-black/10 bg-white px-4 py-3 text-black focus:ring-black/10"
+                    }`}
                   />
                 </div>
 
-                <div className="rounded-[1.6rem] border border-black/10 bg-white/70 p-4">
+                <div className={`no-accent-border rounded-[1.6rem] p-4 ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
                   <div className="mb-3 flex items-center justify-between">
-                    <label className="text-sm font-medium text-black/72">Profile picture</label>
+                    <label className={`text-sm font-medium ${darkMode ? "text-white/72" : "text-black/72"}`}>{t("Profile picture")}</label>
                     {newPhotoPreview ? (
                       <button
                         type="button"
@@ -1636,14 +1701,14 @@ export default function Profile() {
                           setNewPhotoPreview("");
                           setRemovePhoto(true);
                         }}
-                        className="text-sm font-medium text-black/55 hover:text-black"
+                        className={`text-sm font-medium ${darkMode ? "text-white/58 hover:text-white" : "text-black/55 hover:text-black"}`}
                       >
                         Remove
                       </button>
                     ) : null}
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full overflow-hidden border border-black/10 bg-black/5 flex items-center justify-center text-2xl font-bold">
+                    <div className={`h-24 w-24 overflow-hidden rounded-full flex items-center justify-center text-2xl font-bold ${darkMode ? "bg-white/8" : "bg-black/5"}`}>
                       {newPhotoPreview ? (
                         <img
                           src={newPhotoPreview}
@@ -1656,8 +1721,10 @@ export default function Profile() {
                         newName?.[0] || user?.displayName?.[0] || "U"
                       )}
                     </div>
-                    <label className="inline-flex items-center rounded-full border border-black/10 bg-[#EFE7D8] px-4 py-2 text-sm font-semibold text-black/78 shadow-[0_10px_22px_rgba(0,0,0,0.08)] cursor-pointer hover:text-black">
-                      Change photo
+                    <label className={`no-accent-border inline-flex cursor-pointer items-center rounded-full px-4 py-2 text-sm font-semibold shadow-[0_10px_22px_rgba(0,0,0,0.08)] ${
+                      darkMode ? "bg-white text-black" : "bg-black text-white"
+                    }`}>
+                      {t("Change photo")}
                       <input
                         type="file"
                         accept="image/*"
@@ -1676,13 +1743,15 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-black/72">Bio</label>
+                  <label className={`mb-2 block text-sm font-medium ${darkMode ? "text-white/72" : "text-black/72"}`}>Bio</label>
                   <textarea
                     value={newBio}
                     onChange={(e) => setNewBio(e.target.value)}
                     rows={4}
                     placeholder="Add a short bio"
-                    className="w-full rounded-[1.5rem] border border-black/10 bg-white/92 px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
+                    className={`w-full resize-none rounded-[1.5rem] border px-4 py-3 focus:outline-none focus:ring-2 ${
+                      darkMode ? "border-white/10 bg-[#141414] text-white focus:ring-white/10" : "border-black/10 bg-white px-4 py-3 text-black focus:ring-black/10"
+                    }`}
                   />
                 </div>
               </div>
@@ -1694,7 +1763,9 @@ export default function Profile() {
                     setEditProfileModal(false);
                     setRemovePhoto(false);
                   }}
-                  className="rounded-full border border-black/12 bg-white/82 px-5 py-3 font-medium text-black/72 hover:text-black"
+                  className={`no-accent-border rounded-full px-5 py-3 font-medium ${
+                    darkMode ? "bg-white/8 text-white/72" : "bg-white text-black/72"
+                  }`}
                 >
                   Cancel
                 </button>
@@ -1703,12 +1774,13 @@ export default function Profile() {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleEditProfile}
                   disabled={savingProfile}
-                  className={`rounded-full border border-black/10 px-6 py-3 font-semibold text-black shadow-[0_14px_30px_rgba(0,0,0,0.12)] ${
-                    savingProfile ? "bg-black/10 text-black/40" : "bg-[#D7B443]"
+                  className={`no-accent-border rounded-full px-6 py-3 font-semibold shadow-[0_14px_30px_rgba(0,0,0,0.12)] ${
+                    savingProfile ? "bg-white/10 text-white/40" : "bg-[#FFC247] text-black"
                   }`}
                 >
-                  {savingProfile ? "Saving..." : "Save profile"}
+                  {savingProfile ? "Saving..." : t("Save profile")}
                 </motion.button>
+              </div>
               </div>
             </motion.div>
           </motion.div>

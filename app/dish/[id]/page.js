@@ -737,7 +737,7 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-6 w-full max-w-md max-h-[86vh] overflow-y-auto shadow-2xl border-2 my-auto`}>
+          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-4 w-full max-w-md max-h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1rem)] overflow-y-auto shadow-2xl border-2 my-auto`}>
             <div className="flex items-center justify-between mb-5 gap-4">
               <div className="flex gap-2">
                 {[0, 1, 2, 3].map((step) => (
@@ -751,8 +751,12 @@ export default function DishDetail() {
                           ? "w-10 bg-[#F59E0B]"
                           : step === 2
                             ? "w-10 bg-[#23C268]"
-                            : "w-10 bg-[#111111]"
-                      : "w-7 bg-black/10"
+                            : darkMode
+                              ? "w-10 bg-white"
+                              : "w-10 bg-[#111111]"
+                      : darkMode
+                        ? "w-7 bg-white/16"
+                        : "w-7 bg-black/10"
                   }`}
                   />
                 ))}
@@ -785,9 +789,9 @@ export default function DishDetail() {
       setEditDishMode(DISH_MODE_COOKING);
       setEditRestaurant(null);
     }}
-	    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+	    className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+    <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
       <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
         <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
@@ -801,9 +805,9 @@ export default function DishDetail() {
   <button
     type="button"
     onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-	    className={`rounded-[1.35rem] border-2 px-3 py-3 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+	    className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
   >
-    <div className="grid min-h-[4.45rem] grid-cols-[2.3rem,1fr] items-center gap-2">
+    <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
       <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
@@ -832,7 +836,7 @@ export default function DishDetail() {
                   className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
-                <div className={`w-full h-60 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-6 cursor-pointer relative overflow-hidden`}>
+                <div className={`w-full h-40 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-5 cursor-pointer relative overflow-hidden`}>
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -883,7 +887,7 @@ export default function DishDetail() {
                   value={editRecipeIngredients}
                   onChange={(e) => setEditRecipeIngredients(e.target.value)}
                   placeholder="Ingredients"
-                  rows={4}
+                  rows={3}
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
                   disabled={savingEdit}
                 />
@@ -891,7 +895,7 @@ export default function DishDetail() {
                   value={editRecipeMethod}
                   onChange={(e) => setEditRecipeMethod(e.target.value)}
                   placeholder="Method"
-                  rows={5}
+                  rows={4}
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
                   disabled={savingEdit}
                 />
@@ -910,8 +914,8 @@ export default function DishDetail() {
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   placeholder="Description"
-                  rows={4}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-5 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
+                  rows={2}
+                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
                   disabled={savingEdit}
                 />
                 <div className="mb-5">

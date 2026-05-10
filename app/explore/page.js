@@ -9,6 +9,9 @@ import {
   ChevronRight,
   Dumbbell,
   Flame,
+  Camera,
+  Fish,
+  Globe2,
   Leaf,
   MoonStar,
   Snowflake,
@@ -119,13 +122,25 @@ function PlateIcon({ className = "" }) {
 function PastaPlateIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <ellipse cx="12" cy="16.1" rx="7.8" ry="3.6" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M7.1 15.4c1.2-2.4 3-3.6 5.2-3.6 2.3 0 4 .9 4.8 2.7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M8.4 14.9c1.2 1.1 2.5 1.1 3.7 0 1.1-1 2.4-1.1 3.6 0" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M8.9 11.3c.8-1.9 1.8-3 3.2-3.4 1.7-.5 3.1.1 4.3 1.9" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M11.2 8.2 10.7 4" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M13 7.9 13.2 4" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M14.7 8.5 15.6 4.7" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <ellipse cx="12" cy="17.1" rx="8" ry="3.3" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M6.9 16.2c.9-2.2 2.7-3.5 5.1-3.5s4.2 1.2 5.1 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M8.3 15.7c.9.8 1.8.8 2.7 0 .8-.8 1.8-.8 2.7 0 .8.8 1.7.8 2.6 0" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M8.1 13.9c1.2-1 2.5-1.2 3.8-.4 1.4.8 2.7.7 4-.3" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M8.8 11.6c2.2-1.3 4.3-1.4 6.4-.1" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M9.8 10.2 9.2 4.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 9.8 12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M14.2 10.2 14.8 4.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ItalianFlagIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="#fff" />
+      <path d="M5.9 5.2h4.7v13.6H5.9a2.4 2.4 0 0 1-2.4-2.4V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#229246" />
+      <path d="M13.4 5.2h4.7a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4h-4.7V5.2Z" fill="#CE2B37" />
+      <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.28" />
     </svg>
   );
 }
@@ -293,6 +308,13 @@ const TAG_DECOR = {
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
   "date night": { icon: ClinkingGlassesIcon, iconClass: "text-[#B13D56]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
   pasta: { icon: PastaPlateIcon, iconClass: "text-[#D99116]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]" },
+  italian: { icon: ItalianFlagIcon, iconClass: "text-black/50", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#DCFCE7] text-[#14532D] border-[#EF4444]" },
+  ethnic: { icon: Globe2, iconClass: "text-[#3B82F6]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#60A5FA]" },
+  seafood: { icon: Fish, iconClass: "text-[#0891B2]", pillClass: "bg-[#CFFAFE] text-[#155E75] border-[#22D3EE]" },
+  aesthetic: { icon: Camera, iconClass: "text-[#DB2777]", pillClass: "bg-[#FCE7F3] text-[#831843] border-[#F472B6]" },
+  fresh: { icon: null, pillClass: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]" },
+  asian: { icon: null, pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]" },
+  fried: { icon: null, pillClass: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]" },
 };
 
 function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
@@ -393,7 +415,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
       }`}>
         {displayTitle}
       </span>
-      <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass}`} />
+      {Icon ? <Icon className={`${decor.iconSize || "h-[1.3rem] w-[1.3rem]"} shrink-0 ${decor.iconClass || ""}`} /> : null}
     </div>
   );
 }

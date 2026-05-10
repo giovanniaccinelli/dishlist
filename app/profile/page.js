@@ -790,7 +790,7 @@ export default function Profile() {
 
   const handlePublishDishCardStory = async (dish) => {
     const guard = dishActionPointerGuardRef.current;
-    if (!dishCardActionReady || (guard?.dishId === dish?.id && Date.now() < guard.until)) return;
+    if (!dishCardActionReady || dishCardStoryConfirmId !== dish?.id || (guard?.dishId === dish?.id && Date.now() < guard.until)) return;
     if (!user?.uid || !dish?.id) return;
     const ok = await publishDishAsStory(user.uid, dish);
     setDishCardActionTarget(null);
@@ -3217,11 +3217,7 @@ export default function Profile() {
                     event.preventDefault();
                     event.stopPropagation();
                     const dishId = dishCardActionTarget.dish?.id || "";
-                    if (dishCardStoryConfirmId !== dishId) {
-                      setDishCardStoryConfirmId(dishId);
-                      return;
-                    }
-                    handlePublishDishCardStory(dishCardActionTarget.dish);
+                    setDishCardStoryConfirmId(dishId);
                   }}
                   disabled={!dishCardActionReady}
                   className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
@@ -3234,9 +3230,26 @@ export default function Profile() {
                         : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
                   }`}
                 >
-                  <span>{dishCardStoryConfirmId === dishCardActionTarget.dish?.id ? t("Confirm story") : t("Add to story")}</span>
+                  <span>{t("Add to story")}</span>
                   <StoryStatIcon size={17} />
                 </button>
+                {dishCardStoryConfirmId === dishCardActionTarget.dish?.id ? (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handlePublishDishCardStory(dishCardActionTarget.dish);
+                    }}
+                    disabled={!dishCardActionReady}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-[#D9FFE3]" : "border-[#2BD36B]/45 bg-[#EAF7EE] text-[#165D32]"
+                    }`}
+                  >
+                    <span>{t("Confirm story")}</span>
+                    <StoryStatIcon size={17} />
+                  </button>
+                ) : null}
                 {profileIdCandidates.includes(dishCardActionTarget.dish?.owner) ? (
                   <button
                     type="button"

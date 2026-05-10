@@ -332,6 +332,13 @@ const translations = {
     gourmet: "gourmet",
     "date night": "date night",
     pasta: "pasta",
+    italian: "italiano",
+    ethnic: "etnico",
+    seafood: "pesce",
+    aesthetic: "aesthetic",
+    fresh: "fresco",
+    asian: "asiatico",
+    fried: "fritto",
   },
 };
 

@@ -20,6 +20,13 @@ export const TAG_OPTIONS = [
   "gourmet",
   "date night",
   "pasta",
+  "italian",
+  "ethnic",
+  "seafood",
+  "aesthetic",
+  "fresh",
+  "asian",
+  "fried",
 ];
 
 const TAG_COLOR_MAP = {
@@ -44,6 +51,13 @@ const TAG_COLOR_MAP = {
   gourmet: "bg-[#F5F3FF] text-[#6D28D9] border-[#DDD6FE]",
   "date night": "bg-[#FAE8FF] text-[#86198F] border-[#E879F9]",
   pasta: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]",
+  italian: "bg-[#DCFCE7] text-[#14532D] border-[#EF4444]",
+  ethnic: "bg-[#DBEAFE] text-[#1E3A8A] border-[#60A5FA]",
+  seafood: "bg-[#CFFAFE] text-[#155E75] border-[#22D3EE]",
+  aesthetic: "bg-[#FCE7F3] text-[#831843] border-[#F472B6]",
+  fresh: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]",
+  asian: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]",
+  fried: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]",
 };
 
 const TAG_DARK_COLOR_MAP = {
@@ -68,6 +82,13 @@ const TAG_DARK_COLOR_MAP = {
   gourmet: "border-[#C084FC]/75 bg-[#241238] text-[#E9D5FF]",
   "date night": "border-[#E879F9]/75 bg-[#2D1235] text-[#F5D0FE]",
   pasta: "border-[#F59E0B]/80 bg-[#2F2107] text-[#FDE68A]",
+  italian: "border-[#EF4444]/75 bg-[#0D2518] text-[#BBF7D0]",
+  ethnic: "border-[#60A5FA]/75 bg-[#0C1B33] text-[#BFDBFE]",
+  seafood: "border-[#22D3EE]/75 bg-[#092A32] text-[#CFFAFE]",
+  aesthetic: "border-[#F472B6]/75 bg-[#321325] text-[#FCE7F3]",
+  fresh: "border-[#34D399]/75 bg-[#08251A] text-[#A7F3D0]",
+  asian: "border-[#F87171]/75 bg-[#341112] text-[#FECACA]",
+  fried: "border-[#FB923C]/75 bg-[#321A0A] text-[#FED7AA]",
 };
 
 export function getTagChipClass(tag, active) {

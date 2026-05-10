@@ -602,10 +602,7 @@ export default function PublicProfile() {
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
-        dishes:
-          unfilteredActiveDishlist.id === "uploaded"
-            ? (unfilteredActiveDishlist.dishes || [])
-            : (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;

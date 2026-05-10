@@ -1034,10 +1034,7 @@ export default function Profile() {
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
-        dishes:
-          unfilteredActiveDishlist.id === "uploaded"
-            ? (unfilteredActiveDishlist.dishes || [])
-            : (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
+        dishes: (unfilteredActiveDishlist.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)),
       }
     : null;
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
@@ -1269,6 +1266,15 @@ export default function Profile() {
                 </div>
                 {(allowDelete || onRemovePreview || profileIdCandidates.includes(dish?.owner)) && (
                   <button
+                    type="button"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onPointerUp={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

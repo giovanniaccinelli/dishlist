@@ -53,8 +53,8 @@ export default function DishlistPickerModal({
           onClick={onClose}
         >
           <motion.div
-            className={`no-accent-border flex w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
-              isSwipeCard ? "min-h-[74vh] max-h-[82vh]" : "max-h-[82vh]"
+            className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+              isSwipeCard ? "h-[82vh]" : "max-h-[calc(100dvh-2rem)]"
             } ${
               darkMode
                 ? "border-white/12 bg-[#101010] text-white"
@@ -117,7 +117,7 @@ export default function DishlistPickerModal({
               </div>
             ) : (
               <>
-                <div className={`flex flex-1 flex-col gap-2 overflow-y-auto pr-1 ${isSwipeCard ? "min-h-0" : "max-h-[52vh]"}`}>
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
                   {orderedLists.map((dishlist) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);

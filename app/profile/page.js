@@ -46,6 +46,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
+import { RatingStars } from "../../components/RatingStars";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -179,6 +180,7 @@ export default function Profile() {
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [dishTags, setDishTags] = useState([]);
+  const [dishRating, setDishRating] = useState(0);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -450,9 +452,7 @@ export default function Profile() {
       params.set("list", dishlistId);
     }
     const query = params.toString();
-    const nextUrl = query ? `${pathname}?${query}` : pathname;
-    const navigate = dishlistId === "overview" ? router.replace : router.push;
-    navigate(nextUrl, { scroll: false });
+    window.history.pushState({ dishlistId }, "", query ? `${pathname}?${query}` : pathname);
   };
 
   const handleDishlistDetailPointerDown = (event) => {
@@ -592,6 +592,7 @@ export default function Profile() {
         recipeIngredients: dishRecipeIngredients || "",
         recipeMethod: dishRecipeMethod || "",
         tags: dishTags,
+        rating: dishRating,
         isPublic: dishIsPublic,
         ...imageFields,
         owner: user.uid,
@@ -616,6 +617,7 @@ export default function Profile() {
               dishMode: DISH_MODE_COOKING,
               recipeIngredients: dishRecipeIngredients || "",
               recipeMethod: dishRecipeMethod || "",
+              rating: dishRating,
               tags: dishTags,
               isPublic: dishIsPublic,
               ...imageFields,
@@ -633,6 +635,7 @@ export default function Profile() {
       setDishRecipeIngredients("");
       setDishRecipeMethod("");
       setDishTags([]);
+      setDishRating(0);
       setDishIsPublic(true);
       setDishImage(null);
       setPreview(null);
@@ -1564,6 +1567,10 @@ export default function Profile() {
                 rows={3}
                 disabled={loadingUpload}
               />
+              <div className="mb-4 rounded-2xl border border-black/10 bg-[#F6F6F2] p-3">
+                <p className="mb-2 text-sm font-medium text-black">{t("Rating")}</p>
+                <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
+              </div>
               <textarea
                 placeholder="Recipe ingredients"
                 value={dishRecipeIngredients}

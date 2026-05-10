@@ -172,6 +172,7 @@ const translations = {
     "Choose dishlists": "Scegli dishlist",
     "Save dish": "Salva piatto",
     "Add To": "Aggiungi a",
+    Rating: "Valutazione",
     "Dish actions": "Azioni piatto",
     "Add to story": "Lo sto mangiando",
     "Edit dish": "Modifica piatto",

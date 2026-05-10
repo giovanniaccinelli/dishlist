@@ -19,6 +19,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dis
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
+import { RatingStars } from "./RatingStars";
 
 function DeckAutoplayVideo({
   src,
@@ -1303,6 +1304,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       </div>
                     )
                   ) : null}
+                  <RatingStars value={currentCard.rating} size="text-[1.05rem]" className="mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]" readOnly />
                 </div>
               ) : null}
             </div>

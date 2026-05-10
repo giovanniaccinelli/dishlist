@@ -12,6 +12,7 @@ import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
+import { RatingStars } from "../../components/RatingStars";
 import { useAuth } from "../lib/auth";
 import { dispatchPushEvent } from "../lib/pushClient";
 import {
@@ -47,6 +48,7 @@ export default function UploadPage() {
   const [storyTaggedUser, setStoryTaggedUser] = useState("");
   const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
   const [dishTags, setDishTags] = useState([]);
+  const [dishRating, setDishRating] = useState(0);
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -166,8 +168,8 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
-    setDishlistPickerOpen(false);
-    setLoadingUpload(true);
+      setDishlistPickerOpen(false);
+      setLoadingUpload(true);
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
       if (dishImage) {
@@ -184,6 +186,7 @@ export default function UploadPage() {
           recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
+          rating: dishRating,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           ...imageFields,
@@ -210,6 +213,7 @@ export default function UploadPage() {
           recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
+          rating: dishRating,
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           isPublic: dishIsPublic,
@@ -237,6 +241,7 @@ export default function UploadPage() {
         setToastVariant("success");
         setToast("Dish uploaded");
         setTimeout(() => navigateBackToOrigin(), 1200);
+        setDishRating(0);
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);
@@ -600,6 +605,12 @@ export default function UploadPage() {
                   rows={2}
                   disabled={loadingUpload}
                 />
+                <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
+                  <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {language === "it" ? "Valutazione" : "Rating"}
+                  </div>
+                  <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
+                </div>
                 <div className="mb-4">
                   <button
                     type="button"

@@ -382,10 +382,6 @@ function CategoryTitle({ row, t, darkMode = false }) {
 function ExploreRow({ row, onExpand, t, darkMode = false }) {
   const { title, dishes } = row;
   if (row.type === "map") {
-    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-    const mapSrc = key
-      ? `https://maps.googleapis.com/maps/api/staticmap?center=45.4642,9.19&zoom=12&size=640x220&scale=2&maptype=roadmap&key=${encodeURIComponent(key)}`
-      : "";
     return (
       <section className="explore-row no-accent-border mb-6 shadow-none">
         <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
@@ -403,17 +399,19 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
         <button
           type="button"
           onClick={onExpand}
-          className={`no-accent-border relative block h-[11rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block h-[7.75rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
           aria-label="Open map"
         >
-          {mapSrc ? (
-            <img src={mapSrc} alt="Map preview" className="h-full w-full object-cover" loading="lazy" decoding="async" />
-          ) : (
-            <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(90deg, rgba(230,70,70,.18) 1px, transparent 1px), linear-gradient(rgba(230,70,70,.18) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-[#1D241F]" />
+          <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+          <div className="absolute -left-8 top-8 h-20 w-[120%] rotate-[-10deg] rounded-full border-[10px] border-[#E64646]/28" />
+          <div className="absolute left-1/4 top-5 h-16 w-16 rounded-full border-[8px] border-[#F0A623]/28" />
+          <div className="absolute right-10 top-7 flex h-9 w-9 items-center justify-center rounded-full bg-[#E64646] text-white shadow-[0_12px_28px_rgba(0,0,0,0.25)]">
+            <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.2} />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
         </button>
       </section>
     );

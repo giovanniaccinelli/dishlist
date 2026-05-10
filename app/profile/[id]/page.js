@@ -288,9 +288,7 @@ export default function PublicProfile() {
       params.set("list", dishlistId);
     }
     const query = params.toString();
-    const nextUrl = query ? `${pathname}?${query}` : pathname;
-    const navigate = dishlistId === "overview" ? router.replace : router.push;
-    navigate(nextUrl, { scroll: false });
+    window.history.pushState({ dishlistId }, "", query ? `${pathname}?${query}` : pathname);
   };
 
   const handleDishlistDetailPointerDown = (event) => {

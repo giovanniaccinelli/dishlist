@@ -404,10 +404,10 @@ export default function UploadPage() {
                             ? "w-10 bg-[#F59E0B]"
                             : step === 2
                               ? "w-10 bg-[#23C268]"
-                              : "w-10 bg-[#F59E0B]"
+                              : "w-10 bg-[#8B5CF6]"
                         : darkMode
-                          ? "w-7 bg-white/28"
-                          : "w-7 bg-[#C9C9C2]"
+                          ? "w-7 border border-white/75 bg-white/16"
+                          : "w-7 border border-white bg-[#C9C9C2]"
                     }`}
                   />
                 ))}

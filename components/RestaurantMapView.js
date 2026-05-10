@@ -152,8 +152,8 @@ export default function RestaurantMapView({
     if (mapRef.current) return;
 
     mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
-      center: { lat: 41.9028, lng: 12.4964 },
-      zoom: 6,
+      center: { lat: 45.4642, lng: 9.19 },
+      zoom: 5,
       disableDefaultUI: true,
       gestureHandling: "greedy",
       clickableIcons: false,
@@ -200,25 +200,25 @@ export default function RestaurantMapView({
 
     if (highlightedGroup) {
       mapRef.current.setCenter({ lat: highlightedGroup.lat, lng: highlightedGroup.lng });
-      mapRef.current.setZoom(15);
+      mapRef.current.setZoom(14);
       return;
     }
 
     if (groups.length === 1) {
       mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
-      mapRef.current.setZoom(15);
+      mapRef.current.setZoom(14);
       return;
     }
 
     mapRef.current.fitBounds(bounds, 56);
     const listener = window.google.maps.event.addListenerOnce(mapRef.current, "bounds_changed", () => {
       const currentZoom = mapRef.current.getZoom();
-      if (currentZoom < 6) {
-        mapRef.current.setZoom(6);
+      if (currentZoom < 5) {
+        mapRef.current.setZoom(5);
         return;
       }
-      if (currentZoom > 13) {
-        mapRef.current.setZoom(13);
+      if (currentZoom > 12) {
+        mapRef.current.setZoom(12);
       }
     });
 
@@ -256,7 +256,7 @@ export default function RestaurantMapView({
     setSelectedPlaceId(group.placeId || "");
     if (mapRef.current && typeof group.lat === "number" && typeof group.lng === "number") {
       mapRef.current.panTo({ lat: group.lat, lng: group.lng });
-      mapRef.current.setZoom(15);
+      mapRef.current.setZoom(14);
     }
     setQuery(group.name || "");
     setPredictions([]);
@@ -291,7 +291,7 @@ export default function RestaurantMapView({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
         });
-        mapRef.current.setZoom(15);
+        mapRef.current.setZoom(14);
       }
     );
   };

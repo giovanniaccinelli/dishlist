@@ -26,6 +26,7 @@ import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForU
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
+import DishRatingBadge from "../../components/DishRatingBadge";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -129,6 +130,7 @@ export default function Dishlists() {
           id: dishId,
           imageUrl,
           dishMode: String(dishData?.dishMode || "").toLowerCase(),
+          rating: Number(dishData?.rating || 0),
         });
       };
 
@@ -186,6 +188,7 @@ export default function Dishlists() {
               id: dish.id,
               imageUrl: getDishImageUrl(dish, "thumb"),
               dishMode: String(dish?.dishMode || "").toLowerCase(),
+              rating: Number(dish?.rating || 0),
             }))
             .filter((dish) => dish.imageUrl);
 
@@ -560,11 +563,12 @@ export default function Dishlists() {
                       {previewCells.map((previewDish, idx) => (
                         <div
                           key={`${u.id}-preview-${idx}-${previewDish.id || "empty"}`}
-                          className={`people-preview-dish no-accent-border aspect-square overflow-hidden rounded-lg border-2 ${
+                          className={`people-preview-dish no-accent-border relative aspect-square overflow-hidden rounded-lg border-2 ${
                             previewDish?.dishMode === "restaurant" ? "restaurant-accent-border" : "default-accent-border"
                           } bg-neutral-100`}
                           style={{ borderColor: previewDish?.dishMode === "restaurant" ? "#E64646" : "#E4B43F" }}
                         >
+                          <DishRatingBadge dish={previewDish} className="left-1 top-1 scale-[0.9]" />
                           {previewDish?.imageUrl ? (
                             <img
                               src={previewDish.imageUrl}

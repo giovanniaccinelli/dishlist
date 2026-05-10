@@ -34,6 +34,7 @@ import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
+import DishRatingBadge from "../../../components/DishRatingBadge";
 import RestaurantMapView from "../../../components/RestaurantMapView";
 import {
   dishModeMatches,
@@ -900,18 +901,20 @@ export default function PublicProfile() {
                       {Array.from({ length: 4 }).map((_, index) => {
                         const dish = preview[index];
                         return dish ? (
-                          <img
-                            key={`${dishlist.id}-${dish.id}-${index}`}
-                            src={getDishImageUrl(dish, "thumb")}
-                            alt={dish.name || dishlist.name}
-                            className={`no-accent-border aspect-square w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
-                            style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                            loading="lazy"
-                            decoding="async"
-                            onError={(event) => {
-                              event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                            }}
-                          />
+                          <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
+                            <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
+                            <img
+                              src={getDishImageUrl(dish, "thumb")}
+                              alt={dish.name || dishlist.name}
+                              className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"} object-cover`}
+                              style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
+                              loading="lazy"
+                              decoding="async"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             key={`${dishlist.id}-empty-${index}`}
@@ -989,6 +992,7 @@ export default function PublicProfile() {
                 >
                   <span className="sr-only">Open dish card</span>
                 </Link>
+                <DishRatingBadge dish={dish} />
                 <img
                   src={getDishImageUrl(dish, "thumb")}
                   alt={dish.name}
@@ -1146,18 +1150,20 @@ export default function PublicProfile() {
                         {Array.from({ length: 4 }).map((_, index) => {
                           const dish = preview[index];
                           return dish ? (
-                            <img
-                              key={`${dishlist.id}-${dish.id}-${index}`}
-                              src={getDishImageUrl(dish, "thumb")}
-                              alt={dish.name || dishlist.name}
-                              className={`no-accent-border aspect-square w-full rounded-[0.85rem] border-2 object-cover ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
-                              style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(event) => {
-                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                              }}
-                            />
+                            <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
+                              <DishRatingBadge dish={dish} className="left-1 top-1 scale-[0.9]" />
+                              <img
+                                src={getDishImageUrl(dish, "thumb")}
+                                alt={dish.name || dishlist.name}
+                                className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 object-cover ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
+                                style={{ borderColor: String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "#E64646" : "#E4B43F" }}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(event) => {
+                                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                }}
+                              />
+                            </div>
                           ) : (
                             <div
                               key={`${dishlist.id}-empty-${index}`}

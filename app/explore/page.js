@@ -31,6 +31,7 @@ import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import MapPreview from "../../components/MapPreview";
+import DishRatingBadge from "../../components/DishRatingBadge";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
@@ -311,6 +312,7 @@ function DishPreview({ dish, title, t }) {
   return (
     <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+      <DishRatingBadge dish={dish} />
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -484,6 +486,7 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
           {row.dishes.map((dish) => (
             <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
               <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+              <DishRatingBadge dish={dish} />
               <img
                 src={getDishImageUrl(dish, "thumb")}
                 alt={dish.name}

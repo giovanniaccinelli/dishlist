@@ -23,6 +23,7 @@ import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
+import DishRatingBadge from "../../components/DishRatingBadge";
 import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
 
 const DISHES_PAGE_SIZE = 24;
@@ -693,6 +694,7 @@ export default function Dishes() {
                 >
                   <span className="sr-only">Open dish card</span>
                 </Link>
+                <DishRatingBadge dish={dish} />
                 <img
                   src={imageSrc}
                   alt={dish.name}

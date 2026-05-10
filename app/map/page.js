@@ -80,9 +80,6 @@ function MapPageContent() {
         <h1 className="mt-2 text-[2rem] leading-none font-semibold text-black">
           {t("Restaurants map")}
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-black/58">
-          A shared map of restaurants people have linked to their dishes, with the meals posted from each place.
-        </p>
       </div>
 
       <RestaurantMapView

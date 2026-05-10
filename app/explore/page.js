@@ -654,10 +654,12 @@ export default function Explore() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between relative">
-        <h1 className="text-2xl font-bold">{t("Explore")}</h1>
-        <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
-        <div className="flex items-center gap-2">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[1fr_auto_1fr] items-center relative">
+        <h1 className="justify-self-start text-2xl font-bold">{t("Explore")}</h1>
+        <div className="justify-self-center">
+          <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
+        </div>
+        <div className="flex items-center gap-2 justify-self-end">
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
         </div>
       </div>

@@ -152,8 +152,8 @@ export default function RestaurantMapView({
     if (mapRef.current) return;
 
     mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
-      center: { lat: 20, lng: 0 },
-      zoom: 3,
+      center: { lat: 41.9028, lng: 12.4964 },
+      zoom: 6,
       disableDefaultUI: true,
       gestureHandling: "greedy",
       clickableIcons: false,
@@ -206,13 +206,18 @@ export default function RestaurantMapView({
 
     if (groups.length === 1) {
       mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
-      mapRef.current.setZoom(14);
+      mapRef.current.setZoom(15);
       return;
     }
 
     mapRef.current.fitBounds(bounds, 56);
     const listener = window.google.maps.event.addListenerOnce(mapRef.current, "bounds_changed", () => {
-      if (mapRef.current.getZoom() > 13) {
+      const currentZoom = mapRef.current.getZoom();
+      if (currentZoom < 6) {
+        mapRef.current.setZoom(6);
+        return;
+      }
+      if (currentZoom > 13) {
         mapRef.current.setZoom(13);
       }
     });

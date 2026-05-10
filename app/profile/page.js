@@ -62,7 +62,7 @@ const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
   { label: "Details", color: "#F59E0B" },
   { label: "Recipe", color: "#23C268" },
-  { label: "Story", color: "#2BD36B" },
+  { label: "Story", color: "#F59E0B" },
 ];
 
 function StoryStatIcon({ size = 10 }) {
@@ -2631,7 +2631,7 @@ export default function Profile() {
                   <div className="flex h-full flex-col justify-between gap-8">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>Find dish</p>
+                        <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Find dish")}</p>
                         <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/60"}`}>Pick an existing dish for your story.</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">

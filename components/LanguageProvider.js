@@ -106,7 +106,7 @@ const translations = {
     "Create dish": "Carica",
     "Upload dish": "Carica",
     "Post a new dish to your DishList.": "Pubblica un nuovo piatto nella tua DishList.",
-    "Find dish": "Trova piatto",
+    "Find dish": "Cerca",
     "See if it already exists.": "Guarda se esiste gi\u00e0.",
     "Dish mode": "Modalit\u00e0 piatto",
     "Show dishes from": "Mostra piatti da",

@@ -751,10 +751,10 @@ export default function DishDetail() {
                           ? "w-10 bg-[#F59E0B]"
                           : step === 2
                             ? "w-10 bg-[#23C268]"
-                            : "w-10 bg-[#2BD36B]"
+                            : "w-10 bg-[#F59E0B]"
                       : darkMode
-                        ? "w-7 bg-white/16"
-                        : "w-7 bg-black/20"
+                        ? "w-7 bg-white/28"
+                        : "w-7 bg-[#C9C9C2]"
                   }`}
                   />
                 ))}

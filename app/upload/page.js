@@ -404,10 +404,10 @@ export default function UploadPage() {
                             ? "w-10 bg-[#F59E0B]"
                             : step === 2
                               ? "w-10 bg-[#23C268]"
-                              : "w-10 bg-[#2BD36B]"
+                              : "w-10 bg-[#F59E0B]"
                         : darkMode
-                          ? "w-7 bg-white/16"
-                          : "w-7 bg-black/20"
+                          ? "w-7 bg-white/28"
+                          : "w-7 bg-[#C9C9C2]"
                     }`}
                   />
                 ))}
@@ -848,7 +848,7 @@ export default function UploadPage() {
                 <div className="flex h-full flex-col justify-between gap-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className={`text-[1.9rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>Find dish</p>
+                      <p className={`text-[1.9rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Find dish")}</p>
                       <p className={`mt-4 text-base max-w-[15rem] ${darkMode ? "text-white/64" : "text-black/70"}`}>See if it already exists.</p>
                     </div>
                     <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">

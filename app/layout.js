@@ -11,7 +11,7 @@ import { LanguageProvider } from "../components/LanguageProvider";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="it" className="dark" suppressHydrationWarning>
       <head>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-RK0GKK67BN"
@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
-          <div className="app-background-surface absolute inset-0 bg-[#FFF8EF]" />
+          <div className="app-background-surface absolute inset-0 bg-[#050505]" />
         </div>
         <div className="relative z-10 min-h-[100dvh]">
           <AuthProvider>

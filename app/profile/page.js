@@ -1140,7 +1140,7 @@ export default function Profile() {
             onSelect={setSelectedDishMode}
           />
         </div>
-        <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-4">
+        <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => {

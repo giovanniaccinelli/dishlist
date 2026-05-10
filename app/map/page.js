@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CircleUserRound } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import RestaurantMapView from "../../components/RestaurantMapView";
@@ -65,11 +65,11 @@ function MapPageContent() {
         </div>
         <button
           type="button"
-          onClick={() => router.push(user ? "/profile" : "/")}
+          onClick={() => router.push(user ? "/directs" : "/")}
           className="top-action-btn"
-          aria-label="Profile"
+          aria-label="Directs"
         >
-          <CircleUserRound size={18} />
+          <Send size={18} />
         </button>
       </div>
 

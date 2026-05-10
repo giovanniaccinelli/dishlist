@@ -94,6 +94,13 @@ export default function Feed() {
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
 
+  const isOwnDish = (dish) => {
+    if (!userId || !dish) return false;
+    return [dish.owner, dish.ownerId, dish.userId, dish.uploadedBy, dish.createdBy]
+      .filter(Boolean)
+      .some((value) => String(value) === String(userId));
+  };
+
   const shuffleArray = (arr) => {
     const copy = [...arr];
     for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -194,7 +201,7 @@ export default function Feed() {
       setLoadingDishes(true);
       try {
         const allItems = await getAllDishesFromFirestore();
-        const publicItems = allItems.filter((dish) => dish.isPublic !== false);
+        const publicItems = allItems.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
 
         let nextFollowingIds = [];
         let forYou = [];
@@ -345,6 +352,7 @@ export default function Feed() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (loading) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth") !== "1") return;
     if (userId) return;
@@ -365,7 +373,7 @@ export default function Feed() {
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
         return getAllDishesFromFirestore().then((items) => {
-          const publicItems = items.filter((dish) => dish.isPublic !== false);
+          const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
           const ordered = publicItems
             .slice()
             .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
@@ -373,7 +381,7 @@ export default function Feed() {
         });
       })
       .catch((err) => console.error("Failed to recount saves:", err));
-  }, []);
+  }, [loading, userId]);
 
   const excludedTagSet = useMemo(
     () => new Set(excludedTags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)),
@@ -489,7 +497,7 @@ export default function Feed() {
     setLoadingDishes(true);
     try {
       const items = await getAllDishesFromFirestore();
-      const publicItems = items.filter((dish) => dish.isPublic !== false);
+      const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
       const ordered = publicItems
         .slice()
         .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));

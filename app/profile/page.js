@@ -209,6 +209,7 @@ export default function Profile() {
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
+  const [dishCardActionReady, setDishCardActionReady] = useState(false);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -221,6 +222,7 @@ export default function Profile() {
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
   const dishlistDetailSwipeRef = useRef(null);
+  const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL =
     profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "");
@@ -702,6 +704,8 @@ export default function Profile() {
   };
 
   const handlePublishDishCardStory = async (dish) => {
+    const guard = dishActionPointerGuardRef.current;
+    if (!dishCardActionReady || (guard?.dishId === dish?.id && Date.now() < guard.until)) return;
     if (!user?.uid || !dish?.id) return;
     const ok = await publishDishAsStory(user.uid, dish);
     setDishCardActionTarget(null);
@@ -709,6 +713,16 @@ export default function Profile() {
     setToast(ok ? "Story posted" : "Story failed");
     setTimeout(() => setToast(""), 1200);
   };
+
+  useEffect(() => {
+    if (!dishCardActionTarget) {
+      setDishCardActionReady(false);
+      return undefined;
+    }
+    setDishCardActionReady(false);
+    const timer = window.setTimeout(() => setDishCardActionReady(true), 450);
+    return () => window.clearTimeout(timer);
+  }, [dishCardActionTarget?.dish?.id]);
 
   const handleRemoveSavedDish = async (dish) => {
     const ok = await removeSavedDishFromUser(user.uid, dish.id);
@@ -1270,10 +1284,12 @@ export default function Profile() {
                     onPointerDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 1200 };
                     }}
                     onPointerUp={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 1200 };
                     }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -2887,9 +2903,22 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => handlePublishDishCardStory(dishCardActionTarget.dish)}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onPointerUp={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handlePublishDishCardStory(dishCardActionTarget.dish);
+                  }}
+                  disabled={!dishCardActionReady}
                   className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
-                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                    !dishCardActionReady
+                      ? darkMode
+                        ? "border-white/10 bg-white/6 text-white/35"
+                        : "border-black/8 bg-black/4 text-black/35"
+                      : darkMode
+                        ? "border-[#38BDF8]/45 bg-[#0D2634] text-white"
+                        : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
                   }`}
                 >
                   <span>{t("Add to story")}</span>

@@ -24,7 +24,7 @@ import { db } from "../lib/firebase";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CircleUserRound, Plus, Search, Send } from "lucide-react";
+import { Plus, Search, Send } from "lucide-react";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
 
@@ -382,13 +382,6 @@ export default function Dishlists() {
           >
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
-          </Link>
-          <Link
-            href={user ? "/profile" : "/?auth=1"}
-            className="top-action-btn"
-            aria-label="Open profile"
-          >
-            <CircleUserRound size={18} />
           </Link>
         </div>
       </div>

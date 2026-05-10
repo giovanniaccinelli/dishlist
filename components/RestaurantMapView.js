@@ -66,8 +66,8 @@ export default function RestaurantMapView({
     if (!Number.isFinite(selectedGroup.lat) || !Number.isFinite(selectedGroup.lng)) return;
     mapRef.current.panTo({ lat: selectedGroup.lat, lng: selectedGroup.lng });
     const currentZoom = mapRef.current.getZoom?.() || 0;
-    if (currentZoom < 13) {
-      mapRef.current.setZoom(13);
+    if (currentZoom < 14) {
+      mapRef.current.setZoom(14);
     }
   }, [selectedGroup?.placeId]);
 
@@ -153,7 +153,7 @@ export default function RestaurantMapView({
 
     mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
       center: { lat: 20, lng: 0 },
-      zoom: 2,
+      zoom: 3,
       disableDefaultUI: true,
       gestureHandling: "greedy",
       clickableIcons: false,
@@ -200,20 +200,20 @@ export default function RestaurantMapView({
 
     if (highlightedGroup) {
       mapRef.current.setCenter({ lat: highlightedGroup.lat, lng: highlightedGroup.lng });
-      mapRef.current.setZoom(14);
+      mapRef.current.setZoom(15);
       return;
     }
 
     if (groups.length === 1) {
       mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
-      mapRef.current.setZoom(13);
+      mapRef.current.setZoom(14);
       return;
     }
 
     mapRef.current.fitBounds(bounds, 56);
     const listener = window.google.maps.event.addListenerOnce(mapRef.current, "bounds_changed", () => {
-      if (mapRef.current.getZoom() > 12) {
-        mapRef.current.setZoom(12);
+      if (mapRef.current.getZoom() > 13) {
+        mapRef.current.setZoom(13);
       }
     });
 
@@ -251,7 +251,7 @@ export default function RestaurantMapView({
     setSelectedPlaceId(group.placeId || "");
     if (mapRef.current && typeof group.lat === "number" && typeof group.lng === "number") {
       mapRef.current.panTo({ lat: group.lat, lng: group.lng });
-      mapRef.current.setZoom(14);
+      mapRef.current.setZoom(15);
     }
     setQuery(group.name || "");
     setPredictions([]);
@@ -286,7 +286,7 @@ export default function RestaurantMapView({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
         });
-        mapRef.current.setZoom(14);
+        mapRef.current.setZoom(15);
       }
     );
   };

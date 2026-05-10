@@ -41,7 +41,7 @@ import { db } from "./lib/firebase";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
-import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../components/LanguageProvider";
+import { useLanguage } from "../components/LanguageProvider";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -53,7 +53,7 @@ const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 
 export default function Feed() {
   const { user, loading } = useAuth();
-  const { t, language, setLanguage, darkMode } = useLanguage();
+  const { t, darkMode } = useLanguage();
   const userId = user?.uid || null;
   const router = useRouter();
   const forYouDeckRef = useRef(null);
@@ -90,7 +90,6 @@ export default function Feed() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
@@ -599,49 +598,6 @@ export default function Feed() {
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setLanguageMenuOpen((prev) => !prev)}
-              className="top-action-btn text-[1.05rem]"
-              aria-label="Open language options"
-            >
-              {language === LANGUAGE_IT ? "🇮🇹" : "🇬🇧"}
-            </button>
-            <AnimatePresence>
-              {languageMenuOpen ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: -6 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96, y: -6 }}
-                  className="absolute right-0 top-[calc(100%+0.45rem)] z-40 w-36 rounded-2xl border border-black/10 bg-white p-2 shadow-[0_18px_36px_rgba(0,0,0,0.14)]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLanguage(LANGUAGE_EN);
-                      setLanguageMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold ${language === LANGUAGE_EN ? "bg-black/5 text-black" : "text-black/72"}`}
-                  >
-                    <span className="text-base">🇬🇧</span>
-                    <span>{t("English")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLanguage(LANGUAGE_IT);
-                      setLanguageMenuOpen(false);
-                    }}
-                    className={`mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold ${language === LANGUAGE_IT ? "bg-black/5 text-black" : "text-black/72"}`}
-                  >
-                    <span className="text-base">🇮🇹</span>
-                    <span>{t("Italian")}</span>
-                  </button>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
         </div>
       </div>
       {!userId && guestMode === "feed" && (

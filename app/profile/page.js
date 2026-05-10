@@ -62,7 +62,7 @@ const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
   { label: "Details", color: "#F59E0B" },
   { label: "Recipe", color: "#23C268" },
-  { label: "Story", color: "#111111" },
+  { label: "Story", color: "#2BD36B" },
 ];
 
 function StoryStatIcon({ size = 10 }) {

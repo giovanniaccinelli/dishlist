@@ -8,7 +8,6 @@ import {
   ChefHat,
   Check,
   ChevronRight,
-  CircleUserRound,
   Dumbbell,
   Flame,
   Leaf,
@@ -360,7 +359,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
   }
 
   const decor = TAG_DECOR[String(row.rawTag || "").toLowerCase()] || {
-    icon: CircleUserRound,
+    icon: Users,
     iconClass: "text-black/55",
     iconSize: "h-[1.3rem] w-[1.3rem]",
     pillClass: getTagChipClass(row.rawTag || row.title, true),
@@ -660,7 +659,6 @@ export default function Explore() {
         <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
         <div className="flex items-center gap-2">
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
-          <TopActionButton href={user ? "/profile" : "/?auth=1"} icon={CircleUserRound} label="Open profile" />
         </div>
       </div>
       <SearchBar

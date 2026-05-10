@@ -8,6 +8,7 @@ import { useAuth } from "../app/lib/auth";
 export const LANGUAGE_EN = "en";
 export const LANGUAGE_IT = "it";
 const LANGUAGE_STORAGE_KEY = "dishlist-language";
+const LANGUAGE_EXPLICIT_STORAGE_KEY = "dishlist-language-explicit";
 const DARK_MODE_STORAGE_KEY = "dishlist-dark-mode";
 const TEXT_ATTRIBUTES = ["placeholder", "aria-label", "title", "value"];
 const textNodeOriginals = new WeakMap();
@@ -359,7 +360,7 @@ function applyTranslationsToDocument(language) {
 }
 
 const LanguageContext = createContext({
-  language: LANGUAGE_EN,
+  language: LANGUAGE_IT,
   setLanguage: () => {},
   darkMode: false,
   setDarkMode: () => {},
@@ -368,14 +369,17 @@ const LanguageContext = createContext({
 
 export function LanguageProvider({ children }) {
   const { user } = useAuth();
-  const [language, setLanguageState] = useState(LANGUAGE_EN);
+  const [language, setLanguageState] = useState(LANGUAGE_IT);
   const [darkMode, setDarkModeState] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (stored === LANGUAGE_EN || stored === LANGUAGE_IT) {
+    const explicit = window.localStorage.getItem(LANGUAGE_EXPLICIT_STORAGE_KEY) === "1";
+    if (explicit && (stored === LANGUAGE_EN || stored === LANGUAGE_IT)) {
       setLanguageState(stored);
+    } else {
+      setLanguageState(LANGUAGE_IT);
     }
     setDarkModeState(true);
   }, []);
@@ -389,10 +393,11 @@ export function LanguageProvider({ children }) {
         const snap = await getDoc(doc(db, "users", user.uid));
         const data = snap.exists() ? snap.data() : {};
         const remoteLanguage = data?.language || "";
-        if (!cancelled && (remoteLanguage === LANGUAGE_EN || remoteLanguage === LANGUAGE_IT)) {
+        if (!cancelled && data?.languagePreferenceSet === true && (remoteLanguage === LANGUAGE_EN || remoteLanguage === LANGUAGE_IT)) {
           setLanguageState((prev) => {
             const stored = typeof window !== "undefined" ? window.localStorage.getItem(LANGUAGE_STORAGE_KEY) : "";
-            return stored === LANGUAGE_EN || stored === LANGUAGE_IT ? stored : remoteLanguage;
+            const explicit = typeof window !== "undefined" ? window.localStorage.getItem(LANGUAGE_EXPLICIT_STORAGE_KEY) === "1" : false;
+            return explicit && (stored === LANGUAGE_EN || stored === LANGUAGE_IT) ? stored : remoteLanguage;
           });
         }
         if (!cancelled && data?.darkMode === true) {
@@ -435,9 +440,12 @@ export function LanguageProvider({ children }) {
   const setLanguage = async (nextLanguage) => {
     if (nextLanguage !== LANGUAGE_EN && nextLanguage !== LANGUAGE_IT) return;
     setLanguageState(nextLanguage);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LANGUAGE_EXPLICIT_STORAGE_KEY, "1");
+    }
     if (!user?.uid) return;
     try {
-      await setDoc(doc(db, "users", user.uid), { language: nextLanguage }, { merge: true });
+      await setDoc(doc(db, "users", user.uid), { language: nextLanguage, languagePreferenceSet: true }, { merge: true });
     } catch (err) {
       console.warn("Failed to persist language preference:", err);
     }

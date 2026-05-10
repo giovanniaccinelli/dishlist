@@ -147,13 +147,13 @@ function buildDishPayload(dishId, dishData = null) {
         owner: dishData.owner || "",
         ownerName: dishData.ownerName || "",
         ownerPhotoURL: dishData.ownerPhotoURL || "",
+        saves: Math.max(0, Number(dishData.saves || 0)),
         createdAt: dishData.createdAt || new Date(),
       }
     : { dishId, createdAt: new Date() };
 }
 
 async function hydrateDishPayload(dishId, payload) {
-  if (payload?.name) return payload;
   try {
     const dishSnap = await getDoc(doc(db, "dishes", dishId));
     if (!dishSnap.exists()) return payload;
@@ -185,12 +185,87 @@ async function hydrateDishPayload(dishId, payload) {
       owner: data.owner || payload?.owner || "",
       ownerName: data.ownerName || payload?.ownerName || "",
       ownerPhotoURL: data.ownerPhotoURL || payload?.ownerPhotoURL || "",
+      saves: Math.max(0, Number(data.saves ?? payload?.saves ?? 0)),
       createdAt: data.createdAt || payload?.createdAt || new Date(),
     };
   } catch (err) {
     console.warn("Failed to hydrate dish payload, continuing:", err);
     return payload;
   }
+}
+
+async function mergeDishesWithCanonical(dishes = []) {
+  const items = (Array.isArray(dishes) ? dishes : []).filter((dish) => dish?.id);
+  if (!items.length) return [];
+
+  const canonicalSnaps = await Promise.all(
+    items.map((dish) => getDoc(doc(db, "dishes", dish.id)))
+  );
+  const canonicalMap = new Map();
+  canonicalSnaps.forEach((snap) => {
+    if (snap.exists()) canonicalMap.set(snap.id, snap.data());
+  });
+
+  return items.map((dish) => {
+    const canonical = canonicalMap.get(dish.id);
+    if (!canonical) {
+      return {
+        ...dish,
+        saves: Math.max(0, Number(dish.saves || 0)),
+      };
+    }
+    return {
+      ...dish,
+      name: canonical.name || dish.name || "",
+      description: canonical.description || dish.description || "",
+      dishLink: canonical.dishLink || dish.dishLink || "",
+      dishMode: canonical.dishMode || dish.dishMode || "",
+      restaurant: normalizeRestaurant(canonical.restaurant || dish.restaurant),
+      mediaType:
+        canonical.mediaType ||
+        dish.mediaType ||
+        (canonical.mediaMimeType?.startsWith("video/") || dish.mediaMimeType?.startsWith("video/")
+          ? "video"
+          : "image"),
+      mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
+      recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
+      recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
+      rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
+      tags: normalizeTags(canonical.tags || dish.tags),
+      isPublic: canonical.isPublic !== false,
+      cardURL:
+        canonical.cardURL ||
+        canonical.imageURL ||
+        canonical.imageUrl ||
+        dish.cardURL ||
+        dish.imageURL ||
+        "",
+      thumbURL:
+        canonical.thumbURL ||
+        canonical.thumbnailURL ||
+        canonical.cardURL ||
+        canonical.imageURL ||
+        dish.thumbURL ||
+        dish.cardURL ||
+        dish.imageURL ||
+        "",
+      imageURL:
+        canonical.imageURL ||
+        canonical.imageUrl ||
+        canonical.image_url ||
+        canonical.image ||
+        dish.imageURL ||
+        dish.imageUrl ||
+        dish.image_url ||
+        dish.image ||
+        "",
+      owner: canonical.owner || dish.owner || "",
+      ownerName: canonical.ownerName || dish.ownerName || "",
+      ownerPhotoURL: canonical.ownerPhotoURL || dish.ownerPhotoURL || "",
+      saves: Math.max(0, Number(canonical.saves ?? dish.saves ?? 0)),
+      createdAt: canonical.createdAt || dish.createdAt || null,
+    };
+  });
 }
 
 function normalizeDishlistName(name) {
@@ -621,6 +696,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
     };
   }
 
+  await syncDishSaveCount(dishId);
   clearReadCache(userId);
   return true;
 }
@@ -672,13 +748,10 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   const userRef = doc(db, "users", userId);
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
-    const existingSaved = await getDoc(savedDocRef);
     await setDoc(userRef, { savedDishes: arrayUnion(dishId), toTryDishes: arrayRemove(dishId) }, { merge: true });
     await setDoc(savedDocRef, payload, { merge: true });
     await deleteDoc(doc(db, "users", userId, "toTry", dishId));
-    if (!existingSaved.exists()) {
-      await syncDishSaveCount(dishId);
-    }
+    await syncDishSaveCount(dishId);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -744,7 +817,8 @@ export async function getToTryDishesFromFirestore(userId) {
   return cachedRead(`user:${userId}:toTry`, async () => {
     const toTrySub = await getDocs(collection(db, "users", userId, "toTry"));
     const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
-    return enrichWithOwnerPhotos(results);
+    const merged = await mergeDishesWithCanonical(results);
+    return enrichWithOwnerPhotos(merged);
   });
 }
 
@@ -757,7 +831,8 @@ export async function getCustomDishlistsForUser(userId) {
         const data = dishlistDoc.data() || {};
         const itemSnap = await getDocs(customDishlistItemsCollection(userId, dishlistDoc.id));
         const dishes = itemSnap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
-        const enriched = await enrichWithOwnerPhotos(dishes);
+        const merged = await mergeDishesWithCanonical(dishes);
+        const enriched = await enrichWithOwnerPhotos(merged);
         return {
           id: dishlistDoc.id,
           name: data.name || "Dishlist",
@@ -783,7 +858,8 @@ export async function getCustomDishlistDishes(userId, dishlistId) {
   return cachedRead(`user:${userId}:customDishlist:${dishlistId}`, async () => {
     const snapshot = await getDocs(customDishlistItemsCollection(userId, dishlistId));
     const dishes = snapshot.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
-    return enrichWithOwnerPhotos(dishes);
+    const merged = await mergeDishesWithCanonical(dishes);
+    return enrichWithOwnerPhotos(merged);
   });
 }
 

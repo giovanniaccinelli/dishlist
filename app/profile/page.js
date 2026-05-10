@@ -1269,7 +1269,7 @@ export default function Profile() {
   const showingDishlistOverview = activeDishlistId === "overview";
   const getVisibleDishlistDishes = (dishlist) =>
     orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
-  const getDishlistPreviewDishes = (dishlist) => (dishlist?.dishes || []).slice(0, 4);
+  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || []).slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist

@@ -372,7 +372,7 @@ export default function Feed() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const recountFlagKey = "dishlist-save-recount-v2";
+    const recountFlagKey = "dishlist-save-recount-v3";
     const shouldRecount = params.get("recountSaves") === "1" || window.localStorage.getItem(recountFlagKey) !== "done";
     if (!shouldRecount) return;
     recountDishSavesFromUsers()

@@ -406,7 +406,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const actionBottom = 24;
   const tagsBottom = actionBottom + 64;
   const commentBottom = tagsBottom + 8;
-  const textBottom = Math.max(120, commentBottom + 40);
+  const textBottom = Math.max(88, commentBottom + 4);
   const recipeContentBottom = Math.max(tagsBottom + 28, 132);
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardBorderClass = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
@@ -1200,9 +1200,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{
-                    height: "46%",
+                    height: "36%",
                     background:
-                      "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.68) 36%, rgba(0,0,0,0.30) 64%, rgba(0,0,0,0) 100%)",
+                      "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.70) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
                   }}
                 />
               ) : null}
@@ -1454,7 +1454,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 aria-label="Open comments"
               >
                 <MessageCircle size={28} strokeWidth={2.15} />
-                <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span>
+                {dishCommentCount > 0 ? <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span> : null}
               </button>
               <button
                 data-no-drag="true"
@@ -1604,7 +1604,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 aria-label="Open comments"
               >
                 <MessageCircle size={28} strokeWidth={2.15} />
-                <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span>
+                {dishCommentCount > 0 ? <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span> : null}
               </button>
               <button
                 data-no-drag="true"
@@ -1657,7 +1657,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 className={`inline-flex items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-white px-3 py-2 text-[12px] font-semibold text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)]`}
               >
                 <MessageCircle size={17} strokeWidth={2.1} />
-                <span>{recipeCommentCount}</span>
+                {recipeCommentCount > 0 ? <span>{recipeCommentCount}</span> : null}
               </button>
             </div>
           ) : null}

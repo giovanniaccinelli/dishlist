@@ -2818,6 +2818,16 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePublishDishCardStory(dishCardActionTarget.dish)}
+                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
+                  }`}
+                >
+                  <span>{t("Add to story")}</span>
+                  <StoryStatIcon size={17} />
+                </button>
                 {dishCardActionTarget.dish?.owner === user?.uid ? (
                   <button
                     type="button"
@@ -2835,16 +2845,6 @@ export default function Profile() {
                     <Pencil size={16} />
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => handlePublishDishCardStory(dishCardActionTarget.dish)}
-                  className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
-                    darkMode ? "border-[#38BDF8]/45 bg-[#0D2634] text-white" : "border-[#38BDF8]/45 bg-[#EFFAFF] text-black"
-                  }`}
-                >
-                  <span>{t("Add to story")}</span>
-                  <StoryStatIcon size={17} />
-                </button>
                 <button
                   type="button"
                   onClick={() => {

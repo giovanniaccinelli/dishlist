@@ -604,9 +604,10 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
   // Best-effort: keep a savedDishes array for quick lookups
   try {
     const refDoc = doc(db, "users", userId);
-    await setDoc(refDoc, { savedDishes: arrayUnion(dishId) }, { merge: true });
+    await setDoc(refDoc, { savedDishes: arrayUnion(dishId), toTryDishes: arrayRemove(dishId) }, { merge: true });
+    await deleteDoc(doc(db, "users", userId, "toTry", dishId));
   } catch (err) {
-    console.warn("Failed to update savedDishes array, continuing:", err);
+    console.warn("Failed to update saved/to-try arrays, continuing:", err);
   }
 
   if (typeof globalThis !== "undefined") {
@@ -670,8 +671,9 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
   const savedDocRef = doc(db, "users", userId, "saved", dishId);
   try {
     const existingSaved = await getDoc(savedDocRef);
-    await updateDoc(userRef, { savedDishes: arrayUnion(dishId) });
+    await setDoc(userRef, { savedDishes: arrayUnion(dishId), toTryDishes: arrayRemove(dishId) }, { merge: true });
     await setDoc(savedDocRef, payload, { merge: true });
+    await deleteDoc(doc(db, "users", userId, "toTry", dishId));
     if (!existingSaved.exists()) {
       await syncDishSaveCount(dishId);
     }
@@ -793,7 +795,7 @@ export async function getAllDishlistsForUser(userId) {
   ]);
   const savedIds = new Set(saved.map((dish) => dish?.id).filter(Boolean));
   const toTryCollection = dedupeDishArray([
-    ...toTry,
+    ...toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)),
     ...allDishes.filter((dish) => dish?.id && !savedIds.has(dish.id)),
   ]);
   return [

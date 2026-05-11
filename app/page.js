@@ -37,7 +37,7 @@ import {
   DishModeFilterModal,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, orderBy, query, setDoc, where } from "firebase/firestore";
+import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
@@ -132,6 +132,7 @@ export default function Feed() {
   const [activityItems, setActivityItems] = useState([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activitySeenAt, setActivitySeenAt] = useState(0);
+  const [activityPingAt, setActivityPingAt] = useState(0);
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
@@ -142,7 +143,7 @@ export default function Feed() {
     () => activityItems.filter((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0)),
     [activityItems, activitySeenAt]
   );
-  const hasActivityUpdate = unseenActivityItems.length > 0;
+  const hasActivityUpdate = unseenActivityItems.length > 0 || Number(activityPingAt || 0) > Number(activitySeenAt || 0);
 
   const isOwnDish = (dish) => {
     if (!userId || !dish) return false;
@@ -192,6 +193,24 @@ export default function Feed() {
     return () => {
       cancelled = true;
     };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setActivityPingAt(0);
+      return undefined;
+    }
+    const q = query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(1));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const latest = snapshot.docs[0]?.data();
+        setActivityPingAt(timestampToMs(latest?.createdAt || latest?.updatedAt));
+      },
+      (error) => {
+        console.error("Failed to listen for activity updates:", error);
+      }
+    );
   }, [userId]);
 
   useEffect(() => {
@@ -922,6 +941,7 @@ export default function Feed() {
     await buildActivityItems();
     const now = Date.now();
     setActivitySeenAt(now);
+    setActivityPingAt((value) => Math.min(Number(value || 0), now));
     if (typeof window !== "undefined") {
       localStorage.setItem(activitySeenStorageKey(userId), String(now));
     }

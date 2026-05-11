@@ -695,7 +695,10 @@ export default function Feed() {
       ]);
       const userData = userSnap.exists() ? userSnap.data() || {} : {};
       const followers = Array.isArray(userData.followers) ? userData.followers : [];
-      const followerUsers = await getUsersByIds(followers);
+      const followerUsers = await getUsersByIds(followers).catch((error) => {
+        console.error("Failed to load follower activity:", error);
+        return [];
+      });
       const followerItems = followerUsers.map((follower) => ({
         id: `follow-${follower.id}`,
         kind: "follow",
@@ -725,7 +728,10 @@ export default function Feed() {
 
       const dishCommentGroups = await Promise.all(
         uploadedDishes.slice(0, 24).map(async (dish) => {
-          const comments = await getCommentsForDish(dish.id, 8, "dish");
+          const comments = await getCommentsForDish(dish.id, 8, "dish").catch((error) => {
+            console.error("Failed to load dish activity comments:", error);
+            return [];
+          });
           return comments
             .filter((comment) => comment.userId !== userId)
             .map((comment) => ({
@@ -741,11 +747,17 @@ export default function Feed() {
         })
       );
 
-      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(12)));
+      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(12))).catch((error) => {
+        console.error("Failed to load story activity:", error);
+        return { docs: [] };
+      });
       const storyCommentGroups = await Promise.all(
         storySnap.docs.map(async (storyDoc) => {
           const story = { id: storyDoc.id, ...storyDoc.data() };
-          const comments = await getCommentsForStory(userId, storyDoc.id, 8);
+          const comments = await getCommentsForStory(userId, storyDoc.id, 8).catch((error) => {
+            console.error("Failed to load story activity comments:", error);
+            return [];
+          });
           return comments
             .filter((comment) => comment.userId !== userId)
             .map((comment) => ({
@@ -763,31 +775,49 @@ export default function Feed() {
 
       const saveGroups = await Promise.all(
         uploadedDishes.slice(0, 12).map(async (dish) => {
-          const savedSnap = await getDocs(query(collectionGroup(db, "saved"), where("id", "==", dish.id), limitResults(8)));
-          const events = savedSnap.docs
-            .map((savedDoc) => {
-              const saverId = savedDoc.ref.parent.parent?.id || "";
+          try {
+            const savedSnap = await getDocs(query(collectionGroup(db, "saved"), where("id", "==", dish.id), limitResults(8)));
+            const events = savedSnap.docs
+              .map((savedDoc) => {
+                const saverId = savedDoc.ref.parent.parent?.id || "";
+                return {
+                  saverId,
+                  savedAt: savedDoc.data()?.savedAt || savedDoc.data()?.addedAt || null,
+                };
+              })
+              .filter((event) => event.saverId && event.saverId !== userId);
+            const saverUsers = await getUsersByIds(events.map((event) => event.saverId));
+            const usersById = new Map(saverUsers.map((saver) => [saver.id, saver]));
+            return events.slice(0, 4).map((event) => {
+              const saver = usersById.get(event.saverId);
               return {
-                saverId,
-                savedAt: savedDoc.data()?.savedAt || savedDoc.data()?.addedAt || null,
+                id: `save-${dish.id}-${event.saverId}`,
+                kind: "save",
+                icon: Heart,
+                actor: saver?.displayName || saver?.name || "Someone",
+                text: t("saved your dish"),
+                detail: dish.name || "",
+                href: `/dish/${dish.id}?source=uploaded&mode=single`,
+                timeMs: timestampToMs(event.savedAt),
               };
-            })
-            .filter((event) => event.saverId && event.saverId !== userId);
-          const saverUsers = await getUsersByIds(events.map((event) => event.saverId));
-          const usersById = new Map(saverUsers.map((saver) => [saver.id, saver]));
-          return events.slice(0, 4).map((event) => {
-            const saver = usersById.get(event.saverId);
-            return {
-              id: `save-${dish.id}-${event.saverId}`,
-              kind: "save",
-              icon: Heart,
-              actor: saver?.displayName || saver?.name || "Someone",
-              text: t("saved your dish"),
-              detail: dish.name || "",
-              href: `/dish/${dish.id}?source=uploaded&mode=single`,
-              timeMs: timestampToMs(event.savedAt),
-            };
-          });
+            });
+          } catch (error) {
+            console.error("Failed to load timestamped save activity:", error);
+            const savers = await getUsersWhoSavedDish(dish.id).catch(() => []);
+            return savers
+              .filter((saver) => saver.id !== userId)
+              .slice(0, 3)
+              .map((saver) => ({
+                id: `save-${dish.id}-${saver.id}`,
+                kind: "save",
+                icon: Heart,
+                actor: saver.displayName || saver.name || "Someone",
+                text: t("saved your dish"),
+                detail: dish.name || "",
+                href: `/dish/${dish.id}?source=uploaded&mode=single`,
+                timeMs: timestampToMs(saver.savedAt || saver.addedAt),
+              }));
+          }
         })
       );
 

@@ -1434,6 +1434,11 @@ export default function Profile() {
         dishes: getVisibleDishlistDishes(unfilteredActiveDishlist),
       }
     : null;
+  const visibleLeaderboardTakes = leaderboardTakes.filter((take) => {
+    if (selectedDishMode === DISH_MODE_ALL) return true;
+    const mode = take?.questionDishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
+    return mode === selectedDishMode;
+  });
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const profileCounts = useMemo(
     () => ({
@@ -1873,7 +1878,7 @@ export default function Profile() {
       </div>
 
       {showingDishlistOverview ? (
-        <ProfileTakesStrip takes={leaderboardTakes} darkMode={darkMode} t={t} />
+        <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
       ) : null}
 
       {showingDishlistOverview ? (

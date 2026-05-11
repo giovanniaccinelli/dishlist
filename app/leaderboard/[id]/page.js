@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, animate, useMotionValue, useTransform } from "framer-motion";
-import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle } from "lucide-react";
+import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle, Users, X } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
   addLeaderboardAnswer,
   getLeaderboardAnswers,
   getLeaderboardQuestion,
   getLeaderboardQuestions,
+  getUsersByIds,
   voteLeaderboardAnswer,
 } from "../../lib/firebaseHelpers";
 import { useLanguage } from "../../../components/LanguageProvider";
@@ -51,6 +52,7 @@ export default function LeaderboardQuestionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [votingAnswerId, setVotingAnswerId] = useState("");
+  const [voterModal, setVoterModal] = useState(null);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
 
@@ -165,6 +167,28 @@ export default function LeaderboardQuestionPage() {
     setVotingAnswerId("");
   };
 
+  const openVoters = async (answer) => {
+    const voteIds = Array.isArray(answer?.votes) ? answer.votes.filter(Boolean) : [];
+    if (!voteIds.length) {
+      setVoterModal({ title: answer?.text || "", voters: [] });
+      return;
+    }
+    const users = await getUsersByIds(voteIds);
+    const usersById = new Map(users.map((item) => [item.id, item]));
+    setVoterModal({
+      title: answer?.text || "",
+      voters: voteIds.map((id) => {
+        const isAnonymous = Boolean(answer?.voteAnonymous?.[id]);
+        const voter = usersById.get(id);
+        return {
+          id,
+          name: isAnonymous ? "Anonimo" : voter?.displayName || voter?.name || "User",
+          anonymous: isAnonymous,
+        };
+      }),
+    });
+  };
+
   const stopCardDrag = (event) => {
     event.stopPropagation();
   };
@@ -230,7 +254,7 @@ export default function LeaderboardQuestionPage() {
           <div className="h-12 w-12" />
         </div>
 
-        <div className="relative mt-0 touch-none select-none">
+        <div className="relative mt-0 flex flex-1 touch-none select-none">
           <motion.div
             key={question.id}
             drag={questions.length > 1 && !isEjecting ? "x" : false}
@@ -240,7 +264,7 @@ export default function LeaderboardQuestionPage() {
             initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
-            className="cursor-grab rounded-[1.7rem] border-2 bg-[#101010] p-4 active:cursor-grabbing"
+            className="flex min-h-[calc(100dvh-10.5rem)] w-full cursor-grab flex-col rounded-[1.7rem] border-2 bg-[#101010] p-4 active:cursor-grabbing"
             style={{ x: dragX, rotate: cardRotate, borderColor: accent.main, boxShadow: `0 16px 42px rgba(0,0,0,0.36), 0 0 18px ${accent.glow}` }}
           >
             <div className="mb-3">
@@ -254,15 +278,12 @@ export default function LeaderboardQuestionPage() {
               </div>
             </div>
 
-            <div className={`mb-3 max-h-[18.75rem] space-y-2 overflow-y-auto pr-1 transition-opacity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${answersLoading ? "opacity-55" : "opacity-100"}`}>
+            <div className={`mb-3 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 transition-opacity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${answersLoading ? "opacity-55" : "opacity-100"}`}>
               {rankedAnswers.map((answer, index) => {
                 const alreadyVoted = user?.uid && Array.isArray(answer.votes) && answer.votes.includes(user.uid);
                 return (
-                  <button
-                    type="button"
+                  <div
                     key={answer.id}
-                    onClick={() => vote(answer)}
-                    disabled={Boolean(votingAnswerId)}
                     data-no-question-swipe="true"
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
@@ -274,24 +295,39 @@ export default function LeaderboardQuestionPage() {
                       boxShadow: alreadyVoted ? `inset 0 0 0 1px ${accent.main}, 0 10px 24px rgba(0,0,0,0.16)` : "0 10px 24px rgba(0,0,0,0.16)",
                     }}
                   >
-                    <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
-                      {index + 1}
-                    </div>
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem]" style={{ background: accent.soft }}>
-                      <MessageCircle size={19} style={{ color: accent.main }} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
-                      <div className="mt-1 truncate text-xs text-white/45">
-                        {answer.anonymous ? "Anonimo" : answer.userName || "User"}
+                    <button
+                      type="button"
+                      onClick={() => vote(answer)}
+                      disabled={Boolean(votingAnswerId)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
+                        {index + 1}
                       </div>
-                    </div>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem]" style={{ background: accent.soft }}>
+                        <MessageCircle size={19} style={{ color: accent.main }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
+                        <div className="mt-1 truncate text-xs text-white/45">
+                          {answer.anonymous ? "Anonimo" : answer.userName || "User"}
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openVoters(answer)}
+                      className="flex items-center justify-center text-white/45 transition hover:text-white"
+                      aria-label="Show voters"
+                    >
+                      <Users size={17} />
+                    </button>
                     <div className="flex items-center gap-1 text-sm font-black" style={{ color: accent.main }}>
                       <Flame size={16} />
                       {voteCount(answer)}
                     </div>
                     {alreadyVoted ? <span className="sr-only">Voted</span> : null}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -337,6 +373,33 @@ export default function LeaderboardQuestionPage() {
           ) : null}
         </div>
       </div>
+      {voterModal ? (
+        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/55 px-4 pb-6" onClick={() => setVoterModal(null)}>
+          <div className="w-full max-w-sm rounded-[1.5rem] border border-white/10 bg-[#111111] p-4 text-white shadow-[0_20px_70px_rgba(0,0,0,0.45)]" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-base font-black">Voti</div>
+                <div className="mt-0.5 max-w-[15rem] truncate text-xs text-white/45">{voterModal.title}</div>
+              </div>
+              <button type="button" onClick={() => setVoterModal(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/8">
+                <X size={17} />
+              </button>
+            </div>
+            <div className="max-h-64 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {voterModal.voters.length ? (
+                voterModal.voters.map((voter) => (
+                  <div key={voter.id} className="flex items-center justify-between border-t border-white/8 py-3 text-sm font-semibold">
+                    <span>{voter.name}</span>
+                    {voter.anonymous ? <Lock size={14} className="text-white/35" /> : null}
+                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center text-sm text-white/45">Nessun voto</div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

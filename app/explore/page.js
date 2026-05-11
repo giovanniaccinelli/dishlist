@@ -606,31 +606,29 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;
           const hot = Number(question.recentVotes || 0) > 0;
-          const border = featured ? "2px solid #E64646" : "0.5px solid rgba(255,255,255,0.18)";
-          const forcedRedGlow = featured ? "0 0 22px rgba(230,70,70,0.42), 0 10px 24px rgba(0,0,0,0.18)" : undefined;
+          const cardBorder = featured ? "#E64646" : darkMode ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)";
           return (
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[1.05rem] p-2.5 ${
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-hidden rounded-[1.05rem] border p-2.5 ${
                 darkMode
-                  ? `bg-[#121212] ${featured ? "bg-[linear-gradient(145deg,rgba(230,70,70,0.24),rgba(18,18,18,0.96)_58%)]" : ""}`
-                  : `bg-white ${featured ? "bg-[linear-gradient(145deg,rgba(230,70,70,0.13),rgba(255,255,255,0.98)_58%)]" : ""}`
+                  ? "bg-[#121212]"
+                  : "bg-white"
               }`}
               style={{
-                border,
-                boxShadow: forcedRedGlow || "0 10px 22px rgba(0,0,0,0.14)",
+                borderColor: cardBorder,
+                boxShadow: featured ? "0 0 0 1px rgba(230,70,70,0.28), 0 0 16px rgba(230,70,70,0.32), 0 10px 22px rgba(0,0,0,0.16)" : "0 8px 18px rgba(0,0,0,0.12)",
               }}
             >
-              <div className={`pointer-events-none absolute inset-0 rounded-[1rem] bg-gradient-to-br ${featured ? "from-[#E64646]/24" : accent.glow} via-transparent to-transparent`} />
-              <div className={`relative mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
+              <div className={`mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
                 {hot ? <Flame size={9} fill="currentColor" /> : null}
                 {question.label || t("IN TREND")}
               </div>
-              <div className={`relative min-h-[2.25rem] text-[0.7rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+              <div className={`min-h-[2.25rem] text-[0.7rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                 {question.title}
               </div>
-              <div className="relative mt-2 flex items-center justify-between">
+              <div className="mt-2 flex items-center justify-between">
                 <span className={`text-[9px] font-bold ${featured ? "text-[#E64646]" : accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))}</span>
                 <span className={`flex h-7 w-7 items-center justify-center rounded-full border ${featured ? "border-[#E64646]" : accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
                   <MessageCircle size={13} className={darkMode ? "text-white" : "text-black"} />
@@ -742,6 +740,15 @@ export default function Explore() {
       setLoading(false);
     })();
   }, []);
+
+  const visibleLeaderboardQuestions = useMemo(() => {
+    if (search.trim()) return [];
+    return leaderboardQuestions.filter((question) => {
+      if (selectedDishMode === DISH_MODE_ALL) return true;
+      const mode = question?.dishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
+      return mode === selectedDishMode;
+    });
+  }, [leaderboardQuestions, search, selectedDishMode]);
 
   const toggleTagFilter = (tag) => {
     setSelectedTagsDraft((prev) => {
@@ -993,12 +1000,13 @@ export default function Explore() {
         <CategoryRowsLoading />
       ) : (
         <div>
-          {categoryRows.map((row, index) => (
+          {!categoryRows.some((item) => item.type === "map") ? (
+            <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
+          ) : null}
+          {categoryRows.map((row) => (
             <div key={row.key}>
               <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} />
-              {row.type === "map" || (index === 0 && !categoryRows.some((item) => item.type === "map")) ? (
-                <LeaderboardRail questions={leaderboardQuestions} t={t} darkMode={darkMode} />
-              ) : null}
+              {row.type === "map" ? <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} /> : null}
             </div>
           ))}
         </div>

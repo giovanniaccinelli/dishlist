@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import { AuthProvider } from "./lib/auth";
 import DebugBanner from "../components/DebugBanner";
+import ClientCrashRecovery from "../components/ClientCrashRecovery";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import NotificationsManager from "../components/NotificationsManager";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }) {
           <div className="app-background-surface absolute inset-0 bg-[#050505]" />
         </div>
         <div className="relative z-10 min-h-[100dvh]">
+          <ClientCrashRecovery />
           <AuthProvider>
             <LanguageProvider>
               <GoogleAnalytics />

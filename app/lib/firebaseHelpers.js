@@ -1331,7 +1331,14 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
         return answers
           .filter((answer) => ids.includes(String(answer.userId || "")))
           .filter((answer) => includeAnonymous || !answer.anonymous)
-          .map((answer) => ({ ...answer, questionId: question.id, questionTitle: question.title, questionLabel: question.label, questionAccent: question.accent }));
+          .map((answer) => ({
+            ...answer,
+            questionId: question.id,
+            questionTitle: question.title,
+            questionLabel: question.label,
+            questionAccent: question.accent,
+            questionRecentVotes: question.recentVotes || 0,
+          }));
       })
     );
     return groups

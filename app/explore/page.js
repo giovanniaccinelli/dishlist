@@ -605,28 +605,29 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;
+          const hot = Number(question.recentVotes || 0) > 0;
           return (
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-hidden rounded-[1.05rem] border p-3 shadow-[0_12px_26px_rgba(0,0,0,0.16)] ${
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[0.95rem] border p-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.14)] ${
                 darkMode
-                  ? `bg-[#121212] ${featured ? "border-[#E64646] shadow-[0_0_22px_rgba(230,70,70,0.30),0_12px_26px_rgba(0,0,0,0.22)]" : "border-white/10"}`
-                  : `bg-white ${featured ? "border-[#E64646] shadow-[0_0_18px_rgba(230,70,70,0.20),0_12px_26px_rgba(0,0,0,0.14)]" : accent.border}`
+                  ? `bg-[#121212] ${featured ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.50),0_0_24px_6px_rgba(230,70,70,0.26),0_10px_22px_rgba(0,0,0,0.20)]" : "border-white/10"}`
+                  : `bg-white ${featured ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.42),0_0_22px_5px_rgba(230,70,70,0.22),0_10px_22px_rgba(0,0,0,0.12)]" : accent.border}`
               }`}
             >
               <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${featured ? "from-[#E64646]/25" : accent.glow} via-transparent to-transparent`} />
-              <div className={`relative mb-3 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.06em] ${featured ? "text-[#E64646]" : accent.text}`}>
-                <Flame size={11} fill="currentColor" />
+              <div className={`relative mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
+                {hot ? <Flame size={9} fill="currentColor" /> : null}
                 {question.label || t("IN TREND")}
               </div>
-              <div className={`relative min-h-[3.2rem] text-[0.78rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+              <div className={`relative min-h-[2.55rem] text-[0.7rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                 {question.title}
               </div>
-              <div className="relative mt-3 flex items-center justify-between">
-                <span className={`text-[10px] font-bold ${featured ? "text-[#E64646]" : accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))}</span>
-                <span className={`flex h-8 w-8 items-center justify-center rounded-full border ${featured ? "border-[#E64646]" : accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
-                  <MessageCircle size={15} className={darkMode ? "text-white" : "text-black"} />
+              <div className="relative mt-2 flex items-center justify-between">
+                <span className={`text-[9px] font-bold ${featured ? "text-[#E64646]" : accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))}</span>
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full border ${featured ? "border-[#E64646]" : accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
+                  <MessageCircle size={13} className={darkMode ? "text-white" : "text-black"} />
                 </span>
               </div>
             </Link>

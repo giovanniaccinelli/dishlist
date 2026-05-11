@@ -47,7 +47,7 @@ export default function LeaderboardQuestionPage() {
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState("");
-  const [anonymous, setAnonymous] = useState(true);
+  const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const swipeRef = useRef(null);
 
@@ -58,6 +58,7 @@ export default function LeaderboardQuestionPage() {
   );
   const totalVotes = rankedAnswers.reduce((sum, answer) => sum + voteCount(answer), 0);
   const currentIndex = Math.max(0, questions.findIndex((item) => item.id === questionId));
+  const hot = Number(question?.recentVotes || 0) > 0;
 
   const load = async () => {
     if (!questionId) return;
@@ -67,8 +68,9 @@ export default function LeaderboardQuestionPage() {
       getLeaderboardQuestion(questionId),
       getLeaderboardAnswers(questionId),
     ]);
+    const enrichedQuestion = allQuestions.find((item) => item.id === questionId) || nextQuestion;
     setQuestions(allQuestions);
-    setQuestion(nextQuestion);
+    setQuestion(enrichedQuestion);
     setAnswers(nextAnswers);
     setLoading(false);
   };
@@ -113,18 +115,46 @@ export default function LeaderboardQuestionPage() {
     if (ok) await load();
   };
 
-  const handlePointerDown = (event) => {
-    swipeRef.current = { x: event.clientX, y: event.clientY, t: Date.now() };
+  const isSwipeBlockedTarget = (target) => {
+    return Boolean(target?.closest?.("button,input,textarea,select,a,[data-no-question-swipe='true']"));
   };
 
-  const handlePointerUp = (event) => {
+  const startSwipe = (x, y, target) => {
+    if (isSwipeBlockedTarget(target)) {
+      swipeRef.current = null;
+      return;
+    }
+    swipeRef.current = { x, y, t: Date.now() };
+  };
+
+  const endSwipe = (x, y) => {
     const start = swipeRef.current;
     swipeRef.current = null;
     if (!start) return;
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    if (Math.abs(dx) < 58 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    const dx = x - start.x;
+    const dy = y - start.y;
+    if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
     goToQuestion(dx < 0 ? 1 : -1);
+  };
+
+  const handlePointerDown = (event) => {
+    startSwipe(event.clientX, event.clientY, event.target);
+  };
+
+  const handlePointerUp = (event) => {
+    endSwipe(event.clientX, event.clientY);
+  };
+
+  const handleTouchStart = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    startSwipe(touch.clientX, touch.clientY, event.target);
+  };
+
+  const handleTouchEnd = (event) => {
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    endSwipe(touch.clientX, touch.clientY);
   };
 
   if (loading) {
@@ -172,9 +202,11 @@ export default function LeaderboardQuestionPage() {
         </div>
 
         <div
-          className="relative"
+          className="relative touch-pan-y select-none"
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           onPointerCancel={() => {
             swipeRef.current = null;
           }}
@@ -185,7 +217,7 @@ export default function LeaderboardQuestionPage() {
           >
             <div className="mb-5">
               <div className="mb-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
-                <Flame size={18} fill="currentColor" />
+                {hot ? <Flame size={18} fill="currentColor" /> : null}
                 {question.label || "IN TREND"}
               </div>
               <h1 className="max-w-[94%] text-[2.35rem] font-black leading-[1.06] tracking-[-0.04em]">{question.title}</h1>
@@ -202,6 +234,7 @@ export default function LeaderboardQuestionPage() {
                     type="button"
                     key={answer.id}
                     onClick={() => vote(answer)}
+                    data-no-question-swipe="true"
                     className="flex w-full items-center gap-3 rounded-[1.25rem] bg-[#171717] p-3.5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
@@ -229,6 +262,7 @@ export default function LeaderboardQuestionPage() {
             <div className="rounded-[1.45rem] border border-white/10 bg-[#0B0B0B] p-4">
               <div className="mb-3 text-lg font-black">Aggiungi la tua risposta</div>
               <input
+                data-no-question-swipe="true"
                 value={answerText}
                 onChange={(event) => setAnswerText(event.target.value)}
                 placeholder="Scrivi la tua risposta"
@@ -238,6 +272,7 @@ export default function LeaderboardQuestionPage() {
                 type="button"
                 onClick={submitAnswer}
                 disabled={submitting || !answerText.trim()}
+                data-no-question-swipe="true"
                 className="w-full rounded-[1.15rem] px-5 py-4 text-base font-black text-white disabled:opacity-45"
                 style={{ background: accent.main }}
               >
@@ -246,6 +281,7 @@ export default function LeaderboardQuestionPage() {
               <button
                 type="button"
                 onClick={() => setAnonymous((value) => !value)}
+                data-no-question-swipe="true"
                 className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-bold text-white/34"
               >
                 <Lock size={16} />

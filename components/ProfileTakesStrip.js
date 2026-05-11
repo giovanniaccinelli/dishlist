@@ -14,18 +14,20 @@ const ACCENT_BY_NAME = {
 
 export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (value) => value }) {
   if (!takes.length) return null;
+  const hasHotTake = takes.some((take) => Number(take.questionRecentVotes || 0) > 0);
 
   return (
     <section className="mb-5">
       <div className="mb-3 flex items-center gap-2 px-1">
         <h2 className={`text-[1.15rem] font-bold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Takes")}</h2>
-        <Flame size={18} className="text-[#E64646]" fill="none" />
+        {hasHotTake ? <Flame size={18} className="text-[#E64646]" fill="none" /> : null}
       </div>
       <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
         {takes.slice(0, 8).map((take, index) => {
           const accent = take.accentColor || ACCENT_BY_NAME[take.questionAccent] || ACCENTS[index % ACCENTS.length];
           const questionTitle = take.questionTitle || take.question || t("Leaderboard question");
           const answer = take.text || take.answer || "";
+          const hot = Number(take.questionRecentVotes || 0) > 0;
           return (
             <Link
               key={`${take.questionId || "question"}-${take.id || index}`}
@@ -38,9 +40,10 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
             >
               <div>
                 <span
-                  className="inline-flex rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]"
                   style={{ color: accent, backgroundColor: `${accent}22` }}
                 >
+                  {hot ? <Flame size={11} fill="currentColor" /> : null}
                   {take.questionLabel || "Best"}
                 </span>
                 <div className={`mt-4 text-[0.98rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>

@@ -367,7 +367,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentCard?._key, currentCard]);
 
   useLayoutEffect(() => {
-    if (!currentCard?.description || visibleRecipe) {
+    if (!currentCard?.description || showRecipe) {
       setDescriptionTruncated(false);
       return undefined;
     }
@@ -384,7 +384,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const observer = new ResizeObserver(measureDescription);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [currentCard?._key, currentCard?.description, visibleRecipe]);
+  }, [currentCard?._key, currentCard?.description, showRecipe]);
 
   useEffect(() => {
     if (!showRecipe) {

@@ -601,7 +601,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
         </div>
         <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-3 pl-6 pr-4 pt-1 snap-x snap-mandatory scroll-pl-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-3 overflow-x-auto pb-3 pl-8 pr-4 pt-1 snap-x snap-mandatory scroll-pl-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;

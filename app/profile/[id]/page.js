@@ -239,7 +239,6 @@ export default function PublicProfile() {
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [dishes, setDishes] = useState([]);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
-  const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
@@ -435,6 +434,7 @@ export default function PublicProfile() {
   useEffect(() => {
     if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
     if ([...customDishlists, ...canonicalDishlists].some((dishlist) => dishlist.id === activeDishlistId)) return;
+    if (!canonicalDishlistsLoaded) return;
     setActiveDishlistId("overview");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -442,7 +442,7 @@ export default function PublicProfile() {
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
-  }, [activeDishlistId, customDishlists, canonicalDishlists]);
+  }, [activeDishlistId, customDishlists, canonicalDishlists, canonicalDishlistsLoaded, pathname, router]);
 
   const selectDishlist = (dishlistId) => {
     if (dishlistId !== "overview") setSelectedDishMode(DISH_MODE_ALL);
@@ -1221,62 +1221,6 @@ export default function PublicProfile() {
                   ))}
                 </div>
               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {dishlistsOpen && (
-          <motion.div
-            className={`fixed inset-0 z-[88] overflow-y-auto ${darkMode ? "bg-[#050505]" : "bg-[#F6F6F2]"}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setDishlistsOpen(false)}
-          >
-            <motion.div
-              className={`min-h-screen w-full px-4 pb-28 pt-24 ${darkMode ? "text-white" : "text-black"}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mx-auto w-full max-w-3xl">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
-                    Dishlists
-                  </div>
-                  <h3 className={`mt-2 text-[1.7rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                    {profileUser.displayName || "User"}&apos;s lists
-                  </h3>
-                </div>
-                <button type="button" onClick={() => setDishlistsOpen(false)} className={`text-sm ${darkMode ? "text-white/65" : "text-black/55"}`}>
-                  Close
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {allDishlists.map((dishlist) => {
-                  const preview = getDishlistPreviewDishes(dishlist);
-                  return (
-                    <button
-                      key={dishlist.id}
-                      type="button"
-                      onClick={() => {
-                        selectDishlist(dishlist.id);
-                        setDishlistsOpen(false);
-                      }}
-                      className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
-                        darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-[#FBF8F1]"
-                      }`}
-                    >
-                      <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
-                      <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
-                    </button>
-                  );
-                })}
-              </div>
-              </div>
             </motion.div>
           </motion.div>
         )}

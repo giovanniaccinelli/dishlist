@@ -275,6 +275,7 @@ export default function Profile() {
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
+  const [profileInitialLoadDone, setProfileInitialLoadDone] = useState(false);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -374,8 +375,15 @@ export default function Profile() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      (async () => {
+    if (!user) {
+      setProfileInitialLoadDone(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setProfileInitialLoadDone(false);
+    (async () => {
+      try {
         const loadUserDoc = async () => {
           const matches = [];
           try {
@@ -400,6 +408,7 @@ export default function Profile() {
 
         const { best: userDoc, aliases } = await loadUserDoc();
         const nextProfileUser = userDoc?.exists?.() ? { id: userDoc.id, ...userDoc.data() } : null;
+        if (cancelled) return;
         setProfileAliasIds(aliases.length ? aliases : [user.uid]);
         setProfileOwnerId(nextProfileUser?.id || user.uid);
         const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
@@ -413,6 +422,7 @@ export default function Profile() {
           getLeaderboardAnswersForUser(candidateIds, true),
         ]);
         const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
+        if (cancelled) return;
         setProfileUser(nextProfileUser);
         setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
@@ -433,8 +443,16 @@ export default function Profile() {
             representativeTags: normalizeRepresentativeTags(nextProfileUser.representativeTags),
           }));
         }
-      })();
-    }
+      } catch (error) {
+        console.error("Failed to load own profile:", error);
+      } finally {
+        if (!cancelled) setProfileInitialLoadDone(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   useEffect(() => {
@@ -444,12 +462,11 @@ export default function Profile() {
       try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const ownerCandidates = profileAliasIds;
-        const [uploadedResults, savedResults, toTryResults, customResults, takesResults] = await Promise.all([
+        const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
           getUploadedDishesForUserAliases(ownerCandidates),
           Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getCustomDishlistsForUser(candidateId))),
-          getLeaderboardAnswersForUser(ownerCandidates, true),
         ]);
         const [uploaded, saved, toTry, custom] = [
           mergeUniqueById([uploadedResults]),
@@ -476,7 +493,6 @@ export default function Profile() {
         setSavedDishes(saved);
         setToTryDishes(toTry);
         setCustomDishlists(custom);
-        setLeaderboardTakes(takesResults);
       } catch (err) {
         console.error("Failed to hydrate profile counts:", err);
       }
@@ -1578,7 +1594,7 @@ export default function Profile() {
   );
 
 
-  if (loading) {
+  if (loading || (user && !profileInitialLoadDone)) {
     return <FullScreenLoading title="Loading profile" />;
   }
 

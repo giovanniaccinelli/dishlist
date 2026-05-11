@@ -1283,8 +1283,20 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
   const text = String(answer?.text || "").trim();
   if (!questionId || !user?.uid || !text) return null;
   try {
+    const answersSnap = await getDocs(leaderboardAnswersCollection(questionId));
     const refDoc = doc(leaderboardAnswersCollection(questionId));
-    await setDoc(refDoc, {
+    const batch = writeBatch(db);
+    answersSnap.docs.forEach((answerDoc) => {
+      const data = answerDoc.data();
+      if (Array.isArray(data.votes) && data.votes.includes(user.uid)) {
+        batch.update(answerDoc.ref, {
+          votes: arrayRemove(user.uid),
+          [`voteTimestamps.${user.uid}`]: deleteField(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+    });
+    batch.set(refDoc, {
       text,
       note: String(answer?.note || "").trim(),
       anonymous: Boolean(answer?.anonymous),
@@ -1298,6 +1310,7 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    await batch.commit();
     return refDoc.id;
   } catch (err) {
     console.error("Failed to add leaderboard answer:", err);
@@ -1308,11 +1321,27 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
 export async function voteLeaderboardAnswer(questionId, answerId, userId) {
   if (!questionId || !answerId || !userId) return false;
   try {
-    await updateDoc(leaderboardAnswerDoc(questionId, answerId), {
-      votes: arrayUnion(userId),
-      [`voteTimestamps.${userId}`]: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+    const answersSnap = await getDocs(leaderboardAnswersCollection(questionId));
+    const batch = writeBatch(db);
+    answersSnap.docs.forEach((answerDoc) => {
+      if (answerDoc.id === answerId) {
+        batch.update(answerDoc.ref, {
+          votes: arrayUnion(userId),
+          [`voteTimestamps.${userId}`]: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        return;
+      }
+      const data = answerDoc.data();
+      if (Array.isArray(data.votes) && data.votes.includes(userId)) {
+        batch.update(answerDoc.ref, {
+          votes: arrayRemove(userId),
+          [`voteTimestamps.${userId}`]: deleteField(),
+          updatedAt: serverTimestamp(),
+        });
+      }
     });
+    await batch.commit();
     return true;
   } catch (err) {
     console.error("Failed to vote leaderboard answer:", err);

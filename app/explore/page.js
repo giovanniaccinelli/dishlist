@@ -986,13 +986,17 @@ export default function Explore() {
           </div>
         )}
       </div>
-      {!loading ? <LeaderboardRail questions={leaderboardQuestions} t={t} darkMode={darkMode} /> : null}
       {loading ? (
         <CategoryRowsLoading />
       ) : (
         <div>
-          {categoryRows.map((row) => (
-            <ExploreRow key={row.key} row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} />
+          {categoryRows.map((row, index) => (
+            <div key={row.key}>
+              <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} />
+              {row.type === "map" || (index === 0 && !categoryRows.some((item) => item.type === "map")) ? (
+                <LeaderboardRail questions={leaderboardQuestions} t={t} darkMode={darkMode} />
+              ) : null}
+            </div>
           ))}
         </div>
       )}

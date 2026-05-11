@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate, useMotionValue, useTransform } from "framer-motion";
 import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
@@ -50,6 +50,9 @@ export default function LeaderboardQuestionPage() {
   const [answerText, setAnswerText] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isEjecting, setIsEjecting] = useState(false);
+  const dragX = useMotionValue(0);
+  const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
 
   const accent = accentMap[question?.accent] || accentMap.red;
   const rankedAnswers = useMemo(
@@ -110,7 +113,6 @@ export default function LeaderboardQuestionPage() {
       router.push("/?auth=1");
       return;
     }
-    if (Array.isArray(answer.votes) && answer.votes.includes(user.uid)) return;
     const ok = await voteLeaderboardAnswer(questionId, answer.id, user.uid);
     if (ok) await load();
   };
@@ -119,11 +121,32 @@ export default function LeaderboardQuestionPage() {
     event.stopPropagation();
   };
 
-  const handleQuestionDragEnd = (_event, info) => {
+  const handleQuestionDragEnd = async (_event, info) => {
+    if (isEjecting) return;
     const offsetX = info?.offset?.x || 0;
-    const velocityX = info?.velocity?.x || 0;
-    if (Math.abs(offsetX) < 72 && Math.abs(velocityX) < 520) return;
-    goToQuestion(offsetX < 0 || velocityX < -520 ? 1 : -1);
+    if (Math.abs(offsetX) < 70) {
+      animate(dragX, 0, {
+        type: "spring",
+        stiffness: 420,
+        damping: 34,
+        mass: 0.55,
+      });
+      return;
+    }
+    const direction = offsetX > 0 ? -1 : 1;
+    const targetX = (offsetX > 0 ? 1 : -1) * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
+    setIsEjecting(true);
+    try {
+      await animate(dragX, targetX, {
+        type: "spring",
+        stiffness: 280,
+        damping: 28,
+        mass: 0.6,
+      }).finished;
+    } catch {}
+    dragX.set(0);
+    setIsEjecting(false);
+    goToQuestion(direction);
   };
 
   if (loading) {
@@ -147,8 +170,8 @@ export default function LeaderboardQuestionPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),0.75rem)]">
-        <div className="flex items-center justify-between py-3">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),0.5rem)]">
+        <div className="flex items-center justify-between py-2">
           <button type="button" onClick={() => router.back()} className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
             <ArrowLeft size={24} />
           </button>
@@ -159,34 +182,34 @@ export default function LeaderboardQuestionPage() {
           <div className="h-12 w-12" />
         </div>
 
-        <div className="relative mt-1 touch-pan-y select-none">
+        <div className="relative mt-0 touch-none select-none">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={question.id}
-              drag={questions.length > 1 ? "x" : false}
+              drag={questions.length > 1 && !isEjecting ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.38}
+              dragElastic={0.9}
               onDragEnd={handleQuestionDragEnd}
-              initial={{ opacity: 0, x: 36, rotate: 1.5 }}
-              animate={{ opacity: 1, x: 0, rotate: 0 }}
-              exit={{ opacity: 0, x: -36, rotate: -1.5 }}
+              initial={{ opacity: 0, scale: 0.985 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.985 }}
               transition={{ type: "spring", stiffness: 360, damping: 32 }}
-              className="rounded-[2rem] border border-white/10 bg-[#101010] p-5 shadow-[0_0_42px_rgba(0,0,0,0.42)]"
-              style={{ boxShadow: `0 0 34px ${accent.glow}, 0 20px 58px rgba(0,0,0,0.36)` }}
+              className="cursor-grab rounded-[1.7rem] border border-white/10 bg-[#101010] p-4 shadow-[0_0_42px_rgba(0,0,0,0.42)] active:cursor-grabbing"
+              style={{ x: dragX, rotate: cardRotate, boxShadow: `0 0 28px ${accent.glow}, 0 16px 46px rgba(0,0,0,0.34)` }}
             >
-            <div className="mb-5">
-              <div className="mb-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
+            <div className="mb-3">
+              <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
                 {hot ? <Flame size={18} fill="currentColor" /> : null}
                 {question.label || "IN TREND"}
               </div>
-              <h1 className="max-w-[94%] text-[2.35rem] font-black leading-[1.06] tracking-[-0.04em]">{question.title}</h1>
-              <div className="mt-5 text-base font-semibold text-white/42">
+              <h1 className="max-w-[94%] text-[1.95rem] font-black leading-[1.06] tracking-[-0.04em]">{question.title}</h1>
+              <div className="mt-3 text-sm font-semibold text-white/42">
                 {Math.max(0, totalVotes)} voti · {rankedAnswers.length} risposte
               </div>
             </div>
 
-            <div className="mb-5 space-y-2">
-              {rankedAnswers.slice(0, 8).map((answer, index) => {
+            <div className="mb-3 space-y-2">
+              {rankedAnswers.slice(0, 5).map((answer, index) => {
                 const alreadyVoted = user?.uid && Array.isArray(answer.votes) && answer.votes.includes(user.uid);
                 return (
                   <button
@@ -196,22 +219,24 @@ export default function LeaderboardQuestionPage() {
                     data-no-question-swipe="true"
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
-                    className="flex w-full items-center gap-3 rounded-[1.25rem] bg-[#171717] p-3.5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
+                    className={`flex w-full items-center gap-3 rounded-[1.1rem] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition ${
+                      alreadyVoted ? "bg-[#211515] ring-2 ring-[#E64646]/80" : "bg-[#171717]"
+                    }`}
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
                       {index + 1}
                     </div>
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem]" style={{ background: accent.soft }}>
-                      <MessageCircle size={22} style={{ color: accent.main }} />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem]" style={{ background: accent.soft }}>
+                      <MessageCircle size={19} style={{ color: accent.main }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-black">{answer.text}</div>
+                      <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
                       <div className="mt-1 truncate text-xs text-white/45">
                         {answer.anonymous ? "Anonimo" : answer.userName || "User"}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-base font-black" style={{ color: accent.main }}>
-                      <Flame size={18} />
+                    <div className="flex items-center gap-1 text-sm font-black" style={{ color: accent.main }}>
+                      <Flame size={16} />
                       {voteCount(answer)}
                     </div>
                     {alreadyVoted ? <span className="sr-only">Voted</span> : null}
@@ -221,24 +246,24 @@ export default function LeaderboardQuestionPage() {
             </div>
 
             <div
-              className="rounded-[1.45rem] border border-white/10 bg-[#0B0B0B] p-4"
+              className="rounded-[1.25rem] border border-white/10 bg-[#0B0B0B] p-3"
               onPointerDownCapture={stopCardDrag}
               onTouchStartCapture={stopCardDrag}
             >
-              <div className="mb-3 text-lg font-black">Aggiungi la tua risposta</div>
+              <div className="mb-2 text-base font-black">Aggiungi la tua risposta</div>
               <input
                 data-no-question-swipe="true"
                 value={answerText}
                 onChange={(event) => setAnswerText(event.target.value)}
                 placeholder="Scrivi la tua risposta"
-                className="mb-3 w-full rounded-[1.15rem] border border-white/12 bg-[#050505] px-4 py-4 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
+                className="mb-2 w-full rounded-[1rem] border border-white/12 bg-[#050505] px-4 py-3 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
               />
               <button
                 type="button"
                 onClick={submitAnswer}
                 disabled={submitting || !answerText.trim()}
                 data-no-question-swipe="true"
-                className="w-full rounded-[1.15rem] px-5 py-4 text-base font-black text-white disabled:opacity-45"
+                className="w-full rounded-[1rem] px-5 py-3 text-sm font-black text-white disabled:opacity-45"
                 style={{ background: accent.main }}
               >
                 {submitting ? "Invio..." : "Aggiungi e vota"}
@@ -247,7 +272,7 @@ export default function LeaderboardQuestionPage() {
                 type="button"
                 onClick={() => setAnonymous((value) => !value)}
                 data-no-question-swipe="true"
-                className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-bold text-white/34"
+                className="mt-3 flex w-full items-center justify-center gap-2 text-sm font-bold text-white/34"
               >
                 {anonymous ? <Lock size={16} /> : <LockOpen size={16} />}
                 {anonymous ? "Il tuo voto è anonimo" : "Risposta visibile sul profilo"}

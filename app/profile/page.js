@@ -275,7 +275,6 @@ export default function Profile() {
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
-  const [profileInitialLoadDone, setProfileInitialLoadDone] = useState(false);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -376,12 +375,10 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) {
-      setProfileInitialLoadDone(false);
       return undefined;
     }
 
     let cancelled = false;
-    setProfileInitialLoadDone(false);
     (async () => {
       try {
         const loadUserDoc = async () => {
@@ -411,26 +408,7 @@ export default function Profile() {
         if (cancelled) return;
         setProfileAliasIds(aliases.length ? aliases : [user.uid]);
         setProfileOwnerId(nextProfileUser?.id || user.uid);
-        const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
-        const results = await Promise.allSettled([
-          getUploadedDishesForUserAliases(candidateIds),
-          Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
-          Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
-          Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
-          Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
-          Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
-          getLeaderboardAnswersForUser(candidateIds, true),
-        ]);
-        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
-        if (cancelled) return;
         setProfileUser(nextProfileUser);
-        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
-        setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
-        setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
-        setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
-        setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
-        setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
-        setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
         if (nextProfileUser) {
           setProfileMeta((prev) => ({
             ...prev,
@@ -443,10 +421,33 @@ export default function Profile() {
             representativeTags: normalizeRepresentativeTags(nextProfileUser.representativeTags),
           }));
         }
+        const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
+        getLeaderboardAnswersForUser(candidateIds, true)
+          .then((takes) => {
+            if (!cancelled) setLeaderboardTakes(takes);
+          })
+          .catch((error) => {
+            console.error("Failed to load own profile leaderboard takes:", error);
+            if (!cancelled) setLeaderboardTakes([]);
+          });
+        const results = await Promise.allSettled([
+          getUploadedDishesForUserAliases(candidateIds),
+          Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
+          Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
+        ]);
+        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+        if (cancelled) return;
+        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
+        setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
+        setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
+        setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
+        setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
+        setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
       } catch (error) {
         console.error("Failed to load own profile:", error);
-      } finally {
-        if (!cancelled) setProfileInitialLoadDone(true);
       }
     })();
 
@@ -1594,7 +1595,7 @@ export default function Profile() {
   );
 
 
-  if (loading || (user && !profileInitialLoadDone)) {
+  if (loading) {
     return <FullScreenLoading title="Loading profile" />;
   }
 

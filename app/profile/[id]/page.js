@@ -322,6 +322,8 @@ export default function PublicProfile() {
       const nextProfileUser = { id: userDoc.id, ...userDoc.data() };
       const candidateIds = aliases.length ? aliases : getProfileIdCandidates(routeProfileId, userDoc);
       setProfileAliasIds(candidateIds);
+      setProfileUser(nextProfileUser);
+      setProfileLoadFailed(false);
 
       const results = await Promise.allSettled([
         getUploadedDishesForUserAliases(candidateIds),
@@ -330,20 +332,17 @@ export default function PublicProfile() {
         Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
-        getLeaderboardAnswersForUser(candidateIds, false),
       ]);
 
       if (cancelled) return;
 
-      const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
-      setProfileUser(nextProfileUser);
+      const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
       setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById([dishesRes.value]) : []);
       setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
       setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
       setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
       setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
       setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
-      setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
     })();
 
     return () => {

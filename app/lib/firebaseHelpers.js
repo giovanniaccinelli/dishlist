@@ -1368,7 +1368,18 @@ export async function voteLeaderboardAnswer(questionId, answerId, userId, option
     const answersSnap = await getDocs(leaderboardAnswersCollection(questionId));
     const batch = writeBatch(db);
     answersSnap.docs.forEach((answerDoc) => {
+      const data = answerDoc.data();
       if (answerDoc.id === answerId) {
+        const alreadyVoted = Array.isArray(data.votes) && data.votes.includes(userId);
+        if (alreadyVoted && options?.toggle) {
+          batch.update(answerDoc.ref, {
+            votes: arrayRemove(userId),
+            [`voteTimestamps.${userId}`]: deleteField(),
+            [`voteAnonymous.${userId}`]: deleteField(),
+            updatedAt: serverTimestamp(),
+          });
+          return;
+        }
         batch.update(answerDoc.ref, {
           votes: arrayUnion(userId),
           [`voteTimestamps.${userId}`]: serverTimestamp(),
@@ -1377,7 +1388,6 @@ export async function voteLeaderboardAnswer(questionId, answerId, userId, option
         });
         return;
       }
-      const data = answerDoc.data();
       if (Array.isArray(data.votes) && data.votes.includes(userId)) {
         batch.update(answerDoc.ref, {
           votes: arrayRemove(userId),

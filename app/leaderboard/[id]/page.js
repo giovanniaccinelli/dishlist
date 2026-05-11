@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, animate, useMotionValue, useTransform } from "framer-motion";
-import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle, Users, X } from "lucide-react";
+import { ArrowLeft, Flame, Lock, LockOpen, Users, X } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
   addLeaderboardAnswer,
@@ -151,14 +151,15 @@ export default function LeaderboardQuestionPage() {
       return;
     }
     if (!answer?.id || votingAnswerId) return;
+    const alreadyVoted = Array.isArray(answer.votes) && answer.votes.includes(user.uid);
     setVotingAnswerId(answer.id);
     setAnswers((prev) =>
       prev.map((item) => {
         const votes = Array.isArray(item.votes) ? item.votes.filter((id) => id !== user.uid) : [];
-        return item.id === answer.id ? { ...item, votes: [...votes, user.uid] } : { ...item, votes };
+        return item.id === answer.id && !alreadyVoted ? { ...item, votes: [...votes, user.uid] } : { ...item, votes };
       })
     );
-    const ok = await voteLeaderboardAnswer(activeQuestionId, answer.id, user.uid, { anonymous });
+    const ok = await voteLeaderboardAnswer(activeQuestionId, answer.id, user.uid, { anonymous, toggle: true });
     if (ok) {
       await loadAnswers(activeQuestionId);
     } else {
@@ -170,13 +171,14 @@ export default function LeaderboardQuestionPage() {
   const openVoters = async (answer) => {
     const voteIds = Array.isArray(answer?.votes) ? answer.votes.filter(Boolean) : [];
     if (!voteIds.length) {
-      setVoterModal({ title: answer?.text || "", voters: [] });
+      setVoterModal({ title: answer?.text || "", author: answer?.anonymous ? "Anonimo" : answer?.userName || "User", voters: [] });
       return;
     }
     const users = await getUsersByIds(voteIds);
     const usersById = new Map(users.map((item) => [item.id, item]));
     setVoterModal({
       title: answer?.text || "",
+      author: answer?.anonymous ? "Anonimo" : answer?.userName || "User",
       voters: voteIds.map((id) => {
         const isAnonymous = Boolean(answer?.voteAnonymous?.[id]);
         const voter = usersById.get(id);
@@ -284,10 +286,16 @@ export default function LeaderboardQuestionPage() {
                 return (
                   <div
                     key={answer.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openVoters(answer)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") openVoters(answer);
+                    }}
                     data-no-question-swipe="true"
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
-                    className={`flex w-full items-center gap-3 rounded-[1.1rem] border p-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.16)] transition ${
+                    className={`flex w-full items-center gap-3 rounded-[1.1rem] border p-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.16)] transition active:scale-[0.99] ${
                       alreadyVoted ? "bg-[#241515]" : "bg-[#171717]"
                     }`}
                     style={{
@@ -297,31 +305,31 @@ export default function LeaderboardQuestionPage() {
                   >
                     <button
                       type="button"
-                      onClick={() => vote(answer)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        vote(answer);
+                      }}
                       disabled={Boolean(votingAnswerId)}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                      className="shrink-0 rounded-full px-3 py-2 text-xs font-black transition active:scale-[0.97]"
+                      style={{
+                        background: alreadyVoted ? accent.main : accent.soft,
+                        color: alreadyVoted ? "#050505" : accent.main,
+                      }}
                     >
-                      <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
-                        {index + 1}
-                      </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem]" style={{ background: accent.soft }}>
-                        <MessageCircle size={19} style={{ color: accent.main }} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
-                        <div className="mt-1 truncate text-xs text-white/45">
-                          {answer.anonymous ? "Anonimo" : answer.userName || "User"}
-                        </div>
-                      </div>
+                      {alreadyVoted ? t("Voted") : t("Vote")}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => openVoters(answer)}
-                      className="flex items-center justify-center text-white/45 transition hover:text-white"
-                      aria-label="Show voters"
-                    >
+                    <div className="w-7 shrink-0 text-center text-[1.2rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
+                      <div className="mt-1 truncate text-xs text-white/45">
+                        {answer.anonymous ? "Anonimo" : answer.userName || "User"}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center text-white/45">
                       <Users size={17} />
-                    </button>
+                    </div>
                     <div className="flex items-center gap-1 text-sm font-black" style={{ color: accent.main }}>
                       <Flame size={16} />
                       {voteCount(answer)}
@@ -378,12 +386,19 @@ export default function LeaderboardQuestionPage() {
           <div className="w-full max-w-sm rounded-[1.5rem] border border-white/10 bg-[#111111] p-4 text-white shadow-[0_20px_70px_rgba(0,0,0,0.45)]" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <div className="text-base font-black">Voti</div>
-                <div className="mt-0.5 max-w-[15rem] truncate text-xs text-white/45">{voterModal.title}</div>
+                <div className="text-base font-black">{t("Answer")}</div>
+                <div className="mt-0.5 text-xs font-semibold text-white/45">{voterModal.author}</div>
               </div>
               <button type="button" onClick={() => setVoterModal(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/8">
                 <X size={17} />
               </button>
+            </div>
+            <div className="mb-4 rounded-[1.1rem] border border-white/8 bg-white/[0.04] p-3 text-[1rem] font-black leading-snug">
+              {voterModal.title}
+            </div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-white/45">
+              <Users size={14} />
+              {t("Votes")}
             </div>
             <div className="max-h-64 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {voterModal.voters.length ? (
@@ -394,7 +409,7 @@ export default function LeaderboardQuestionPage() {
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-sm text-white/45">Nessun voto</div>
+                <div className="py-6 text-center text-sm text-white/45">{t("No votes yet")}</div>
               )}
             </div>
           </div>

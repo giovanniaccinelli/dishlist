@@ -611,7 +611,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-hidden rounded-[1.05rem] border p-2.5 ${
+              className={`relative min-w-[33%] basis-[33%] snap-start overflow-hidden rounded-[1.05rem] border p-2.5 ${
                 darkMode
                   ? "bg-[#121212]"
                   : "bg-white"

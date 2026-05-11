@@ -354,8 +354,10 @@ export default function Dishlists() {
     const targetRef = doc(db, "users", userId);
     const currentRef = doc(db, "users", user.uid);
     const followingSinceField = `followingSince.${userId}`;
+    const followerSinceField = `followersSince.${user.uid}`;
     await updateDoc(targetRef, {
       followers: alreadyFollowing ? arrayRemove(user.uid) : arrayUnion(user.uid),
+      [followerSinceField]: alreadyFollowing ? null : Date.now(),
     });
     await updateDoc(currentRef, {
       following: alreadyFollowing ? arrayRemove(userId) : arrayUnion(userId),

@@ -214,6 +214,31 @@ async function hydrateDishPayload(dishId, payload) {
   }
 }
 
+function dishActivityOwnerId(payload = null) {
+  return String(payload?.owner || payload?.ownerId || payload?.userId || payload?.uploadedBy || payload?.createdBy || "").trim();
+}
+
+async function recordDishSaveActivity(userId, dishId, payload = null) {
+  const ownerId = dishActivityOwnerId(payload);
+  if (!ownerId || !userId || ownerId === userId || !dishId) return;
+  try {
+    await setDoc(
+      doc(db, "users", ownerId, "activity", `save_${dishId}_${userId}`),
+      {
+        kind: "save",
+        actorId: userId,
+        dishId,
+        dishName: payload?.name || "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn("Failed to record dish save activity:", err);
+  }
+}
+
 async function mergeDishesWithCanonical(dishes = []) {
   const items = (Array.isArray(dishes) ? dishes : []).filter((dish) => dish?.id);
   if (!items.length) return [];
@@ -729,6 +754,7 @@ export async function saveDishReferenceToUser(userId, dishId, dishData = null) {
   }
 
   await syncDishSaveCount(dishId);
+  await recordDishSaveActivity(userId, dishId, payload);
   clearReadCache(userId);
   return true;
 }
@@ -785,6 +811,7 @@ export async function saveDishToUserList(userId, dishId, dishData = null) {
     await setDoc(savedDocRef, savedPayload, { merge: true });
     await deleteDoc(doc(db, "users", userId, "toTry", dishId));
     await syncDishSaveCount(dishId);
+    await recordDishSaveActivity(userId, dishId, savedPayload);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -811,6 +838,7 @@ export async function addDishToToTryList(userId, dishId, dishData = null) {
     await setDoc(userRef, { toTryDishes: arrayUnion(dishId) }, { merge: true });
     await setDoc(toTryDocRef, toTryPayload, { merge: true });
     await syncDishSaveCount(dishId);
+    await recordDishSaveActivity(userId, dishId, toTryPayload);
     clearReadCache(userId);
     return true;
   } catch (err) {
@@ -1062,6 +1090,7 @@ export async function addDishToCustomDishlist(userId, dishlistId, dishId, dishDa
     );
     await setDoc(customDishlistItemDoc(userId, dishlistId, dishId), payload, { merge: true });
     await syncDishSaveCount(dishId);
+    await recordDishSaveActivity(userId, dishId, payload);
     clearReadCache(userId);
     return true;
   } catch (err) {

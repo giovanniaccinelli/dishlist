@@ -152,7 +152,7 @@ const translations = {
     "Showing restaurant dishes": "Stai vedendo i piatti Ristorante",
     "Eat in": "A casa",
     "Eat out": "Al ristorante",
-    "Load more": "Carica altro",
+    "Load more": "Carica altri",
     Dish: "Piatto",
     dish: "piatto",
     Recipe: "Ricetta",

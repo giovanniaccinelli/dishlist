@@ -85,6 +85,8 @@ const ACTIVITY_STYLE = {
   comment: { color: "#2BD36B", bg: "rgba(43,211,107,0.12)", border: "rgba(43,211,107,0.26)" },
   save: { color: "#E64646", bg: "rgba(230,70,70,0.13)", border: "rgba(230,70,70,0.28)" },
 };
+const ACTIVITY_INITIAL_LIMIT = 30;
+const ACTIVITY_PAGE_SIZE = 30;
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -130,6 +132,7 @@ export default function Feed() {
   const [activityItems, setActivityItems] = useState([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activitySeenAt, setActivitySeenAt] = useState(0);
+  const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
@@ -701,6 +704,31 @@ export default function Feed() {
       ]);
       const userData = userSnap.exists() ? userSnap.data() || {} : {};
       const followers = Array.isArray(userData.followers) ? userData.followers : [];
+      const activitySnap = await getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
+        console.error("Failed to load timestamped activity:", error);
+        return { docs: [] };
+      });
+      const savedActivityEvents = activitySnap.docs
+        .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
+        .filter((event) => event.kind === "save" && event.actorId && event.actorId !== userId && event.dishId);
+      const saveActivityUsers = await getUsersByIds(savedActivityEvents.map((event) => event.actorId)).catch((error) => {
+        console.error("Failed to load timestamped save actors:", error);
+        return [];
+      });
+      const saveActivityUsersById = new Map(saveActivityUsers.map((actor) => [actor.id, actor]));
+      const saveActivityItems = savedActivityEvents.map((event) => {
+        const actor = saveActivityUsersById.get(event.actorId);
+        return {
+          id: `save-${event.dishId}-${event.actorId}`,
+          kind: "save",
+          icon: Heart,
+          actor: actor?.displayName || actor?.name || "Someone",
+          text: t("saved your dish"),
+          detail: event.dishName || "",
+          href: `/dish/${event.dishId}?source=uploaded&mode=single`,
+          timeMs: timestampToMs(event.createdAt || event.updatedAt),
+        };
+      });
       const followerUsers = await getUsersByIds(followers).catch((error) => {
         console.error("Failed to load follower activity:", error);
         return [];
@@ -712,7 +740,7 @@ export default function Feed() {
         actor: follower.displayName || follower.name || "Someone",
         text: t("started following you"),
         href: `/profile/${follower.id}`,
-        timeMs: timestampToMs(follower.followingSince?.[userId]),
+        timeMs: timestampToMs(userData.followersSince?.[follower.id] || follower.followingSince?.[userId]),
       }));
 
       const followedPostItems = followingDeck
@@ -841,13 +869,22 @@ export default function Feed() {
         ...followedPostItems,
         ...dishCommentGroups.flat(),
         ...storyCommentGroups.flat(),
+        ...saveActivityItems,
         ...saveGroups.flat(),
       ]
         .filter((item) => item.id)
+        .reduce((unique, item) => {
+          if (!unique.has(item.id) || Number(item.timeMs || 0) > Number(unique.get(item.id)?.timeMs || 0)) {
+            unique.set(item.id, item);
+          }
+          return unique;
+        }, new Map())
+        .values();
+      const sortedItems = Array.from(items)
         .sort((a, b) => Number(b.timeMs || 0) - Number(a.timeMs || 0))
         .slice(0, 80);
-      setActivityItems(items);
-      return items;
+      setActivityItems(sortedItems);
+      return sortedItems;
     } catch (error) {
       console.error("Failed to load activity:", error);
       return [];
@@ -859,6 +896,7 @@ export default function Feed() {
   useEffect(() => {
     if (!userId) {
       setActivityItems([]);
+      setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
       return undefined;
     }
     let cancelled = false;
@@ -876,6 +914,7 @@ export default function Feed() {
       return;
     }
     setActivityOpen(true);
+    setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
     await buildActivityItems();
     const now = Date.now();
     setActivitySeenAt(now);
@@ -1240,7 +1279,7 @@ export default function Feed() {
                   <div className="py-10 text-center text-sm font-semibold text-white/42">{t("Loading updates...")}</div>
                 ) : activityItems.length ? (
                   <div className="space-y-2">
-                    {activityItems.map((item) => {
+                    {activityItems.slice(0, activityVisibleCount).map((item) => {
                       const Icon = item.icon || Bell;
                       const fresh = Number(item.timeMs || 0) > Number(activitySeenAt || 0);
                       const style = ACTIVITY_STYLE[item.kind] || ACTIVITY_STYLE.post;
@@ -1269,6 +1308,15 @@ export default function Feed() {
                         </Link>
                       );
                     })}
+                    {activityItems.length > activityVisibleCount ? (
+                      <button
+                        type="button"
+                        onClick={() => setActivityVisibleCount((count) => Math.min(activityItems.length, count + ACTIVITY_PAGE_SIZE))}
+                        className="mt-3 w-full rounded-full border border-white/12 bg-white/7 px-4 py-3 text-sm font-black text-white transition active:scale-[0.99]"
+                      >
+                        {t("Load more")}
+                      </button>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="py-10 text-center">

@@ -559,7 +559,10 @@ export default function PublicProfile() {
     const newFollowing = isFollowing
       ? currentFollowing.filter((followId) => !profileIdCandidates.includes(followId))
       : Array.from(new Set([...currentFollowing, profileDocId]));
-    await updateDoc(userRef, { followers: newFollowers });
+    await updateDoc(userRef, {
+      followers: newFollowers,
+      [`followersSince.${user.uid}`]: isFollowing ? null : Date.now(),
+    });
     await updateDoc(currentUserRef, {
       following: newFollowing,
       [`followingSince.${profileDocId}`]: isFollowing ? null : Date.now(),

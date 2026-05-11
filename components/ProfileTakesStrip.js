@@ -15,6 +15,12 @@ const ACCENT_BY_NAME = {
 export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (value) => value }) {
   if (!takes.length) return null;
   const hasHotTake = takes.some((take) => Number(take.questionRecentVotes || 0) > 0);
+  const sortedTakes = [...takes].sort(
+    (a, b) =>
+      Number(b.questionTotalVotes || 0) - Number(a.questionTotalVotes || 0) ||
+      Number(b.questionRecentVotes || 0) - Number(a.questionRecentVotes || 0) ||
+      (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+  );
 
   return (
     <section className="mb-5">
@@ -22,8 +28,8 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
         <h2 className={`text-[1.15rem] font-bold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Takes")}</h2>
         {hasHotTake ? <Flame size={18} className="text-[#E64646]" fill="none" /> : null}
       </div>
-      <div className="grid grid-cols-2 gap-3 pb-1">
-        {takes.slice(0, 8).map((take, index) => {
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {sortedTakes.slice(0, 12).map((take, index) => {
           const accent = take.accentColor || ACCENT_BY_NAME[take.questionAccent] || ACCENTS[index % ACCENTS.length];
           const questionTitle = take.questionTitle || take.question || t("Leaderboard question");
           const answer = take.text || take.answer || "";
@@ -32,7 +38,7 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
             <Link
               key={`${take.questionId || "question"}-${take.id || index}`}
               href={take.questionId ? `/leaderboard/${take.questionId}` : "/explore"}
-              className={`group flex min-h-[8rem] min-w-0 flex-col justify-between rounded-[1.35rem] border p-3.5 transition active:scale-[0.98] ${
+              className={`group flex min-h-[8rem] w-[10.8rem] min-w-[10.8rem] snap-start flex-col justify-between rounded-[1.35rem] border p-3.5 transition active:scale-[0.98] ${
                 darkMode
                   ? "border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.09),rgba(255,255,255,0.035))] shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
                   : "border-black/10 bg-white shadow-[0_14px_30px_rgba(0,0,0,0.10)]"

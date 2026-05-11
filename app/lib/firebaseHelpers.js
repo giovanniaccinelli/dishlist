@@ -1420,6 +1420,7 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
                 questionLabel: question.label,
                 questionAccent: question.accent,
                 questionDishMode: question.dishMode || "restaurant",
+                questionTotalVotes: question.totalVotes || 0,
                 questionRecentVotes: question.recentVotes || 0,
               },
             ];

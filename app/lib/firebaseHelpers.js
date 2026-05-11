@@ -1388,19 +1388,16 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
         const answers = await getLeaderboardAnswers(question.id);
         return answers
           .flatMap((answer) => {
-            const authorId = String(answer.userId || "");
-            const authoredByUser = ids.includes(authorId);
             const votedByUser = Array.isArray(answer.votes) && ids.some((id) => answer.votes.includes(id));
-            if (!authoredByUser && !votedByUser) return [];
+            if (!votedByUser) return [];
             const matchingVoteId = ids.find((id) => Array.isArray(answer.votes) && answer.votes.includes(id)) || "";
-            const anonymousVote =
-              authoredByUser ? Boolean(answer.anonymous) : Boolean(answer.voteAnonymous?.[matchingVoteId]);
+            const anonymousVote = Boolean(answer.voteAnonymous?.[matchingVoteId]);
             if (!includeAnonymous && anonymousVote) return [];
             return [
               {
                 ...answer,
                 anonymous: anonymousVote,
-                takeKind: authoredByUser ? "answer" : "vote",
+                takeKind: "vote",
                 questionId: question.id,
                 questionTitle: question.title,
                 questionLabel: question.label,

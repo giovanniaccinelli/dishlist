@@ -49,6 +49,7 @@ export default function LeaderboardQuestionPage() {
   const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
+  const [votingAnswerId, setVotingAnswerId] = useState("");
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
 
@@ -64,11 +65,31 @@ export default function LeaderboardQuestionPage() {
   const load = async () => {
     if (!questionId) return;
     setLoading(true);
-    const [allQuestions, nextQuestion, nextAnswers] = await Promise.all([
+    const [allQuestions, nextQuestion, fetchedAnswers] = await Promise.all([
       getLeaderboardQuestions(40),
       getLeaderboardQuestion(questionId),
       getLeaderboardAnswers(questionId),
     ]);
+    let nextAnswers = fetchedAnswers;
+    if (user?.uid) {
+      const votedAnswers = fetchedAnswers.filter((answer) => Array.isArray(answer.votes) && answer.votes.includes(user.uid));
+      if (votedAnswers.length > 1) {
+        const timestampToMs = (value) => {
+          if (!value) return 0;
+          if (typeof value.toMillis === "function") return value.toMillis();
+          if (typeof value.seconds === "number") return value.seconds * 1000;
+          const parsed = Date.parse(value);
+          return Number.isFinite(parsed) ? parsed : 0;
+        };
+        const keeper = votedAnswers
+          .slice()
+          .sort((a, b) => timestampToMs(b.voteTimestamps?.[user.uid]) - timestampToMs(a.voteTimestamps?.[user.uid]))[0];
+        if (keeper?.id) {
+          await voteLeaderboardAnswer(questionId, keeper.id, user.uid, { anonymous: Boolean(keeper.voteAnonymous?.[user.uid]) });
+          nextAnswers = await getLeaderboardAnswers(questionId);
+        }
+      }
+    }
     const enrichedQuestion = allQuestions.find((item) => item.id === questionId) || nextQuestion;
     setQuestions(allQuestions);
     setQuestion(enrichedQuestion);
@@ -78,7 +99,7 @@ export default function LeaderboardQuestionPage() {
 
   useEffect(() => {
     load();
-  }, [questionId]);
+  }, [questionId, user?.uid]);
 
   const goToQuestion = (direction) => {
     if (!questions.length) return;
@@ -111,8 +132,21 @@ export default function LeaderboardQuestionPage() {
       router.push("/?auth=1");
       return;
     }
+    if (!answer?.id || votingAnswerId) return;
+    setVotingAnswerId(answer.id);
+    setAnswers((prev) =>
+      prev.map((item) => {
+        const votes = Array.isArray(item.votes) ? item.votes.filter((id) => id !== user.uid) : [];
+        return item.id === answer.id ? { ...item, votes: [...votes, user.uid] } : { ...item, votes };
+      })
+    );
     const ok = await voteLeaderboardAnswer(questionId, answer.id, user.uid, { anonymous });
-    if (ok) await load();
+    if (ok) {
+      await load();
+    } else {
+      await load();
+    }
+    setVotingAnswerId("");
   };
 
   const stopCardDrag = (event) => {
@@ -168,8 +202,8 @@ export default function LeaderboardQuestionPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),0.5rem)]">
-        <div className="flex items-center justify-between py-2">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[calc(env(safe-area-inset-top)+1.35rem)]">
+        <div className="flex items-center justify-between py-3">
           <button type="button" onClick={() => router.back()} className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
             <ArrowLeft size={24} />
           </button>
@@ -214,13 +248,14 @@ export default function LeaderboardQuestionPage() {
                     type="button"
                     key={answer.id}
                     onClick={() => vote(answer)}
+                    disabled={Boolean(votingAnswerId)}
                     data-no-question-swipe="true"
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
                     className={`flex w-full items-center gap-3 rounded-[1.1rem] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition ${
-                      alreadyVoted ? "bg-[#211515] ring-2" : "bg-[#171717]"
+                      alreadyVoted ? "bg-[#2A1414] ring-4 scale-[1.01]" : "bg-[#171717]"
                     }`}
-                    style={alreadyVoted ? { "--tw-ring-color": accent.main } : undefined}
+                    style={alreadyVoted ? { "--tw-ring-color": accent.main, boxShadow: `0 0 0 1px ${accent.main}, 0 0 22px ${accent.glow}` } : undefined}
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
                       {index + 1}

@@ -331,12 +331,11 @@ export default function PublicProfile() {
         Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
         Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
-        getLeaderboardAnswersForUser(candidateIds, false),
       ]);
 
       if (cancelled) return;
 
-      const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
+      const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
       setProfileUser(nextProfileUser);
       setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById([dishesRes.value]) : []);
       setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
@@ -344,7 +343,6 @@ export default function PublicProfile() {
       setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
       setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
       setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
-      setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
     })();
 
     return () => {
@@ -774,7 +772,7 @@ export default function PublicProfile() {
     orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
   const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
   const unfilteredActiveDishlist =
-    showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || null;
+    showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist
     ? {
         ...unfilteredActiveDishlist,
@@ -821,7 +819,7 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-x-hidden overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 relative">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3">
           <div className="flex items-center justify-start">
@@ -1036,9 +1034,8 @@ export default function PublicProfile() {
             })}
           </div>
         </div>
-      ) : activeDishlist ? (
+      ) : (
         <div
-          className="mx-auto w-full max-w-3xl px-2 pb-4"
           onPointerDown={handleDishlistDetailPointerDown}
           onPointerUp={handleDishlistDetailPointerUp}
           onPointerCancel={() => {
@@ -1146,10 +1143,6 @@ export default function PublicProfile() {
           </AnimatePresence>
         )}
           </div>
-        </div>
-      ) : (
-        <div className={`mx-auto flex h-32 w-full max-w-3xl items-center justify-center px-2 text-sm font-semibold ${darkMode ? "text-white/60" : "text-black/50"}`}>
-          {t("Loading...")}
         </div>
       )}
 

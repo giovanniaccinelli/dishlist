@@ -1302,6 +1302,23 @@ export async function updateLeaderboardQuestion(questionId, userId, updates = {}
   }
 }
 
+export async function deleteLeaderboardQuestion(questionId, userId) {
+  if (!questionId || !userId) return false;
+  try {
+    const questionSnap = await getDoc(leaderboardQuestionDoc(questionId));
+    if (!questionSnap.exists()) return false;
+    const answersSnap = await getDocs(leaderboardAnswersCollection(questionId));
+    const batch = writeBatch(db);
+    answersSnap.docs.forEach((answerDoc) => batch.delete(answerDoc.ref));
+    batch.delete(leaderboardQuestionDoc(questionId));
+    await batch.commit();
+    return true;
+  } catch (err) {
+    console.error("Failed to delete leaderboard question:", err);
+    return false;
+  }
+}
+
 export async function addLeaderboardAnswer(questionId, user, answer) {
   const text = String(answer?.text || "").trim();
   if (!questionId || !user?.uid || !text) return null;

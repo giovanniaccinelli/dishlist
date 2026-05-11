@@ -35,6 +35,7 @@ import {
   getLeaderboardQuestions,
   createLeaderboardQuestion,
   updateLeaderboardQuestion,
+  deleteLeaderboardQuestion,
   updateCustomDishlistName,
   publishDishAsStory,
   getAvatarTone,
@@ -1021,7 +1022,7 @@ export default function Profile() {
       return;
     }
     const questions = await getLeaderboardQuestions(50);
-    setLeaderboardAdminQuestions(questions.filter((question) => !user?.uid || question.createdBy === user.uid));
+    setLeaderboardAdminQuestions(questions);
   };
 
   useEffect(() => {
@@ -1065,7 +1066,6 @@ export default function Profile() {
       setLeaderboardQuestionDishMode("restaurant");
       setLeaderboardQuestionEditingId("");
       await loadLeaderboardAdminQuestions();
-      setLeaderboardAdminOpen(false);
       setToastVariant("success");
       setToast(t(leaderboardQuestionEditingId ? "Leaderboard question updated" : "Leaderboard question published"));
       setTimeout(() => setToast(""), 1300);
@@ -1076,6 +1076,28 @@ export default function Profile() {
       setTimeout(() => setToast(""), 1500);
     } finally {
       setLeaderboardQuestionSaving(false);
+    }
+  };
+
+  const handleDeleteLeaderboardQuestion = async (questionId) => {
+    if (!user?.uid || !questionId || leaderboardAdminPassword !== "cravy1723") return;
+    const ok = await deleteLeaderboardQuestion(questionId, user.uid);
+    if (ok) {
+      if (leaderboardQuestionEditingId === questionId) {
+        setLeaderboardQuestionEditingId("");
+        setLeaderboardQuestionTitle("");
+        setLeaderboardQuestionLabel("IN TREND");
+        setLeaderboardQuestionAccent("red");
+        setLeaderboardQuestionDishMode("restaurant");
+      }
+      await loadLeaderboardAdminQuestions();
+      setToastVariant("success");
+      setToast(t("Question deleted"));
+      setTimeout(() => setToast(""), 1300);
+    } else {
+      setToastVariant("error");
+      setToast(t("Could not delete question"));
+      setTimeout(() => setToast(""), 1500);
     }
   };
 
@@ -2317,160 +2339,14 @@ export default function Profile() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setLeaderboardAdminOpen((value) => !value)}
+                      onClick={() => setLeaderboardAdminOpen(true)}
                       className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${
                         darkMode ? "bg-white text-black" : "bg-black text-white"
                       }`}
                     >
-                      {leaderboardAdminOpen ? t("Close") : t("Open")}
+                      {t("Open")}
                     </button>
                   </div>
-                  {leaderboardAdminOpen ? (
-                    <div className="mt-4 space-y-3">
-                      <input
-                        type="password"
-                        value={leaderboardAdminPassword}
-                        onChange={(event) => setLeaderboardAdminPassword(event.target.value)}
-                        placeholder={t("Admin password")}
-                        className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
-                          darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
-                        }`}
-                      />
-                      {leaderboardAdminPassword === "cravy1723" ? (
-                        <div className={`rounded-[1rem] border p-3 ${darkMode ? "border-white/10 bg-[#080808]" : "border-black/10 bg-[#F5F2EA]"}`}>
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <div className="text-sm font-black">{t("Edit existing questions")}</div>
-                            <button
-                              type="button"
-                              onClick={loadLeaderboardAdminQuestions}
-                              className={`rounded-full border px-3 py-1.5 text-xs font-black ${
-                                darkMode ? "border-white/12 text-white" : "border-black/12 text-black"
-                              }`}
-                            >
-                              {t("Refresh")}
-                            </button>
-                          </div>
-                          {leaderboardAdminQuestions.length ? (
-                            <div className="max-h-48 space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                              {leaderboardAdminQuestions.map((question) => {
-                                const active = leaderboardQuestionEditingId === question.id;
-                                return (
-                                  <button
-                                    key={question.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setLeaderboardQuestionEditingId(question.id);
-                                      setLeaderboardQuestionTitle(question.title || "");
-                                      setLeaderboardQuestionLabel(question.label || "IN TREND");
-                                      setLeaderboardQuestionAccent(question.accent || "red");
-                                      setLeaderboardQuestionDishMode(question.dishMode === "home" ? "home" : "restaurant");
-                                    }}
-                                    className={`w-full rounded-[0.9rem] border px-3 py-2.5 text-left ${
-                                      active
-                                        ? "border-[#E64646] bg-[#2A1414] text-white"
-                                        : darkMode
-                                          ? "border-white/10 bg-[#111111] text-white"
-                                          : "border-black/10 bg-white text-black"
-                                    }`}
-                                  >
-                                    <div className="truncate text-sm font-black">{question.title}</div>
-                                    <div className="mt-1 text-xs opacity-60">{t(question.dishMode === "home" ? "Eat in" : "Eat out")} · {active ? t("Editing") : t("Tap to edit")}</div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className={`text-sm ${darkMode ? "text-white/45" : "text-black/45"}`}>{t("No questions yet")}</div>
-                          )}
-                        </div>
-                      ) : null}
-                      <input
-                        type="text"
-                        value={leaderboardQuestionTitle}
-                        onChange={(event) => setLeaderboardQuestionTitle(event.target.value)}
-                        placeholder={t("Question")}
-                        className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
-                          darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
-                        }`}
-                      />
-                      <div className="grid grid-cols-[1fr_auto] gap-2">
-                        <input
-                          type="text"
-                          value={leaderboardQuestionLabel}
-                          onChange={(event) => setLeaderboardQuestionLabel(event.target.value)}
-                          placeholder={t("Label")}
-                          className={`min-w-0 rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
-                            darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
-                          }`}
-                        />
-                        <select
-                          value={leaderboardQuestionAccent}
-                          onChange={(event) => setLeaderboardQuestionAccent(event.target.value)}
-                          className={`rounded-[1rem] border px-3 py-3 text-[16px] outline-none ${
-                            darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"
-                          }`}
-                        >
-                          <option value="red">Red</option>
-                          <option value="orange">Orange</option>
-                          <option value="yellow">Yellow</option>
-                          <option value="blue">Blue</option>
-                          <option value="pink">Pink</option>
-                        </select>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: "restaurant", label: t("Eat out"), color: "#E64646" },
-                          { id: "home", label: t("Eat in"), color: "#E4B43F" },
-                        ].map((item) => {
-                          const active = leaderboardQuestionDishMode === item.id;
-                          return (
-                            <button
-                              key={item.id}
-                              type="button"
-                              onClick={() => setLeaderboardQuestionDishMode(item.id)}
-                              className={`rounded-[1rem] border px-4 py-3 text-sm font-black transition ${
-                                darkMode ? "bg-[#080808] text-white" : "bg-[#F5F2EA] text-black"
-                              }`}
-                              style={{
-                                borderColor: active ? item.color : darkMode ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
-                                boxShadow: active ? `0 0 0 1px ${item.color}` : "none",
-                                color: active ? item.color : undefined,
-                              }}
-                            >
-                              {item.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCreateLeaderboardQuestion}
-                        disabled={leaderboardQuestionSaving}
-                        className={`w-full rounded-full px-4 py-3 text-sm font-black transition ${
-                          darkMode ? "bg-[#E64646] text-white" : "bg-[#E64646] text-white"
-                        } ${leaderboardQuestionSaving ? "opacity-60" : ""}`}
-                      >
-                        {leaderboardQuestionSaving ? t("Publishing...") : t(leaderboardQuestionEditingId ? "Update question" : "Publish question")}
-                      </button>
-                      {leaderboardQuestionEditingId ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setLeaderboardQuestionEditingId("");
-                            setLeaderboardQuestionTitle("");
-                            setLeaderboardQuestionLabel("IN TREND");
-                            setLeaderboardQuestionAccent("red");
-                            setLeaderboardQuestionDishMode("restaurant");
-                          }}
-                          className={`w-full rounded-full border px-4 py-3 text-sm font-black ${
-                            darkMode ? "border-white/12 bg-[#080808] text-white" : "border-black/12 bg-[#F5F2EA] text-black"
-                          }`}
-                        >
-                          {t("Create new question")}
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
                 </div>
               </section>
 
@@ -2506,6 +2382,186 @@ export default function Profile() {
                   </button>
                 </div>
               </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Leaderboard Manager */}
+      <AnimatePresence>
+        {leaderboardAdminOpen && (
+          <motion.div
+            className={`fixed inset-0 z-[110] flex flex-col ${darkMode ? "bg-[#050505] text-white" : "bg-[#F8F6F0] text-black"}`}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 420, damping: 38 }}
+          >
+            <div className="app-top-nav flex items-center justify-between px-5 pb-3">
+              <button
+                type="button"
+                onClick={() => setLeaderboardAdminOpen(false)}
+                className={`no-accent-border flex h-11 w-11 items-center justify-center rounded-full ${darkMode ? "bg-white/8 text-white" : "bg-white text-black"}`}
+                aria-label="Close leaderboard manager"
+              >
+                <X size={19} />
+              </button>
+              <h2 className="text-[1.25rem] font-bold leading-none">{t("Question manager")}</h2>
+              <div className="h-11 w-11" />
+            </div>
+
+            <div className="bottom-nav-spacer flex-1 overflow-y-auto px-5 pb-8 pt-2">
+              <input
+                type="password"
+                value={leaderboardAdminPassword}
+                onChange={(event) => setLeaderboardAdminPassword(event.target.value)}
+                placeholder={t("Admin password")}
+                className={`mb-4 w-full rounded-[1.1rem] border px-4 py-3 text-[16px] outline-none ${
+                  darkMode ? "border-white/10 bg-[#111111] text-white placeholder:text-white/35" : "border-black/10 bg-white text-black placeholder:text-black/35"
+                }`}
+              />
+
+              {leaderboardAdminPassword === "cravy1723" ? (
+                <div className="space-y-4">
+                  <section className={`rounded-[1.35rem] border p-4 ${darkMode ? "border-white/10 bg-[#111111]" : "border-black/10 bg-white"}`}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="text-[1rem] font-black">{t("Edit existing questions")}</div>
+                      <button
+                        type="button"
+                        onClick={loadLeaderboardAdminQuestions}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-black ${darkMode ? "border-white/12 text-white" : "border-black/12 text-black"}`}
+                      >
+                        {t("Refresh")}
+                      </button>
+                    </div>
+                    {leaderboardAdminQuestions.length ? (
+                      <div className="max-h-72 space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {leaderboardAdminQuestions.map((question) => {
+                          const active = leaderboardQuestionEditingId === question.id;
+                          return (
+                            <div
+                              key={question.id}
+                              className={`rounded-[1rem] border p-3 ${active ? "border-[#E64646] bg-[#2A1414] text-white" : darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"}`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setLeaderboardQuestionEditingId(question.id);
+                                  setLeaderboardQuestionTitle(question.title || "");
+                                  setLeaderboardQuestionLabel(question.label || "IN TREND");
+                                  setLeaderboardQuestionAccent(question.accent || "red");
+                                  setLeaderboardQuestionDishMode(question.dishMode === "home" ? "home" : "restaurant");
+                                }}
+                                className="w-full text-left"
+                              >
+                                <div className="truncate text-sm font-black">{question.title}</div>
+                                <div className="mt-1 text-xs opacity-60">{t(question.dishMode === "home" ? "Eat in" : "Eat out")} · {active ? t("Editing") : t("Tap to edit")}</div>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteLeaderboardQuestion(question.id)}
+                                className="mt-2 inline-flex items-center gap-1 rounded-full border border-[#E64646]/60 px-3 py-1.5 text-xs font-black text-[#E64646]"
+                              >
+                                <Trash2 size={13} />
+                                {t("Delete")}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className={`text-sm ${darkMode ? "text-white/45" : "text-black/45"}`}>{t("No questions yet")}</div>
+                    )}
+                  </section>
+
+                  <section className={`rounded-[1.35rem] border p-4 ${darkMode ? "border-white/10 bg-[#111111]" : "border-black/10 bg-white"}`}>
+                    <div className="mb-3 text-[1rem] font-black">{leaderboardQuestionEditingId ? t("Update question") : t("Create new question")}</div>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={leaderboardQuestionTitle}
+                        onChange={(event) => setLeaderboardQuestionTitle(event.target.value)}
+                        placeholder={t("Question")}
+                        className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
+                          darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
+                        }`}
+                      />
+                      <div className="grid grid-cols-[1fr_auto] gap-2">
+                        <input
+                          type="text"
+                          value={leaderboardQuestionLabel}
+                          onChange={(event) => setLeaderboardQuestionLabel(event.target.value)}
+                          placeholder={t("Label")}
+                          className={`min-w-0 rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
+                            darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
+                          }`}
+                        />
+                        <select
+                          value={leaderboardQuestionAccent}
+                          onChange={(event) => setLeaderboardQuestionAccent(event.target.value)}
+                          className={`rounded-[1rem] border px-3 py-3 text-[16px] outline-none ${darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"}`}
+                        >
+                          <option value="red">Red</option>
+                          <option value="orange">Orange</option>
+                          <option value="yellow">Yellow</option>
+                          <option value="blue">Blue</option>
+                          <option value="pink">Pink</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: "restaurant", label: t("Eat out"), color: "#E64646" },
+                          { id: "home", label: t("Eat in"), color: "#E4B43F" },
+                        ].map((item) => {
+                          const active = leaderboardQuestionDishMode === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setLeaderboardQuestionDishMode(item.id)}
+                              className={`rounded-[1rem] border px-4 py-3 text-sm font-black transition ${darkMode ? "bg-[#080808] text-white" : "bg-[#F5F2EA] text-black"}`}
+                              style={{
+                                borderColor: active ? item.color : darkMode ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
+                                boxShadow: active ? `0 0 0 1px ${item.color}` : "none",
+                                color: active ? item.color : undefined,
+                              }}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCreateLeaderboardQuestion}
+                        disabled={leaderboardQuestionSaving}
+                        className={`w-full rounded-full px-4 py-3 text-sm font-black transition ${darkMode ? "bg-[#E64646] text-white" : "bg-[#E64646] text-white"} ${leaderboardQuestionSaving ? "opacity-60" : ""}`}
+                      >
+                        {leaderboardQuestionSaving ? t("Publishing...") : t(leaderboardQuestionEditingId ? "Update question" : "Publish question")}
+                      </button>
+                      {leaderboardQuestionEditingId ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLeaderboardQuestionEditingId("");
+                            setLeaderboardQuestionTitle("");
+                            setLeaderboardQuestionLabel("IN TREND");
+                            setLeaderboardQuestionAccent("red");
+                            setLeaderboardQuestionDishMode("restaurant");
+                          }}
+                          className={`w-full rounded-full border px-4 py-3 text-sm font-black ${darkMode ? "border-white/12 bg-[#080808] text-white" : "border-black/12 bg-[#F5F2EA] text-black"}`}
+                        >
+                          {t("Create new question")}
+                        </button>
+                      ) : null}
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <div className={`rounded-[1.35rem] border p-4 text-sm ${darkMode ? "border-white/10 bg-[#111111] text-white/55" : "border-black/10 bg-white text-black/55"}`}>
+                  {t("Enter the admin password to manage leaderboard questions.")}
+                </div>
+              )}
             </div>
           </motion.div>
         )}

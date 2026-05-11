@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence, animate, useMotionValue, useTransform } from "framer-motion";
+import { motion, animate, useMotionValue, useTransform } from "framer-motion";
 import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
@@ -64,8 +64,6 @@ export default function LeaderboardQuestionPage() {
     [answers]
   );
   const totalVotes = rankedAnswers.reduce((sum, answer) => sum + voteCount(answer), 0);
-  const currentIndex = Math.max(0, questions.findIndex((item) => item.id === activeQuestionId));
-  const nextQuestion = questions.length > 1 ? questions[(currentIndex + 1) % questions.length] : null;
   const hot = Number(question?.recentVotes || 0) > 0;
 
   const loadQuestions = async () => {
@@ -233,23 +231,18 @@ export default function LeaderboardQuestionPage() {
         </div>
 
         <div className="relative mt-0 touch-none select-none">
-          {nextQuestion ? (
-            <div className="pointer-events-none absolute inset-x-2 top-4 bottom-0 rounded-[1.7rem] border border-white/10 bg-[#111111] opacity-70 shadow-[0_14px_34px_rgba(0,0,0,0.22)]" />
-          ) : null}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={question.id}
-              drag={questions.length > 1 && !isEjecting ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.9}
-              onDragEnd={handleQuestionDragEnd}
-              initial={{ opacity: 0, scale: 0.985 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.985 }}
-              transition={{ type: "spring", stiffness: 360, damping: 32 }}
-              className="cursor-grab rounded-[1.7rem] border-2 bg-[#101010] p-4 shadow-[0_0_42px_rgba(0,0,0,0.42)] active:cursor-grabbing"
-              style={{ x: dragX, rotate: cardRotate, borderColor: accent.main, boxShadow: `0 0 28px ${accent.glow}, 0 16px 46px rgba(0,0,0,0.34)` }}
-            >
+          <motion.div
+            key={question.id}
+            drag={questions.length > 1 && !isEjecting ? "x" : false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.9}
+            onDragEnd={handleQuestionDragEnd}
+            initial={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 360, damping: 32 }}
+            className="cursor-grab rounded-[1.7rem] border-2 bg-[#101010] p-4 active:cursor-grabbing"
+            style={{ x: dragX, rotate: cardRotate, borderColor: accent.main, boxShadow: `0 16px 42px rgba(0,0,0,0.36), 0 0 18px ${accent.glow}` }}
+          >
             <div className="mb-3">
               <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
                 {hot ? <Flame size={18} fill="currentColor" /> : null}
@@ -273,10 +266,13 @@ export default function LeaderboardQuestionPage() {
                     data-no-question-swipe="true"
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
-                    className={`flex w-full items-center gap-3 rounded-[1.1rem] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition ${
-                      alreadyVoted ? "bg-[#2A1414] ring-4 scale-[1.01]" : "bg-[#171717]"
+                    className={`flex w-full items-center gap-3 rounded-[1.1rem] border p-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.16)] transition ${
+                      alreadyVoted ? "bg-[#241515]" : "bg-[#171717]"
                     }`}
-                    style={alreadyVoted ? { "--tw-ring-color": accent.main, boxShadow: `0 0 0 1px ${accent.main}, 0 0 22px ${accent.glow}` } : undefined}
+                    style={{
+                      borderColor: alreadyVoted ? accent.main : "rgba(255,255,255,0.08)",
+                      boxShadow: alreadyVoted ? `inset 0 0 0 1px ${accent.main}, 0 10px 24px rgba(0,0,0,0.16)` : "0 10px 24px rgba(0,0,0,0.16)",
+                    }}
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
                       {index + 1}
@@ -333,8 +329,7 @@ export default function LeaderboardQuestionPage() {
                 {anonymous ? "Il tuo voto è anonimo" : "Risposta visibile sul profilo"}
               </button>
             </div>
-            </motion.div>
-          </AnimatePresence>
+          </motion.div>
           {questions.length > 1 ? (
             <div className="mt-4 text-center text-xs font-semibold text-white/28">
               {t("Swipe between leaderboard questions")}

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Flame, Lock, MessageCircle, MoreHorizontal, Share } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Flame, Lock, LockOpen, MessageCircle } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
   addLeaderboardAnswer,
@@ -49,7 +50,6 @@ export default function LeaderboardQuestionPage() {
   const [answerText, setAnswerText] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const swipeRef = useRef(null);
 
   const accent = accentMap[question?.accent] || accentMap.red;
   const rankedAnswers = useMemo(
@@ -115,46 +115,15 @@ export default function LeaderboardQuestionPage() {
     if (ok) await load();
   };
 
-  const isSwipeBlockedTarget = (target) => {
-    return Boolean(target?.closest?.("button,input,textarea,select,a,[data-no-question-swipe='true']"));
+  const stopCardDrag = (event) => {
+    event.stopPropagation();
   };
 
-  const startSwipe = (x, y, target) => {
-    if (isSwipeBlockedTarget(target)) {
-      swipeRef.current = null;
-      return;
-    }
-    swipeRef.current = { x, y, t: Date.now() };
-  };
-
-  const endSwipe = (x, y) => {
-    const start = swipeRef.current;
-    swipeRef.current = null;
-    if (!start) return;
-    const dx = x - start.x;
-    const dy = y - start.y;
-    if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
-    goToQuestion(dx < 0 ? 1 : -1);
-  };
-
-  const handlePointerDown = (event) => {
-    startSwipe(event.clientX, event.clientY, event.target);
-  };
-
-  const handlePointerUp = (event) => {
-    endSwipe(event.clientX, event.clientY);
-  };
-
-  const handleTouchStart = (event) => {
-    const touch = event.touches?.[0];
-    if (!touch) return;
-    startSwipe(touch.clientX, touch.clientY, event.target);
-  };
-
-  const handleTouchEnd = (event) => {
-    const touch = event.changedTouches?.[0];
-    if (!touch) return;
-    endSwipe(touch.clientX, touch.clientY);
+  const handleQuestionDragEnd = (_event, info) => {
+    const offsetX = info?.offset?.x || 0;
+    const velocityX = info?.velocity?.x || 0;
+    if (Math.abs(offsetX) < 72 && Math.abs(velocityX) < 520) return;
+    goToQuestion(offsetX < 0 || velocityX < -520 ? 1 : -1);
   };
 
   if (loading) {
@@ -178,8 +147,8 @@ export default function LeaderboardQuestionPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),1rem)]">
-        <div className="flex items-center justify-between py-6">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[max(env(safe-area-inset-top),0.75rem)]">
+        <div className="flex items-center justify-between py-3">
           <button type="button" onClick={() => router.back()} className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
             <ArrowLeft size={24} />
           </button>
@@ -187,34 +156,24 @@ export default function LeaderboardQuestionPage() {
             Leaderboard
             <PodiumIcon className="h-6 w-6 text-[#D7B443]" />
           </div>
-          <button type="button" className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
-            <MoreHorizontal size={22} />
-          </button>
+          <div className="h-12 w-12" />
         </div>
 
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm font-bold text-white/35">
-            {questions.length ? `${currentIndex + 1}/${questions.length}` : ""}
-          </div>
-          <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/5">
-            <Share size={21} />
-          </button>
-        </div>
-
-        <div
-          className="relative touch-pan-y select-none"
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onPointerCancel={() => {
-            swipeRef.current = null;
-          }}
-        >
-          <div
-            className="rounded-[2rem] border border-white/10 bg-[#101010] p-5 shadow-[0_0_42px_rgba(0,0,0,0.42)]"
-            style={{ boxShadow: `0 0 34px ${accent.glow}, 0 20px 58px rgba(0,0,0,0.36)` }}
-          >
+        <div className="relative mt-1 touch-pan-y select-none">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={question.id}
+              drag={questions.length > 1 ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.38}
+              onDragEnd={handleQuestionDragEnd}
+              initial={{ opacity: 0, x: 36, rotate: 1.5 }}
+              animate={{ opacity: 1, x: 0, rotate: 0 }}
+              exit={{ opacity: 0, x: -36, rotate: -1.5 }}
+              transition={{ type: "spring", stiffness: 360, damping: 32 }}
+              className="rounded-[2rem] border border-white/10 bg-[#101010] p-5 shadow-[0_0_42px_rgba(0,0,0,0.42)]"
+              style={{ boxShadow: `0 0 34px ${accent.glow}, 0 20px 58px rgba(0,0,0,0.36)` }}
+            >
             <div className="mb-5">
               <div className="mb-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
                 {hot ? <Flame size={18} fill="currentColor" /> : null}
@@ -235,6 +194,8 @@ export default function LeaderboardQuestionPage() {
                     key={answer.id}
                     onClick={() => vote(answer)}
                     data-no-question-swipe="true"
+                    onPointerDownCapture={stopCardDrag}
+                    onTouchStartCapture={stopCardDrag}
                     className="flex w-full items-center gap-3 rounded-[1.25rem] bg-[#171717] p-3.5 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
@@ -259,7 +220,11 @@ export default function LeaderboardQuestionPage() {
               })}
             </div>
 
-            <div className="rounded-[1.45rem] border border-white/10 bg-[#0B0B0B] p-4">
+            <div
+              className="rounded-[1.45rem] border border-white/10 bg-[#0B0B0B] p-4"
+              onPointerDownCapture={stopCardDrag}
+              onTouchStartCapture={stopCardDrag}
+            >
               <div className="mb-3 text-lg font-black">Aggiungi la tua risposta</div>
               <input
                 data-no-question-swipe="true"
@@ -284,11 +249,12 @@ export default function LeaderboardQuestionPage() {
                 data-no-question-swipe="true"
                 className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-bold text-white/34"
               >
-                <Lock size={16} />
+                {anonymous ? <Lock size={16} /> : <LockOpen size={16} />}
                 {anonymous ? "Il tuo voto è anonimo" : "Risposta visibile sul profilo"}
               </button>
             </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
           {questions.length > 1 ? (
             <div className="mt-4 text-center text-xs font-semibold text-white/28">
               {t("Swipe between leaderboard questions")}

@@ -610,18 +610,21 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[0.95rem] border p-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.14)] ${
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[1.05rem] border p-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.14)] ${
                 darkMode
-                  ? `bg-[#121212] ${featured ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.50),0_0_24px_6px_rgba(230,70,70,0.26),0_10px_22px_rgba(0,0,0,0.20)]" : "border-white/10"}`
-                  : `bg-white ${featured ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.42),0_0_22px_5px_rgba(230,70,70,0.22),0_10px_22px_rgba(0,0,0,0.12)]" : accent.border}`
+                  ? `bg-[#121212] ${featured ? "border-2 border-[#E64646] bg-[linear-gradient(145deg,rgba(230,70,70,0.22),rgba(18,18,18,0.96)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.42),0_0_28px_7px_rgba(230,70,70,0.32),0_12px_32px_rgba(230,70,70,0.18)]" : "border-white/10"}`
+                  : `bg-white ${featured ? "border-2 border-[#E64646] bg-[linear-gradient(145deg,rgba(230,70,70,0.13),rgba(255,255,255,0.98)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.38),0_0_26px_6px_rgba(230,70,70,0.25),0_10px_22px_rgba(0,0,0,0.12)]" : accent.border}`
               }`}
             >
-              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${featured ? "from-[#E64646]/25" : accent.glow} via-transparent to-transparent`} />
+              {featured ? (
+                <div className="pointer-events-none absolute -inset-2 -z-10 rounded-[1.35rem] bg-[#E64646]/20 blur-xl" />
+              ) : null}
+              <div className={`pointer-events-none absolute inset-0 rounded-[1rem] bg-gradient-to-br ${featured ? "from-[#E64646]/24" : accent.glow} via-transparent to-transparent`} />
               <div className={`relative mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
                 {hot ? <Flame size={9} fill="currentColor" /> : null}
                 {question.label || t("IN TREND")}
               </div>
-              <div className={`relative min-h-[2.55rem] text-[0.7rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+              <div className={`relative min-h-[2.25rem] text-[0.7rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                 {question.title}
               </div>
               <div className="relative mt-2 flex items-center justify-between">

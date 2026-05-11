@@ -430,8 +430,9 @@ export default function Profile() {
           Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
+          getLeaderboardAnswersForUser(candidateIds, true),
         ]);
-        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
         setProfileUser(nextProfileUser);
         setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
@@ -439,6 +440,7 @@ export default function Profile() {
         setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
         setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
+        setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
         if (nextProfileUser) {
           setProfileMeta((prev) => ({
             ...prev,
@@ -462,11 +464,12 @@ export default function Profile() {
       try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const ownerCandidates = profileAliasIds;
-        const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
+        const [uploadedResults, savedResults, toTryResults, customResults, takesResults] = await Promise.all([
           getUploadedDishesForUserAliases(ownerCandidates),
           Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
           Promise.all(ownerCandidates.map((candidateId) => getCustomDishlistsForUser(candidateId))),
+          getLeaderboardAnswersForUser(ownerCandidates, true),
         ]);
         const [uploaded, saved, toTry, custom] = [
           mergeUniqueById([uploadedResults]),
@@ -493,6 +496,7 @@ export default function Profile() {
         setSavedDishes(saved);
         setToTryDishes(toTry);
         setCustomDishlists(custom);
+        setLeaderboardTakes(takesResults);
       } catch (err) {
         console.error("Failed to hydrate profile counts:", err);
       }

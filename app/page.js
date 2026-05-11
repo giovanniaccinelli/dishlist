@@ -13,17 +13,20 @@ import {
   createDishForUser,
   getAllDishesFromFirestore,
   getAllDishlistsForUser,
+  getCommentsForDish,
+  getCommentsForStory,
   getDishesFromFirestore,
   getFollowingForUser,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
+  getUsersByIds,
   getUsersWhoSavedDish,
   recountDishSavesFromUsers,
   saveDishToSelectedDishlist,
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { ChevronLeft, ChevronRight, Send, Settings, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import {
@@ -34,7 +37,7 @@ import {
   DishModeFilterModal,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
+import { arrayUnion, collection, doc, getDoc, getDocs, limit as limitResults, orderBy, query, setDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
@@ -51,6 +54,24 @@ const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
 const FEED_VIEWED_FIELD = "feedViewedDishIds";
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
+const activitySeenStorageKey = (userId) => `feed:activitySeenAt:${userId}`;
+
+function timestampToMs(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatActivityTime(timeMs) {
+  if (!timeMs) return "";
+  const diff = Date.now() - timeMs;
+  if (diff < 60 * 1000) return "now";
+  if (diff < 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 60000))}m`;
+  if (diff < 24 * 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 3600000))}h`;
+  return `${Math.max(1, Math.floor(diff / 86400000))}d`;
+}
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -92,11 +113,16 @@ export default function Feed() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterVersion, setFilterVersion] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [activityItems, setActivityItems] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activitySeenAt, setActivitySeenAt] = useState(0);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
+  const hasActivityUpdate = activityItems.some((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0));
 
   const isOwnDish = (dish) => {
     if (!userId || !dish) return false;
@@ -127,6 +153,26 @@ export default function Feed() {
   useEffect(() => {
     viewedDishIdsRef.current = viewedDishIds;
   }, [viewedDishIds]);
+
+  useEffect(() => {
+    if (!userId || typeof window === "undefined") {
+      setActivitySeenAt(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const localSeen = Number(localStorage.getItem(activitySeenStorageKey(userId)) || 0);
+      let remoteSeen = 0;
+      try {
+        const snap = await getDoc(doc(db, "users", userId));
+        remoteSeen = timestampToMs(snap.data()?.feedActivitySeenAt);
+      } catch {}
+      if (!cancelled) setActivitySeenAt(Math.max(localSeen, remoteSeen));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -632,6 +678,145 @@ export default function Feed() {
     setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
   };
 
+  const buildActivityItems = async () => {
+    if (!userId) return [];
+    setActivityLoading(true);
+    try {
+      const [userSnap, uploadedDishes] = await Promise.all([
+        getDoc(doc(db, "users", userId)),
+        getDishesFromFirestore(userId),
+      ]);
+      const userData = userSnap.exists() ? userSnap.data() || {} : {};
+      const followers = Array.isArray(userData.followers) ? userData.followers : [];
+      const followerUsers = await getUsersByIds(followers);
+      const followerItems = followerUsers.map((follower) => ({
+        id: `follow-${follower.id}`,
+        icon: UserPlus,
+        actor: follower.displayName || follower.name || "Someone",
+        text: t("started following you"),
+        href: `/profile/${follower.id}`,
+        timeMs: timestampToMs(follower.followingSince?.[userId]),
+      }));
+
+      const followedPostItems = followingDeck
+        .filter((dish) => {
+          const followSince = Number(followingSinceById[dish?.owner] || 0);
+          return followSince && timestampToMs(dish.createdAt) > followSince;
+        })
+        .slice(0, 20)
+        .map((dish) => ({
+          id: `post-${dish.id}`,
+          icon: Utensils,
+          actor: dish.ownerName || "Someone",
+          text: t("posted a new dish"),
+          detail: dish.name || "",
+          href: `/dish/${dish.id}?source=public&mode=single`,
+          timeMs: timestampToMs(dish.createdAt),
+        }));
+
+      const dishCommentGroups = await Promise.all(
+        uploadedDishes.slice(0, 24).map(async (dish) => {
+          const comments = await getCommentsForDish(dish.id, 8, "dish");
+          return comments
+            .filter((comment) => comment.userId !== userId)
+            .map((comment) => ({
+              id: `dish-comment-${dish.id}-${comment.id}`,
+              icon: MessageCircle,
+              actor: comment.userName || "Someone",
+              text: t("commented on your dish"),
+              detail: dish.name || "",
+              href: `/dish/${dish.id}?source=uploaded&mode=single`,
+              timeMs: timestampToMs(comment.createdAt),
+            }));
+        })
+      );
+
+      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(12)));
+      const storyCommentGroups = await Promise.all(
+        storySnap.docs.map(async (storyDoc) => {
+          const story = { id: storyDoc.id, ...storyDoc.data() };
+          const comments = await getCommentsForStory(userId, storyDoc.id, 8);
+          return comments
+            .filter((comment) => comment.userId !== userId)
+            .map((comment) => ({
+              id: `story-comment-${storyDoc.id}-${comment.id}`,
+              icon: MessageCircle,
+              actor: comment.userName || "Someone",
+              text: t("commented on your story"),
+              detail: story.name || story.dishName || "",
+              href: "/profile",
+              timeMs: timestampToMs(comment.createdAt),
+            }));
+        })
+      );
+
+      const saveGroups = await Promise.all(
+        uploadedDishes.slice(0, 12).map(async (dish) => {
+          const savers = await getUsersWhoSavedDish(dish.id);
+          return savers
+            .filter((saver) => saver.id !== userId)
+            .slice(0, 3)
+            .map((saver) => ({
+              id: `save-${dish.id}-${saver.id}`,
+              icon: Heart,
+              actor: saver.displayName || saver.name || "Someone",
+              text: t("saved your dish"),
+              detail: dish.name || "",
+              href: `/dish/${dish.id}?source=uploaded&mode=single`,
+              timeMs: 0,
+            }));
+        })
+      );
+
+      const items = [
+        ...followerItems,
+        ...followedPostItems,
+        ...dishCommentGroups.flat(),
+        ...storyCommentGroups.flat(),
+        ...saveGroups.flat(),
+      ]
+        .filter((item) => item.id)
+        .sort((a, b) => Number(b.timeMs || 0) - Number(a.timeMs || 0))
+        .slice(0, 80);
+      setActivityItems(items);
+      return items;
+    } catch (error) {
+      console.error("Failed to load activity:", error);
+      return [];
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      setActivityItems([]);
+      return undefined;
+    }
+    let cancelled = false;
+    buildActivityItems().then((items) => {
+      if (!cancelled) setActivityItems(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, followingDeck, followingSinceById]);
+
+  const openActivity = async () => {
+    if (!userId) {
+      router.push("/?auth=1");
+      return;
+    }
+    setActivityOpen(true);
+    await buildActivityItems();
+    const now = Date.now();
+    setActivitySeenAt(now);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(activitySeenStorageKey(userId), String(now));
+    }
+    setDoc(doc(db, "users", userId), { feedActivitySeenAt: new Date(now) }, { merge: true }).catch(() => {});
+  };
+
   if (loading || loadingDishes) {
     return <FeedLoading />;
   }
@@ -667,13 +852,15 @@ export default function Feed() {
             <Send size={18} />
             {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
-          <Link
-            href={userId ? "/profile?settings=1" : "/?auth=1"}
-            className="top-action-btn"
-            aria-label="Open settings"
+          <button
+            type="button"
+            onClick={openActivity}
+            className="top-action-btn relative"
+            aria-label="Open activity"
           >
-            <Settings size={18} />
-          </Link>
+            <Bell size={18} />
+            {hasActivityUpdate ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          </button>
         </div>
       </div>
       {!userId && guestMode === "feed" && (
@@ -949,6 +1136,81 @@ export default function Feed() {
         variant={dishlistPickerVariant}
         dishPreview={dishlistPickerVariant === "swipe" ? dishlistPickerDish : null}
       />
+      <AnimatePresence>
+        {activityOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[138] bg-black/70 backdrop-blur-sm text-white flex items-end justify-center px-3 pb-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActivityOpen(false)}
+          >
+            <motion.div
+              className="w-full max-w-md max-h-[calc(100dvh-4rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808] shadow-[0_24px_70px_rgba(0,0,0,0.5)]"
+              initial={{ y: 32, scale: 0.98 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 32, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 420, damping: 36 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-white/8 px-4 py-4">
+                <div>
+                  <h2 className="text-[1.35rem] font-black leading-none">{t("Activity")}</h2>
+                  <div className="mt-1 text-xs font-semibold text-white/38">{t("Updates from your DishList")}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActivityOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-white"
+                  aria-label="Close activity"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto p-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {activityLoading && !activityItems.length ? (
+                  <div className="py-10 text-center text-sm font-semibold text-white/42">{t("Loading updates...")}</div>
+                ) : activityItems.length ? (
+                  <div className="space-y-2">
+                    {activityItems.map((item) => {
+                      const Icon = item.icon || Bell;
+                      const fresh = Number(item.timeMs || 0) > Number(activitySeenAt || 0);
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href || "#"}
+                          onClick={() => setActivityOpen(false)}
+                          className="flex items-center gap-3 rounded-[1.25rem] border border-white/8 bg-white/[0.045] px-3 py-3 text-left transition active:scale-[0.99]"
+                        >
+                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-white">
+                            <Icon size={18} />
+                            {fresh ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-black">
+                              {item.actor}
+                              <span className="font-semibold text-white/62"> {item.text}</span>
+                            </div>
+                            {item.detail ? <div className="mt-1 truncate text-xs font-semibold text-white/42">{item.detail}</div> : null}
+                          </div>
+                          {item.timeMs ? <div className="shrink-0 text-xs font-bold text-white/32">{formatActivityTime(item.timeMs)}</div> : null}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-10 text-center">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/8">
+                      <Bell size={20} />
+                    </div>
+                    <div className="text-sm font-black">{t("No updates yet")}</div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <AnimatePresence>
         {aboutOpen ? (
           <motion.div

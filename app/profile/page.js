@@ -65,6 +65,7 @@ import {
   dishModeMatches,
   DISH_MODE_ALL,
   DISH_MODE_COOKING,
+  DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantForkKnifeIcon,
@@ -275,6 +276,7 @@ export default function Profile() {
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
+  const [profileContentReady, setProfileContentReady] = useState(false);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
@@ -382,10 +384,12 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) {
+      setProfileContentReady(false);
       return undefined;
     }
 
     let cancelled = false;
+    setProfileContentReady(false);
     (async () => {
       try {
         const loadUserDoc = async () => {
@@ -447,8 +451,10 @@ export default function Profile() {
         setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
         setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
+        setProfileContentReady(true);
       } catch (error) {
         console.error("Failed to load own profile:", error);
+        if (!cancelled) setProfileContentReady(true);
       }
     })();
 
@@ -1882,139 +1888,157 @@ export default function Profile() {
         ) : null}
       </div>
 
-      {showingDishlistOverview ? (
-        <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
-      ) : null}
-
-      {showingDishlistOverview ? (
-        <div className="mb-4 flex justify-center px-2">
-          <button
-            type="button"
-            onClick={() => setProfileMapOpen(true)}
-            className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
-              darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
-            }`}
-            style={{ borderColor: "#E64646" }}
-          >
-            <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
-            {t("Restaurants")}
-          </button>
-        </div>
-      ) : null}
-
-      {showingDishlistOverview ? (
+      {!profileContentReady ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
+          <div className={`mb-4 h-20 animate-pulse rounded-[1.35rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`} />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {[
-              ...allDishlists.filter((dishlist) => dishlist.type === "system"),
-              ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
-            ].map((dishlist) => {
-              const isMap = dishlist.type === "map";
-              const preview = getDishlistPreviewDishes(dishlist);
-              return (
-                <button
-                  key={dishlist.id}
-                  type="button"
-                  onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
-                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${
-                    darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
-                    <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
-                  </div>
-                  {isMap ? (
-                    <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
-                      darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
-                    }`}>
-                      <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-                      <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
-                    </div>
-                  ) : (
-                    <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
-                  )}
-                  <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={handleOpenCreateDishlist}
-              className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#45C47A]/55 p-3 text-left ${
-                darkMode ? "bg-[#12351F]" : "bg-[#F3FFF7]"
-              }`}
-            >
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#63D892]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1FA463] text-white">
-                  <Plus size={22} />
-                </div>
-                <div className="text-sm font-semibold">{t("Create dishlist")}</div>
-              </div>
-            </button>
+            {[0, 1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className={`min-h-[11.4rem] animate-pulse rounded-[1.5rem] border ${
+                  darkMode ? "border-white/8 bg-white/6" : "border-black/8 bg-black/5"
+                }`}
+              />
+            ))}
           </div>
         </div>
       ) : (
-        <div
-          onPointerDown={handleDishlistDetailPointerDown}
-          onPointerUp={handleDishlistDetailPointerUp}
-          onPointerCancel={() => {
-            dishlistDetailSwipeRef.current = null;
-          }}
-        >
-          <div
-            className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-2"
-          >
-            <button
-              type="button"
-              onClick={() => selectDishlist("overview")}
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
-                darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
-              }`}
-              aria-label={t("Back")}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <div
-              onPointerDown={(event) => event.stopPropagation()}
-              onPointerUp={(event) => event.stopPropagation()}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <DishModeFilterButton value={selectedDishMode} onSelect={handleDishModeSelect} />
+        <>
+          {showingDishlistOverview ? (
+            <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
+          ) : null}
+
+          {showingDishlistOverview ? (
+            <div className="mb-4 flex justify-center px-2">
+              <button
+                type="button"
+                onClick={() => setProfileMapOpen(true)}
+                className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
+                  darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
+                }`}
+                style={{ borderColor: "#E64646" }}
+              >
+                <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
+                {t("Restaurants")}
+              </button>
             </div>
-            <div className="flex justify-end">
-              {activeDishlist?.type === "custom" ? (
+          ) : null}
+
+          {showingDishlistOverview ? (
+            <div className="mx-auto w-full max-w-3xl px-2 pb-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[
+                  ...allDishlists.filter((dishlist) => dishlist.type === "system"),
+                  ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
+                ].map((dishlist) => {
+                  const isMap = dishlist.type === "map";
+                  const preview = getDishlistPreviewDishes(dishlist);
+                  return (
+                    <button
+                      key={dishlist.id}
+                      type="button"
+                      onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
+                      className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${
+                        darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                        <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
+                      </div>
+                      {isMap ? (
+                        <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
+                          darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
+                        }`}>
+                          <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+                          <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
+                        </div>
+                      ) : (
+                        <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
+                      )}
+                      <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
-                  onClick={() => {
-                    setDishlistRenameTarget(activeDishlist);
-                    setDishlistRenameValue(activeDishlist.name || "");
-                  }}
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+                  onClick={handleOpenCreateDishlist}
+                  className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#45C47A]/55 p-3 text-left ${
+                    darkMode ? "bg-[#12351F]" : "bg-[#F3FFF7]"
+                  }`}
+                >
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#63D892]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1FA463] text-white">
+                      <Plus size={22} />
+                    </div>
+                    <div className="text-sm font-semibold">{t("Create dishlist")}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onPointerDown={handleDishlistDetailPointerDown}
+              onPointerUp={handleDishlistDetailPointerUp}
+              onPointerCancel={() => {
+                dishlistDetailSwipeRef.current = null;
+              }}
+            >
+              <div
+                className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => selectDishlist("overview")}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
                     darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
                   }`}
-                  aria-label="Edit dishlist"
+                  aria-label={t("Back")}
                 >
-                  <Pencil size={16} />
+                  <ChevronLeft size={16} />
                 </button>
-              ) : (
-                <span className="h-10 w-10" aria-hidden="true" />
-              )}
+                <div
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onPointerUp={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <DishModeFilterButton value={selectedDishMode} onSelect={handleDishModeSelect} />
+                </div>
+                <div className="flex justify-end">
+                  {activeDishlist?.type === "custom" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDishlistRenameTarget(activeDishlist);
+                        setDishlistRenameValue(activeDishlist.name || "");
+                      }}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+                        darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
+                      }`}
+                      aria-label="Edit dishlist"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  ) : (
+                    <span className="h-10 w-10" aria-hidden="true" />
+                  )}
+                </div>
+              </div>
+              <DishGrid
+                title={
+                  <span className="inline-flex items-center gap-2">
+                    {activeDishlist?.name || "All dishes"}
+                    <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
+                  </span>
+                }
+                dishes={activeDishlist?.dishes || []}
+                allowDelete={false}
+                source={activeDishlist?.id || "all_dishes"}
+                onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
+              />
             </div>
-          </div>
-          <DishGrid
-            title={
-              <span className="inline-flex items-center gap-2">
-                {activeDishlist?.name || "All dishes"}
-                <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
-              </span>
-            }
-            dishes={activeDishlist?.dishes || []}
-            allowDelete={false}
-            source={activeDishlist?.id || "all_dishes"}
-            onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
-          />
-        </div>
+          )}
+        </>
       )}
 
       {/* Add Dish button */}

@@ -6,9 +6,10 @@ import { RestaurantMapIcon } from "./DishModeControls";
 
 const MILAN_CENTER = { lat: 45.4642, lng: 9.19 };
 
-export default function MapPreview({ className = "" }) {
+export default function MapPreview({ className = "", groups = [] }) {
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
+  const markersRef = useRef([]);
   const [state, setState] = useState("loading");
 
   useEffect(() => {
@@ -39,6 +40,26 @@ export default function MapPreview({ className = "" }) {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (state !== "ready" || !mapRef.current || typeof window === "undefined") return;
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = [];
+    groups.forEach((group) => {
+      if (!Number.isFinite(group?.lat) || !Number.isFinite(group?.lng)) return;
+      const marker = new window.google.maps.Marker({
+        map: mapRef.current,
+        position: { lat: group.lat, lng: group.lng },
+        title: group.name || "Restaurant",
+        clickable: false,
+      });
+      markersRef.current.push(marker);
+    });
+    return () => {
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
+    };
+  }, [groups, state]);
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className}`}>

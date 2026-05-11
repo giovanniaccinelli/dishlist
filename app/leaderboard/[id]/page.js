@@ -242,7 +242,7 @@ export default function LeaderboardQuestionPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[calc(env(safe-area-inset-top)+2.35rem)]">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-none flex-col px-3 pb-8 pt-[calc(env(safe-area-inset-top)+2.35rem)]">
         <div className="flex items-center justify-between py-3">
           <button type="button" onClick={() => router.back()} className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
             <ArrowLeft size={24} />
@@ -254,7 +254,7 @@ export default function LeaderboardQuestionPage() {
           <div className="h-12 w-12" />
         </div>
 
-        <div className="relative mt-0 flex flex-1 touch-none select-none">
+        <div className="relative mt-0 flex flex-1 flex-col items-center touch-none select-none">
           <motion.div
             key={question.id}
             drag={questions.length > 1 && !isEjecting ? "x" : false}
@@ -264,7 +264,7 @@ export default function LeaderboardQuestionPage() {
             initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
-            className="flex min-h-[calc(100dvh-10.5rem)] w-full cursor-grab flex-col rounded-[1.7rem] border-2 bg-[#101010] p-4 active:cursor-grabbing"
+            className="flex min-h-[calc(100dvh-12.4rem)] w-full max-w-[calc(100vw-1.5rem)] cursor-grab flex-col rounded-[1.7rem] border-2 bg-[#101010] p-4 active:cursor-grabbing"
             style={{ x: dragX, rotate: cardRotate, borderColor: accent.main, boxShadow: `0 16px 42px rgba(0,0,0,0.36), 0 0 18px ${accent.glow}` }}
           >
             <div className="mb-3">

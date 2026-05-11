@@ -521,7 +521,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
           }`}
           aria-label="Open map"
         >
-          <MapPreview />
+          <MapPreview groups={row.groups || []} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
         </button>
       </section>
@@ -601,7 +601,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
         </div>
         <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-3 overflow-x-auto px-1 pb-3 pt-1 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;
@@ -618,7 +618,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
               }`}
               style={{
                 borderColor: cardBorder,
-                boxShadow: featured ? "0 0 0 1px rgba(230,70,70,0.28), 0 0 16px rgba(230,70,70,0.32), 0 10px 22px rgba(0,0,0,0.16)" : "0 8px 18px rgba(0,0,0,0.12)",
+                boxShadow: featured ? "0 0 0 1.5px #E64646, 0 0 14px 2px rgba(230,70,70,0.34), 0 10px 22px rgba(0,0,0,0.16)" : "0 8px 18px rgba(0,0,0,0.12)",
               }}
             >
               <div className={`mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
@@ -807,6 +807,7 @@ export default function Explore() {
           type: "map",
           title: "Mappa",
           dishes: [{}],
+          groups: restaurantRows,
         },
         ...restaurantRows,
       ];
@@ -814,11 +815,13 @@ export default function Explore() {
 
     const rows = [];
     if (selectedDishMode !== DISH_MODE_COOKING) {
+      const mapGroups = getRestaurantDishGroups(modePool);
       rows.push({
         key: "map",
         type: "map",
         title: "Mappa",
         dishes: [{}],
+        groups: mapGroups,
       });
     }
     rows.push({

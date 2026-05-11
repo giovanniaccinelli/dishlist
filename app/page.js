@@ -37,7 +37,7 @@ import {
   DishModeFilterModal,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { arrayUnion, collection, doc, getDoc, getDocs, limit as limitResults, orderBy, query, setDoc } from "firebase/firestore";
+import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { useRouter } from "next/navigation";
@@ -65,13 +65,20 @@ function timestampToMs(value) {
 }
 
 function formatActivityTime(timeMs) {
-  if (!timeMs) return "";
+  if (!timeMs) return "recently";
   const diff = Date.now() - timeMs;
   if (diff < 60 * 1000) return "now";
   if (diff < 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 60000))}m`;
   if (diff < 24 * 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 3600000))}h`;
   return `${Math.max(1, Math.floor(diff / 86400000))}d`;
 }
+
+const ACTIVITY_STYLE = {
+  follow: { color: "#38BDF8", bg: "rgba(56,189,248,0.12)", border: "rgba(56,189,248,0.28)" },
+  post: { color: "#F0A623", bg: "rgba(240,166,35,0.13)", border: "rgba(240,166,35,0.28)" },
+  comment: { color: "#2BD36B", bg: "rgba(43,211,107,0.12)", border: "rgba(43,211,107,0.26)" },
+  save: { color: "#E64646", bg: "rgba(230,70,70,0.13)", border: "rgba(230,70,70,0.28)" },
+};
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -691,6 +698,7 @@ export default function Feed() {
       const followerUsers = await getUsersByIds(followers);
       const followerItems = followerUsers.map((follower) => ({
         id: `follow-${follower.id}`,
+        kind: "follow",
         icon: UserPlus,
         actor: follower.displayName || follower.name || "Someone",
         text: t("started following you"),
@@ -706,6 +714,7 @@ export default function Feed() {
         .slice(0, 20)
         .map((dish) => ({
           id: `post-${dish.id}`,
+          kind: "post",
           icon: Utensils,
           actor: dish.ownerName || "Someone",
           text: t("posted a new dish"),
@@ -721,6 +730,7 @@ export default function Feed() {
             .filter((comment) => comment.userId !== userId)
             .map((comment) => ({
               id: `dish-comment-${dish.id}-${comment.id}`,
+              kind: "comment",
               icon: MessageCircle,
               actor: comment.userName || "Someone",
               text: t("commented on your dish"),
@@ -740,6 +750,7 @@ export default function Feed() {
             .filter((comment) => comment.userId !== userId)
             .map((comment) => ({
               id: `story-comment-${storyDoc.id}-${comment.id}`,
+              kind: "comment",
               icon: MessageCircle,
               actor: comment.userName || "Someone",
               text: t("commented on your story"),
@@ -752,19 +763,31 @@ export default function Feed() {
 
       const saveGroups = await Promise.all(
         uploadedDishes.slice(0, 12).map(async (dish) => {
-          const savers = await getUsersWhoSavedDish(dish.id);
-          return savers
-            .filter((saver) => saver.id !== userId)
-            .slice(0, 3)
-            .map((saver) => ({
-              id: `save-${dish.id}-${saver.id}`,
+          const savedSnap = await getDocs(query(collectionGroup(db, "saved"), where("id", "==", dish.id), limitResults(8)));
+          const events = savedSnap.docs
+            .map((savedDoc) => {
+              const saverId = savedDoc.ref.parent.parent?.id || "";
+              return {
+                saverId,
+                savedAt: savedDoc.data()?.savedAt || savedDoc.data()?.addedAt || null,
+              };
+            })
+            .filter((event) => event.saverId && event.saverId !== userId);
+          const saverUsers = await getUsersByIds(events.map((event) => event.saverId));
+          const usersById = new Map(saverUsers.map((saver) => [saver.id, saver]));
+          return events.slice(0, 4).map((event) => {
+            const saver = usersById.get(event.saverId);
+            return {
+              id: `save-${dish.id}-${event.saverId}`,
+              kind: "save",
               icon: Heart,
-              actor: saver.displayName || saver.name || "Someone",
+              actor: saver?.displayName || saver?.name || "Someone",
               text: t("saved your dish"),
               detail: dish.name || "",
               href: `/dish/${dish.id}?source=uploaded&mode=single`,
-              timeMs: 0,
-            }));
+              timeMs: timestampToMs(event.savedAt),
+            };
+          });
         })
       );
 
@@ -1146,7 +1169,7 @@ export default function Feed() {
             onClick={() => setActivityOpen(false)}
           >
             <motion.div
-              className="w-full max-w-md max-h-[calc(100dvh-4rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#080808] shadow-[0_24px_70px_rgba(0,0,0,0.5)]"
+            className="w-full max-w-md max-h-[calc(100dvh-4rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,#111111_0%,#070707_100%)] shadow-[0_24px_70px_rgba(0,0,0,0.5)]"
               initial={{ y: 32, scale: 0.98 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 32, scale: 0.98 }}
@@ -1155,8 +1178,8 @@ export default function Feed() {
             >
               <div className="flex items-center justify-between border-b border-white/8 px-4 py-4">
                 <div>
-                  <h2 className="text-[1.35rem] font-black leading-none">{t("Activity")}</h2>
-                  <div className="mt-1 text-xs font-semibold text-white/38">{t("Updates from your DishList")}</div>
+                  <h2 className="text-[1.45rem] font-black leading-none tracking-[-0.03em]">{t("Activity")}</h2>
+                  <div className="mt-1 text-xs font-semibold text-white/42">{t("Updates from your DishList")}</div>
                 </div>
                 <button
                   type="button"
@@ -1175,25 +1198,27 @@ export default function Feed() {
                     {activityItems.map((item) => {
                       const Icon = item.icon || Bell;
                       const fresh = Number(item.timeMs || 0) > Number(activitySeenAt || 0);
+                      const style = ACTIVITY_STYLE[item.kind] || ACTIVITY_STYLE.post;
                       return (
                         <Link
                           key={item.id}
                           href={item.href || "#"}
                           onClick={() => setActivityOpen(false)}
-                          className="flex items-center gap-3 rounded-[1.25rem] border border-white/8 bg-white/[0.045] px-3 py-3 text-left transition active:scale-[0.99]"
+                          className="flex items-center gap-3 rounded-[1.35rem] border px-3 py-3.5 text-left transition active:scale-[0.99]"
+                          style={{ borderColor: fresh ? style.border : "rgba(255,255,255,0.08)", background: fresh ? style.bg : "rgba(255,255,255,0.045)" }}
                         >
-                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-white">
+                          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: style.bg, color: style.color }}>
                             <Icon size={18} />
                             {fresh ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-black">
+                            <div className="truncate text-[0.94rem] font-black">
                               {item.actor}
                               <span className="font-semibold text-white/62"> {item.text}</span>
                             </div>
                             {item.detail ? <div className="mt-1 truncate text-xs font-semibold text-white/42">{item.detail}</div> : null}
                           </div>
-                          {item.timeMs ? <div className="shrink-0 text-xs font-bold text-white/32">{formatActivityTime(item.timeMs)}</div> : null}
+                          <div className="shrink-0 rounded-full bg-white/7 px-2 py-1 text-[11px] font-bold text-white/45">{formatActivityTime(item.timeMs)}</div>
                         </Link>
                       );
                     })}

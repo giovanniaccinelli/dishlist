@@ -35,6 +35,7 @@ const translations = {
     "Updates from your DishList": "Aggiornamenti dalla tua DishList",
     "Loading updates...": "Caricamento aggiornamenti...",
     "No updates yet": "Ancora nessun aggiornamento",
+    recently: "di recente",
     "started following you": "ha iniziato a seguirti",
     "posted a new dish": "ha pubblicato un nuovo piatto",
     "commented on your dish": "ha commentato un tuo piatto",

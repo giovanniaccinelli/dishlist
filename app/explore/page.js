@@ -36,6 +36,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import MapPreview from "../../components/MapPreview";
 import DishRatingBadge from "../../components/DishRatingBadge";
+import { RatingStars } from "../../components/RatingStars";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
@@ -454,7 +455,17 @@ function DishPreview({ dish, title, t }) {
 function CategoryTitle({ row, t, darkMode = false }) {
   if (row.key.startsWith("restaurant-")) {
     return (
-      <span className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>{row.title}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={`min-w-0 truncate text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>{row.title}</span>
+        {Number(row.averageRating || 0) > 0 ? (
+          <RatingStars
+            value={row.averageRating}
+            readOnly
+            size="text-[0.88rem]"
+            className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)]"
+          />
+        ) : null}
+      </div>
     );
   }
 
@@ -791,15 +802,24 @@ export default function Explore() {
 
     if (selectedDishMode === DISH_MODE_RESTAURANT) {
       const restaurantRows = getRestaurantDishGroups(modePool)
-        .map((group) => ({
-          key: `restaurant-${group.placeId}`,
-          title: group.name,
-          rawTag: group.name,
-          placeId: group.placeId,
-          dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
-          totalCount: group.dishes?.length || 0,
-          totalSaves: (group.dishes || []).reduce((sum, dish) => sum + Math.max(0, Number(dish?.saves || 0)), 0),
-        }))
+        .map((group) => {
+          const ratedDishes = (group.dishes || [])
+            .map((dish) => Math.max(0, Math.min(5, Number(dish?.rating) || 0)))
+            .filter((rating) => rating > 0);
+          const averageRating = ratedDishes.length
+            ? Math.round((ratedDishes.reduce((sum, rating) => sum + rating, 0) / ratedDishes.length) * 2) / 2
+            : 0;
+          return {
+            key: `restaurant-${group.placeId}`,
+            title: group.name,
+            rawTag: group.name,
+            placeId: group.placeId,
+            dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
+            totalCount: group.dishes?.length || 0,
+            totalSaves: (group.dishes || []).reduce((sum, dish) => sum + Math.max(0, Number(dish?.saves || 0)), 0),
+            averageRating,
+          };
+        })
         .sort((a, b) => b.totalCount - a.totalCount || b.totalSaves - a.totalSaves || a.title.localeCompare(b.title));
       return [
         {

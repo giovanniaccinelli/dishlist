@@ -6,6 +6,7 @@ import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import DishRatingBadge from "./DishRatingBadge";
 
 function Avatar({ user }) {
   if (!user) return null;
@@ -432,6 +433,7 @@ export default function RestaurantMapView({
                               className="restaurant-accent-border flex h-40 overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
                             >
                               <div className="relative h-full w-full overflow-hidden">
+                                <DishRatingBadge dish={user.dishes[0]} className="text-[10px]" />
                                 <img
                                   src={getDishImageUrl(user.dishes[0], "thumb")}
                                   alt={user.dishes[0].name || "Dish"}

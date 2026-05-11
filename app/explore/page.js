@@ -13,6 +13,7 @@ import {
   Fish,
   Globe2,
   Leaf,
+  MessageCircle,
   MoonStar,
   Snowflake,
   Sun,
@@ -29,7 +30,7 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
-import { getAllDishesFromFirestore, getTrendingStoryDishes } from "../lib/firebaseHelpers";
+import { getAllDishesFromFirestore, getLeaderboardQuestions, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
@@ -577,6 +578,57 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
   );
 }
 
+function LeaderboardRail({ questions = [], t, darkMode = false }) {
+  if (!questions.length) return null;
+  const accents = {
+    red: { border: "border-[#E64646]", text: "text-[#E64646]", glow: "from-[#E64646]/28" },
+    orange: { border: "border-[#F26A21]", text: "text-[#F26A21]", glow: "from-[#F26A21]/24" },
+    yellow: { border: "border-[#D7B443]", text: "text-[#D7B443]", glow: "from-[#D7B443]/22" },
+    blue: { border: "border-[#5CB7E8]", text: "text-[#5CB7E8]", glow: "from-[#5CB7E8]/22" },
+    pink: { border: "border-[#D96EEA]", text: "text-[#D96EEA]", glow: "from-[#D96EEA]/22" },
+  };
+  return (
+    <section className="mb-7">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className={`text-[1.55rem] font-black leading-none ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
+          <Trophy size={22} className="text-[#D7B443]" strokeWidth={2.2} />
+        </div>
+        <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {questions.map((question, index) => {
+          const accent = accents[question.accent] || accents.red;
+          return (
+            <Link
+              href={`/leaderboard/${question.id}`}
+              key={question.id}
+              className={`relative min-w-[72%] basis-[72%] snap-start overflow-hidden rounded-[1.55rem] border p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:min-w-[33%] sm:basis-[33%] ${
+                darkMode ? `bg-[#121212] ${index === 0 ? accent.border : "border-white/10"}` : `bg-white ${accent.border}`
+              }`}
+            >
+              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent.glow} via-transparent to-transparent`} />
+              <div className={`relative mb-5 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.08em] ${accent.text}`}>
+                <Flame size={14} fill="currentColor" />
+                {question.label || t("IN TREND")}
+              </div>
+              <div className={`relative min-h-[4.25rem] text-[1.05rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+                {question.title}
+              </div>
+              <div className="relative mt-5 flex items-center justify-between">
+                <span className={`text-xs font-bold ${accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))} voti</span>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full border ${accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
+                  <MessageCircle size={20} className={darkMode ? "text-white" : "text-black"} />
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
   if (!row) return null;
 
@@ -635,6 +687,7 @@ export default function Explore() {
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [allDishes, setAllDishes] = useState([]);
   const [trendingDishes, setTrendingDishes] = useState([]);
+  const [leaderboardQuestions, setLeaderboardQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
@@ -663,12 +716,14 @@ export default function Explore() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [all, trending] = await Promise.all([
+      const [all, trending, questions] = await Promise.all([
         getAllDishesFromFirestore(),
         getTrendingStoryDishes(20),
+        getLeaderboardQuestions(8),
       ]);
       setAllDishes(all.filter((dish) => dish.isPublic !== false));
       setTrendingDishes(trending);
+      setLeaderboardQuestions(questions);
       setLoading(false);
     })();
   }, []);
@@ -919,6 +974,7 @@ export default function Explore() {
           </div>
         )}
       </div>
+      {!loading ? <LeaderboardRail questions={leaderboardQuestions} t={t} darkMode={darkMode} /> : null}
       {loading ? (
         <CategoryRowsLoading />
       ) : (

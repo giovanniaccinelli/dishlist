@@ -26,6 +26,7 @@ import {
   markStoryViewed,
   saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
+  getLeaderboardAnswersForUser,
   getAvatarTone,
   normalizeProfilePhotoURL,
 } from "../../lib/firebaseHelpers";
@@ -39,6 +40,7 @@ import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
+import ProfileTakesStrip from "../../../components/ProfileTakesStrip";
 import RestaurantMapView from "../../../components/RestaurantMapView";
 import {
   dishModeMatches,
@@ -257,6 +259,7 @@ export default function PublicProfile() {
   const [activeStories, setActiveStories] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [leaderboardTakes, setLeaderboardTakes] = useState([]);
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
@@ -346,6 +349,26 @@ export default function PublicProfile() {
       cancelled = true;
     };
   }, [routeProfileId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!canonicalProfileIds.length) {
+      setLeaderboardTakes([]);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const takes = await getLeaderboardAnswersForUser(canonicalProfileIds, false);
+        if (!cancelled) setLeaderboardTakes(takes);
+      } catch (error) {
+        console.error("Failed to load public profile leaderboard takes:", error);
+        if (!cancelled) setLeaderboardTakes([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileAliasKey, profileDocId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -949,6 +972,10 @@ export default function PublicProfile() {
         ) : null}
 
       </div>
+
+      {showingDishlistOverview ? (
+        <ProfileTakesStrip takes={leaderboardTakes} darkMode={darkMode} t={t} />
+      ) : null}
 
       {showingDishlistOverview ? (
         <div className="mb-4 flex justify-center px-2">

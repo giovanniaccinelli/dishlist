@@ -31,6 +31,8 @@ import {
   saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
+  getLeaderboardAnswersForUser,
+  createLeaderboardQuestion,
   updateCustomDishlistName,
   publishDishAsStory,
   getAvatarTone,
@@ -54,6 +56,7 @@ import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
+import ProfileTakesStrip from "../../components/ProfileTakesStrip";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -314,6 +317,13 @@ export default function Profile() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [leaderboardTakes, setLeaderboardTakes] = useState([]);
+  const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
+  const [leaderboardAdminPassword, setLeaderboardAdminPassword] = useState("");
+  const [leaderboardQuestionTitle, setLeaderboardQuestionTitle] = useState("");
+  const [leaderboardQuestionLabel, setLeaderboardQuestionLabel] = useState("IN TREND");
+  const [leaderboardQuestionAccent, setLeaderboardQuestionAccent] = useState("red");
+  const [leaderboardQuestionSaving, setLeaderboardQuestionSaving] = useState(false);
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -356,6 +366,26 @@ export default function Profile() {
       router.replace("/");
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!canonicalProfileIds.length) {
+      setLeaderboardTakes([]);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const takes = await getLeaderboardAnswersForUser(canonicalProfileIds, true);
+        if (!cancelled) setLeaderboardTakes(takes);
+      } catch (error) {
+        console.error("Failed to load profile leaderboard takes:", error);
+        if (!cancelled) setLeaderboardTakes([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileAliasKey, profileDocId]);
 
   useEffect(() => {
     if (user) {
@@ -976,6 +1006,47 @@ export default function Profile() {
       if (cleaned.length >= PROFILE_REPRESENTATIVE_TAG_LIMIT) return cleaned;
       return [...cleaned, tag];
     });
+  };
+
+  const handleCreateLeaderboardQuestion = async () => {
+    const title = leaderboardQuestionTitle.trim();
+    if (!user?.uid || leaderboardQuestionSaving) return;
+    if (leaderboardAdminPassword !== "cravy1723") {
+      setToastVariant("error");
+      setToast(t("Wrong password"));
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    if (!title) {
+      setToastVariant("error");
+      setToast(t("Write a question"));
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    setLeaderboardQuestionSaving(true);
+    try {
+      const questionId = await createLeaderboardQuestion(user.uid, {
+        title,
+        label: leaderboardQuestionLabel.trim() || "IN TREND",
+        accent: leaderboardQuestionAccent,
+      });
+      if (!questionId) throw new Error("Question was not created.");
+      setLeaderboardQuestionTitle("");
+      setLeaderboardQuestionLabel("IN TREND");
+      setLeaderboardQuestionAccent("red");
+      setLeaderboardAdminPassword("");
+      setLeaderboardAdminOpen(false);
+      setToastVariant("success");
+      setToast(t("Leaderboard question published"));
+      setTimeout(() => setToast(""), 1300);
+    } catch (error) {
+      console.error("Failed to create leaderboard question:", error);
+      setToastVariant("error");
+      setToast(t("Could not publish question"));
+      setTimeout(() => setToast(""), 1500);
+    } finally {
+      setLeaderboardQuestionSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -1750,6 +1821,10 @@ export default function Profile() {
       </div>
 
       {showingDishlistOverview ? (
+        <ProfileTakesStrip takes={leaderboardTakes} darkMode={darkMode} t={t} />
+      ) : null}
+
+      {showingDishlistOverview ? (
         <div className="mb-4 flex justify-center px-2">
           <button
             type="button"
@@ -2193,6 +2268,89 @@ export default function Profile() {
                   >
                     {representativeTagsSaving ? t("Saving...") : t("Save tags")}
                   </button>
+                </div>
+              </section>
+
+              <section className="mb-5">
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Leaderboard")}
+                </div>
+                <div className={`no-accent-border rounded-[1.45rem] p-4 ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-semibold">{t("Question manager")}</div>
+                      <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                        {t("Create the questions shown in Explore.")}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLeaderboardAdminOpen((value) => !value)}
+                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${
+                        darkMode ? "bg-white text-black" : "bg-black text-white"
+                      }`}
+                    >
+                      {leaderboardAdminOpen ? t("Close") : t("Open")}
+                    </button>
+                  </div>
+                  {leaderboardAdminOpen ? (
+                    <div className="mt-4 space-y-3">
+                      <input
+                        type="password"
+                        value={leaderboardAdminPassword}
+                        onChange={(event) => setLeaderboardAdminPassword(event.target.value)}
+                        placeholder={t("Admin password")}
+                        className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
+                          darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
+                        }`}
+                      />
+                      <input
+                        type="text"
+                        value={leaderboardQuestionTitle}
+                        onChange={(event) => setLeaderboardQuestionTitle(event.target.value)}
+                        placeholder={t("Question")}
+                        className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
+                          darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
+                        }`}
+                      />
+                      <div className="grid grid-cols-[1fr_auto] gap-2">
+                        <input
+                          type="text"
+                          value={leaderboardQuestionLabel}
+                          onChange={(event) => setLeaderboardQuestionLabel(event.target.value)}
+                          placeholder={t("Label")}
+                          className={`min-w-0 rounded-[1rem] border px-4 py-3 text-[16px] outline-none ${
+                            darkMode ? "border-white/10 bg-[#080808] text-white placeholder:text-white/35" : "border-black/10 bg-[#F5F2EA] text-black placeholder:text-black/35"
+                          }`}
+                        />
+                        <select
+                          value={leaderboardQuestionAccent}
+                          onChange={(event) => setLeaderboardQuestionAccent(event.target.value)}
+                          className={`rounded-[1rem] border px-3 py-3 text-[16px] outline-none ${
+                            darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"
+                          }`}
+                        >
+                          <option value="red">Red</option>
+                          <option value="orange">Orange</option>
+                          <option value="yellow">Yellow</option>
+                          <option value="blue">Blue</option>
+                          <option value="pink">Pink</option>
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCreateLeaderboardQuestion}
+                        disabled={leaderboardQuestionSaving}
+                        className={`w-full rounded-full px-4 py-3 text-sm font-black transition ${
+                          darkMode ? "bg-[#E64646] text-white" : "bg-[#E64646] text-white"
+                        } ${leaderboardQuestionSaving ? "opacity-60" : ""}`}
+                      >
+                        {leaderboardQuestionSaving ? t("Publishing...") : t("Publish question")}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </section>
 

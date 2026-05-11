@@ -86,6 +86,22 @@ function getStoryCommentsCollection(ownerId, storyId) {
   return collection(db, "users", ownerId, "stories", storyId, "comments");
 }
 
+function leaderboardQuestionsCollection() {
+  return collection(db, "leaderboardQuestions");
+}
+
+function leaderboardQuestionDoc(questionId) {
+  return doc(db, "leaderboardQuestions", questionId);
+}
+
+function leaderboardAnswersCollection(questionId) {
+  return collection(db, "leaderboardQuestions", questionId, "answers");
+}
+
+function leaderboardAnswerDoc(questionId, answerId) {
+  return doc(db, "leaderboardQuestions", questionId, "answers", answerId);
+}
+
 async function getUserIdsWithDishInAnyDishlist(dishId) {
   if (!dishId) return [];
   const userIds = new Set();
@@ -1162,6 +1178,150 @@ export async function getUsersByIds(userIds = []) {
       .map((snap) => ({ id: snap.id, ...snap.data(), photoURL: normalizeProfilePhotoURL(snap.data()?.photoURL || "") }));
   } catch (err) {
     console.error("Failed to load users by ids:", err);
+    return [];
+  }
+}
+
+export async function getLeaderboardQuestions(max = 12) {
+  try {
+    const snapshot = await getDocs(
+      query(leaderboardQuestionsCollection(), orderBy("createdAt", "desc"), limitResults(max))
+    );
+    const questions = await Promise.all(
+      snapshot.docs.map(async (docSnap) => {
+        const answersSnap = await getDocs(leaderboardAnswersCollection(docSnap.id));
+        const answers = answersSnap.docs.map((answerDoc) => ({ id: answerDoc.id, ...answerDoc.data() }));
+        const totalVotes = answers.reduce((sum, answer) => sum + (Array.isArray(answer.votes) ? answer.votes.length : 0), 0);
+        const topAnswer = answers
+          .slice()
+          .sort((a, b) => (Array.isArray(b.votes) ? b.votes.length : 0) - (Array.isArray(a.votes) ? a.votes.length : 0))[0] || null;
+        return {
+          id: docSnap.id,
+          ...docSnap.data(),
+          answerCount: answers.length,
+          totalVotes,
+          topAnswerText: topAnswer?.text || "",
+        };
+      })
+    );
+    return questions.sort((a, b) => Number(b.totalVotes || 0) - Number(a.totalVotes || 0) || (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (err) {
+    console.error("Failed to load leaderboard questions:", err);
+    return [];
+  }
+}
+
+export async function getLeaderboardQuestion(questionId) {
+  if (!questionId) return null;
+  try {
+    const snap = await getDoc(leaderboardQuestionDoc(questionId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch (err) {
+    console.error("Failed to load leaderboard question:", err);
+    return null;
+  }
+}
+
+export async function getLeaderboardAnswers(questionId) {
+  if (!questionId) return [];
+  try {
+    const snapshot = await getDocs(leaderboardAnswersCollection(questionId));
+    return snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => {
+        const voteDelta = (Array.isArray(b.votes) ? b.votes.length : 0) - (Array.isArray(a.votes) ? a.votes.length : 0);
+        if (voteDelta !== 0) return voteDelta;
+        return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0);
+      });
+  } catch (err) {
+    console.error("Failed to load leaderboard answers:", err);
+    return [];
+  }
+}
+
+export async function createLeaderboardQuestion(userId, question) {
+  const title = String(question?.title || "").trim();
+  if (!userId || !title) return null;
+  try {
+    const now = serverTimestamp();
+    const refDoc = doc(leaderboardQuestionsCollection());
+    await setDoc(refDoc, {
+      title,
+      label: String(question?.label || "IN TREND").trim(),
+      accent: String(question?.accent || "red").trim(),
+      createdBy: userId,
+      createdAt: now,
+      updatedAt: now,
+      closesAt: question?.closesAt || null,
+      active: true,
+    });
+    return refDoc.id;
+  } catch (err) {
+    console.error("Failed to create leaderboard question:", err);
+    return null;
+  }
+}
+
+export async function addLeaderboardAnswer(questionId, user, answer) {
+  const text = String(answer?.text || "").trim();
+  if (!questionId || !user?.uid || !text) return null;
+  try {
+    const refDoc = doc(leaderboardAnswersCollection(questionId));
+    await setDoc(refDoc, {
+      text,
+      note: String(answer?.note || "").trim(),
+      anonymous: Boolean(answer?.anonymous),
+      userId: user.uid,
+      userName: user.displayName || "User",
+      userPhotoURL: normalizeProfilePhotoURL(user.photoURL || ""),
+      votes: arrayUnion(user.uid),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return refDoc.id;
+  } catch (err) {
+    console.error("Failed to add leaderboard answer:", err);
+    return null;
+  }
+}
+
+export async function voteLeaderboardAnswer(questionId, answerId, userId) {
+  if (!questionId || !answerId || !userId) return false;
+  try {
+    await setDoc(
+      leaderboardAnswerDoc(questionId, answerId),
+      {
+        votes: arrayUnion(userId),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to vote leaderboard answer:", err);
+    return false;
+  }
+}
+
+export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymous = false) {
+  const ids = Array.from(new Set((Array.isArray(userIds) ? userIds : [userIds]).map((id) => String(id || "").trim()).filter(Boolean)));
+  if (!ids.length) return [];
+  try {
+    const questions = await getLeaderboardQuestions(50);
+    const groups = await Promise.all(
+      questions.map(async (question) => {
+        const answers = await getLeaderboardAnswers(question.id);
+        return answers
+          .filter((answer) => ids.includes(String(answer.userId || "")))
+          .filter((answer) => includeAnonymous || !answer.anonymous)
+          .map((answer) => ({ ...answer, questionId: question.id, questionTitle: question.title, questionLabel: question.label, questionAccent: question.accent }));
+      })
+    );
+    return groups
+      .flat()
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (err) {
+    console.error("Failed to load user leaderboard answers:", err);
     return [];
   }
 }

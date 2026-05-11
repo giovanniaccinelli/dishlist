@@ -1438,10 +1438,31 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
   const ids = Array.from(new Set((Array.isArray(userIds) ? userIds : [userIds]).map((id) => String(id || "").trim()).filter(Boolean)));
   if (!ids.length) return [];
   try {
-    const questions = await getLeaderboardQuestions(50);
+    const weekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const timestampToMs = (value) => {
+      if (!value) return 0;
+      if (typeof value.toMillis === "function") return value.toMillis();
+      if (typeof value.seconds === "number") return value.seconds * 1000;
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const questionsSnap = await getDocs(
+      query(leaderboardQuestionsCollection(), orderBy("createdAt", "desc"), limitResults(50))
+    );
     const groups = await Promise.all(
-      questions.map(async (question) => {
-        const answers = await getLeaderboardAnswers(question.id);
+      questionsSnap.docs.map(async (questionDoc) => {
+        const question = { id: questionDoc.id, ...questionDoc.data() };
+        const answersSnap = await getDocs(leaderboardAnswersCollection(question.id));
+        const answers = answersSnap.docs.map((answerDoc) => ({ id: answerDoc.id, ...answerDoc.data() }));
+        const totalVotes = answers.reduce((sum, answer) => sum + (Array.isArray(answer.votes) ? answer.votes.length : 0), 0);
+        const recentVotes = answers.reduce((sum, answer) => {
+          const votes = Array.isArray(answer.votes) ? answer.votes : [];
+          const voteTimestamps = answer.voteTimestamps && typeof answer.voteTimestamps === "object" ? answer.voteTimestamps : null;
+          if (voteTimestamps) {
+            return sum + votes.filter((userId) => timestampToMs(voteTimestamps[userId]) >= weekAgoMs).length;
+          }
+          return sum + (timestampToMs(answer.createdAt) >= weekAgoMs ? votes.length : 0);
+        }, 0);
         return answers
           .flatMap((answer) => {
             const votedByUser = Array.isArray(answer.votes) && ids.some((id) => answer.votes.includes(id));
@@ -1459,8 +1480,8 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
                 questionLabel: question.label,
                 questionAccent: question.accent,
                 questionDishMode: question.dishMode || "restaurant",
-                questionTotalVotes: question.totalVotes || 0,
-                questionRecentVotes: question.recentVotes || 0,
+                questionTotalVotes: totalVotes,
+                questionRecentVotes: recentVotes,
               },
             ];
           });

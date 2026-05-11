@@ -374,26 +374,6 @@ export default function Profile() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    let cancelled = false;
-    if (!canonicalProfileIds.length) {
-      setLeaderboardTakes([]);
-      return undefined;
-    }
-    (async () => {
-      try {
-        const takes = await getLeaderboardAnswersForUser(canonicalProfileIds, true);
-        if (!cancelled) setLeaderboardTakes(takes);
-      } catch (error) {
-        console.error("Failed to load profile leaderboard takes:", error);
-        if (!cancelled) setLeaderboardTakes([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profileAliasKey, profileDocId]);
-
-  useEffect(() => {
     if (user) {
       (async () => {
         const loadUserDoc = async () => {

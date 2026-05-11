@@ -434,7 +434,7 @@ export default function PublicProfile() {
 
   useEffect(() => {
     if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
-    if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
+    if ([...customDishlists, ...canonicalDishlists].some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("overview");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -442,7 +442,7 @@ export default function PublicProfile() {
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
-  }, [activeDishlistId, customDishlists]);
+  }, [activeDishlistId, customDishlists, canonicalDishlists]);
 
   const selectDishlist = (dishlistId) => {
     if (dishlistId !== "overview") setSelectedDishMode(DISH_MODE_ALL);

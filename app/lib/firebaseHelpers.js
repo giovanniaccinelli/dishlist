@@ -1184,6 +1184,14 @@ export async function getUsersByIds(userIds = []) {
 
 export async function getLeaderboardQuestions(max = 12) {
   try {
+    const weekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const timestampToMs = (value) => {
+      if (!value) return 0;
+      if (typeof value.toMillis === "function") return value.toMillis();
+      if (typeof value.seconds === "number") return value.seconds * 1000;
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
     const snapshot = await getDocs(
       query(leaderboardQuestionsCollection(), orderBy("createdAt", "desc"), limitResults(max))
     );
@@ -1192,6 +1200,14 @@ export async function getLeaderboardQuestions(max = 12) {
         const answersSnap = await getDocs(leaderboardAnswersCollection(docSnap.id));
         const answers = answersSnap.docs.map((answerDoc) => ({ id: answerDoc.id, ...answerDoc.data() }));
         const totalVotes = answers.reduce((sum, answer) => sum + (Array.isArray(answer.votes) ? answer.votes.length : 0), 0);
+        const recentVotes = answers.reduce((sum, answer) => {
+          const votes = Array.isArray(answer.votes) ? answer.votes : [];
+          const voteTimestamps = answer.voteTimestamps && typeof answer.voteTimestamps === "object" ? answer.voteTimestamps : null;
+          if (voteTimestamps) {
+            return sum + votes.filter((userId) => timestampToMs(voteTimestamps[userId]) >= weekAgoMs).length;
+          }
+          return sum + (timestampToMs(answer.createdAt) >= weekAgoMs ? votes.length : 0);
+        }, 0);
         const topAnswer = answers
           .slice()
           .sort((a, b) => (Array.isArray(b.votes) ? b.votes.length : 0) - (Array.isArray(a.votes) ? a.votes.length : 0))[0] || null;
@@ -1200,11 +1216,12 @@ export async function getLeaderboardQuestions(max = 12) {
           ...docSnap.data(),
           answerCount: answers.length,
           totalVotes,
+          recentVotes,
           topAnswerText: topAnswer?.text || "",
         };
       })
     );
-    return questions.sort((a, b) => Number(b.totalVotes || 0) - Number(a.totalVotes || 0) || (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    return questions.sort((a, b) => Number(b.recentVotes || 0) - Number(a.recentVotes || 0) || Number(b.totalVotes || 0) - Number(a.totalVotes || 0) || (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   } catch (err) {
     console.error("Failed to load leaderboard questions:", err);
     return [];
@@ -1275,6 +1292,9 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
       userName: user.displayName || "User",
       userPhotoURL: normalizeProfilePhotoURL(user.photoURL || ""),
       votes: arrayUnion(user.uid),
+      voteTimestamps: {
+        [user.uid]: serverTimestamp(),
+      },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -1288,14 +1308,11 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
 export async function voteLeaderboardAnswer(questionId, answerId, userId) {
   if (!questionId || !answerId || !userId) return false;
   try {
-    await setDoc(
-      leaderboardAnswerDoc(questionId, answerId),
-      {
-        votes: arrayUnion(userId),
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+    await updateDoc(leaderboardAnswerDoc(questionId, answerId), {
+      votes: arrayUnion(userId),
+      [`voteTimestamps.${userId}`]: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
     return true;
   } catch (err) {
     console.error("Failed to vote leaderboard answer:", err);

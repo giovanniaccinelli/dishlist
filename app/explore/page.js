@@ -581,44 +581,52 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
 function LeaderboardRail({ questions = [], t, darkMode = false }) {
   if (!questions.length) return null;
   const accents = {
-    red: { border: "border-[#E64646]", text: "text-[#E64646]", glow: "from-[#E64646]/28" },
-    orange: { border: "border-[#F26A21]", text: "text-[#F26A21]", glow: "from-[#F26A21]/24" },
-    yellow: { border: "border-[#D7B443]", text: "text-[#D7B443]", glow: "from-[#D7B443]/22" },
-    blue: { border: "border-[#5CB7E8]", text: "text-[#5CB7E8]", glow: "from-[#5CB7E8]/22" },
-    pink: { border: "border-[#D96EEA]", text: "text-[#D96EEA]", glow: "from-[#D96EEA]/22" },
+    red: { border: "border-[#E64646]", text: "text-[#E64646]", glow: "from-[#E64646]/24" },
+    orange: { border: "border-[#F26A21]", text: "text-[#F26A21]", glow: "from-[#F26A21]/20" },
+    yellow: { border: "border-[#D7B443]", text: "text-[#D7B443]", glow: "from-[#D7B443]/18" },
+    blue: { border: "border-[#5CB7E8]", text: "text-[#5CB7E8]", glow: "from-[#5CB7E8]/18" },
+    pink: { border: "border-[#D96EEA]", text: "text-[#D96EEA]", glow: "from-[#D96EEA]/18" },
   };
   return (
     <section className="mb-7">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className={`text-[1.55rem] font-black leading-none ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
-          <Trophy size={22} className="text-[#D7B443]" strokeWidth={2.2} />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#D7B443]">
+            <path d="M4 11.25H8.35V20H4V11.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M9.85 4H14.15V20H9.85V4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M15.65 8.25H20V20H15.65V8.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M3 20H21" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+          </svg>
         </div>
         <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
+          const featured = index === 0;
           return (
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[72%] basis-[72%] snap-start overflow-hidden rounded-[1.55rem] border p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:min-w-[33%] sm:basis-[33%] ${
-                darkMode ? `bg-[#121212] ${index === 0 ? accent.border : "border-white/10"}` : `bg-white ${accent.border}`
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-hidden rounded-[1.05rem] border p-3 shadow-[0_12px_26px_rgba(0,0,0,0.16)] ${
+                darkMode
+                  ? `bg-[#121212] ${featured ? "border-[#E64646] shadow-[0_0_22px_rgba(230,70,70,0.30),0_12px_26px_rgba(0,0,0,0.22)]" : "border-white/10"}`
+                  : `bg-white ${featured ? "border-[#E64646] shadow-[0_0_18px_rgba(230,70,70,0.20),0_12px_26px_rgba(0,0,0,0.14)]" : accent.border}`
               }`}
             >
-              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent.glow} via-transparent to-transparent`} />
-              <div className={`relative mb-5 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.08em] ${accent.text}`}>
-                <Flame size={14} fill="currentColor" />
+              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${featured ? "from-[#E64646]/25" : accent.glow} via-transparent to-transparent`} />
+              <div className={`relative mb-3 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.06em] ${featured ? "text-[#E64646]" : accent.text}`}>
+                <Flame size={11} fill="currentColor" />
                 {question.label || t("IN TREND")}
               </div>
-              <div className={`relative min-h-[4.25rem] text-[1.05rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+              <div className={`relative min-h-[3.2rem] text-[0.78rem] font-black leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                 {question.title}
               </div>
-              <div className="relative mt-5 flex items-center justify-between">
-                <span className={`text-xs font-bold ${accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))} voti</span>
-                <span className={`flex h-11 w-11 items-center justify-center rounded-full border ${accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
-                  <MessageCircle size={20} className={darkMode ? "text-white" : "text-black"} />
+              <div className="relative mt-3 flex items-center justify-between">
+                <span className={`text-[10px] font-bold ${featured ? "text-[#E64646]" : accent.text}`}>+{Math.max(0, Number(question.totalVotes || 0))}</span>
+                <span className={`flex h-8 w-8 items-center justify-center rounded-full border ${featured ? "border-[#E64646]" : accent.border} ${darkMode ? "bg-white/5" : "bg-black/5"}`}>
+                  <MessageCircle size={15} className={darkMode ? "text-white" : "text-black"} />
                 </span>
               </div>
             </Link>

@@ -48,6 +48,7 @@ const translations = {
     "Write a question": "Scrivi una domanda",
     "Leaderboard question published": "Domanda leaderboard pubblicata",
     "Could not publish question": "Impossibile pubblicare la domanda",
+    "Swipe between leaderboard questions": "Scorri tra le domande leaderboard",
     Account: "Account",
     "Log in required": "Accesso richiesto",
     "Create account": "Crea account",

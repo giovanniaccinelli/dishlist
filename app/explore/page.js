@@ -601,7 +601,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
         </div>
         <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-3 pl-8 pr-4 pt-1 snap-x snap-mandatory scroll-pl-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;
@@ -611,14 +611,14 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[33%] basis-[33%] snap-start overflow-hidden rounded-[1.05rem] border p-2.5 ${
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-hidden rounded-[1.05rem] border p-2.5 ${
                 darkMode
                   ? "bg-[#121212]"
                   : "bg-white"
               }`}
               style={{
                 borderColor: cardBorder,
-                boxShadow: featured ? "0 0 0 1.5px #E64646, 0 0 14px 2px rgba(230,70,70,0.34), 0 10px 22px rgba(0,0,0,0.16)" : "0 8px 18px rgba(0,0,0,0.12)",
+                boxShadow: featured ? "inset 0 0 0 1.5px #E64646, inset 0 0 18px rgba(230,70,70,0.18), 0 8px 18px rgba(0,0,0,0.12)" : "0 8px 18px rgba(0,0,0,0.12)",
               }}
             >
               <div className={`mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>

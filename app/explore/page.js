@@ -591,7 +591,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
     <section className="mb-7">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className={`text-[1.55rem] font-black leading-none ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
+          <h2 className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#D7B443]">
             <path d="M4 11.25H8.35V20H4V11.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
             <path d="M9.85 4H14.15V20H9.85V4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
@@ -607,9 +607,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
           const featured = index === 0;
           const hot = Number(question.recentVotes || 0) > 0;
           const border = featured ? "2px solid #E64646" : "0.5px solid rgba(255,255,255,0.18)";
-          const forcedRedGlow = featured
-            ? "0 0 0 1px rgba(230,70,70,0.95), 0 0 30px 7px rgba(230,70,70,0.34), inset 0 0 0 1px rgba(230,70,70,0.62)"
-            : undefined;
+          const forcedRedGlow = featured ? "0 0 22px rgba(230,70,70,0.42), 0 10px 24px rgba(0,0,0,0.18)" : undefined;
           return (
             <Link
               href={`/leaderboard/${question.id}`}
@@ -621,13 +619,9 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
               }`}
               style={{
                 border,
-                outline: featured ? "1px solid rgba(230,70,70,0.9)" : "none",
                 boxShadow: forcedRedGlow || "0 10px 22px rgba(0,0,0,0.14)",
               }}
             >
-              {featured ? (
-                <div className="pointer-events-none absolute -inset-2 -z-10 rounded-[1.35rem] bg-[#E64646]/20 blur-xl" />
-              ) : null}
               <div className={`pointer-events-none absolute inset-0 rounded-[1rem] bg-gradient-to-br ${featured ? "from-[#E64646]/24" : accent.glow} via-transparent to-transparent`} />
               <div className={`relative mb-2 inline-flex min-h-[0.9rem] items-center gap-1 text-[7px] font-black uppercase tracking-[0.04em] ${featured ? "text-[#E64646]" : accent.text}`}>
                 {hot ? <Flame size={9} fill="currentColor" /> : null}

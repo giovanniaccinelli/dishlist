@@ -42,9 +42,10 @@ export default function LeaderboardQuestionPage() {
   const { t } = useLanguage();
   const questionId = params?.id;
   const [questions, setQuestions] = useState([]);
-  const [question, setQuestion] = useState(null);
+  const [activeQuestionId, setActiveQuestionId] = useState(questionId || "");
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [answersLoading, setAnswersLoading] = useState(false);
   const [answerText, setAnswerText] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -53,26 +54,41 @@ export default function LeaderboardQuestionPage() {
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
 
+  const question = useMemo(
+    () => questions.find((item) => item.id === activeQuestionId) || null,
+    [activeQuestionId, questions]
+  );
   const accent = getQuestionTone(question);
   const rankedAnswers = useMemo(
     () => [...answers].sort((a, b) => voteCount(b) - voteCount(a) || (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)),
     [answers]
   );
   const totalVotes = rankedAnswers.reduce((sum, answer) => sum + voteCount(answer), 0);
-  const currentIndex = Math.max(0, questions.findIndex((item) => item.id === questionId));
+  const currentIndex = Math.max(0, questions.findIndex((item) => item.id === activeQuestionId));
+  const nextQuestion = questions.length > 1 ? questions[(currentIndex + 1) % questions.length] : null;
   const hot = Number(question?.recentVotes || 0) > 0;
 
-  const load = async () => {
+  const loadQuestions = async () => {
     if (!questionId) return;
     setLoading(true);
-    const [allQuestions, nextQuestion, fetchedAnswers] = await Promise.all([
+    const [allQuestions, nextQuestion] = await Promise.all([
       getLeaderboardQuestions(40),
       getLeaderboardQuestion(questionId),
-      getLeaderboardAnswers(questionId),
     ]);
-    let nextAnswers = fetchedAnswers;
+    const mergedQuestions = nextQuestion && !allQuestions.some((item) => item.id === nextQuestion.id)
+      ? [nextQuestion, ...allQuestions]
+      : allQuestions;
+    setQuestions(mergedQuestions);
+    setActiveQuestionId((current) => current || questionId);
+    setLoading(false);
+  };
+
+  const loadAnswers = async (targetQuestionId = activeQuestionId) => {
+    if (!targetQuestionId) return;
+    setAnswersLoading(true);
+    let nextAnswers = await getLeaderboardAnswers(targetQuestionId);
     if (user?.uid) {
-      const votedAnswers = fetchedAnswers.filter((answer) => Array.isArray(answer.votes) && answer.votes.includes(user.uid));
+      const votedAnswers = nextAnswers.filter((answer) => Array.isArray(answer.votes) && answer.votes.includes(user.uid));
       if (votedAnswers.length > 1) {
         const timestampToMs = (value) => {
           if (!value) return 0;
@@ -85,30 +101,32 @@ export default function LeaderboardQuestionPage() {
           .slice()
           .sort((a, b) => timestampToMs(b.voteTimestamps?.[user.uid]) - timestampToMs(a.voteTimestamps?.[user.uid]))[0];
         if (keeper?.id) {
-          await voteLeaderboardAnswer(questionId, keeper.id, user.uid, { anonymous: Boolean(keeper.voteAnonymous?.[user.uid]) });
-          nextAnswers = await getLeaderboardAnswers(questionId);
+          await voteLeaderboardAnswer(targetQuestionId, keeper.id, user.uid, { anonymous: Boolean(keeper.voteAnonymous?.[user.uid]) });
+          nextAnswers = await getLeaderboardAnswers(targetQuestionId);
         }
       }
     }
-    const enrichedQuestion = allQuestions.find((item) => item.id === questionId) || nextQuestion;
-    setQuestions(allQuestions);
-    setQuestion(enrichedQuestion);
     setAnswers(nextAnswers);
-    setLoading(false);
+    setAnswersLoading(false);
   };
 
   useEffect(() => {
-    load();
-  }, [questionId, user?.uid]);
+    loadQuestions();
+  }, [questionId]);
+
+  useEffect(() => {
+    loadAnswers(activeQuestionId);
+  }, [activeQuestionId, user?.uid]);
 
   const goToQuestion = (direction) => {
     if (!questions.length) return;
     const index = questions.findIndex((item) => item.id === questionId);
-    const safeIndex = index >= 0 ? index : 0;
+    const activeIndex = questions.findIndex((item) => item.id === activeQuestionId);
+    const safeIndex = activeIndex >= 0 ? activeIndex : index >= 0 ? index : 0;
     const nextIndex = (safeIndex + direction + questions.length) % questions.length;
     const nextQuestion = questions[nextIndex];
-    if (nextQuestion?.id && nextQuestion.id !== questionId) {
-      router.replace(`/leaderboard/${nextQuestion.id}`, { scroll: false });
+    if (nextQuestion?.id && nextQuestion.id !== activeQuestionId) {
+      setActiveQuestionId(nextQuestion.id);
     }
   };
 
@@ -119,10 +137,10 @@ export default function LeaderboardQuestionPage() {
     }
     if (!answerText.trim() || submitting) return;
     setSubmitting(true);
-    const ok = await addLeaderboardAnswer(questionId, user, { text: answerText, anonymous });
+    const ok = await addLeaderboardAnswer(activeQuestionId, user, { text: answerText, anonymous });
     if (ok) {
       setAnswerText("");
-      await load();
+      await loadAnswers(activeQuestionId);
     }
     setSubmitting(false);
   };
@@ -140,11 +158,11 @@ export default function LeaderboardQuestionPage() {
         return item.id === answer.id ? { ...item, votes: [...votes, user.uid] } : { ...item, votes };
       })
     );
-    const ok = await voteLeaderboardAnswer(questionId, answer.id, user.uid, { anonymous });
+    const ok = await voteLeaderboardAnswer(activeQuestionId, answer.id, user.uid, { anonymous });
     if (ok) {
-      await load();
+      await loadAnswers(activeQuestionId);
     } else {
-      await load();
+      await loadAnswers(activeQuestionId);
     }
     setVotingAnswerId("");
   };
@@ -202,7 +220,7 @@ export default function LeaderboardQuestionPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[calc(env(safe-area-inset-top)+1.35rem)]">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-5 pb-8 pt-[calc(env(safe-area-inset-top)+2.35rem)]">
         <div className="flex items-center justify-between py-3">
           <button type="button" onClick={() => router.back()} className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-white/8">
             <ArrowLeft size={24} />
@@ -215,6 +233,9 @@ export default function LeaderboardQuestionPage() {
         </div>
 
         <div className="relative mt-0 touch-none select-none">
+          {nextQuestion ? (
+            <div className="pointer-events-none absolute inset-x-2 top-4 bottom-0 rounded-[1.7rem] border border-white/10 bg-[#111111] opacity-70 shadow-[0_14px_34px_rgba(0,0,0,0.22)]" />
+          ) : null}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={question.id}
@@ -240,8 +261,8 @@ export default function LeaderboardQuestionPage() {
               </div>
             </div>
 
-            <div className="mb-3 space-y-2">
-              {rankedAnswers.slice(0, 5).map((answer, index) => {
+            <div className={`mb-3 max-h-[18.75rem] space-y-2 overflow-y-auto pr-1 transition-opacity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${answersLoading ? "opacity-55" : "opacity-100"}`}>
+              {rankedAnswers.map((answer, index) => {
                 const alreadyVoted = user?.uid && Array.isArray(answer.votes) && answer.votes.includes(user.uid);
                 return (
                   <button

@@ -360,6 +360,13 @@ export default function Profile() {
   const profileAliasKey = profileAliasIds.join("|");
   const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
   const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
+  const handleDishModeSelect = (nextMode) => {
+    const normalized =
+      nextMode === DISH_MODE_COOKING || nextMode === DISH_MODE_RESTAURANT || nextMode === DISH_MODE_ALL
+        ? nextMode
+        : DISH_MODE_ALL;
+    setSelectedDishMode(normalized);
+  };
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
@@ -422,14 +429,6 @@ export default function Profile() {
           }));
         }
         const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
-        getLeaderboardAnswersForUser(candidateIds, true)
-          .then((takes) => {
-            if (!cancelled) setLeaderboardTakes(takes);
-          })
-          .catch((error) => {
-            console.error("Failed to load own profile leaderboard takes:", error);
-            if (!cancelled) setLeaderboardTakes([]);
-          });
         const results = await Promise.allSettled([
           getUploadedDishesForUserAliases(candidateIds),
           Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
@@ -437,8 +436,9 @@ export default function Profile() {
           Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
+          getLeaderboardAnswersForUser(candidateIds, true),
         ]);
-        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
+        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
         if (cancelled) return;
         setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
@@ -446,6 +446,7 @@ export default function Profile() {
         setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
         setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
+        setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
       } catch (error) {
         console.error("Failed to load own profile:", error);
       }
@@ -1424,8 +1425,11 @@ export default function Profile() {
       : resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
-  const getVisibleDishlistDishes = (dishlist) =>
-    orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
+  const getVisibleDishlistDishes = (dishlist) => {
+    const sourceDishes = Array.isArray(dishlist?.dishes) ? dishlist.dishes : [];
+    const filteredDishes = sourceDishes.filter((dish) => dishModeMatches(dish, selectedDishMode));
+    return orderDishesForProfileList(filteredDishes);
+  };
   const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
@@ -1435,7 +1439,7 @@ export default function Profile() {
         dishes: getVisibleDishlistDishes(unfilteredActiveDishlist),
       }
     : null;
-  const visibleLeaderboardTakes = leaderboardTakes.filter((take) => {
+  const visibleLeaderboardTakes = (Array.isArray(leaderboardTakes) ? leaderboardTakes : []).filter((take) => {
     if (selectedDishMode === DISH_MODE_ALL) return true;
     const mode = take?.questionDishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
     return mode === selectedDishMode;
@@ -1971,7 +1975,13 @@ export default function Profile() {
             >
               <ChevronLeft size={16} />
             </button>
-            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
+            <div
+              onPointerDown={(event) => event.stopPropagation()}
+              onPointerUp={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <DishModeFilterButton value={selectedDishMode} onSelect={handleDishModeSelect} />
+            </div>
             <div className="flex justify-end">
               {activeDishlist?.type === "custom" ? (
                 <button

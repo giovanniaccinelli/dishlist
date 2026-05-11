@@ -65,12 +65,18 @@ function timestampToMs(value) {
 }
 
 function formatActivityTime(timeMs) {
-  if (!timeMs) return "recently";
-  const diff = Date.now() - timeMs;
-  if (diff < 60 * 1000) return "now";
-  if (diff < 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 60000))}m`;
-  if (diff < 24 * 60 * 60 * 1000) return `${Math.max(1, Math.floor(diff / 3600000))}h`;
-  return `${Math.max(1, Math.floor(diff / 86400000))}d`;
+  if (!timeMs) return "";
+  const date = new Date(timeMs);
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  if (sameDay) {
+    return new Intl.DateTimeFormat("it-IT", { hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "ieri";
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return new Intl.DateTimeFormat("it-IT", sameYear ? { day: "2-digit", month: "short" } : { day: "2-digit", month: "short", year: "2-digit" }).format(date);
 }
 
 const ACTIVITY_STYLE = {
@@ -804,10 +810,19 @@ export default function Feed() {
           } catch (error) {
             console.error("Failed to load timestamped save activity:", error);
             const savers = await getUsersWhoSavedDish(dish.id).catch(() => []);
-            return savers
-              .filter((saver) => saver.id !== userId)
-              .slice(0, 3)
-              .map((saver) => ({
+            const directEvents = await Promise.all(
+              savers
+                .filter((saver) => saver.id !== userId)
+                .slice(0, 3)
+                .map(async (saver) => {
+                  const savedDoc = await getDoc(doc(db, "users", saver.id, "saved", dish.id)).catch(() => null);
+                  const savedData = savedDoc?.exists?.() ? savedDoc.data() || {} : {};
+                  return { saver, savedAt: savedData.savedAt || savedData.addedAt || null };
+                })
+            );
+            return directEvents
+              .filter(({ saver }) => saver?.id && saver.id !== userId)
+              .map(({ saver, savedAt }) => ({
                 id: `save-${dish.id}-${saver.id}`,
                 kind: "save",
                 icon: Heart,
@@ -815,7 +830,7 @@ export default function Feed() {
                 text: t("saved your dish"),
                 detail: dish.name || "",
                 href: `/dish/${dish.id}?source=uploaded&mode=single`,
-                timeMs: timestampToMs(saver.savedAt || saver.addedAt),
+                timeMs: timestampToMs(savedAt),
               }));
           }
         })
@@ -1248,7 +1263,9 @@ export default function Feed() {
                             </div>
                             {item.detail ? <div className="mt-1 truncate text-xs font-semibold text-white/42">{item.detail}</div> : null}
                           </div>
-                          <div className="shrink-0 rounded-full bg-white/7 px-2 py-1 text-[11px] font-bold text-white/45">{formatActivityTime(item.timeMs)}</div>
+                          {item.timeMs ? (
+                            <div className="shrink-0 rounded-full bg-white/7 px-2 py-1 text-[11px] font-bold text-white/45">{formatActivityTime(item.timeMs)}</div>
+                          ) : null}
                         </Link>
                       );
                     })}

@@ -606,15 +606,17 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
           const accent = accents[question.accent] || accents.red;
           const featured = index === 0;
           const hot = Number(question.recentVotes || 0) > 0;
+          const borderColor = featured ? "#E64646" : question.accent === "yellow" ? "#D7B443" : question.accent === "blue" ? "#5CB7E8" : question.accent === "pink" ? "#D96EEA" : question.accent === "orange" ? "#F26A21" : "#E64646";
           return (
             <Link
               href={`/leaderboard/${question.id}`}
               key={question.id}
-              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[1.05rem] border p-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.14)] ${
+              className={`relative min-w-[31.5%] basis-[31.5%] snap-start overflow-visible rounded-[1.05rem] p-2.5 shadow-[0_10px_22px_rgba(0,0,0,0.14)] ${
                 darkMode
-                  ? `bg-[#121212] ${featured ? "border-2 border-[#E64646] bg-[linear-gradient(145deg,rgba(230,70,70,0.22),rgba(18,18,18,0.96)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.42),0_0_28px_7px_rgba(230,70,70,0.32),0_12px_32px_rgba(230,70,70,0.18)]" : "border-white/10"}`
-                  : `bg-white ${featured ? "border-2 border-[#E64646] bg-[linear-gradient(145deg,rgba(230,70,70,0.13),rgba(255,255,255,0.98)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.38),0_0_26px_6px_rgba(230,70,70,0.25),0_10px_22px_rgba(0,0,0,0.12)]" : accent.border}`
+                  ? `bg-[#121212] ${featured ? "bg-[linear-gradient(145deg,rgba(230,70,70,0.22),rgba(18,18,18,0.96)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.42),0_0_28px_7px_rgba(230,70,70,0.32),0_12px_32px_rgba(230,70,70,0.18)]" : ""}`
+                  : `bg-white ${featured ? "bg-[linear-gradient(145deg,rgba(230,70,70,0.13),rgba(255,255,255,0.98)_58%)] shadow-[0_0_0_1px_rgba(230,70,70,0.38),0_0_26px_6px_rgba(230,70,70,0.25),0_10px_22px_rgba(0,0,0,0.12)]" : ""}`
               }`}
+              style={{ borderColor, borderStyle: "solid", borderWidth: featured ? 2 : 0.75 }}
             >
               {featured ? (
                 <div className="pointer-events-none absolute -inset-2 -z-10 rounded-[1.35rem] bg-[#E64646]/20 blur-xl" />

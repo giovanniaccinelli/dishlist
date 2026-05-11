@@ -1266,6 +1266,7 @@ export async function createLeaderboardQuestion(userId, question) {
       title,
       label: String(question?.label || "IN TREND").trim(),
       accent: String(question?.accent || "red").trim(),
+      dishMode: question?.dishMode === "home" ? "home" : "restaurant",
       createdBy: userId,
       createdAt: now,
       updatedAt: now,
@@ -1276,6 +1277,28 @@ export async function createLeaderboardQuestion(userId, question) {
   } catch (err) {
     console.error("Failed to create leaderboard question:", err);
     return null;
+  }
+}
+
+export async function updateLeaderboardQuestion(questionId, userId, updates = {}) {
+  const title = String(updates?.title || "").trim();
+  if (!questionId || !userId || !title) return false;
+  try {
+    await setDoc(
+      leaderboardQuestionDoc(questionId),
+      {
+        title,
+        label: String(updates?.label || "IN TREND").trim(),
+        accent: String(updates?.accent || "red").trim(),
+        dishMode: updates?.dishMode === "home" ? "home" : "restaurant",
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to update leaderboard question:", err);
+    return false;
   }
 }
 
@@ -1292,6 +1315,7 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
         batch.update(answerDoc.ref, {
           votes: arrayRemove(user.uid),
           [`voteTimestamps.${user.uid}`]: deleteField(),
+          [`voteAnonymous.${user.uid}`]: deleteField(),
           updatedAt: serverTimestamp(),
         });
       }
@@ -1307,6 +1331,9 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
       voteTimestamps: {
         [user.uid]: serverTimestamp(),
       },
+      voteAnonymous: {
+        [user.uid]: Boolean(answer?.anonymous),
+      },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -1318,7 +1345,7 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
   }
 }
 
-export async function voteLeaderboardAnswer(questionId, answerId, userId) {
+export async function voteLeaderboardAnswer(questionId, answerId, userId, options = {}) {
   if (!questionId || !answerId || !userId) return false;
   try {
     const answersSnap = await getDocs(leaderboardAnswersCollection(questionId));
@@ -1328,6 +1355,7 @@ export async function voteLeaderboardAnswer(questionId, answerId, userId) {
         batch.update(answerDoc.ref, {
           votes: arrayUnion(userId),
           [`voteTimestamps.${userId}`]: serverTimestamp(),
+          [`voteAnonymous.${userId}`]: Boolean(options?.anonymous),
           updatedAt: serverTimestamp(),
         });
         return;
@@ -1337,6 +1365,7 @@ export async function voteLeaderboardAnswer(questionId, answerId, userId) {
         batch.update(answerDoc.ref, {
           votes: arrayRemove(userId),
           [`voteTimestamps.${userId}`]: deleteField(),
+          [`voteAnonymous.${userId}`]: deleteField(),
           updatedAt: serverTimestamp(),
         });
       }
@@ -1358,16 +1387,29 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
       questions.map(async (question) => {
         const answers = await getLeaderboardAnswers(question.id);
         return answers
-          .filter((answer) => ids.includes(String(answer.userId || "")))
-          .filter((answer) => includeAnonymous || !answer.anonymous)
-          .map((answer) => ({
-            ...answer,
-            questionId: question.id,
-            questionTitle: question.title,
-            questionLabel: question.label,
-            questionAccent: question.accent,
-            questionRecentVotes: question.recentVotes || 0,
-          }));
+          .flatMap((answer) => {
+            const authorId = String(answer.userId || "");
+            const authoredByUser = ids.includes(authorId);
+            const votedByUser = Array.isArray(answer.votes) && ids.some((id) => answer.votes.includes(id));
+            if (!authoredByUser && !votedByUser) return [];
+            const matchingVoteId = ids.find((id) => Array.isArray(answer.votes) && answer.votes.includes(id)) || "";
+            const anonymousVote =
+              authoredByUser ? Boolean(answer.anonymous) : Boolean(answer.voteAnonymous?.[matchingVoteId]);
+            if (!includeAnonymous && anonymousVote) return [];
+            return [
+              {
+                ...answer,
+                anonymous: anonymousVote,
+                takeKind: authoredByUser ? "answer" : "vote",
+                questionId: question.id,
+                questionTitle: question.title,
+                questionLabel: question.label,
+                questionAccent: question.accent,
+                questionDishMode: question.dishMode || "restaurant",
+                questionRecentVotes: question.recentVotes || 0,
+              },
+            ];
+          });
       })
     );
     return groups

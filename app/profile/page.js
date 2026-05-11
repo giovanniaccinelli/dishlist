@@ -32,7 +32,9 @@ import {
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
   getLeaderboardAnswersForUser,
+  getLeaderboardQuestions,
   createLeaderboardQuestion,
+  updateLeaderboardQuestion,
   updateCustomDishlistName,
   publishDishAsStory,
   getAvatarTone,
@@ -323,6 +325,9 @@ export default function Profile() {
   const [leaderboardQuestionTitle, setLeaderboardQuestionTitle] = useState("");
   const [leaderboardQuestionLabel, setLeaderboardQuestionLabel] = useState("IN TREND");
   const [leaderboardQuestionAccent, setLeaderboardQuestionAccent] = useState("red");
+  const [leaderboardQuestionDishMode, setLeaderboardQuestionDishMode] = useState("restaurant");
+  const [leaderboardQuestionEditingId, setLeaderboardQuestionEditingId] = useState("");
+  const [leaderboardAdminQuestions, setLeaderboardAdminQuestions] = useState([]);
   const [leaderboardQuestionSaving, setLeaderboardQuestionSaving] = useState(false);
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
@@ -1008,6 +1013,17 @@ export default function Profile() {
     });
   };
 
+  const loadLeaderboardAdminQuestions = async () => {
+    if (leaderboardAdminPassword !== "cravy1723") {
+      setToastVariant("error");
+      setToast(t("Wrong password"));
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    const questions = await getLeaderboardQuestions(50);
+    setLeaderboardAdminQuestions(questions.filter((question) => !user?.uid || question.createdBy === user.uid));
+  };
+
   const handleCreateLeaderboardQuestion = async () => {
     const title = leaderboardQuestionTitle.trim();
     if (!user?.uid || leaderboardQuestionSaving) return;
@@ -1025,19 +1041,28 @@ export default function Profile() {
     }
     setLeaderboardQuestionSaving(true);
     try {
-      const questionId = await createLeaderboardQuestion(user.uid, {
+      const payload = {
         title,
         label: leaderboardQuestionLabel.trim() || "IN TREND",
         accent: leaderboardQuestionAccent,
-      });
-      if (!questionId) throw new Error("Question was not created.");
+        dishMode: leaderboardQuestionDishMode,
+      };
+      if (leaderboardQuestionEditingId) {
+        const ok = await updateLeaderboardQuestion(leaderboardQuestionEditingId, user.uid, payload);
+        if (!ok) throw new Error("Question was not updated.");
+      } else {
+        const questionId = await createLeaderboardQuestion(user.uid, payload);
+        if (!questionId) throw new Error("Question was not created.");
+      }
       setLeaderboardQuestionTitle("");
       setLeaderboardQuestionLabel("IN TREND");
       setLeaderboardQuestionAccent("red");
-      setLeaderboardAdminPassword("");
+      setLeaderboardQuestionDishMode("restaurant");
+      setLeaderboardQuestionEditingId("");
+      await loadLeaderboardAdminQuestions();
       setLeaderboardAdminOpen(false);
       setToastVariant("success");
-      setToast(t("Leaderboard question published"));
+      setToast(t(leaderboardQuestionEditingId ? "Leaderboard question updated" : "Leaderboard question published"));
       setTimeout(() => setToast(""), 1300);
     } catch (error) {
       console.error("Failed to create leaderboard question:", error);
@@ -2339,6 +2364,31 @@ export default function Profile() {
                           <option value="pink">Pink</option>
                         </select>
                       </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: "restaurant", label: t("Eat out"), color: "#E64646" },
+                          { id: "home", label: t("Eat in"), color: "#E4B43F" },
+                        ].map((item) => {
+                          const active = leaderboardQuestionDishMode === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setLeaderboardQuestionDishMode(item.id)}
+                              className={`rounded-[1rem] border px-4 py-3 text-sm font-black transition ${
+                                darkMode ? "bg-[#080808] text-white" : "bg-[#F5F2EA] text-black"
+                              }`}
+                              style={{
+                                borderColor: active ? item.color : darkMode ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
+                                boxShadow: active ? `0 0 0 1px ${item.color}` : "none",
+                                color: active ? item.color : undefined,
+                              }}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                       <button
                         type="button"
                         onClick={handleCreateLeaderboardQuestion}
@@ -2347,8 +2397,40 @@ export default function Profile() {
                           darkMode ? "bg-[#E64646] text-white" : "bg-[#E64646] text-white"
                         } ${leaderboardQuestionSaving ? "opacity-60" : ""}`}
                       >
-                        {leaderboardQuestionSaving ? t("Publishing...") : t("Publish question")}
+                        {leaderboardQuestionSaving ? t("Publishing...") : t(leaderboardQuestionEditingId ? "Update question" : "Publish question")}
                       </button>
+                      <button
+                        type="button"
+                        onClick={loadLeaderboardAdminQuestions}
+                        className={`w-full rounded-full border px-4 py-3 text-sm font-black ${
+                          darkMode ? "border-white/12 bg-[#080808] text-white" : "border-black/12 bg-[#F5F2EA] text-black"
+                        }`}
+                      >
+                        {t("Load my questions")}
+                      </button>
+                      {leaderboardAdminQuestions.length ? (
+                        <div className="space-y-2 pt-1">
+                          {leaderboardAdminQuestions.map((question) => (
+                            <button
+                              key={question.id}
+                              type="button"
+                              onClick={() => {
+                                setLeaderboardQuestionEditingId(question.id);
+                                setLeaderboardQuestionTitle(question.title || "");
+                                setLeaderboardQuestionLabel(question.label || "IN TREND");
+                                setLeaderboardQuestionAccent(question.accent || "red");
+                                setLeaderboardQuestionDishMode(question.dishMode === "home" ? "home" : "restaurant");
+                              }}
+                              className={`w-full rounded-[1rem] border px-4 py-3 text-left ${
+                                darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"
+                              }`}
+                            >
+                              <div className="truncate text-sm font-black">{question.title}</div>
+                              <div className="mt-1 text-xs opacity-55">{t(question.dishMode === "home" ? "Eat in" : "Eat out")} · {t("Edit")}</div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

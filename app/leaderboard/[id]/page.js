@@ -14,13 +14,11 @@ import {
 } from "../../lib/firebaseHelpers";
 import { useLanguage } from "../../../components/LanguageProvider";
 
-const accentMap = {
-  red: { main: "#E64646", soft: "rgba(230,70,70,0.16)", glow: "rgba(230,70,70,0.25)" },
-  orange: { main: "#F26A21", soft: "rgba(242,106,33,0.16)", glow: "rgba(242,106,33,0.22)" },
-  yellow: { main: "#D7B443", soft: "rgba(215,180,67,0.16)", glow: "rgba(215,180,67,0.20)" },
-  blue: { main: "#5CB7E8", soft: "rgba(92,183,232,0.16)", glow: "rgba(92,183,232,0.20)" },
-  pink: { main: "#D96EEA", soft: "rgba(217,110,234,0.16)", glow: "rgba(217,110,234,0.20)" },
-};
+function getQuestionTone(question) {
+  return question?.dishMode === "home"
+    ? { main: "#E4B43F", soft: "rgba(228,180,63,0.16)", glow: "rgba(228,180,63,0.24)" }
+    : { main: "#E64646", soft: "rgba(230,70,70,0.16)", glow: "rgba(230,70,70,0.25)" };
+}
 
 function voteCount(answer) {
   return Array.isArray(answer?.votes) ? answer.votes.length : 0;
@@ -54,7 +52,7 @@ export default function LeaderboardQuestionPage() {
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
 
-  const accent = accentMap[question?.accent] || accentMap.red;
+  const accent = getQuestionTone(question);
   const rankedAnswers = useMemo(
     () => [...answers].sort((a, b) => voteCount(b) - voteCount(a) || (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)),
     [answers]
@@ -113,7 +111,7 @@ export default function LeaderboardQuestionPage() {
       router.push("/?auth=1");
       return;
     }
-    const ok = await voteLeaderboardAnswer(questionId, answer.id, user.uid);
+    const ok = await voteLeaderboardAnswer(questionId, answer.id, user.uid, { anonymous });
     if (ok) await load();
   };
 
@@ -194,8 +192,8 @@ export default function LeaderboardQuestionPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.985 }}
               transition={{ type: "spring", stiffness: 360, damping: 32 }}
-              className="cursor-grab rounded-[1.7rem] border border-white/10 bg-[#101010] p-4 shadow-[0_0_42px_rgba(0,0,0,0.42)] active:cursor-grabbing"
-              style={{ x: dragX, rotate: cardRotate, boxShadow: `0 0 28px ${accent.glow}, 0 16px 46px rgba(0,0,0,0.34)` }}
+              className="cursor-grab rounded-[1.7rem] border-2 bg-[#101010] p-4 shadow-[0_0_42px_rgba(0,0,0,0.42)] active:cursor-grabbing"
+              style={{ x: dragX, rotate: cardRotate, borderColor: accent.main, boxShadow: `0 0 28px ${accent.glow}, 0 16px 46px rgba(0,0,0,0.34)` }}
             >
             <div className="mb-3">
               <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.08em]" style={{ color: accent.main }}>
@@ -220,8 +218,9 @@ export default function LeaderboardQuestionPage() {
                     onPointerDownCapture={stopCardDrag}
                     onTouchStartCapture={stopCardDrag}
                     className={`flex w-full items-center gap-3 rounded-[1.1rem] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition ${
-                      alreadyVoted ? "bg-[#211515] ring-2 ring-[#E64646]/80" : "bg-[#171717]"
+                      alreadyVoted ? "bg-[#211515] ring-2" : "bg-[#171717]"
                     }`}
+                    style={alreadyVoted ? { "--tw-ring-color": accent.main } : undefined}
                   >
                     <div className="w-8 text-center text-[1.25rem] font-black" style={{ color: index < 3 ? accent.main : "rgba(255,255,255,0.55)" }}>
                       {index + 1}

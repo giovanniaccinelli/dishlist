@@ -273,6 +273,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+  const [descriptionTruncated, setDescriptionTruncated] = useState(false);
   const [noRecipeNoticeOpen, setNoRecipeNoticeOpen] = useState(false);
   const [recipePanelOverflow, setRecipePanelOverflow] = useState({
     ingredients: false,
@@ -290,6 +292,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
+  const descriptionRef = useRef(null);
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
@@ -356,10 +359,32 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   useEffect(() => {
     setShowRecipe(isRecipeOnlyDish(currentCard));
     setRecipePanelModal(null);
+    setDescriptionModalOpen(false);
+    setDescriptionTruncated(false);
     setNoRecipeNoticeOpen(false);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
   }, [currentCard?._key, currentCard]);
+
+  useLayoutEffect(() => {
+    if (!currentCard?.description || visibleRecipe) {
+      setDescriptionTruncated(false);
+      return undefined;
+    }
+
+    const measureDescription = () => {
+      const node = descriptionRef.current;
+      setDescriptionTruncated(Boolean(node && node.scrollHeight - node.clientHeight > 2));
+    };
+
+    measureDescription();
+
+    const node = descriptionRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measureDescription);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [currentCard?._key, currentCard?.description, visibleRecipe]);
 
   useEffect(() => {
     if (!showRecipe) {
@@ -1258,10 +1283,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   >
                     {currentCard.name}
                   </button>
-                  {currentCard.description || normalizedDishLink ? (
+                    {currentCard.description || normalizedDishLink ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
                     {currentCard.description ? (
-                      <p className="min-w-0 flex-1 line-clamp-2">
+                      <p
+                        ref={descriptionRef}
+                        data-no-drag={descriptionTruncated ? "true" : undefined}
+                        onClick={(e) => {
+                          if (!descriptionTruncated) return;
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setDescriptionModalOpen(true);
+                        }}
+                        onPointerDown={(e) => {
+                          if (descriptionTruncated) e.stopPropagation();
+                        }}
+                        className={`min-w-0 flex-1 line-clamp-2 ${descriptionTruncated ? "cursor-pointer" : ""}`}
+                        title={descriptionTruncated ? currentCard.description : undefined}
+                      >
                         {currentCard.description}
                       </p>
                     ) : null}
@@ -1735,6 +1774,44 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           history={currentStoryPushHistory}
         />
       ) : null}
+      <AnimatePresence>
+        {descriptionModalOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[141] flex items-center justify-center bg-black/34 p-4 backdrop-blur-[3px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDescriptionModalOpen(false)}
+          >
+            <motion.div
+              className={`w-full max-w-sm rounded-[1.45rem] border p-4 shadow-[0_24px_70px_rgba(0,0,0,0.28)] ${
+                darkMode ? "border-white/12 bg-[#111] text-white" : "border-black/10 bg-white text-black"
+              }`}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0 text-lg font-black leading-tight">{currentCard?.name || "Dish"}</div>
+                <button
+                  type="button"
+                  onClick={() => setDescriptionModalOpen(false)}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    darkMode ? "bg-white/8 text-white" : "bg-black/5 text-black"
+                  }`}
+                  aria-label="Close description"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <p className={`max-h-[48vh] overflow-y-auto whitespace-pre-wrap text-sm font-semibold leading-6 ${darkMode ? "text-white/76" : "text-black/72"}`}>
+                {currentCard?.description || ""}
+              </p>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <AnimatePresence>
         {noRecipeNoticeOpen ? (
           <motion.div

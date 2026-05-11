@@ -138,7 +138,11 @@ export default function Feed() {
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
-  const hasActivityUpdate = activityItems.some((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0));
+  const unseenActivityItems = useMemo(
+    () => activityItems.filter((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0)),
+    [activityItems, activitySeenAt]
+  );
+  const hasActivityUpdate = unseenActivityItems.length > 0;
 
   const isOwnDish = (dish) => {
     if (!userId || !dish) return false;

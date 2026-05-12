@@ -1035,16 +1035,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           {darkMode && !visibleRecipe ? (
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-36 bg-gradient-to-b from-black/58 via-black/24 to-transparent"
+              className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
             />
           ) : null}
           <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"}`}>
-            {darkMode && !visibleRecipe ? (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -left-3 -top-3 -z-10 h-[4.9rem] w-[17.25rem] rounded-[1.4rem] bg-[radial-gradient(circle_at_2.4rem_2.2rem,rgba(0,0,0,0.54),rgba(0,0,0,0.34)_46%,rgba(0,0,0,0)_78%)]"
-              />
-            ) : null}
             {darkMode ? (
               <div className="flex min-w-0 items-center gap-2 text-white">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>

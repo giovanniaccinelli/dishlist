@@ -1239,7 +1239,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   style={{
                     height: "36%",
                     background:
-                      "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.70) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
+                      "linear-gradient(to top, rgba(0,0,0,0.74) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
                   }}
                 />
               ) : null}

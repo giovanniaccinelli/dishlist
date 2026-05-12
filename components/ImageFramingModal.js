@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Minus, Move, Plus, RotateCcw, X } from "lucide-react";
+import { Check, Move, RotateCcw, X } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const getPointerDistance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const getPointerCenter = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
 function makeCroppedFile({ file, image, frame, offset, zoom }) {
   const frameWidth = Math.max(1, frame.width);
@@ -49,7 +51,10 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
   const { darkMode, language } = useLanguage();
   const frameRef = useRef(null);
   const imageRef = useRef(null);
-  const dragRef = useRef(null);
+  const pointersRef = useRef(new Map());
+  const gestureRef = useRef(null);
+  const offsetRef = useRef({ x: 0, y: 0 });
+  const zoomRef = useRef(1);
   const [objectUrl, setObjectUrl] = useState("");
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
@@ -57,13 +62,21 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
   const copy = useMemo(
     () =>
       language === "it"
         ? {
             title: "Inquadra la foto",
-            subtitle: "Trascina per spostarla. Usa lo zoom per decidere cosa finisce nella card.",
-            zoom: "Zoom",
+            subtitle: "Trascina per spostarla. Pizzica con due dita per ingrandire.",
+            zoom: "Trascina e pizzica",
             reset: "Ripristina",
             cancel: "Annulla",
             confirm: "Usa questa foto",
@@ -71,8 +84,8 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
           }
         : {
             title: "Frame the photo",
-            subtitle: "Drag to move it. Use zoom to choose what lands inside the card.",
-            zoom: "Zoom",
+            subtitle: "Drag to move it. Pinch with two fingers to zoom.",
+            zoom: "Drag and pinch",
             reset: "Reset",
             cancel: "Cancel",
             confirm: "Use this photo",
@@ -85,6 +98,8 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
     if (!open || !file) return undefined;
     const nextUrl = URL.createObjectURL(file);
     setObjectUrl(nextUrl);
+    offsetRef.current = { x: 0, y: 0 };
+    zoomRef.current = 1;
     setOffset({ x: 0, y: 0 });
     setZoom(1);
     setImageSize({ width: 0, height: 0 });
@@ -92,6 +107,13 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
       URL.revokeObjectURL(nextUrl);
     };
   }, [file, open]);
+
+  useEffect(() => {
+    if (!open) {
+      pointersRef.current.clear();
+      gestureRef.current = null;
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -104,57 +126,172 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
     return () => window.removeEventListener("resize", updateFrame);
   }, [open]);
 
-  const bounds = useMemo(() => {
+  const getBoundsForZoom = (nextZoom) => {
     const frameWidth = frameSize.width || 1;
     const frameHeight = frameSize.height || 1;
     const imageWidth = imageSize.width || 1;
     const imageHeight = imageSize.height || 1;
     const coverScale = Math.max(frameWidth / imageWidth, frameHeight / imageHeight);
-    const displayWidth = imageWidth * coverScale * zoom;
-    const displayHeight = imageHeight * coverScale * zoom;
+    const displayWidth = imageWidth * coverScale * nextZoom;
+    const displayHeight = imageHeight * coverScale * nextZoom;
     return {
       x: Math.max(0, (displayWidth - frameWidth) / 2),
       y: Math.max(0, (displayHeight - frameHeight) / 2),
       displayWidth,
       displayHeight,
     };
-  }, [frameSize.height, frameSize.width, imageSize.height, imageSize.width, zoom]);
+  };
+
+  const bounds = useMemo(
+    () => getBoundsForZoom(zoom),
+    [frameSize.height, frameSize.width, imageSize.height, imageSize.width, zoom]
+  );
 
   useEffect(() => {
-    setOffset((prev) => ({
-      x: clamp(prev.x, -bounds.x, bounds.x),
-      y: clamp(prev.y, -bounds.y, bounds.y),
-    }));
+    setOffset((prev) => {
+      const nextOffset = {
+        x: clamp(prev.x, -bounds.x, bounds.x),
+        y: clamp(prev.y, -bounds.y, bounds.y),
+      };
+      offsetRef.current = nextOffset;
+      return nextOffset;
+    });
   }, [bounds.x, bounds.y]);
 
-  const updateZoom = (nextZoom) => {
-    setZoom(clamp(Number(nextZoom) || 1, 1, 3));
+  const getFramePoint = (point) => {
+    const rect = frameRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: point.x - rect.left - rect.width / 2,
+      y: point.y - rect.top - rect.height / 2,
+    };
+  };
+
+  const clampOffsetForZoom = (nextOffset, nextZoom = zoom) => {
+    const nextBounds = getBoundsForZoom(nextZoom);
+    return {
+      x: clamp(nextOffset.x, -nextBounds.x, nextBounds.x),
+      y: clamp(nextOffset.y, -nextBounds.y, nextBounds.y),
+    };
+  };
+
+  const startPanGesture = (pointer) => {
+    gestureRef.current = {
+      type: "pan",
+      pointerId: pointer.id,
+      startX: pointer.x,
+      startY: pointer.y,
+      startOffset: offsetRef.current,
+    };
+  };
+
+  const startPinchGesture = () => {
+    const pointers = Array.from(pointersRef.current.values()).slice(0, 2);
+    if (pointers.length < 2) return;
+    const center = getPointerCenter(pointers[0], pointers[1]);
+    gestureRef.current = {
+      type: "pinch",
+      pointerIds: [pointers[0].id, pointers[1].id],
+      startCenter: getFramePoint(center),
+      startDistance: Math.max(1, getPointerDistance(pointers[0], pointers[1])),
+      startOffset: offsetRef.current,
+      startZoom: zoomRef.current,
+    };
   };
 
   const handlePointerDown = (event) => {
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      offset,
-    };
+    pointersRef.current.set(event.pointerId, {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    });
+    if (pointersRef.current.size >= 2) {
+      startPinchGesture();
+    } else {
+      startPanGesture({ id: event.pointerId, x: event.clientX, y: event.clientY });
+    }
   };
 
   const handlePointerMove = (event) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const nextX = drag.offset.x + event.clientX - drag.startX;
-    const nextY = drag.offset.y + event.clientY - drag.startY;
-    setOffset({
-      x: clamp(nextX, -bounds.x, bounds.x),
-      y: clamp(nextY, -bounds.y, bounds.y),
+    if (!pointersRef.current.has(event.pointerId)) return;
+    event.preventDefault();
+    pointersRef.current.set(event.pointerId, {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
     });
+
+    const gesture = gestureRef.current;
+    if (!gesture) return;
+
+    if (gesture.type === "pinch") {
+      const [firstId, secondId] = gesture.pointerIds;
+      const first = pointersRef.current.get(firstId);
+      const second = pointersRef.current.get(secondId);
+      if (!first || !second) return;
+      const currentDistance = Math.max(1, getPointerDistance(first, second));
+      const currentCenter = getFramePoint(getPointerCenter(first, second));
+      const nextZoom = clamp(gesture.startZoom * (currentDistance / gesture.startDistance), 1, 3);
+      const zoomRatio = nextZoom / gesture.startZoom;
+      const nextOffset = {
+        x: currentCenter.x + (gesture.startOffset.x - gesture.startCenter.x) * zoomRatio,
+        y: currentCenter.y + (gesture.startOffset.y - gesture.startCenter.y) * zoomRatio,
+      };
+      setZoom(nextZoom);
+      zoomRef.current = nextZoom;
+      offsetRef.current = clampOffsetForZoom(nextOffset, nextZoom);
+      setOffset(offsetRef.current);
+      return;
+    }
+
+    if (gesture.pointerId !== event.pointerId || pointersRef.current.size > 1) return;
+    const nextOffset = clampOffsetForZoom({
+      x: gesture.startOffset.x + event.clientX - gesture.startX,
+      y: gesture.startOffset.y + event.clientY - gesture.startY,
+    });
+    offsetRef.current = nextOffset;
+    setOffset(nextOffset);
   };
 
   const handlePointerUp = (event) => {
-    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    pointersRef.current.delete(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {}
+    if (pointersRef.current.size >= 2) {
+      startPinchGesture();
+      return;
+    }
+    if (pointersRef.current.size === 1) {
+      startPanGesture(Array.from(pointersRef.current.values())[0]);
+      return;
+    }
+    gestureRef.current = null;
+  };
+
+  const handleWheel = (event) => {
+    if (!imageSize.width) return;
+    event.preventDefault();
+    const zoomDelta = -event.deltaY * 0.002;
+    const currentZoom = zoomRef.current;
+    const currentOffset = offsetRef.current;
+    const nextZoom = clamp(currentZoom * (1 + zoomDelta), 1, 3);
+    if (nextZoom === currentZoom) return;
+    const framePoint = getFramePoint({ x: event.clientX, y: event.clientY });
+    const zoomRatio = nextZoom / currentZoom;
+    setZoom(nextZoom);
+    zoomRef.current = nextZoom;
+    const nextOffset = clampOffsetForZoom(
+      {
+        x: framePoint.x + (currentOffset.x - framePoint.x) * zoomRatio,
+        y: framePoint.y + (currentOffset.y - framePoint.y) * zoomRatio,
+      },
+      nextZoom
+    );
+    offsetRef.current = nextOffset;
+    setOffset(nextOffset);
   };
 
   const handleConfirm = async () => {
@@ -217,6 +354,7 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
+                onWheel={handleWheel}
               >
                 {objectUrl ? (
                   <img
@@ -257,7 +395,7 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
               </div>
 
               <div className={`mt-4 rounded-[1.3rem] border px-4 py-3 ${darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white"}`}>
-                <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <div className="inline-flex items-center gap-2 text-sm font-semibold">
                     <Move size={16} />
                     {copy.zoom}
@@ -265,6 +403,8 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
                   <button
                     type="button"
                     onClick={() => {
+                      zoomRef.current = 1;
+                      offsetRef.current = { x: 0, y: 0 };
                       setZoom(1);
                       setOffset({ x: 0, y: 0 });
                     }}
@@ -272,31 +412,6 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
                   >
                     <RotateCcw size={13} />
                     {copy.reset}
-                  </button>
-                </div>
-                <div className="grid grid-cols-[2.35rem,1fr,2.35rem] items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => updateZoom(zoom - 0.12)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full ${darkMode ? "bg-white/8 text-white" : "bg-black/6 text-black"}`}
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <input
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.01"
-                    value={zoom}
-                    onChange={(event) => updateZoom(event.target.value)}
-                    className="w-full accent-[#FFC247]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => updateZoom(zoom + 0.12)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full ${darkMode ? "bg-white/8 text-white" : "bg-black/6 text-black"}`}
-                  >
-                    <Plus size={16} />
                   </button>
                 </div>
               </div>

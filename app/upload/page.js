@@ -10,6 +10,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
+import ImageFramingModal from "../../components/ImageFramingModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { RatingStars } from "../../components/RatingStars";
@@ -52,6 +53,7 @@ export default function UploadPage() {
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [imageFramingFile, setImageFramingFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -128,6 +130,12 @@ export default function UploadPage() {
     }
   }, [loading, user]);
 
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   const toggleTag = (tag) => {
     setDishTags((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -136,11 +144,24 @@ export default function UploadPage() {
     });
   };
 
-  const handleImageChange = (file) => {
+  const applySelectedMediaFile = (file) => {
     if (!file) return;
     setDishImage(file);
-    setPreview(URL.createObjectURL(file));
+    setPreview((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return URL.createObjectURL(file);
+    });
     setMediaPickerOpen(false);
+  };
+
+  const handleImageChange = (file) => {
+    if (!file) return;
+    setMediaPickerOpen(false);
+    if (file.type?.startsWith("image/")) {
+      setImageFramingFile(file);
+      return;
+    }
+    applySelectedMediaFile(file);
   };
 
   const handleDrop = (e) => {
@@ -1021,6 +1042,17 @@ export default function UploadPage() {
             </motion.div>
           </motion.div>
         ) : null}
+        <ImageFramingModal
+          open={Boolean(imageFramingFile)}
+          file={imageFramingFile}
+          dishName={dishName}
+          ownerName={user?.displayName || "You"}
+          onCancel={() => setImageFramingFile(null)}
+          onConfirm={(framedFile) => {
+            setImageFramingFile(null);
+            applySelectedMediaFile(framedFile);
+          }}
+        />
         {showAuthPrompt && (
           <AuthPromptModal
             open={showAuthPrompt}

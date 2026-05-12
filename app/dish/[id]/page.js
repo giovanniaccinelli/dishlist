@@ -12,6 +12,7 @@ import BottomNav from "../../../components/BottomNav";
 import { FullScreenLoading } from "../../../components/AppLoadingState";
 import AppToast from "../../../components/AppToast";
 import AppBackButton from "../../../components/AppBackButton";
+import ImageFramingModal from "../../../components/ImageFramingModal";
 import { getDishImageUrl, isDishVideo } from "../../lib/dishImage";
 import {
   addDishToToTryList,
@@ -78,6 +79,7 @@ export default function DishDetail() {
   const [editDishMode, setEditDishMode] = useState(DISH_MODE_COOKING);
   const [editRestaurant, setEditRestaurant] = useState(null);
   const [editImageFile, setEditImageFile] = useState(null);
+  const [editImageFramingFile, setEditImageFramingFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
   const [editStep, setEditStep] = useState(0);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -98,6 +100,7 @@ export default function DishDetail() {
   const [initialDeckIndex, setInitialDeckIndex] = useState(0);
   const [profileCardActionsDish, setProfileCardActionsDish] = useState(null);
   const activeDeckRef = useRef(null);
+  const editPreviewObjectUrlRef = useRef("");
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -392,8 +395,33 @@ export default function DishDetail() {
     });
   };
 
+  const clearEditPreviewObjectUrl = () => {
+    if (!editPreviewObjectUrlRef.current) return;
+    URL.revokeObjectURL(editPreviewObjectUrlRef.current);
+    editPreviewObjectUrlRef.current = "";
+  };
+
+  const applyEditMediaFile = (file) => {
+    if (!file) return;
+    clearEditPreviewObjectUrl();
+    const nextPreview = URL.createObjectURL(file);
+    editPreviewObjectUrlRef.current = nextPreview;
+    setEditImageFile(file);
+    setEditPreview(nextPreview);
+  };
+
+  const handleEditImageChange = (file) => {
+    if (!file) return;
+    if (file.type?.startsWith("image/")) {
+      setEditImageFramingFile(file);
+      return;
+    }
+    applyEditMediaFile(file);
+  };
+
   const openEditModal = (dishToEdit) => {
     if (!dishToEdit || dishToEdit?.owner !== userId) return;
+    clearEditPreviewObjectUrl();
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
@@ -415,6 +443,7 @@ export default function DishDetail() {
     setEditDishMode(dishToEdit?.dishMode || DISH_MODE_COOKING);
     setEditRestaurant(dishToEdit?.restaurant || null);
     setEditImageFile(null);
+    setEditImageFramingFile(null);
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
     );
@@ -425,10 +454,18 @@ export default function DishDetail() {
   const closeEditModal = () => {
     setEditOpen(false);
     setEditingDish(null);
+    setEditImageFramingFile(null);
+    clearEditPreviewObjectUrl();
     if (openEditOnLoad && returnTo) {
       router.push(returnTo);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      clearEditPreviewObjectUrl();
+    };
+  }, []);
 
   useEffect(() => {
     if (!openEditOnLoad || editOpen || loadingDish || !dish || dish.owner !== userId) return;
@@ -509,6 +546,8 @@ export default function DishDetail() {
 
       setEditOpen(false);
       setEditingDish(null);
+      setEditImageFramingFile(null);
+      clearEditPreviewObjectUrl();
       setPageToastVariant("success");
       setPageToast("Dish updated");
       setTimeout(() => setPageToast(""), 1200);
@@ -982,8 +1021,8 @@ export default function DishDetail() {
                     accept="image/*,video/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null;
-                      setEditImageFile(file);
-                      if (file) setEditPreview(URL.createObjectURL(file));
+                      handleEditImageChange(file);
+                      e.target.value = "";
                     }}
                     className="absolute opacity-0 w-full h-full cursor-pointer"
                     disabled={savingEdit}
@@ -1231,6 +1270,17 @@ export default function DishDetail() {
         onClose={() => setShareOpen(false)}
         dish={shareDish}
         currentUser={user}
+      />
+      <ImageFramingModal
+        open={Boolean(editImageFramingFile)}
+        file={editImageFramingFile}
+        dishName={editName}
+        ownerName={user?.displayName || "You"}
+        onCancel={() => setEditImageFramingFile(null)}
+        onConfirm={(framedFile) => {
+          setEditImageFramingFile(null);
+          applyEditMediaFile(framedFile);
+        }}
       />
       <DishlistPickerModal
         open={dishlistPickerOpen}

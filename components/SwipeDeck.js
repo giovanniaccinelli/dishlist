@@ -1032,6 +1032,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
             </div>
           ) : null}
+          {darkMode && !visibleRecipe ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-28 bg-gradient-to-b from-black/34 via-black/14 to-transparent"
+            />
+          ) : null}
           <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"}`}>
             {darkMode ? (
               <div className="flex min-w-0 items-center gap-2 text-white">
@@ -1052,7 +1058,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       data-no-drag="true"
                       href={`/profile/${currentCard.owner}`}
                       className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
-                      style={{ textShadow: "0 1px 1px rgba(0,0,0,0.9), 1px 0 1px rgba(0,0,0,0.75), -1px 0 1px rgba(0,0,0,0.75), 0 -1px 1px rgba(0,0,0,0.62)" }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {currentCard.ownerName || "Unknown"}
@@ -1060,7 +1065,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   ) : (
                     <p
                       className="truncate text-[0.98rem] font-semibold leading-tight"
-                      style={{ textShadow: "0 1px 1px rgba(0,0,0,0.9), 1px 0 1px rgba(0,0,0,0.75), -1px 0 1px rgba(0,0,0,0.75), 0 -1px 1px rgba(0,0,0,0.62)" }}
                     >
                       {currentCard.ownerName || "Unknown"}
                     </p>
@@ -1068,7 +1072,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   {uploadDateLabel ? (
                   <div
                     className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75"
-                    style={{ textShadow: "0 1px 1px rgba(0,0,0,0.82), 1px 0 1px rgba(0,0,0,0.65), -1px 0 1px rgba(0,0,0,0.65), 0 -1px 1px rgba(0,0,0,0.55)" }}
                   >
                       {uploadDateLabel}
                     </div>

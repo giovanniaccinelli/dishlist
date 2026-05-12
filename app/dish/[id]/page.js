@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera, ListChecks, MoreHorizontal, Pencil, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Crop, ListChecks, MoreHorizontal, Pencil, Plus, X } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
@@ -73,6 +73,8 @@ export default function DishDetail() {
   const [editDishLink, setEditDishLink] = useState("");
   const [editRecipeIngredients, setEditRecipeIngredients] = useState("");
   const [editRecipeMethod, setEditRecipeMethod] = useState("");
+  const [editTaggedUser, setEditTaggedUser] = useState("");
+  const [editTaggedUserId, setEditTaggedUserId] = useState("");
   const [editTags, setEditTags] = useState([]);
   const [editRating, setEditRating] = useState(0);
   const [editIsPublic, setEditIsPublic] = useState(true);
@@ -81,6 +83,11 @@ export default function DishDetail() {
   const [editImageFile, setEditImageFile] = useState(null);
   const [editImageFramingFile, setEditImageFramingFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
+  const [editMediaPickerOpen, setEditMediaPickerOpen] = useState(false);
+  const [editTagUserPickerOpen, setEditTagUserPickerOpen] = useState(false);
+  const [editTaggableUsers, setEditTaggableUsers] = useState([]);
+  const [editTagUserSearch, setEditTagUserSearch] = useState("");
+  const [editTagUsersLoading, setEditTagUsersLoading] = useState(false);
   const [editStep, setEditStep] = useState(0);
   const [savingEdit, setSavingEdit] = useState(false);
   const [pageToast, setPageToast] = useState("");
@@ -101,6 +108,8 @@ export default function DishDetail() {
   const [profileCardActionsDish, setProfileCardActionsDish] = useState(null);
   const activeDeckRef = useRef(null);
   const editPreviewObjectUrlRef = useRef("");
+  const editLibraryInputRef = useRef(null);
+  const editCameraInputRef = useRef(null);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -395,6 +404,30 @@ export default function DishDetail() {
     });
   };
 
+  useEffect(() => {
+    if (!editTagUserPickerOpen) return undefined;
+    let active = true;
+    (async () => {
+      setEditTagUsersLoading(true);
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        const usersList = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((candidate) => candidate.id !== user?.uid);
+        if (active) setEditTaggableUsers(usersList);
+      } finally {
+        if (active) setEditTagUsersLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [editTagUserPickerOpen, user?.uid]);
+
+  const filteredEditTaggableUsers = editTaggableUsers.filter((candidate) =>
+    (candidate.displayName || "").toLowerCase().includes(editTagUserSearch.trim().toLowerCase())
+  );
+
   const clearEditPreviewObjectUrl = () => {
     if (!editPreviewObjectUrlRef.current) return;
     URL.revokeObjectURL(editPreviewObjectUrlRef.current);
@@ -412,11 +445,48 @@ export default function DishDetail() {
 
   const handleEditImageChange = (file) => {
     if (!file) return;
+    setEditMediaPickerOpen(false);
     if (file.type?.startsWith("image/")) {
       setEditImageFramingFile(file);
       return;
     }
     applyEditMediaFile(file);
+  };
+
+  const openEditLibraryPicker = () => {
+    setEditMediaPickerOpen(false);
+    if (editLibraryInputRef.current) {
+      editLibraryInputRef.current.value = "";
+    }
+    editLibraryInputRef.current?.click();
+  };
+
+  const openEditCameraPicker = () => {
+    setEditMediaPickerOpen(false);
+    if (editCameraInputRef.current) {
+      editCameraInputRef.current.value = "";
+    }
+    editCameraInputRef.current?.click();
+  };
+
+  const openCurrentImageFraming = async () => {
+    const currentImageUrl = editPreview || getDishImageUrl(editingDish);
+    if (!currentImageUrl || editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish)) return;
+    setEditMediaPickerOpen(false);
+    try {
+      const response = await fetch(currentImageUrl);
+      if (!response.ok) throw new Error("Could not load current image.");
+      const blob = await response.blob();
+      const type = blob.type || "image/jpeg";
+      const extension = type.includes("png") ? "png" : "jpg";
+      const baseName = editName.trim() || "dish";
+      setEditImageFramingFile(new File([blob], `${baseName}-current.${extension}`, { type }));
+    } catch (err) {
+      console.error("Failed to open current image for framing:", err);
+      setPageToastVariant("error");
+      setPageToast("Could not open current photo");
+      setTimeout(() => setPageToast(""), 1400);
+    }
   };
 
   const openEditModal = (dishToEdit) => {
@@ -426,6 +496,8 @@ export default function DishDetail() {
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
     setEditDishLink(dishToEdit?.dishLink || "");
+    setEditTaggedUser(dishToEdit?.taggedUserName || "");
+    setEditTaggedUserId(dishToEdit?.taggedUserId || "");
     setEditRating(Number(dishToEdit?.rating || 0));
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
@@ -444,6 +516,9 @@ export default function DishDetail() {
     setEditRestaurant(dishToEdit?.restaurant || null);
     setEditImageFile(null);
     setEditImageFramingFile(null);
+    setEditMediaPickerOpen(false);
+    setEditTagUserPickerOpen(false);
+    setEditTagUserSearch("");
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
     );
@@ -455,6 +530,9 @@ export default function DishDetail() {
     setEditOpen(false);
     setEditingDish(null);
     setEditImageFramingFile(null);
+    setEditMediaPickerOpen(false);
+    setEditTagUserPickerOpen(false);
+    setEditTagUserSearch("");
     clearEditPreviewObjectUrl();
     if (openEditOnLoad && returnTo) {
       router.push(returnTo);
@@ -523,6 +601,8 @@ export default function DishDetail() {
         name: editName.trim(),
         description: editDescription.trim(),
         dishLink: editDishLink.trim(),
+        taggedUserName: editTaggedUser.trim(),
+        taggedUserId: editTaggedUserId || "",
         recipeIngredients: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeIngredients.trim(),
         recipeMethod: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeMethod.trim(),
         tags: editTags,
@@ -547,6 +627,9 @@ export default function DishDetail() {
       setEditOpen(false);
       setEditingDish(null);
       setEditImageFramingFile(null);
+      setEditMediaPickerOpen(false);
+      setEditTagUserPickerOpen(false);
+      setEditTagUserSearch("");
       clearEditPreviewObjectUrl();
       setPageToastVariant("success");
       setPageToast("Dish updated");
@@ -1015,8 +1098,14 @@ export default function DishDetail() {
                   className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
-                <div className={`w-full h-40 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-5 cursor-pointer relative overflow-hidden`}>
+                <button
+                  type="button"
+                  onClick={() => setEditMediaPickerOpen(true)}
+                  className={`w-full h-40 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-5 cursor-pointer relative overflow-hidden`}
+                  disabled={savingEdit}
+                >
                   <input
+                    ref={editLibraryInputRef}
                     type="file"
                     accept="image/*,video/*"
                     onChange={(e) => {
@@ -1024,7 +1113,20 @@ export default function DishDetail() {
                       handleEditImageChange(file);
                       e.target.value = "";
                     }}
-                    className="absolute opacity-0 w-full h-full cursor-pointer"
+                    className="hidden"
+                    disabled={savingEdit}
+                  />
+                  <input
+                    ref={editCameraInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    capture="environment"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      handleEditImageChange(file);
+                      e.target.value = "";
+                    }}
+                    className="hidden"
                     disabled={savingEdit}
                   />
                   {editPreview ? (
@@ -1052,7 +1154,7 @@ export default function DishDetail() {
                       <div className="text-sm font-medium">Change photo</div>
                     </div>
                   )}
-                </div>
+                </button>
               </>
             ) : null}
 
@@ -1122,6 +1224,32 @@ export default function DishDetail() {
                     spellCheck={false}
                   />
                 </div>
+                <div className="mb-4">
+                  <p className="mb-2 text-sm font-medium text-black">Tag a user</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditTagUserPickerOpen(true)}
+                      className={`flex-1 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-left text-sm text-black focus:outline-none focus:ring-2`}
+                      disabled={savingEdit}
+                    >
+                      {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : "Select user (optional)"}
+                    </button>
+                    {editTaggedUser ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditTaggedUser("");
+                          setEditTaggedUserId("");
+                        }}
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                        aria-label="Clear tagged user"
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-black">Tags</p>
@@ -1179,6 +1307,11 @@ export default function DishDetail() {
                       <p className={`text-sm mt-1 line-clamp-3 ${darkMode ? "text-white/65" : "text-black/65"}`}>
                         {editDescription || "No description"}
                       </p>
+                      {editTaggedUser.trim() ? (
+                        <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
+                          @{editTaggedUser.trim().replace(/^@+/, "")}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -1271,6 +1404,145 @@ export default function DishDetail() {
         dish={shareDish}
         currentUser={user}
       />
+      <AnimatePresence>
+        {editTagUserPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[125] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+            onClick={() => setEditTagUserPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="w-full max-w-md rounded-[1.75rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-[1.35rem] font-semibold leading-none text-black">Tag a user</h3>
+                  <p className="mt-2 text-sm text-black/58">Search by name</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditTagUserPickerOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                  aria-label="Close tag user picker"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={editTagUserSearch}
+                onChange={(e) => setEditTagUserSearch(e.target.value)}
+                className="w-full rounded-[1rem] border border-black/10 bg-white px-4 py-3 text-base text-black shadow-[0_10px_24px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-black/12"
+              />
+              <div className="mt-3 max-h-[52dvh] space-y-2 overflow-y-auto pr-1">
+                {editTagUsersLoading ? (
+                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">Loading...</div>
+                ) : filteredEditTaggableUsers.length === 0 ? (
+                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">No users found.</div>
+                ) : (
+                  filteredEditTaggableUsers.map((candidate) => (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      onClick={() => {
+                        setEditTaggedUser(candidate.displayName || "User");
+                        setEditTaggedUserId(candidate.id);
+                        setEditTagUserPickerOpen(false);
+                        setEditTagUserSearch("");
+                      }}
+                      className="flex w-full items-center gap-3 rounded-[1.2rem] border border-black/8 bg-white px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+                    >
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-sm font-bold text-black/65">
+                        {candidate.photoURL ? (
+                          <img src={candidate.photoURL} alt={candidate.displayName || "User"} className="h-full w-full object-cover" />
+                        ) : (
+                          (candidate.displayName?.[0] || "U").toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-base font-semibold text-black">{candidate.displayName || "User"}</div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+        {editMediaPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-end justify-center bg-black/28 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur-[2px]"
+            onClick={() => setEditMediaPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={`w-full max-w-md rounded-[1.75rem] border-2 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] text-black"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-2 pb-3 pt-1 text-center">
+                <div className={`text-[1.05rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Change media</div>
+              </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={openEditLibraryPicker}
+                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
+                >
+                  <div>
+                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Photo library</div>
+                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Pick a photo or video</div>
+                  </div>
+                  <Plus size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
+                </button>
+                <button
+                  type="button"
+                  onClick={openEditCameraPicker}
+                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
+                >
+                  <div>
+                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Take photo</div>
+                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Open the camera</div>
+                  </div>
+                  <Camera size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
+                </button>
+                {editPreview && !editImageFile?.type?.startsWith("video/") && !isDishVideo(editingDish) ? (
+                  <button
+                    type="button"
+                    onClick={openCurrentImageFraming}
+                    className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
+                  >
+                    <div>
+                      <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Crop current photo</div>
+                      <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Reframe the existing image</div>
+                    </div>
+                    <Crop size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
+                  </button>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditMediaPickerOpen(false)}
+                className={`mt-3 flex w-full items-center justify-center rounded-[1.2rem] border-2 px-4 py-3 text-[0.92rem] font-semibold ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white/72" : "border-black/10 bg-white text-black/70"}`}
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <ImageFramingModal
         open={Boolean(editImageFramingFile)}
         file={editImageFramingFile}

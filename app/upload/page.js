@@ -65,7 +65,7 @@ export default function UploadPage() {
   const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
-  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
+  const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes", "uploaded"]);
   const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
@@ -337,7 +337,7 @@ export default function UploadPage() {
     try {
       const nextLists = await getAllDishlistsForUser(user.uid);
       setDishlists(nextLists);
-      const nextSelectedIds = ["all_dishes"];
+      const nextSelectedIds = ["all_dishes", "uploaded"];
       setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);
@@ -1071,7 +1071,7 @@ export default function UploadPage() {
         loading={dishlistsLoading}
         mode="multiple"
         selectedIds={selectedDishlistIds}
-        lockedIds={["all_dishes"]}
+        lockedIds={["all_dishes", "uploaded"]}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

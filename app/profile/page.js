@@ -884,6 +884,10 @@ export default function Profile() {
 
   const handleAddDishCardToStory = async (dish) => {
     if (!user?.uid || !dish?.id) return;
+    const guard = dishActionPointerGuardRef.current;
+    if (guard?.dishId === dish.id && Date.now() < Number(guard.until || 0)) {
+      return;
+    }
     const ok = await publishDishAsStory(user.uid, dish);
     if (ok) {
       getStoryPushStatsForUser(user.uid)
@@ -1713,12 +1717,12 @@ export default function Profile() {
                     onPointerDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 1200 };
+                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 450 };
                     }}
                     onPointerUp={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 1200 };
+                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 450 };
                     }}
                     onClick={(e) => {
                       e.preventDefault();

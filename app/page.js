@@ -954,7 +954,7 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="app-top-nav px-4 pb-2 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
+      <div className="app-top-nav mt-1 px-4 pb-2 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
         <button
           type="button"
           onClick={() => setAboutOpen(true)}

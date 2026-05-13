@@ -1006,7 +1006,7 @@ export default function UploadPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-2 pb-3 pt-1 text-center">
-                <div className={`text-[1.05rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Add media</div>
+                <div className={`text-[1.05rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Add media")}</div>
               </div>
               <div className="space-y-2">
                 <button
@@ -1015,8 +1015,8 @@ export default function UploadPage() {
 	                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
                 >
                   <div>
-	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Photo library</div>
-	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Pick a photo or video</div>
+	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Photo library")}</div>
+	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>{t("Pick a photo or video")}</div>
                   </div>
 	                  <Plus size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
                 </button>
@@ -1026,8 +1026,8 @@ export default function UploadPage() {
 	                  className={`flex w-full items-center justify-between rounded-[1.2rem] border-2 px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white" : "border-black/10 bg-white text-black"}`}
                 >
                   <div>
-	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Take photo</div>
-	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>Open the camera</div>
+	                    <div className={`text-[0.98rem] font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Take photo")}</div>
+	                    <div className={`mt-0.5 text-[0.8rem] ${darkMode ? "text-white/52" : "text-black/48"}`}>{t("Open the camera")}</div>
                   </div>
 	                  <Camera size={24} className={darkMode ? "text-white/65" : "text-black/55"} />
                 </button>
@@ -1037,7 +1037,7 @@ export default function UploadPage() {
                 onClick={() => setMediaPickerOpen(false)}
 	                className={`mt-3 flex w-full items-center justify-center rounded-[1.2rem] border-2 px-4 py-3 text-[0.92rem] font-semibold ${darkMode ? "border-white/12 bg-[#1C1C1C] text-white/72" : "border-black/10 bg-white text-black/70"}`}
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </motion.div>
           </motion.div>

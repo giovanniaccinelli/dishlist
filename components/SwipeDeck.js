@@ -949,7 +949,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={advanceOnAnySwipe ? 0.22 : 0.9}
+          dragElastic={0.9}
           style={{
             x: dragX,
             rotate: cardRotate,

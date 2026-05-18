@@ -160,6 +160,40 @@ function getCalendarMonthPreviewCells(referenceDate = new Date()) {
   });
 }
 
+function getCalendarMonthDate(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  const validDate = Number.isNaN(date.getTime()) ? new Date() : date;
+  return new Date(validDate.getFullYear(), validDate.getMonth(), 1, 12);
+}
+
+function addCalendarMonths(value, delta) {
+  const date = getCalendarMonthDate(value);
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1, 12);
+}
+
+function getCalendarMonthValue(value = new Date()) {
+  const date = getCalendarMonthDate(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getCalendarMonthOptions(center = new Date(), language = "en") {
+  const locale = language === LANGUAGE_IT ? "it-IT" : "en-US";
+  const base = getCalendarMonthDate(center);
+  return Array.from({ length: 25 }).map((_, index) => {
+    const date = addCalendarMonths(base, index - 12);
+    return {
+      value: getCalendarMonthValue(date),
+      label: date.toLocaleDateString(locale, { month: "long", year: "numeric" }),
+    };
+  });
+}
+
+function parseCalendarMonthValue(value = "") {
+  const [year, month] = String(value).split("-").map((part) => Number(part));
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return getCalendarMonthDate(new Date());
+  return new Date(year, month - 1, 1, 12);
+}
+
 async function getMealCalendarEntriesForUserIds(userIds = []) {
   const ids = Array.from(new Set(userIds.filter(Boolean)));
   const snapshots = await Promise.all(
@@ -409,6 +443,7 @@ export default function Profile() {
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [profileCalendarVisibleDay, setProfileCalendarVisibleDay] = useState(() => getStoryCalendarKey(Date.now()));
+  const [profileCalendarMonthDate, setProfileCalendarMonthDate] = useState(() => getCalendarMonthDate(new Date()));
   const [mealCalendarEntries, setMealCalendarEntries] = useState([]);
   const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
   const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
@@ -441,6 +476,7 @@ export default function Profile() {
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
   const profileCalendarRailRef = useRef(null);
+  const profileCalendarMonthSwipeRef = useRef(null);
   const dishlistDetailSwipeRef = useRef(null);
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
@@ -469,6 +505,7 @@ export default function Profile() {
   };
   const openMealCalendarEntry = (dayKey = getStoryCalendarKey(Date.now())) => {
     setProfileCalendarSelectedDay(dayKey);
+    setProfileCalendarMonthDate(getCalendarMonthDate(new Date(`${dayKey}T12:00:00`)));
     setMealCalendarEntryName("");
     setMealCalendarEntryOpen(true);
   };
@@ -1738,6 +1775,34 @@ export default function Profile() {
   );
   const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
   const calendarDaysWithEntries = storyCalendarDays.length;
+  const profileCalendarMonthCells = useMemo(
+    () => getCalendarMonthPreviewCells(profileCalendarMonthDate),
+    [profileCalendarMonthDate]
+  );
+  const profileCalendarMonthOptions = useMemo(
+    () => getCalendarMonthOptions(profileCalendarMonthDate, language),
+    [language, profileCalendarMonthDate]
+  );
+  const changeProfileCalendarMonth = (delta) => {
+    setProfileCalendarMonthDate((prev) => addCalendarMonths(prev, delta));
+  };
+  const selectProfileCalendarDay = (dayKey) => {
+    setProfileCalendarSelectedDay(dayKey);
+    setProfileCalendarVisibleDay(dayKey);
+    setProfileCalendarMonthDate(getCalendarMonthDate(new Date(`${dayKey}T12:00:00`)));
+  };
+  const handleProfileCalendarMonthPointerDown = (event) => {
+    profileCalendarMonthSwipeRef.current = { x: event.clientX, y: event.clientY };
+  };
+  const handleProfileCalendarMonthPointerUp = (event) => {
+    const start = profileCalendarMonthSwipeRef.current;
+    profileCalendarMonthSwipeRef.current = null;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    changeProfileCalendarMonth(dx < 0 ? 1 : -1);
+  };
   const calendarPreviewCells = useMemo(() => {
     return getCalendarMonthPreviewCells(new Date());
   }, []);
@@ -2216,32 +2281,30 @@ export default function Profile() {
                   }`}
                   aria-label="Open calendar"
                 >
-                  <div className="flex h-full flex-col justify-between">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className={`text-[0.78rem] font-black capitalize leading-none ${darkMode ? "text-white" : "text-black"}`}>
-                        {new Date().toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { month: "long" })}
-                      </div>
+                  <div className={`flex h-full flex-col justify-between rounded-[1rem] p-2 ${darkMode ? "bg-white/6" : "bg-white/72"}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className={`h-2.5 w-14 rounded-full ${darkMode ? "bg-white/22" : "bg-black/14"}`} />
+                      <div className={`h-2.5 w-7 rounded-full ${darkMode ? "bg-white/12" : "bg-black/8"}`} />
                     </div>
-                    <div className={`grid grid-cols-7 gap-1 text-center text-[0.48rem] font-black uppercase leading-none ${darkMode ? "text-white/38" : "text-black/35"}`}>
-                      {["L", "M", "M", "G", "V", "S", "D"].map((day, index) => (
-                        <span key={`${day}-${index}`}>{day}</span>
+                    <div className={`grid grid-cols-7 gap-1.5 ${darkMode ? "text-white/38" : "text-black/35"}`}>
+                      {Array.from({ length: 7 }).map((_, index) => (
+                        <span key={index} className={`mx-auto h-1.5 w-1.5 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
                       ))}
                     </div>
-                    <div className="grid grid-cols-7 gap-1">
-                      {calendarPreviewCells.map((cell) => {
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {calendarPreviewCells.slice(0, 35).map((cell) => {
                         const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
                         return (
                           <div
                             key={cell.dayKey}
-                            className={`relative flex h-[0.78rem] items-center justify-center rounded-[0.28rem] text-[0.48rem] font-black leading-none ${
+                            className={`relative h-[0.6rem] rounded-[0.24rem] ${
                               cell.isToday
-                                ? "border border-[#2BD36B] text-[#168944] shadow-[0_0_8px_rgba(43,211,107,0.25)]"
+                                ? "border border-[#2BD36B] shadow-[0_0_8px_rgba(43,211,107,0.25)]"
                                 : cell.inMonth
-                                  ? darkMode ? "bg-white/9 text-white/64" : "bg-white text-black/58"
-                                  : darkMode ? "bg-white/[0.035] text-white/18" : "bg-black/[0.025] text-black/18"
+                                  ? darkMode ? "bg-white/20" : "bg-black/16"
+                                  : darkMode ? "bg-white/7" : "bg-black/6"
                             }`}
                           >
-                            {cell.date.getDate()}
                             {hasItems ? <span className="absolute bottom-[1px] h-[2px] w-[2px] rounded-full bg-[#E64646]" /> : null}
                           </div>
                         );
@@ -4162,59 +4225,76 @@ export default function Profile() {
                   <X size={16} />
                 </button>
               </div>
-              <div className="mb-2.5 flex items-center justify-between gap-3">
-                <div className={`min-w-0 truncate text-sm font-bold capitalize ${darkMode ? "text-white" : "text-black"}`}>
-                  {profileCalendarMonthLabel}
-                </div>
-                <div className={`shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/42" : "text-black/42"}`}>
-                  {calendarDaysWithEntries ? `${calendarDaysWithEntries} ${t("Days").toLowerCase()}` : t("What you ate")}
-                </div>
-              </div>
               <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changeProfileCalendarMonth(-1)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border ${darkMode ? "border-white/10 bg-white/7 text-white/70" : "border-black/8 bg-white text-black/55"}`}
+                    aria-label="Previous month"
+                  >
+                    <ChevronLeft size={15} />
+                  </button>
+                  <select
+                    value={getCalendarMonthValue(profileCalendarMonthDate)}
+                    onChange={(event) => setProfileCalendarMonthDate(parseCalendarMonthValue(event.target.value))}
+                    className={`min-w-0 flex-1 rounded-full border px-3 py-1.5 text-center text-sm font-bold capitalize outline-none ${
+                      darkMode ? "border-white/10 bg-[#171717] text-white" : "border-black/8 bg-white text-black"
+                    }`}
+                    aria-label="Choose month"
+                  >
+                    {profileCalendarMonthOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => changeProfileCalendarMonth(1)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border ${darkMode ? "border-white/10 bg-white/7 text-white/70" : "border-black/8 bg-white text-black/55"}`}
+                    aria-label="Next month"
+                  >
+                    <ChevronLeft className="rotate-180" size={15} />
+                  </button>
+                </div>
                 <div
-                  ref={profileCalendarRailRef}
-                  onScroll={updateProfileCalendarVisibleMonth}
-                  className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  onPointerDown={handleProfileCalendarMonthPointerDown}
+                  onPointerUp={handleProfileCalendarMonthPointerUp}
+                  onPointerCancel={() => {
+                    profileCalendarMonthSwipeRef.current = null;
+                  }}
                 >
-                  {profileCalendarCells.map((cell) => {
-                    const items = storyCalendarByDay.get(cell.dayKey) || [];
-                    const selected = cell.dayKey === profileCalendarSelectedDay;
-                    const weekday = cell.date.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { weekday: "short" });
-                    return (
-                      <button
-                        key={cell.dayKey}
-                        type="button"
-                        data-calendar-day={cell.dayKey}
-                        onClick={() => {
-                          setProfileCalendarSelectedDay(cell.dayKey);
-                          setProfileCalendarVisibleDay(cell.dayKey);
-                        }}
-                        className={`relative flex h-[6.1rem] w-[4.85rem] min-w-[4.85rem] snap-start flex-col items-center justify-center rounded-[1rem] border p-2 text-center transition ${
-                          cell.isToday
-                            ? darkMode
-                              ? "border-[#2BD36B] bg-[#171717] text-white shadow-[0_0_0_1px_rgba(43,211,107,0.38),0_0_18px_rgba(43,211,107,0.18)]"
-                              : "border-[#21B85A] bg-white text-black shadow-[0_0_0_1px_rgba(33,184,90,0.32),0_0_18px_rgba(33,184,90,0.18)]"
-                          : selected
-                            ? darkMode
-                              ? "border-white bg-white text-black shadow-[0_8px_18px_rgba(255,255,255,0.12)]"
-                              : "border-black bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
-                            : darkMode ? "border-white/10 bg-[#171717] text-white" : "border-black/8 bg-white text-black"
-                        }`}
-                      >
-                        <span className={`text-[10px] font-bold uppercase leading-none ${cell.isToday ? "text-[#21B85A]" : selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
-                          {weekday}
-                        </span>
-                        <span className={`mt-1 text-2xl font-black leading-none ${cell.isToday ? "text-[#21B85A]" : ""}`}>
+                  <div className={`mb-1 grid grid-cols-7 gap-1 text-center text-[0.62rem] font-black uppercase ${darkMode ? "text-white/38" : "text-black/35"}`}>
+                    {["L", "M", "M", "G", "V", "S", "D"].map((day, index) => (
+                      <span key={`${day}-${index}`}>{day}</span>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {profileCalendarMonthCells.map((cell) => {
+                      const items = storyCalendarByDay.get(cell.dayKey) || [];
+                      const selected = cell.dayKey === profileCalendarSelectedDay;
+                      return (
+                        <button
+                          key={cell.dayKey}
+                          type="button"
+                          onClick={() => selectProfileCalendarDay(cell.dayKey)}
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
+                            cell.isToday
+                              ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
+                              : selected
+                                ? darkMode ? "border-white bg-white text-black" : "border-black bg-black text-white"
+                                : cell.inMonth
+                                  ? darkMode ? "border-white/8 bg-[#171717] text-white/78" : "border-black/8 bg-white text-black/72"
+                                  : darkMode ? "border-white/[0.04] bg-white/[0.03] text-white/20" : "border-black/[0.04] bg-black/[0.02] text-black/20"
+                          }`}
+                        >
                           {cell.date.getDate()}
-                        </span>
-                        {items.length ? (
-                          <span className={`mt-1.5 rounded-full px-1.5 py-1 text-[10px] font-bold leading-none ${cell.isToday ? darkMode ? "bg-[#2BD36B]/15 text-[#7AF0A2]" : "bg-[#2BD36B]/12 text-[#168944]" : selected ? darkMode ? "bg-black/8 text-black/60" : "bg-white/16 text-white/78" : darkMode ? "bg-white/10 text-white/58" : "bg-black/7 text-black/54"}`}>
-                            {items.length} {t(items.length === 1 ? "Dish" : "Dishes").toLowerCase()}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
+                          {items.length ? <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-[#E64646]" /> : null}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
               <div className={`mt-3 max-h-[22rem] min-h-[16rem] overflow-y-auto rounded-[1rem] border p-3 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>

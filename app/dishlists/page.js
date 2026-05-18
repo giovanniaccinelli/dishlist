@@ -673,7 +673,7 @@ export default function Dishlists() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-[2.15rem] font-semibold leading-none">{t("Upload dish")}</p>
-                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>Post directly to your story.</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>{t("Post directly to your story.")}</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                         <Plus size={32} />
@@ -713,15 +713,15 @@ export default function Dishlists() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Find dish")}</p>
-                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/78"}`}>Choose an existing dish to share.</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/78"}`}>{t("Choose an existing dish to share.")}</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center shadow-md border-[2px] border-[#F0A623]/55 shrink-0 aspect-square">
                         <Search size={28} />
                       </div>
                     </div>
                     <div className={`space-y-2 text-sm ${darkMode ? "text-white/58" : "text-black/65"}`}>
-                      <p>Pick from your uploaded dishes or Your Classics.</p>
-                      <p>Share it instantly to your story.</p>
+                      <p>{t("Pick from your uploaded dishes or Your Classics.")}</p>
+                      <p>{t("Share it instantly to your story.")}</p>
                     </div>
                   </div>
                 </button>

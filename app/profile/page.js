@@ -2283,7 +2283,7 @@ export default function Profile() {
                   aria-label="Open calendar"
                 >
                   <div className="relative flex h-full flex-col">
-                    <div className="relative h-6 border-b border-[#21B85A]/35 bg-[#2BD36B]">
+                    <div className="relative h-6 border-b border-[#D9B84F]/45 bg-[#F2D46D]">
                       <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-8">
                         {[0, 1].map((item) => (
                           <span
@@ -2303,11 +2303,11 @@ export default function Profile() {
                             key={cell.dayKey}
                             className={`relative rounded-[0.32rem] ${
                               cell.isToday
-                                ? "border border-[#2BD36B] bg-transparent"
+                                ? "border border-[#F2D46D] bg-transparent"
                                 : darkMode ? "bg-white/12" : "bg-black/8"
                             }`}
                           >
-                            {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#2BD36B]" /> : null}
+                            {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#F2D46D]" /> : null}
                           </div>
                         );
                       })}
@@ -4066,7 +4066,7 @@ export default function Profile() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-[2.15rem] font-semibold leading-none">{t("Upload dish")}</p>
-                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>Post directly to your story.</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/68" : "text-black/78"}`}>{t("Post directly to your story.")}</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
                         <Plus size={32} />
@@ -4101,7 +4101,7 @@ export default function Profile() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className={`text-[2.15rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Find dish")}</p>
-                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/60"}`}>Pick an existing dish for your story.</p>
+                        <p className={`mt-4 text-base ${darkMode ? "text-white/62" : "text-black/60"}`}>{t("Pick an existing dish for your story.")}</p>
                       </div>
                       <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">
                         <Search size={30} />
@@ -4374,7 +4374,7 @@ export default function Profile() {
         ) : null}
         {mealCalendarEntryOpen ? (
           <motion.div
-            className="fixed inset-0 z-[105] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[105] flex items-start justify-center overflow-y-auto bg-black/55 px-4 pb-[42dvh] pt-[12dvh] backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

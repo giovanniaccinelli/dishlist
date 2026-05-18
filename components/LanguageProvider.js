@@ -147,6 +147,7 @@ const translations = {
     "Open calendar": "Apri calendario",
     "What you ate": "Cosa hai mangiato",
     "Story meals will show up here.": "Qui appariranno i piatti pubblicati nelle storie.",
+    "No story meals that day.": "Nessun piatto in storia quel giorno.",
     "Most Saved": "Più salvati",
     "Trending Now": "Di tendenza ora",
     "Loading map": "Caricamento mappa",

@@ -363,6 +363,8 @@ const translations = {
     Description: "Descrizione",
     "Dish link": "Link del piatto",
     "Add link": "Aggiungi link",
+    "Tag a user": "Tagga un utente",
+    "Search by name": "Cerca per nome",
     "Tag a user (optional)": "Tagga un utente (facoltativo)",
     Ingredients: "Ingredienti",
     Method: "Procedimento",

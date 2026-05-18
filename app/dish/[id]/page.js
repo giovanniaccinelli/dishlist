@@ -1422,18 +1422,24 @@ export default function DishDetail() {
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              className="w-full max-w-md rounded-[1.75rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+              className={`w-full max-w-md rounded-[1.75rem] border p-4 shadow-[0_24px_60px_rgba(0,0,0,0.24)] ${
+                darkMode
+                  ? "border-white/12 bg-[linear-gradient(180deg,rgba(28,28,26,0.98)_0%,rgba(13,13,12,0.98)_100%)] text-white"
+                  : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,244,236,0.98)_100%)] text-black"
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-[1.35rem] font-semibold leading-none text-black">Tag a user</h3>
-                  <p className="mt-2 text-sm text-black/58">Search by name</p>
+                  <h3 className={`text-[1.35rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Tag a user")}</h3>
+                  <p className={`mt-2 text-sm ${darkMode ? "text-white/56" : "text-black/58"}`}>{t("Search by name")}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setEditTagUserPickerOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border ${
+                    darkMode ? "border-white/12 bg-white/8 text-white/65" : "border-black/10 bg-white text-black/55"
+                  }`}
                   aria-label="Close tag user picker"
                 >
                   <X size={16} />
@@ -1441,16 +1447,20 @@ export default function DishDetail() {
               </div>
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder={t("Search users...")}
                 value={editTagUserSearch}
                 onChange={(e) => setEditTagUserSearch(e.target.value)}
-                className="w-full rounded-[1rem] border border-black/10 bg-white px-4 py-3 text-base text-black shadow-[0_10px_24px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-black/12"
+                className={`w-full rounded-[1rem] border px-4 py-3 text-base shadow-[0_10px_24px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 ${
+                  darkMode
+                    ? "border-white/12 bg-white/8 text-white placeholder:text-white/32 focus:ring-white/18"
+                    : "border-black/10 bg-white text-black placeholder:text-black/35 focus:ring-black/12"
+                }`}
               />
               <div className="mt-3 max-h-[52dvh] space-y-2 overflow-y-auto pr-1">
                 {editTagUsersLoading ? (
-                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">Loading...</div>
+                  <div className={`rounded-[1rem] px-4 py-5 text-sm ${darkMode ? "bg-white/8 text-white/56" : "bg-white/72 text-black/58"}`}>{t("Loading...")}</div>
                 ) : filteredEditTaggableUsers.length === 0 ? (
-                  <div className="rounded-[1rem] bg-white/72 px-4 py-5 text-sm text-black/58">No users found.</div>
+                  <div className={`rounded-[1rem] px-4 py-5 text-sm ${darkMode ? "bg-white/8 text-white/56" : "bg-white/72 text-black/58"}`}>{t("No users found.")}</div>
                 ) : (
                   filteredEditTaggableUsers.map((candidate) => (
                     <button
@@ -1462,9 +1472,13 @@ export default function DishDetail() {
                         setEditTagUserPickerOpen(false);
                         setEditTagUserSearch("");
                       }}
-                      className="flex w-full items-center gap-3 rounded-[1.2rem] border border-black/8 bg-white px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)]"
+                      className={`flex w-full items-center gap-3 rounded-[1.2rem] border px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${
+                        darkMode ? "border-white/10 bg-white/8" : "border-black/8 bg-white"
+                      }`}
                     >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-sm font-bold text-black/65">
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold ${
+                        darkMode ? "bg-white/12 text-white/72" : "bg-black/10 text-black/65"
+                      }`}>
                         {candidate.photoURL ? (
                           <img src={candidate.photoURL} alt={candidate.displayName || "User"} className="h-full w-full object-cover" />
                         ) : (
@@ -1472,7 +1486,7 @@ export default function DishDetail() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-base font-semibold text-black">{candidate.displayName || "User"}</div>
+                        <div className={`truncate text-base font-semibold ${darkMode ? "text-white" : "text-black"}`}>{candidate.displayName || "User"}</div>
                       </div>
                     </button>
                   ))

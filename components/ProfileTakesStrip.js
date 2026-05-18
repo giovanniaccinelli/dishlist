@@ -38,7 +38,7 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
             <Link
               key={`${take.questionId || "question"}-${take.id || index}`}
               href={take.questionId ? `/leaderboard/${take.questionId}` : "/explore"}
-              className={`group flex min-h-[7rem] w-[9.1rem] min-w-[9.1rem] snap-start flex-col justify-between rounded-[1.05rem] border p-3 transition active:scale-[0.98] ${
+              className={`group flex min-h-[7.4rem] w-[10rem] min-w-[10rem] snap-start flex-col justify-between rounded-[1.15rem] border p-3.5 transition active:scale-[0.98] ${
                 darkMode
                   ? "border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.09),rgba(255,255,255,0.035))] shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
                   : "border-black/10 bg-white shadow-[0_14px_30px_rgba(0,0,0,0.10)]"
@@ -46,18 +46,18 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
             >
               <div>
                 <span
-                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[9px] font-black uppercase tracking-[0.1em]"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em]"
                   style={{ color: accent, backgroundColor: `${accent}22` }}
                 >
                   {hot ? <Flame size={11} fill="currentColor" /> : null}
                   {take.questionLabel || "Best"}
                 </span>
-                <div className={`mt-2.5 line-clamp-3 text-[0.82rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
+                <div className={`mt-2.5 line-clamp-3 text-[0.88rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                   {questionTitle}
                 </div>
                 <div className="mt-2.5 h-[2px] w-12 rounded-full" style={{ backgroundColor: accent }} />
               </div>
-              <div className="truncate text-[0.84rem] font-black" style={{ color: accent }}>
+              <div className="truncate text-[0.9rem] font-black" style={{ color: accent }}>
                 {answer || t("Your answer")}
               </div>
             </Link>

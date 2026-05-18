@@ -486,10 +486,12 @@ export default function Profile() {
       setMealCalendarEntryName("");
       setToast(t("Saved"));
       setToastVariant("success");
+      setTimeout(() => setToast(""), 1200);
     } catch (error) {
       console.error("Failed to save calendar entry:", error);
       setToast(t("Something went wrong"));
       setToastVariant("error");
+      setTimeout(() => setToast(""), 1400);
     } finally {
       setMealCalendarEntrySaving(false);
     }
@@ -4064,14 +4066,14 @@ export default function Profile() {
       <AnimatePresence>
         {profileCalendarOpen ? (
           <motion.div
-            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[90] flex items-start justify-center bg-black/45 px-4 pb-[5.75rem] pt-[5.35rem] backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setProfileCalendarOpen(false)}
           >
             <motion.div
-              className={`mx-auto flex h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] w-full max-w-[30rem] flex-col overflow-hidden rounded-[1.6rem] border p-4 shadow-2xl ${
+              className={`mx-auto flex max-h-full w-full max-w-[30rem] flex-col overflow-hidden rounded-[1.35rem] border p-3.5 shadow-2xl ${
                 darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-[#FAF7F0] text-black"
               }`}
               initial={{ scale: 0.98, opacity: 0 }}
@@ -4079,12 +4081,12 @@ export default function Profile() {
               exit={{ scale: 0.98, opacity: 0 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="mb-2.5 flex items-center justify-between gap-3">
                 <div>
-                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                  <div className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
                     {t("What you ate")}
                   </div>
-                  <h3 className={`mt-2 text-[1.6rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                  <h3 className={`mt-1.5 text-[1.35rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                     {t("Calendar")}
                   </h3>
                 </div>
@@ -4097,7 +4099,7 @@ export default function Profile() {
                   <X size={16} />
                 </button>
               </div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-2.5 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setProfileCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
@@ -4118,17 +4120,16 @@ export default function Profile() {
                   <ChevronLeft size={17} className="rotate-180" />
                 </button>
               </div>
-              <div className={`grid grid-cols-7 gap-1 pb-2 text-center text-[10px] font-bold uppercase tracking-[0.08em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
+              <div className={`grid grid-cols-7 gap-1 pb-1.5 text-center text-[10px] font-bold uppercase tracking-[0.08em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
                 {profileCalendarWeekdays.map((day) => (
                   <div key={day}>{day}</div>
                 ))}
               </div>
-              <div className={`rounded-[1.25rem] border p-2.5 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
-                <div className="grid auto-rows-[3.8rem] grid-cols-7 gap-1.5">
+              <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
+                <div className="grid auto-rows-[3.25rem] grid-cols-7 gap-1.5">
                   {profileCalendarCells.map((cell) => {
                     const items = storyCalendarByDay.get(cell.dayKey) || [];
                     const selected = cell.dayKey === profileCalendarSelectedDay;
-                    const firstImageItem = items.find((item) => item.imageDish);
                     return (
                       <button
                         key={cell.dayKey}
@@ -4144,33 +4145,31 @@ export default function Profile() {
                               : darkMode ? "border-white/5 bg-white/[0.025] text-white/26" : "border-black/5 bg-white/42 text-black/28"
                         }`}
                       >
-                        <div className="flex items-start justify-between">
-                          <span className={`text-[12px] font-bold leading-none ${
+                        <span className={`absolute left-2 top-2 text-[13px] font-bold leading-none ${
                             cell.isToday
                               ? selected ? "text-white" : darkMode ? "text-white" : "text-black"
                               : ""
                           }`}>
-                            {cell.date.getDate()}
-                          </span>
-                        </div>
-                        {firstImageItem ? (
-                          <img
-                            src={getDishImageUrl(firstImageItem.imageDish, "thumb")}
-                            alt=""
-                            className="absolute bottom-1.5 left-1.5 h-6 w-6 rounded-[0.5rem] object-cover"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : items.length ? (
-                          <span className={`absolute bottom-2 left-2 h-2.5 w-2.5 rounded-full ${selected ? "bg-white" : darkMode ? "bg-white/65" : "bg-black/65"}`} />
+                          {cell.date.getDate()}
+                        </span>
+                        {items.length ? (
+                          <div className="absolute inset-x-2 bottom-2 flex gap-1">
+                            {Array.from({ length: Math.min(items.length, 3) }).map((_, index) => (
+                              <span
+                                key={index}
+                                className={`h-1.5 flex-1 rounded-full ${
+                                  selected ? "bg-white/85" : darkMode ? "bg-white/46" : "bg-black/45"
+                                }`}
+                              />
+                            ))}
+                          </div>
                         ) : null}
                       </button>
                     );
                   })}
                 </div>
               </div>
-              <div className={`mt-3 min-h-0 flex-1 overflow-y-auto rounded-[1.25rem] border p-3 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
+              <div className={`mt-2.5 min-h-[8.5rem] overflow-y-auto rounded-[1rem] border p-3 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className={`text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/48" : "text-black/45"}`}>
                     {new Date(`${profileCalendarSelectedDay}T12:00:00`).toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {

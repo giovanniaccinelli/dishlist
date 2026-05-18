@@ -8,6 +8,28 @@ import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import DishRatingBadge from "./DishRatingBadge";
 
+const RESTAURANT_PIN_SVG = encodeURIComponent(`
+<svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="#E64646"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="white" stroke-width="3"/>
+  <circle cx="23" cy="20.5" r="10" fill="#111111"/>
+  <path d="M17.6 16.4V21.7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M16.35 16.4V19.15" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M18.85 16.4V19.15" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M17.6 21.7V26" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M29 16.45C26.3 17.85 25.05 19.95 25.05 22.65V26" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M29 16.45V26" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+</svg>`);
+
+function getRestaurantMarkerIcon() {
+  if (typeof window === "undefined" || !window.google?.maps) return undefined;
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${RESTAURANT_PIN_SVG}`,
+    scaledSize: new window.google.maps.Size(38, 45),
+    anchor: new window.google.maps.Point(19, 45),
+  };
+}
+
 function Avatar({ user }) {
   if (!user) return null;
   if (user.photoURL) {
@@ -184,6 +206,7 @@ export default function RestaurantMapView({
         map: mapRef.current,
         position,
         title: group.name,
+        icon: getRestaurantMarkerIcon(),
       });
       marker.addListener("click", () => setSelectedPlaceId(group.placeId));
       markersRef.current.push(marker);

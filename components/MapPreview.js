@@ -5,6 +5,27 @@ import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { RestaurantMapIcon } from "./DishModeControls";
 
 const MILAN_CENTER = { lat: 45.4642, lng: 9.19 };
+const PIN_SVG = encodeURIComponent(`
+<svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
+  <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" stroke="white" stroke-width="3"/>
+  <circle cx="21" cy="19" r="9" fill="#111111"/>
+  <path d="M16 15.2V20.1" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M14.8 15.2V17.8" stroke="white" stroke-width="1.15" stroke-linecap="round"/>
+  <path d="M17.2 15.2V17.8" stroke="white" stroke-width="1.15" stroke-linecap="round"/>
+  <path d="M16 20.1V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M27 15.3C24.45 16.6 23.25 18.6 23.25 21.15V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M27 15.3V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+</svg>`);
+
+function getRestaurantMarkerIcon() {
+  if (typeof window === "undefined" || !window.google?.maps) return undefined;
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${PIN_SVG}`,
+    scaledSize: new window.google.maps.Size(34, 40),
+    anchor: new window.google.maps.Point(17, 40),
+  };
+}
 
 export default function MapPreview({ className = "", groups = [] }) {
   const mapNodeRef = useRef(null);
@@ -52,6 +73,7 @@ export default function MapPreview({ className = "", groups = [] }) {
         position: { lat: group.lat, lng: group.lng },
         title: group.name || "Restaurant",
         clickable: false,
+        icon: getRestaurantMarkerIcon(),
       });
       markersRef.current.push(marker);
     });

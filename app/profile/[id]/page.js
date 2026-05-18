@@ -1181,37 +1181,29 @@ export default function PublicProfile() {
               }`}
               aria-label="Open calendar"
             >
-              <div className={`flex h-full flex-col justify-between rounded-[1rem] p-2 ${darkMode ? "bg-white/6" : "bg-white/72"}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <div className={`h-2.5 w-14 rounded-full ${darkMode ? "bg-white/22" : "bg-black/14"}`} />
-                  <div className={`h-2.5 w-7 rounded-full ${darkMode ? "bg-white/12" : "bg-black/8"}`} />
-                </div>
-                <div className={`grid grid-cols-7 gap-1.5 ${darkMode ? "text-white/38" : "text-black/35"}`}>
-                  {Array.from({ length: 7 }).map((_, index) => (
-                    <span key={index} className={`mx-auto h-1.5 w-1.5 rounded-full ${darkMode ? "bg-white/18" : "bg-black/12"}`} />
+              <div className={`relative flex h-full flex-col overflow-hidden rounded-[1rem] border ${darkMode ? "border-white/10 bg-[#202020]" : "border-black/8 bg-white"}`}>
+                <div className="h-6 bg-[#E64646]" />
+                <div className="absolute left-0 right-0 top-[1.1rem] flex justify-center gap-5">
+                  {[0, 1].map((item) => (
+                    <span key={item} className={`h-2.5 w-2.5 rounded-full border-2 ${darkMode ? "border-[#202020] bg-white" : "border-white bg-black"}`} />
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-1.5">
-                  {calendarPreviewCells.slice(0, 35).map((cell) => {
+                <div className="grid flex-1 grid-cols-7 gap-1.5 p-3 pt-5">
+                  {calendarPreviewCells.slice(0, 28).map((cell) => {
                     const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
                     return (
                       <div
                         key={cell.dayKey}
-                        className={`relative h-[0.6rem] rounded-[0.24rem] ${
+                        className={`relative rounded-[0.28rem] ${
                           cell.isToday
                             ? "border border-[#2BD36B] shadow-[0_0_8px_rgba(43,211,107,0.25)]"
-                            : cell.inMonth
-                              ? darkMode ? "bg-white/20" : "bg-black/16"
-                              : darkMode ? "bg-white/7" : "bg-black/6"
+                            : darkMode ? "bg-white/14" : "bg-black/10"
                         }`}
                       >
-                        {hasItems ? <span className="absolute bottom-[1px] h-[2px] w-[2px] rounded-full bg-[#E64646]" /> : null}
+                        {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#E64646]" /> : null}
                       </div>
                     );
                   })}
-                </div>
-                <div className={`truncate text-[0.66rem] font-bold leading-none ${darkMode ? "text-white/45" : "text-black/42"}`}>
-                  {storyCalendarDays.length ? `${storyCalendarDays.length} ${t("Days").toLowerCase()}` : t("What you ate")}
                 </div>
               </div>
             </button>

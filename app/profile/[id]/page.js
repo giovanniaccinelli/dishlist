@@ -31,7 +31,7 @@ import {
   normalizeProfilePhotoURL,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
@@ -41,18 +41,18 @@ import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
 import ProfileTakesStrip from "../../../components/ProfileTakesStrip";
+import MapPreview from "../../../components/MapPreview";
 import RestaurantMapView from "../../../components/RestaurantMapView";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
   DishModeFilterButton,
   DishModeFilterModal,
-  RestaurantForkKnifeIcon,
   RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
-import { useLanguage } from "../../../components/LanguageProvider";
+import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -77,6 +77,44 @@ function uniqueNonEmpty(values = []) {
         .filter(Boolean)
     )
   );
+}
+
+function getStoryCalendarMillis(value) {
+  if (!value) return 0;
+  if (typeof value === "number") return value;
+  if (value instanceof Date) return value.getTime();
+  if (value?.toMillis) return value.toMillis();
+  if (value?.seconds) return value.seconds * 1000;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getStoryCalendarKey(ms) {
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getCalendarMonthPreviewCells(referenceDate = new Date()) {
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth();
+  const first = new Date(year, month, 1, 12);
+  const mondayOffset = (first.getDay() + 6) % 7;
+  const start = new Date(first);
+  start.setDate(first.getDate() - mondayOffset);
+  return Array.from({ length: 42 }).map((_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return {
+      date,
+      dayKey: getStoryCalendarKey(date.getTime()),
+      inMonth: date.getMonth() === month,
+      isToday: getStoryCalendarKey(date.getTime()) === getStoryCalendarKey(Date.now()),
+    };
+  });
 }
 
 function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
@@ -228,7 +266,7 @@ export default function PublicProfile() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
-  const { t, darkMode } = useLanguage();
+  const { t, darkMode, language } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [profileUser, setProfileUser] = useState(null);
   const [savedDishes, setSavedDishes] = useState([]);
@@ -263,6 +301,8 @@ export default function PublicProfile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
+  const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
+  const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
   const dishlistDetailSwipeRef = useRef(null);
   const viewedAllStories =
     activeStories.length > 0 &&
@@ -787,6 +827,69 @@ export default function PublicProfile() {
     () => getRestaurantDishGroups(dishes),
     [dishes]
   );
+  const storyCalendarDays = useMemo(() => {
+    const dishById = new Map();
+    allDishlists.forEach((dishlist) => {
+      (dishlist.dishes || []).forEach((dish) => {
+        if (dish?.id && !dishById.has(dish.id)) dishById.set(dish.id, dish);
+      });
+    });
+    dishes.forEach((dish) => {
+      if (dish?.id && !dishById.has(dish.id)) dishById.set(dish.id, dish);
+    });
+
+    const entries = [];
+    Object.entries(storyPushStats || {}).forEach(([dishId, stats]) => {
+      const dish = dishById.get(dishId) || { id: dishId };
+      (stats?.history || []).forEach((entry, index) => {
+        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO);
+        if (!ms) return;
+        entries.push({
+          id: `${dishId}-${ms}-${index}`,
+          dayKey: getStoryCalendarKey(ms),
+          ms,
+          dishId,
+          name: dish.name || entry?.name || "Untitled dish",
+          imageDish: dish,
+        });
+      });
+    });
+
+    activeStories.forEach((story) => {
+      const ms = getStoryCalendarMillis(story.createdAt) || getStoryCalendarMillis(story.pushedAtMs);
+      if (!ms) return;
+      entries.push({
+        id: `active-${story.id || story.dishId || ms}`,
+        dayKey: getStoryCalendarKey(ms),
+        ms,
+        dishId: story.dishId || story.id || "",
+        name: story.name || story.dishName || "Untitled dish",
+        imageDish: story,
+      });
+    });
+
+    const byDay = new Map();
+    entries
+      .filter((entry) => entry.dayKey)
+      .sort((a, b) => b.ms - a.ms)
+      .forEach((entry) => {
+        if (!byDay.has(entry.dayKey)) {
+          byDay.set(entry.dayKey, { key: entry.dayKey, ms: entry.ms, items: [] });
+        }
+        const day = byDay.get(entry.dayKey);
+        if (!day.items.some((item) => item.id === entry.id || (item.dishId && item.dishId === entry.dishId && item.ms === entry.ms))) {
+          day.items.push(entry);
+        }
+      });
+
+    return Array.from(byDay.values()).sort((a, b) => b.ms - a.ms);
+  }, [activeStories, allDishlists, dishes, storyPushStats]);
+  const storyCalendarByDay = useMemo(
+    () => new Map(storyCalendarDays.map((day) => [day.key, day.items])),
+    [storyCalendarDays]
+  );
+  const calendarPreviewCells = useMemo(() => getCalendarMonthPreviewCells(new Date()), []);
+  const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
 
   const renderDishCounters = (dish) => (
     <div className="flex items-center gap-3.5 text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
@@ -984,18 +1087,72 @@ export default function PublicProfile() {
       ) : null}
 
       {showingDishlistOverview ? (
-        <div className="mb-4 flex justify-center px-2">
-          <button
-            type="button"
-            onClick={() => setProfileMapOpen(true)}
-            className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
-              darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
-            }`}
-            style={{ borderColor: "#E64646" }}
-          >
-            <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
-            {t("Restaurants")}
-          </button>
+        <div className="mx-auto -mt-2 mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
+          <div>
+            <div className="mb-2 flex items-center gap-2 leading-none">
+              <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
+              <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setProfileMapOpen(true)}
+              className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+              }`}
+              aria-label="Open map"
+            >
+              <MapPreview groups={uploadedRestaurantGroups} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+            </button>
+          </div>
+          <div>
+            <div className="mb-2 flex items-center gap-2 leading-none">
+              <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Calendar")}</span>
+              <CalendarDays className={`h-[1.05rem] w-[1.05rem] shrink-0 ${darkMode ? "text-white/72" : "text-black/72"}`} strokeWidth={2.05} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setProfileCalendarOpen(true)}
+              className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-[#F7F2E8]"
+              }`}
+              aria-label="Open calendar"
+            >
+              <div className="flex h-full flex-col justify-between">
+                <div className={`text-[0.78rem] font-black capitalize leading-none ${darkMode ? "text-white" : "text-black"}`}>
+                  {new Date().toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { month: "long" })}
+                </div>
+                <div className={`grid grid-cols-7 gap-1 text-center text-[0.48rem] font-black uppercase leading-none ${darkMode ? "text-white/38" : "text-black/35"}`}>
+                  {["L", "M", "M", "G", "V", "S", "D"].map((day, index) => (
+                    <span key={`${day}-${index}`}>{day}</span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarPreviewCells.map((cell) => {
+                    const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
+                    return (
+                      <div
+                        key={cell.dayKey}
+                        className={`relative flex h-[0.78rem] items-center justify-center rounded-[0.28rem] text-[0.48rem] font-black leading-none ${
+                          cell.isToday
+                            ? "border border-[#2BD36B] text-[#168944] shadow-[0_0_8px_rgba(43,211,107,0.25)]"
+                            : cell.inMonth
+                              ? darkMode ? "bg-white/9 text-white/64" : "bg-white text-black/58"
+                              : darkMode ? "bg-white/[0.035] text-white/18" : "bg-black/[0.025] text-black/18"
+                        }`}
+                      >
+                        {cell.date.getDate()}
+                        {hasItems ? <span className="absolute bottom-[1px] h-[2px] w-[2px] rounded-full bg-[#E64646]" /> : null}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className={`truncate text-[0.66rem] font-bold leading-none ${darkMode ? "text-white/45" : "text-black/42"}`}>
+                  {storyCalendarDays.length ? `${storyCalendarDays.length} ${t("Days").toLowerCase()}` : t("What you ate")}
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -1268,6 +1425,115 @@ export default function PublicProfile() {
         }}
       />
       <AnimatePresence>
+        {profileCalendarOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[88] flex items-start justify-center bg-black/45 px-4 pb-[5.75rem] pt-[5.35rem] backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setProfileCalendarOpen(false)}
+          >
+            <motion.div
+              className={`mx-auto flex max-h-full w-full max-w-[30rem] flex-col overflow-y-auto overscroll-contain rounded-[1.35rem] border p-3.5 shadow-2xl ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-[#FAF7F0] text-black"
+              }`}
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                    {t("What you ate")}
+                  </div>
+                  <h3 className={`mt-1.5 text-[1.35rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {t("Calendar")}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileCalendarOpen(false)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/55"}`}
+                  aria-label="Close food calendar"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
+                <div className={`mb-2 text-sm font-bold capitalize ${darkMode ? "text-white" : "text-black"}`}>
+                  {new Date().toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { month: "long", year: "numeric" })}
+                </div>
+                <div className={`mb-1 grid grid-cols-7 gap-1 text-center text-[0.62rem] font-black uppercase ${darkMode ? "text-white/38" : "text-black/35"}`}>
+                  {["L", "M", "M", "G", "V", "S", "D"].map((day, index) => (
+                    <span key={`${day}-${index}`}>{day}</span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarPreviewCells.map((cell) => {
+                    const items = storyCalendarByDay.get(cell.dayKey) || [];
+                    const selected = cell.dayKey === profileCalendarSelectedDay;
+                    return (
+                      <button
+                        key={cell.dayKey}
+                        type="button"
+                        onClick={() => setProfileCalendarSelectedDay(cell.dayKey)}
+                        className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
+                          cell.isToday
+                            ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
+                            : selected
+                              ? darkMode ? "border-white bg-white text-black" : "border-black bg-black text-white"
+                              : cell.inMonth
+                                ? darkMode ? "border-white/8 bg-[#171717] text-white/78" : "border-black/8 bg-white text-black/72"
+                                : darkMode ? "border-white/[0.04] bg-white/[0.03] text-white/20" : "border-black/[0.04] bg-black/[0.02] text-black/20"
+                        }`}
+                      >
+                        {cell.date.getDate()}
+                        {items.length ? <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-[#E64646]" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className={`mt-3 rounded-[1rem] border p-3 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
+                <div className={`mb-3 text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                  {new Date(`${profileCalendarSelectedDay}T12:00:00`).toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </div>
+                {profileCalendarSelectedItems.length ? (
+                  <div className="space-y-2">
+                    {profileCalendarSelectedItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/dish/${item.dishId}?source=uploaded&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profileDocId)}`)}`}
+                        className={`flex items-center gap-3 rounded-[1rem] p-3 ${darkMode ? "bg-black/24" : "bg-[#F7F2E8]"}`}
+                      >
+                        <img
+                          src={getDishImageUrl(item.imageDish, "thumb")}
+                          alt={item.name}
+                          className="h-16 w-16 shrink-0 rounded-[0.85rem] object-cover"
+                          onError={(event) => {
+                            event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <div className={`truncate text-base font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={`flex h-20 items-center justify-center rounded-[1rem] text-center text-sm ${darkMode ? "bg-black/20 text-white/45" : "bg-[#F7F2E8] text-black/45"}`}>
+                    {t("No calendar entries that day.")}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
         {profileMapOpen ? (
           <motion.div
             className="fixed inset-0 z-[88] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"

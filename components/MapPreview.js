@@ -9,13 +9,9 @@ const PIN_SVG = encodeURIComponent(`
 <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" stroke="white" stroke-width="3"/>
-  <circle cx="21" cy="19" r="10.75" fill="#111111"/>
-  <path d="M17.8 14.6V18.7" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
-  <path d="M16.75 14.6V16.75" stroke="white" stroke-width="0.95" stroke-linecap="round"/>
-  <path d="M18.85 14.6V16.75" stroke="white" stroke-width="0.95" stroke-linecap="round"/>
-  <path d="M17.8 18.7V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
-  <path d="M24.95 14.65C23.15 16.05 22.35 17.75 22.35 19.9V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
-  <path d="M24.95 14.65V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
+  <circle cx="21" cy="19" r="11.2" fill="#111111"/>
+  <circle cx="21" cy="18.4" r="4.7" stroke="white" stroke-width="1.8"/>
+  <path d="M17.4 23.1H24.6" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
 </svg>`);
 
 function getRestaurantMarkerIcon() {

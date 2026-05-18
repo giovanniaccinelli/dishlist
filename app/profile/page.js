@@ -2278,30 +2278,28 @@ export default function Profile() {
                   type="button"
                   onClick={() => setProfileCalendarOpen(true)}
                   className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#202020]" : "border-black/10 bg-white"
+                    darkMode ? "border-white/10 bg-[#181818]" : "border-black/10 bg-[#FBFAF6]"
                   }`}
                   aria-label="Open calendar"
                 >
-                  <div className="relative flex h-full flex-col overflow-hidden">
-                    <div className="h-6 bg-[#2BD36B]" />
-                    <div className="absolute left-0 right-0 top-[1rem] flex justify-center gap-5">
-                      {[0, 1].map((item) => (
-                        <span key={item} className={`h-2.5 w-2.5 rounded-full border-2 ${darkMode ? "border-[#202020] bg-white" : "border-white bg-black"}`} />
-                      ))}
+                  <div className="relative flex h-full flex-col p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className={`h-1.5 w-12 rounded-full ${darkMode ? "bg-white/24" : "bg-black/18"}`} />
+                      <div className={`h-1.5 w-5 rounded-full ${darkMode ? "bg-white/12" : "bg-black/10"}`} />
                     </div>
-                    <div className="grid flex-1 grid-cols-7 gap-1.5 p-3 pt-5">
+                    <div className="grid flex-1 grid-cols-7 gap-1.5">
                       {calendarPreviewCells.slice(0, 28).map((cell) => {
                         const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
                         return (
                           <div
                             key={cell.dayKey}
-                            className={`relative rounded-[0.28rem] ${
+                            className={`relative rounded-[0.32rem] ${
                               cell.isToday
-                                ? "border border-[#2BD36B] shadow-[0_0_8px_rgba(43,211,107,0.25)]"
-                                : darkMode ? "bg-white/14" : "bg-black/10"
+                                ? "border border-[#2BD36B] bg-transparent"
+                                : darkMode ? "bg-white/12" : "bg-black/8"
                             }`}
                           >
-                            {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#E64646]" /> : null}
+                            {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#2BD36B]" /> : null}
                           </div>
                         );
                       })}

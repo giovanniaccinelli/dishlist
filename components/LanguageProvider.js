@@ -141,6 +141,7 @@ const translations = {
     Mappa: "Mappa",
     Restaurants: "Ristoranti",
     Calendar: "Calendario",
+    Days: "giorni",
     "Restaurant map": "Mappa ristoranti",
     "Open map": "Apri mappa",
     "Meal calendar": "Calendario pasti",

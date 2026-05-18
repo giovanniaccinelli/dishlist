@@ -1706,14 +1706,7 @@ export default function Profile() {
     return getCalendarRangeLabel(first, last, language);
   }, [language, profileCalendarCells, profileCalendarMonth]);
   const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
-  const calendarPreviewItems = useMemo(
-    () =>
-      storyCalendarDays
-        .flatMap((day) => day.items)
-        .filter((item) => item.imageDish)
-        .slice(0, 3),
-    [storyCalendarDays]
-  );
+  const calendarDaysWithEntries = storyCalendarDays.length;
 
   const selectedCreateDishes = Array.from(
     new Map(
@@ -2158,60 +2151,46 @@ export default function Profile() {
           ) : null}
 
           {showingDishlistOverview ? (
-            <div className="mx-auto -mt-4 mb-3 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
+            <div className="mx-auto -mt-2 mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
               <button
                 type="button"
                 onClick={() => setProfileMapOpen(true)}
-                className={`restaurant-accent-border relative h-[9.2rem] overflow-hidden rounded-[1.15rem] border-2 text-left shadow-[0_14px_30px_rgba(0,0,0,0.10)] transition active:scale-[0.98] ${
-                  darkMode ? "bg-[#111] text-white" : "bg-white text-black"
+                className={`restaurant-accent-border relative flex h-[5.8rem] items-center gap-3 overflow-hidden rounded-[1.1rem] border-2 px-3 text-left shadow-[0_10px_22px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
+                  darkMode ? "bg-[#151515] text-white" : "bg-white text-black"
                 }`}
                 style={{ borderColor: "#E64646" }}
               >
-                <MapPreview groups={uploadedRestaurantGroups} className="absolute inset-0" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.58)_100%)]" />
-                <div className="absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#E64646] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
-                  <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem]" strokeWidth={1.9} />
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[0.9rem] border border-[#E64646]/30">
+                  <MapPreview groups={uploadedRestaurantGroups} />
                 </div>
-                <div className="absolute inset-x-3 bottom-2.5 truncate text-sm font-black text-white drop-shadow">
-                  {t("Restaurant map")}
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black">{t("Restaurant map")}</div>
+                  <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                    {uploadedRestaurantGroups.length ? `${uploadedRestaurantGroups.length} ${t("Restaurants").toLowerCase()}` : t("Restaurants")}
+                  </div>
+                </div>
+                <div className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E64646] text-white">
+                  <RestaurantMapIcon className="h-[1rem] w-[1rem]" strokeWidth={2} />
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => setProfileCalendarOpen(true)}
-                className={`relative h-[9.2rem] overflow-hidden rounded-[1.15rem] border-2 text-left shadow-[0_14px_30px_rgba(0,0,0,0.10)] transition active:scale-[0.98] ${
-                  darkMode ? "border-white/12 bg-[#141414] text-white" : "border-black/10 bg-white text-black"
+                className={`relative flex h-[5.8rem] items-center gap-3 overflow-hidden rounded-[1.1rem] border px-3 text-left shadow-[0_10px_22px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
+                  darkMode ? "border-white/12 bg-[#151515] text-white" : "border-black/10 bg-white text-black"
                 }`}
               >
-                {calendarPreviewItems[0] ? (
-                  <div className="absolute inset-0 grid grid-cols-2 gap-1 p-1">
-                    <img
-                      src={getDishImageUrl(calendarPreviewItems[0].imageDish, "thumb")}
-                      alt=""
-                      className="h-full w-full rounded-[0.85rem] object-cover"
-                    />
-                    <div className="grid gap-1">
-                      {(calendarPreviewItems.length > 1 ? calendarPreviewItems.slice(1, 3) : [calendarPreviewItems[0]]).map((item, index) => (
-                        <img
-                          key={`${item.id}-${index}`}
-                          src={getDishImageUrl(item.imageDish, "thumb")}
-                          alt=""
-                          className="h-full w-full rounded-[0.75rem] object-cover"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className={`absolute inset-0 flex items-center justify-center ${darkMode ? "bg-[#151515]" : "bg-[#F7F4EE]"}`}>
-                    <CalendarDays className={darkMode ? "text-white/35" : "text-black/35"} size={44} strokeWidth={1.7} />
-                  </div>
-                )}
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.64)_100%)]" />
-                <div className="absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
-                  <CalendarDays className="h-[1.05rem] w-[1.05rem]" strokeWidth={2} />
+                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[0.9rem] ${darkMode ? "bg-white/10 text-white" : "bg-black/7 text-black"}`}>
+                  <CalendarDays className="h-7 w-7" strokeWidth={1.9} />
                 </div>
-                <div className="absolute inset-x-3 bottom-2.5 truncate text-sm font-black text-white drop-shadow">
-                  {t("Calendar")}
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black">{t("Calendar")}</div>
+                  <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                    {calendarDaysWithEntries ? `${calendarDaysWithEntries} ${t("Days").toLowerCase()}` : t("What you ate")}
+                  </div>
+                </div>
+                <div className={`ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-white text-black" : "bg-black text-white"}`}>
+                  <ChevronLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
                 </div>
               </button>
             </div>
@@ -4149,14 +4128,13 @@ export default function Profile() {
                   {profileCalendarCells.map((cell) => {
                     const items = storyCalendarByDay.get(cell.dayKey) || [];
                     const selected = cell.dayKey === profileCalendarSelectedDay;
-                    const imageItem = items.find((item) => item.imageDish);
                     const weekday = cell.date.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { weekday: "short" });
                     return (
                       <button
                         key={cell.dayKey}
                         type="button"
                         onClick={() => setProfileCalendarSelectedDay(cell.dayKey)}
-                        className={`relative h-[7.15rem] w-[5.75rem] min-w-[5.75rem] snap-start overflow-hidden rounded-[1rem] border p-2 text-left transition ${
+                        className={`relative flex h-[5.2rem] w-[4.8rem] min-w-[4.8rem] snap-start flex-col items-center justify-center rounded-[1rem] border p-2 text-center transition ${
                           selected
                             ? darkMode
                               ? "border-white bg-white text-black shadow-[0_8px_18px_rgba(255,255,255,0.12)]"
@@ -4164,31 +4142,14 @@ export default function Profile() {
                             : darkMode ? "border-white/10 bg-[#171717] text-white" : "border-black/8 bg-white text-black"
                         }`}
                       >
-                        <div className="relative z-10 flex items-start justify-between gap-1">
-                          <span className={`text-[10px] font-bold uppercase leading-none ${selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
-                            {weekday}
-                          </span>
-                          <span className={`text-lg font-black leading-none ${cell.isToday && !selected ? "text-[#E64646]" : ""}`}>
-                            {cell.date.getDate()}
-                          </span>
-                        </div>
-                        {imageItem ? (
-                          <img
-                            src={getDishImageUrl(imageItem.imageDish, "thumb")}
-                            alt=""
-                            className="absolute inset-x-2 bottom-2 h-[4.25rem] rounded-[0.8rem] object-cover"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : items.length ? (
-                          <div className={`absolute inset-x-2 bottom-2 flex h-[4.25rem] items-end rounded-[0.8rem] p-2 text-left ${
-                            selected ? darkMode ? "bg-black/8" : "bg-white/14" : darkMode ? "bg-white/9" : "bg-black/6"
-                          }`}>
-                            <span className={`line-clamp-2 text-[11px] font-bold leading-tight ${selected ? darkMode ? "text-black/70" : "text-white/78" : darkMode ? "text-white/72" : "text-black/68"}`}>
-                              {items[0].name}
-                            </span>
-                          </div>
+                        <span className={`text-[10px] font-bold uppercase leading-none ${selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
+                          {weekday}
+                        </span>
+                        <span className={`mt-1 text-2xl font-black leading-none ${cell.isToday && !selected ? "text-[#E64646]" : ""}`}>
+                          {cell.date.getDate()}
+                        </span>
+                        {items.length ? (
+                          <span className={`mt-2 h-1.5 w-6 rounded-full ${selected ? darkMode ? "bg-black/45" : "bg-white/70" : darkMode ? "bg-white/42" : "bg-black/35"}`} />
                         ) : null}
                       </button>
                     );

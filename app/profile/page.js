@@ -118,31 +118,13 @@ function getStoryCalendarKey(ms) {
   return `${year}-${month}-${day}`;
 }
 
-function getCalendarRangeLabel(startDate, endDate, language = "en") {
-  const locale = language === LANGUAGE_IT ? "it-IT" : "en-US";
-  const sameYear = startDate.getFullYear() === endDate.getFullYear();
-  const start = startDate.toLocaleDateString(locale, {
-    month: "short",
-    day: "numeric",
-    ...(sameYear ? {} : { year: "numeric" }),
-  });
-  const end = endDate.toLocaleDateString(locale, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `${start} - ${end}`;
-}
-
 function getCalendarTimelineCells(days = [], selectedDayKey = getStoryCalendarKey(Date.now())) {
   const todayMs = new Date(`${getStoryCalendarKey(Date.now())}T12:00:00`).getTime();
   const selectedMs = new Date(`${selectedDayKey}T12:00:00`).getTime();
   const entryMs = days.map((day) => Number(day.ms || 0)).filter((ms) => Number.isFinite(ms) && ms > 0);
-  const year = new Date(todayMs).getFullYear();
-  const yearStart = new Date(year, 0, 1, 12).getTime();
-  const yearEnd = new Date(year, 11, 31, 12).getTime();
-  const minMs = Math.min(yearStart, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
-  const maxMs = Math.max(yearEnd, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
+  const defaultStart = todayMs - 119 * 86400000;
+  const minMs = Math.min(defaultStart, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
+  const maxMs = Math.max(todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
   const start = new Date(minMs);
   const end = new Date(maxMs);
   const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
@@ -405,7 +387,6 @@ export default function Profile() {
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
-  const [profileCalendarMonth, setProfileCalendarMonth] = useState(() => new Date());
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [mealCalendarEntries, setMealCalendarEntries] = useState([]);
   const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
@@ -438,6 +419,7 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
+  const profileCalendarRailRef = useRef(null);
   const dishlistDetailSwipeRef = useRef(null);
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
@@ -465,11 +447,7 @@ export default function Profile() {
     return lists;
   };
   const openMealCalendarEntry = (dayKey = getStoryCalendarKey(Date.now())) => {
-    const targetMs = new Date(`${dayKey}T12:00:00`).getTime();
     setProfileCalendarSelectedDay(dayKey);
-    if (Number.isFinite(targetMs)) {
-      setProfileCalendarMonth(new Date(targetMs));
-    }
     setMealCalendarEntryName("");
     setMealCalendarEntryOpen(true);
   };
@@ -536,13 +514,15 @@ export default function Profile() {
           } catch (error) {
             console.error("Direct own-profile fetch failed:", error);
           }
-          try {
-            const snapshot = await getDocs(collection(db, "users"));
-            snapshot.docs.forEach((docSnap) => {
-              if (profileDocMatchesAccount(user, docSnap)) matches.push(docSnap);
-            });
-          } catch (error) {
-            console.error("Own-profile alias scan failed:", error);
+          if (!matches.length) {
+            try {
+              const snapshot = await getDocs(collection(db, "users"));
+              snapshot.docs.forEach((docSnap) => {
+                if (profileDocMatchesAccount(user, docSnap)) matches.push(docSnap);
+              });
+            } catch (error) {
+              console.error("Own-profile alias scan failed:", error);
+            }
           }
           return {
             best: pickBestProfileDoc(user.uid, matches),
@@ -568,6 +548,7 @@ export default function Profile() {
             representativeTags: normalizeRepresentativeTags(nextProfileUser.representativeTags),
           }));
         }
+        setProfileContentReady(true);
         const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
         const results = await Promise.allSettled([
           getUploadedDishesForUserAliases(candidateIds),
@@ -589,7 +570,6 @@ export default function Profile() {
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
         setMealCalendarEntries(mealCalendarRes.status === "fulfilled" ? mealCalendarRes.value : []);
         setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
-        setProfileContentReady(true);
       } catch (error) {
         console.error("Failed to load own profile:", error);
         if (!cancelled) setProfileContentReady(true);
@@ -607,19 +587,6 @@ export default function Profile() {
     (async () => {
       try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
-        const ownerCandidates = profileAliasIds;
-        const [uploadedResults, savedResults, toTryResults, customResults] = await Promise.all([
-          getUploadedDishesForUserAliases(ownerCandidates),
-          Promise.all(ownerCandidates.map((candidateId) => getSavedDishesFromFirestore(candidateId))),
-          Promise.all(ownerCandidates.map((candidateId) => getToTryDishesFromFirestore(candidateId))),
-          Promise.all(ownerCandidates.map((candidateId) => getCustomDishlistsForUser(candidateId))),
-        ]);
-        const [uploaded, saved, toTry, custom] = [
-          mergeUniqueById([uploadedResults]),
-          mergeUniqueById(savedResults),
-          mergeUniqueById(toTryResults),
-          mergeUniqueById(customResults),
-        ];
         if (cancelled) return;
         if (userSnap.exists()) {
           const data = userSnap.data() || {};
@@ -635,10 +602,6 @@ export default function Profile() {
             representativeTags: normalizeRepresentativeTags(data.representativeTags),
           }));
         }
-        setUploadedDishes(uploaded);
-        setSavedDishes(saved);
-        setToTryDishes(toTry);
-        setCustomDishlists(custom);
       } catch (err) {
         console.error("Failed to hydrate profile counts:", err);
       }
@@ -1707,18 +1670,33 @@ export default function Profile() {
     () => getCalendarTimelineCells(storyCalendarDays, profileCalendarSelectedDay),
     [profileCalendarSelectedDay, storyCalendarDays]
   );
-  const profileCalendarRangeLabel = useMemo(() => {
-    const first = profileCalendarCells[0]?.date || profileCalendarMonth;
-    const last = profileCalendarCells[profileCalendarCells.length - 1]?.date || profileCalendarMonth;
-    return getCalendarRangeLabel(first, last, language);
-  }, [language, profileCalendarCells, profileCalendarMonth]);
+  useEffect(() => {
+    if (!profileCalendarOpen) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const rail = profileCalendarRailRef.current;
+      if (rail) rail.scrollLeft = rail.scrollWidth;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [profileCalendarOpen, profileCalendarCells.length]);
+  const profileCalendarSelectedDate = useMemo(
+    () => new Date(`${profileCalendarSelectedDay}T12:00:00`),
+    [profileCalendarSelectedDay]
+  );
+  const profileCalendarMonthLabel = useMemo(
+    () =>
+      profileCalendarSelectedDate.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+        month: "long",
+        year: "numeric",
+      }),
+    [language, profileCalendarSelectedDate]
+  );
   const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
   const calendarDaysWithEntries = storyCalendarDays.length;
   const calendarPreviewCells = useMemo(() => {
     const todayKey = getStoryCalendarKey(Date.now());
     const todayIndex = profileCalendarCells.findIndex((cell) => cell.dayKey === todayKey);
-    const start = Math.max(0, (todayIndex === -1 ? 0 : todayIndex) - 6);
-    return profileCalendarCells.slice(start, start + 14);
+    const start = Math.max(0, (todayIndex === -1 ? profileCalendarCells.length - 1 : todayIndex) - 6);
+    return profileCalendarCells.slice(start, start + 7);
   }, [profileCalendarCells]);
 
   const selectedCreateDishes = Array.from(
@@ -2191,24 +2169,42 @@ export default function Profile() {
                   type="button"
                   onClick={() => setProfileCalendarOpen(true)}
                   className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+                    darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-[#F7F2E8]"
                   }`}
                   aria-label="Open calendar"
                 >
-                  <div className={`grid h-full grid-cols-7 gap-1 rounded-[1rem] p-2 ${darkMode ? "bg-white/6" : "bg-white/72"}`}>
-                    {calendarPreviewCells.map((cell) => {
-                      const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
-                      return (
-                        <div
-                          key={cell.dayKey}
-                          className={`rounded-[0.38rem] border ${
-                            hasItems
-                              ? darkMode ? "border-white/55 bg-white/45" : "border-black/35 bg-black/28"
-                              : darkMode ? "border-white/8 bg-white/8" : "border-black/8 bg-black/[0.035]"
-                          }`}
-                        />
-                      );
-                    })}
+                  <div className="flex h-full flex-col justify-between">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className={`text-[0.78rem] font-black capitalize leading-none ${darkMode ? "text-white" : "text-black"}`}>
+                        {new Date().toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { month: "long" })}
+                      </div>
+                      <div className={`rounded-full px-2 py-1 text-[0.64rem] font-black leading-none ${
+                        darkMode ? "bg-white text-black" : "bg-black text-white"
+                      }`}>
+                        {new Date().getDate()}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {calendarPreviewCells.map((cell) => {
+                        const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
+                        const isToday = cell.dayKey === getStoryCalendarKey(Date.now());
+                        return (
+                          <div key={cell.dayKey} className="flex flex-col items-center gap-1">
+                            <div className={`flex h-7 w-full items-center justify-center rounded-[0.55rem] text-[0.72rem] font-black ${
+                              isToday
+                                ? darkMode ? "bg-white text-black" : "bg-black text-white"
+                                : darkMode ? "bg-white/9 text-white/62" : "bg-white text-black/62"
+                            }`}>
+                              {cell.date.getDate()}
+                            </div>
+                            <span className={`h-1.5 w-1.5 rounded-full ${hasItems ? "bg-[#E64646]" : darkMode ? "bg-white/14" : "bg-black/12"}`} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className={`truncate text-[0.66rem] font-bold leading-none ${darkMode ? "text-white/45" : "text-black/42"}`}>
+                      {calendarDaysWithEntries ? `${calendarDaysWithEntries} ${t("Days").toLowerCase()}` : t("What you ate")}
+                    </div>
                   </div>
                 </button>
               </div>
@@ -4123,24 +4119,29 @@ export default function Profile() {
               </div>
               <div className="mb-2.5 flex items-center justify-between gap-3">
                 <div className={`min-w-0 truncate text-sm font-bold capitalize ${darkMode ? "text-white" : "text-black"}`}>
-                  {profileCalendarRangeLabel}
+                  {profileCalendarMonthLabel}
                 </div>
                 <div className={`shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/42" : "text-black/42"}`}>
                   {calendarDaysWithEntries ? `${calendarDaysWithEntries} ${t("Days").toLowerCase()}` : t("What you ate")}
                 </div>
               </div>
               <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
-                <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {profileCalendarCells.map((cell) => {
+                <div
+                  ref={profileCalendarRailRef}
+                  className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {profileCalendarCells.map((cell, index) => {
                     const items = storyCalendarByDay.get(cell.dayKey) || [];
                     const selected = cell.dayKey === profileCalendarSelectedDay;
                     const weekday = cell.date.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { weekday: "short" });
+                    const monthChanged = index === 0 || cell.date.getMonth() !== profileCalendarCells[index - 1]?.date?.getMonth();
+                    const monthLabel = cell.date.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", { month: "short" });
                     return (
                       <button
                         key={cell.dayKey}
                         type="button"
                         onClick={() => setProfileCalendarSelectedDay(cell.dayKey)}
-                        className={`relative flex h-[5.2rem] w-[4.8rem] min-w-[4.8rem] snap-start flex-col items-center justify-center rounded-[1rem] border p-2 text-center transition ${
+                        className={`relative flex h-[6.1rem] w-[4.85rem] min-w-[4.85rem] snap-start flex-col items-center justify-center rounded-[1rem] border p-2 text-center transition ${
                           selected
                             ? darkMode
                               ? "border-white bg-white text-black shadow-[0_8px_18px_rgba(255,255,255,0.12)]"
@@ -4148,6 +4149,13 @@ export default function Profile() {
                             : darkMode ? "border-white/10 bg-[#171717] text-white" : "border-black/8 bg-white text-black"
                         }`}
                       >
+                        <span className={`absolute left-2 top-2 text-[9px] font-black uppercase leading-none ${
+                          monthChanged || cell.isToday || selected
+                            ? selected ? darkMode ? "text-black/50" : "text-white/62" : "text-[#E64646]"
+                            : "text-transparent"
+                        }`}>
+                          {monthLabel}
+                        </span>
                         <span className={`text-[10px] font-bold uppercase leading-none ${selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
                           {weekday}
                         </span>
@@ -4155,7 +4163,7 @@ export default function Profile() {
                           {cell.date.getDate()}
                         </span>
                         {items.length ? (
-                          <span className={`mt-2 text-[10px] font-bold leading-none ${selected ? darkMode ? "text-black/58" : "text-white/70" : darkMode ? "text-white/46" : "text-black/48"}`}>
+                          <span className={`mt-1.5 rounded-full px-1.5 py-1 text-[10px] font-bold leading-none ${selected ? darkMode ? "bg-black/8 text-black/60" : "bg-white/16 text-white/78" : darkMode ? "bg-white/10 text-white/58" : "bg-black/7 text-black/54"}`}>
                             {items.length} {t(items.length === 1 ? "Dish" : "Dishes").toLowerCase()}
                           </span>
                         ) : null}

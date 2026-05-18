@@ -295,13 +295,15 @@ export default function PublicProfile() {
         } catch (error) {
           console.error("Direct profile fetch failed:", error);
         }
-        try {
+        if (!matches.length) {
+          try {
             const snapshot = await getDocs(collection(db, "users"));
             snapshot.docs.forEach((docSnap) => {
               if (profileDocMatchesId(routeProfileId, docSnap)) matches.push(docSnap);
             });
-        } catch (error) {
-          console.error("Public profile alias scan failed:", error);
+          } catch (error) {
+            console.error("Public profile alias scan failed:", error);
+          }
         }
         return {
           best: pickBestProfileDoc(routeProfileId, matches),

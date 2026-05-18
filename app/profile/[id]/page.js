@@ -1182,7 +1182,7 @@ export default function PublicProfile() {
               aria-label="Open calendar"
             >
               <div className="relative flex h-full flex-col">
-                <div className={`relative h-6 border-b ${darkMode ? "border-[#2BD36B]/20 bg-[#2BD36B]/32" : "border-[#21B85A]/18 bg-[#2BD36B]"}`}>
+                <div className="relative h-6 border-b border-[#21B85A]/35 bg-[#2BD36B]">
                   <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-8">
                     {[0, 1].map((item) => (
                       <span

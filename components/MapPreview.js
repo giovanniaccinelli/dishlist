@@ -10,11 +10,14 @@ const PIN_SVG = encodeURIComponent(`
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" stroke="white" stroke-width="3"/>
   <circle cx="21" cy="19" r="11.2" fill="#111111"/>
-  <g transform="translate(13.6 11.6) scale(0.62)" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3 2v7c0 1.1.9 2 2 2s2-.9 2-2V2"/>
-    <path d="M7 2v20"/>
-    <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/>
-    <path d="M21 15v7"/>
+  <g transform="translate(14 12) scale(0.6)" stroke="white" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 2v6"/>
+    <path d="M5 2v6"/>
+    <path d="M7 2v6"/>
+    <path d="M3 8c0 1.1.9 2 2 2s2-.9 2-2"/>
+    <path d="M5 10v12"/>
+    <path d="M19 2c-2.8 1.6-4 4.1-4 7.5V13h4"/>
+    <path d="M19 2v20"/>
   </g>
 </svg>`);
 

@@ -138,13 +138,12 @@ function getCalendarTimelineCells(days = [], selectedDayKey = getStoryCalendarKe
   const todayMs = new Date(`${getStoryCalendarKey(Date.now())}T12:00:00`).getTime();
   const selectedMs = new Date(`${selectedDayKey}T12:00:00`).getTime();
   const entryMs = days.map((day) => Number(day.ms || 0)).filter((ms) => Number.isFinite(ms) && ms > 0);
-  const year = new Date(todayMs).getFullYear();
-  const yearStart = new Date(year, 0, 1, 12).getTime();
-  const yearEnd = new Date(year, 11, 31, 12).getTime();
-  const minMs = Math.min(yearStart, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
-  const maxMs = Math.max(yearEnd, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
+  const minMs = Math.min(todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
+  const maxMs = Math.max(todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
   const start = new Date(minMs);
+  start.setDate(start.getDate() - 14);
   const end = new Date(maxMs);
+  end.setDate(end.getDate() + 14);
   const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
   return Array.from({ length: totalDays }).map((_, index) => {
     const date = new Date(start);
@@ -438,7 +437,6 @@ export default function Profile() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
-  const profileCalendarRailRef = useRef(null);
   const dishlistDetailSwipeRef = useRef(null);
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
@@ -727,17 +725,6 @@ export default function Profile() {
     const query = params.toString();
     window.history.replaceState({}, "", query ? `/profile?${query}` : "/profile");
   }, []);
-
-  useEffect(() => {
-    if (!profileCalendarOpen || !profileCalendarRailRef.current) return;
-    const selectedIndex = profileCalendarCells.findIndex((cell) => cell.dayKey === profileCalendarSelectedDay);
-    if (selectedIndex < 0) return;
-    const rail = profileCalendarRailRef.current;
-    const targetLeft = Math.max(0, selectedIndex * 84 - rail.clientWidth / 2 + 42);
-    requestAnimationFrame(() => {
-      rail.scrollLeft = targetLeft;
-    });
-  }, [profileCalendarCells, profileCalendarOpen, profileCalendarSelectedDay]);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -1726,12 +1713,7 @@ export default function Profile() {
   }, [language, profileCalendarCells, profileCalendarMonth]);
   const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
   const calendarDaysWithEntries = storyCalendarDays.length;
-  const calendarPreviewCells = useMemo(() => {
-    const todayKey = getStoryCalendarKey(Date.now());
-    const todayIndex = profileCalendarCells.findIndex((cell) => cell.dayKey === todayKey);
-    const start = Math.max(0, (todayIndex === -1 ? 0 : todayIndex) - 6);
-    return profileCalendarCells.slice(start, start + 14);
-  }, [profileCalendarCells]);
+  const calendarPreviewImageItem = storyCalendarDays.flatMap((day) => day.items).find((item) => item.imageDish);
 
   const selectedCreateDishes = Array.from(
     new Map(
@@ -2177,53 +2159,53 @@ export default function Profile() {
 
           {showingDishlistOverview ? (
             <div className="mx-auto -mt-2 mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
-              <div>
-                <div className="mb-2 flex items-center gap-2 leading-none">
-                  <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
-                  <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+              <button
+                type="button"
+                onClick={() => setProfileMapOpen(true)}
+                className={`restaurant-accent-border relative block h-[7.25rem] overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                  darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+                }`}
+                aria-label="Open map"
+              >
+                <MapPreview groups={uploadedRestaurantGroups} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/52 via-black/5 to-transparent" />
+                <div className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#E64646] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+                  <RestaurantMapIcon className="h-[1rem] w-[1rem]" strokeWidth={2.05} />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setProfileMapOpen(true)}
-                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-                  }`}
-                  aria-label="Open map"
-                >
-                  <MapPreview groups={uploadedRestaurantGroups} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                </button>
-              </div>
-              <div>
-                <div className="mb-2 flex items-center gap-2 leading-none">
-                  <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Calendar")}</span>
-                  <CalendarDays className={`h-[1.05rem] w-[1.05rem] shrink-0 ${darkMode ? "text-white/72" : "text-black/72"}`} strokeWidth={2.05} />
+                <div className="absolute inset-x-3 bottom-3 truncate text-sm font-black text-white drop-shadow">
+                  {t("Restaurant map")}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setProfileCalendarOpen(true)}
-                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-                  }`}
-                  aria-label="Open calendar"
-                >
-                  <div className={`grid h-full grid-cols-7 gap-1 rounded-[1rem] p-2 ${darkMode ? "bg-white/6" : "bg-white/72"}`}>
-                    {calendarPreviewCells.map((cell) => {
-                      const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
-                      return (
-                        <div
-                          key={cell.dayKey}
-                          className={`rounded-[0.38rem] border ${
-                            hasItems
-                              ? darkMode ? "border-white/55 bg-white/45" : "border-black/35 bg-black/28"
-                              : darkMode ? "border-white/8 bg-white/8" : "border-black/8 bg-black/[0.035]"
-                          }`}
-                        />
-                      );
-                    })}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileCalendarOpen(true)}
+                className={`relative block h-[7.25rem] overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                  darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+                }`}
+                aria-label="Open calendar"
+              >
+                {calendarPreviewImageItem ? (
+                  <img
+                    src={getDishImageUrl(calendarPreviewImageItem.imageDish, "thumb")}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className={`absolute inset-0 flex items-center justify-center ${darkMode ? "bg-[#151515]" : "bg-[#F7F4EE]"}`}>
+                    <CalendarDays className={darkMode ? "text-white/35" : "text-black/35"} size={44} strokeWidth={1.7} />
                   </div>
-                </button>
-              </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/58 via-black/10 to-transparent" />
+                <div className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+                  <CalendarDays className="h-[1rem] w-[1rem]" strokeWidth={2.05} />
+                </div>
+                <div className="absolute inset-x-3 bottom-3 truncate text-sm font-black text-white drop-shadow">
+                  {t("Calendar")}
+                </div>
+              </button>
             </div>
           ) : null}
 
@@ -4133,16 +4115,29 @@ export default function Profile() {
                   <X size={16} />
                 </button>
               </div>
-              <div className="mb-2.5 flex items-center justify-between gap-3">
-                <div className={`min-w-0 truncate text-sm font-bold capitalize ${darkMode ? "text-white" : "text-black"}`}>
+              <div className="mb-2.5 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setProfileCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 14))}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/60"}`}
+                  aria-label="Previous weeks"
+                >
+                  <ChevronLeft size={17} />
+                </button>
+                <div className={`text-sm font-bold capitalize ${darkMode ? "text-white" : "text-black"}`}>
                   {profileCalendarRangeLabel}
                 </div>
-                <div className={`shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/42" : "text-black/42"}`}>
-                  {calendarDaysWithEntries ? `${calendarDaysWithEntries} ${t("Days").toLowerCase()}` : t("What you ate")}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 14))}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/60"}`}
+                  aria-label="Next weeks"
+                >
+                  <ChevronLeft size={17} className="rotate-180" />
+                </button>
               </div>
               <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
-                <div ref={profileCalendarRailRef} className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {profileCalendarCells.map((cell) => {
                     const items = storyCalendarByDay.get(cell.dayKey) || [];
                     const selected = cell.dayKey === profileCalendarSelectedDay;

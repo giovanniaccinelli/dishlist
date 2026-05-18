@@ -28,7 +28,7 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
         <h2 className={`text-[1.15rem] font-bold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Takes")}</h2>
         {hasHotTake ? <Flame size={18} className="text-[#E64646]" fill="none" /> : null}
       </div>
-      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="grid auto-cols-[calc((100%-0.75rem)/2)] grid-flow-col snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {sortedTakes.slice(0, 12).map((take, index) => {
           const accent = take.accentColor || ACCENT_BY_NAME[take.questionAccent] || ACCENTS[index % ACCENTS.length];
           const questionTitle = take.questionTitle || take.question || t("Leaderboard question");
@@ -38,7 +38,7 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
             <Link
               key={`${take.questionId || "question"}-${take.id || index}`}
               href={take.questionId ? `/leaderboard/${take.questionId}` : "/explore"}
-              className={`group flex min-h-[7.4rem] w-[10rem] min-w-[10rem] snap-start flex-col justify-between rounded-[1.15rem] border p-3.5 transition active:scale-[0.98] ${
+              className={`group flex min-h-[7.4rem] w-full snap-start flex-col justify-between rounded-[1.15rem] border p-3.5 transition active:scale-[0.98] ${
                 darkMode
                   ? "border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.09),rgba(255,255,255,0.035))] shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
                   : "border-black/10 bg-white shadow-[0_14px_30px_rgba(0,0,0,0.10)]"

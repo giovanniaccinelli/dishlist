@@ -49,7 +49,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
-import { ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
@@ -60,6 +60,7 @@ import RestaurantMapView from "../../components/RestaurantMapView";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import ProfileTakesStrip from "../../components/ProfileTakesStrip";
+import MapPreview from "../../components/MapPreview";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -68,7 +69,6 @@ import {
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
-  RestaurantForkKnifeIcon,
   RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../components/DishModeControls";
@@ -95,6 +95,37 @@ function StoryStatIcon({ size = 10 }) {
       <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
+}
+
+function getStoryCalendarMillis(value) {
+  if (!value) return 0;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  if (typeof value?.toMillis === "function") return value.toMillis();
+  if (typeof value?.seconds === "number") return value.seconds * 1000;
+  return 0;
+}
+
+function getStoryCalendarKey(ms) {
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatStoryCalendarDay(ms, language = "en") {
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function uniqueNonEmpty(values = []) {
@@ -322,6 +353,7 @@ export default function Profile() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [leaderboardTakes, setLeaderboardTakes] = useState([]);
   const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
   const [leaderboardAdminPassword, setLeaderboardAdminPassword] = useState("");
@@ -1470,6 +1502,66 @@ export default function Profile() {
     [uploadedDishes]
   );
 
+  const storyCalendarDays = useMemo(() => {
+    const dishById = new Map();
+    allDishlists.forEach((dishlist) => {
+      (dishlist.dishes || []).forEach((dish) => {
+        if (dish?.id && !dishById.has(dish.id)) dishById.set(dish.id, dish);
+      });
+    });
+    uploadedDishes.forEach((dish) => {
+      if (dish?.id && !dishById.has(dish.id)) dishById.set(dish.id, dish);
+    });
+
+    const entries = [];
+    Object.entries(storyPushStats || {}).forEach(([dishId, stats]) => {
+      const dish = dishById.get(dishId) || { id: dishId };
+      (stats?.history || []).forEach((entry, index) => {
+        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO);
+        if (!ms) return;
+        entries.push({
+          id: `${dishId}-${ms}-${index}`,
+          dayKey: getStoryCalendarKey(ms),
+          ms,
+          dishId,
+          name: dish.name || entry?.name || "Untitled dish",
+          imageDish: dish,
+        });
+      });
+    });
+
+    activeStories.forEach((story) => {
+      const ms = getStoryCalendarMillis(story.createdAt) || getStoryCalendarMillis(story.pushedAtMs);
+      if (!ms) return;
+      entries.push({
+        id: `active-${story.id || story.dishId || ms}`,
+        dayKey: getStoryCalendarKey(ms),
+        ms,
+        dishId: story.dishId || story.id || "",
+        name: story.name || story.dishName || "Untitled dish",
+        imageDish: story,
+      });
+    });
+
+    const byDay = new Map();
+    entries
+      .filter((entry) => entry.dayKey)
+      .sort((a, b) => b.ms - a.ms)
+      .forEach((entry) => {
+        if (!byDay.has(entry.dayKey)) {
+          byDay.set(entry.dayKey, { key: entry.dayKey, ms: entry.ms, items: [] });
+        }
+        const day = byDay.get(entry.dayKey);
+        if (!day.items.some((item) => item.id === entry.id || (item.dishId && item.dishId === entry.dishId && item.ms === entry.ms))) {
+          day.items.push(entry);
+        }
+      });
+
+    return Array.from(byDay.values()).sort((a, b) => b.ms - a.ms);
+  }, [activeStories, allDishlists, storyPushStats, uploadedDishes]);
+
+  const storyCalendarCount = storyCalendarDays.reduce((total, day) => total + day.items.length, 0);
+
   const selectedCreateDishes = Array.from(
     new Map(
       allDishlists
@@ -1913,17 +2005,59 @@ export default function Profile() {
           ) : null}
 
           {showingDishlistOverview ? (
-            <div className="mb-4 flex justify-center px-2">
+            <div className="mx-auto mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
               <button
                 type="button"
                 onClick={() => setProfileMapOpen(true)}
-                className={`inline-flex w-full max-w-sm items-center justify-center gap-3 rounded-[1.15rem] border-2 px-5 py-3.5 text-sm font-bold transition active:scale-[0.98] ${
-                  darkMode ? "border-[#E64646] bg-[#190F0F] text-white" : "border-[#E64646] bg-[#FFF7F7] text-[#7E1717]"
+                className={`restaurant-accent-border min-h-[10.4rem] overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
+                  darkMode ? "bg-[#190F0F] text-white" : "bg-[#FFF7F7] text-[#7E1717]"
                 }`}
                 style={{ borderColor: "#E64646" }}
               >
-                <RestaurantForkKnifeIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.85} />
-                {t("Restaurants")}
+                <div className="relative h-[6.7rem] overflow-hidden">
+                  <MapPreview groups={uploadedRestaurantGroups} />
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/58 to-transparent" />
+                </div>
+                <div className="px-3 py-2.5">
+                  <div className="flex items-center gap-2 text-sm font-bold">
+                    <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] text-[#E64646]" strokeWidth={1.9} />
+                    {t("Restaurants")}
+                  </div>
+                  <div className={`mt-1 text-[11px] ${darkMode ? "text-white/58" : "text-black/50"}`}>
+                    {uploadedRestaurantGroups.length} {t("places")}
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileCalendarOpen(true)}
+                className={`min-h-[10.4rem] overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
+                  darkMode ? "border-white/12 bg-[#151515] text-white" : "border-black/10 bg-white text-black"
+                }`}
+              >
+                <div className={`flex h-[6.7rem] flex-col justify-between p-3 ${darkMode ? "bg-[#101010]" : "bg-[#F8F3EA]"}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/38">{t("Calendar")}</div>
+                    <CalendarDays className="h-5 w-5 text-[#1FA463]" strokeWidth={2.1} />
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {Array.from({ length: 14 }).map((_, index) => {
+                      const active = index < Math.min(storyCalendarCount, 14);
+                      return (
+                        <div
+                          key={index}
+                          className={`aspect-square rounded-[0.42rem] ${active ? "bg-[#1FA463]" : darkMode ? "bg-white/10" : "bg-white"}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="px-3 py-2.5">
+                  <div className="text-sm font-bold">{t("Food calendar")}</div>
+                  <div className={`mt-1 text-[11px] ${darkMode ? "text-white/58" : "text-black/50"}`}>
+                    {storyCalendarCount} {t("story meals")}
+                  </div>
+                </div>
               </button>
             </div>
           ) : null}
@@ -3774,6 +3908,92 @@ export default function Profile() {
         loading={dishlistPickerLoading}
       />
       <AnimatePresence>
+        {profileCalendarOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setProfileCalendarOpen(false)}
+          >
+            <motion.div
+              className={`mx-auto flex h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] w-full max-w-[25.5rem] flex-col overflow-hidden rounded-[1.6rem] border p-4 shadow-2xl ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-[#F8F3EA] text-black"
+              }`}
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                    {t("Story meals")}
+                  </div>
+                  <h3 className={`mt-2 text-[1.6rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {t("Food calendar")}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileCalendarOpen(false)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/55"}`}
+                  aria-label="Close food calendar"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {storyCalendarDays.length ? (
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                  {storyCalendarDays.map((day) => (
+                    <div
+                      key={day.key}
+                      className={`rounded-[1.25rem] border p-3 ${darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/86"}`}
+                    >
+                      <div className={`mb-2 text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/50" : "text-black/45"}`}>
+                        {formatStoryCalendarDay(day.ms, language)}
+                      </div>
+                      <div className="space-y-2">
+                        {day.items.map((item) => (
+                          <Link
+                            key={item.id}
+                            href={item.dishId ? `/dish/${item.dishId}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile")}` : "#"}
+                            onClick={(event) => {
+                              if (!item.dishId) event.preventDefault();
+                            }}
+                            className={`flex items-center gap-3 rounded-[1rem] p-2 ${darkMode ? "bg-black/24" : "bg-[#F7F2E8]"}`}
+                          >
+                            <img
+                              src={getDishImageUrl(item.imageDish, "thumb")}
+                              alt={item.name}
+                              className="h-12 w-12 rounded-[0.85rem] object-cover"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                            <div className="min-w-0">
+                              <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>
+                              <div className={`mt-0.5 text-[11px] ${darkMode ? "text-white/45" : "text-black/45"}`}>
+                                {new Date(item.ms).toLocaleTimeString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={`flex min-h-0 flex-1 items-center justify-center rounded-[1.35rem] border text-center text-sm ${darkMode ? "border-white/10 bg-white/6 text-white/55" : "border-black/8 bg-white/72 text-black/55"}`}>
+                  {t("Story meals will show up here.")}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        ) : null}
         {profileMapOpen ? (
           <motion.div
             className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"

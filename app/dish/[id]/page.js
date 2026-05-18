@@ -40,6 +40,7 @@ import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tag
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
+import IngredientBulletTextarea from "../../../components/IngredientBulletTextarea";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
 import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
@@ -1168,9 +1169,9 @@ export default function DishDetail() {
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-                <textarea
+                <IngredientBulletTextarea
                   value={editRecipeIngredients}
-                  onChange={(e) => setEditRecipeIngredients(e.target.value)}
+                  onChange={setEditRecipeIngredients}
                   placeholder="Ingredients"
                   rows={3}
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}

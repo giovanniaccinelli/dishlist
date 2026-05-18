@@ -61,6 +61,7 @@ import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import ProfileTakesStrip from "../../components/ProfileTakesStrip";
 import MapPreview from "../../components/MapPreview";
+import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -2276,14 +2277,14 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setProfileCalendarOpen(true)}
-                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-[#F7F2E8]"
+                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                    darkMode ? "border-white/10 bg-[#202020]" : "border-black/10 bg-white"
                   }`}
                   aria-label="Open calendar"
                 >
-                  <div className={`relative flex h-full flex-col overflow-hidden rounded-[1rem] border ${darkMode ? "border-white/10 bg-[#202020]" : "border-black/8 bg-white"}`}>
-                    <div className="h-6 bg-[#E64646]" />
-                    <div className="absolute left-0 right-0 top-[1.1rem] flex justify-center gap-5">
+                  <div className="relative flex h-full flex-col overflow-hidden">
+                    <div className="h-6 bg-[#2BD36B]" />
+                    <div className="absolute left-0 right-0 top-[1rem] flex justify-center gap-5">
                       {[0, 1].map((item) => (
                         <span key={item} className={`h-2.5 w-2.5 rounded-full border-2 ${darkMode ? "border-[#202020] bg-white" : "border-white bg-black"}`} />
                       ))}
@@ -2471,10 +2472,10 @@ export default function Profile() {
                 rows={3}
                 disabled={loadingUpload}
               />
-              <textarea
+              <IngredientBulletTextarea
                 placeholder="Recipe ingredients"
                 value={dishRecipeIngredients}
-                onChange={(e) => setDishRecipeIngredients(e.target.value)}
+                onChange={setDishRecipeIngredients}
                 className="w-full p-3 rounded-2xl bg-[#F6F6F2] text-black mb-3 border border-black/10 focus:outline-none focus:ring-2 focus:ring-black/20"
                 rows={3}
                 disabled={loadingUpload}

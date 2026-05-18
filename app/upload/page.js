@@ -11,6 +11,7 @@ import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import ImageFramingModal from "../../components/ImageFramingModal";
+import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { RatingStars } from "../../components/RatingStars";
@@ -596,10 +597,10 @@ export default function UploadPage() {
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-                <textarea
+                <IngredientBulletTextarea
                   placeholder="Ingredients"
                   value={dishRecipeIngredients}
-                  onChange={(e) => setDishRecipeIngredients(e.target.value)}
+                  onChange={setDishRecipeIngredients}
                   className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
                   rows={3}
                   disabled={loadingUpload}

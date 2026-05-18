@@ -9,21 +9,21 @@ const PIN_SVG = encodeURIComponent(`
 <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" stroke="white" stroke-width="3"/>
-  <circle cx="21" cy="19" r="9" fill="#111111"/>
-  <path d="M16 15.2V20.1" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M14.8 15.2V17.8" stroke="white" stroke-width="1.15" stroke-linecap="round"/>
-  <path d="M17.2 15.2V17.8" stroke="white" stroke-width="1.15" stroke-linecap="round"/>
-  <path d="M16 20.1V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M27 15.3C24.45 16.6 23.25 18.6 23.25 21.15V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M27 15.3V24.2" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="21" cy="19" r="10.75" fill="#111111"/>
+  <path d="M17.8 14.6V18.7" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
+  <path d="M16.75 14.6V16.75" stroke="white" stroke-width="0.95" stroke-linecap="round"/>
+  <path d="M18.85 14.6V16.75" stroke="white" stroke-width="0.95" stroke-linecap="round"/>
+  <path d="M17.8 18.7V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
+  <path d="M24.95 14.65C23.15 16.05 22.35 17.75 22.35 19.9V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
+  <path d="M24.95 14.65V23.15" stroke="white" stroke-width="1.45" stroke-linecap="round"/>
 </svg>`);
 
 function getRestaurantMarkerIcon() {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   return {
     url: `data:image/svg+xml;charset=UTF-8,${PIN_SVG}`,
-    scaledSize: new window.google.maps.Size(34, 40),
-    anchor: new window.google.maps.Point(17, 40),
+    scaledSize: new window.google.maps.Size(32, 38),
+    anchor: new window.google.maps.Point(16, 38),
   };
 }
 

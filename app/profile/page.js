@@ -48,7 +48,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { CalendarDays, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
@@ -141,6 +141,27 @@ function getCalendarMonthCells(monthDate) {
       isToday: getStoryCalendarKey(date.getTime()) === getStoryCalendarKey(Date.now()),
     };
   });
+}
+
+async function getMealCalendarEntriesForUserIds(userIds = []) {
+  const ids = Array.from(new Set(userIds.filter(Boolean)));
+  const snapshots = await Promise.all(
+    ids.map((userId) => getDocs(collection(db, "users", userId, "mealCalendar")))
+  );
+  return snapshots.flatMap((snap) =>
+    snap.docs.map((docSnap) => {
+      const data = docSnap.data() || {};
+      const ateAtMs = Number(data.ateAtMs || 0) || getStoryCalendarMillis(data.createdAt);
+      return {
+        id: docSnap.id,
+        name: data.name || data.title || "",
+        dayKey: data.dayKey || getStoryCalendarKey(ateAtMs),
+        ms: ateAtMs,
+        createdAt: data.createdAt || null,
+        calendarOnly: true,
+      };
+    })
+  );
 }
 
 function uniqueNonEmpty(values = []) {
@@ -371,6 +392,10 @@ export default function Profile() {
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [profileCalendarMonth, setProfileCalendarMonth] = useState(() => new Date());
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
+  const [mealCalendarEntries, setMealCalendarEntries] = useState([]);
+  const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
+  const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
+  const [mealCalendarEntrySaving, setMealCalendarEntrySaving] = useState(false);
   const [leaderboardTakes, setLeaderboardTakes] = useState([]);
   const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
   const [leaderboardAdminPassword, setLeaderboardAdminPassword] = useState("");
@@ -423,6 +448,51 @@ export default function Profile() {
     const lists = await getCustomDishlistsForUser(ownerId);
     setCustomDishlists(lists);
     return lists;
+  };
+  const openMealCalendarEntry = (dayKey = getStoryCalendarKey(Date.now())) => {
+    const targetMs = new Date(`${dayKey}T12:00:00`).getTime();
+    setProfileCalendarSelectedDay(dayKey);
+    if (Number.isFinite(targetMs)) {
+      setProfileCalendarMonth(new Date(targetMs));
+    }
+    setMealCalendarEntryName("");
+    setMealCalendarEntryOpen(true);
+  };
+  const saveMealCalendarEntry = async () => {
+    const name = mealCalendarEntryName.trim();
+    if (!name || !user?.uid || mealCalendarEntrySaving) return;
+    setMealCalendarEntrySaving(true);
+    try {
+      const dayKey = profileCalendarSelectedDay || getStoryCalendarKey(Date.now());
+      const ateAtMs = new Date(`${dayKey}T12:00:00`).getTime();
+      const docRef = await addDoc(collection(db, "users", user.uid, "mealCalendar"), {
+        name,
+        dayKey,
+        ateAtMs: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
+        createdAt: serverTimestamp(),
+      });
+      setMealCalendarEntries((prev) => [
+        {
+          id: docRef.id,
+          name,
+          dayKey,
+          ms: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
+          createdAt: null,
+          calendarOnly: true,
+        },
+        ...prev,
+      ]);
+      setMealCalendarEntryOpen(false);
+      setMealCalendarEntryName("");
+      setToast(t("Saved"));
+      setToastVariant("success");
+    } catch (error) {
+      console.error("Failed to save calendar entry:", error);
+      setToast(t("Something went wrong"));
+      setToastVariant("error");
+    } finally {
+      setMealCalendarEntrySaving(false);
+    }
   };
 
   useEffect(() => {
@@ -489,9 +559,10 @@ export default function Profile() {
           Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getActiveStoriesForUser(candidateId))),
           Promise.all(candidateIds.map((candidateId) => getStoryPushStatsForUser(candidateId))),
+          getMealCalendarEntriesForUserIds(candidateIds),
           getLeaderboardAnswersForUser(candidateIds, true),
         ]);
-        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, takesRes] = results;
+        const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, mealCalendarRes, takesRes] = results;
         if (cancelled) return;
         setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
@@ -499,6 +570,7 @@ export default function Profile() {
         setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
         setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
+        setMealCalendarEntries(mealCalendarRes.status === "fulfilled" ? mealCalendarRes.value : []);
         setLeaderboardTakes(takesRes.status === "fulfilled" ? takesRes.value : []);
         setProfileContentReady(true);
       } catch (error) {
@@ -628,6 +700,17 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("calendarEntry") !== "1") return;
+    setProfileCalendarOpen(true);
+    openMealCalendarEntry(getStoryCalendarKey(Date.now()));
+    params.delete("calendarEntry");
+    const query = params.toString();
+    window.history.replaceState({}, "", query ? `/profile?${query}` : "/profile");
+  }, []);
+
+  useEffect(() => {
     if (!user) return undefined;
     const userRef = doc(db, "users", user.uid);
     const unsubscribeUser = onSnapshot(userRef, (snap) => {
@@ -669,12 +752,19 @@ export default function Profile() {
       setStoryPushStats(stats);
     });
 
+    const mealCalendarRef = collection(db, "users", user.uid, "mealCalendar");
+    const unsubscribeMealCalendar = onSnapshot(mealCalendarRef, async () => {
+      const entries = await getMealCalendarEntriesForUserIds([user.uid]);
+      setMealCalendarEntries(entries);
+    });
+
     return () => {
       unsubscribeUser();
       unsubscribeSaved();
       unsubscribeToTry();
       unsubscribeStories();
       unsubscribeStoryPushes();
+      unsubscribeMealCalendar();
     };
   }, [user]);
 
@@ -1560,6 +1650,21 @@ export default function Profile() {
       });
     });
 
+    mealCalendarEntries.forEach((entry) => {
+      const ms = Number(entry.ms || entry.ateAtMs || 0) || getStoryCalendarMillis(entry.createdAt) || Date.now();
+      const dayKey = entry.dayKey || getStoryCalendarKey(ms);
+      if (!dayKey) return;
+      entries.push({
+        id: `manual-${entry.id || `${dayKey}-${entry.name}`}`,
+        dayKey,
+        ms,
+        dishId: "",
+        name: entry.name || "Untitled",
+        imageDish: null,
+        calendarOnly: true,
+      });
+    });
+
     const byDay = new Map();
     entries
       .filter((entry) => entry.dayKey)
@@ -1575,7 +1680,7 @@ export default function Profile() {
       });
 
     return Array.from(byDay.values()).sort((a, b) => b.ms - a.ms);
-  }, [activeStories, allDishlists, storyPushStats, uploadedDishes]);
+  }, [activeStories, allDishlists, mealCalendarEntries, storyPushStats, uploadedDishes]);
 
   const storyCalendarCount = storyCalendarDays.reduce((total, day) => total + day.items.length, 0);
   const storyCalendarByDay = useMemo(
@@ -2043,13 +2148,13 @@ export default function Profile() {
                 }`}
                 style={{ borderColor: "#E64646" }}
               >
-                <div className="relative h-[5.35rem] overflow-hidden">
+                <div className="relative h-[4.65rem] overflow-hidden">
                   <MapPreview groups={uploadedRestaurantGroups} />
                   <div className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/92 text-[#E64646] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
                     <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem]" strokeWidth={1.9} />
                   </div>
                 </div>
-                <div className="px-3 py-2 text-sm font-bold">
+                <div className="px-3 py-1.5 text-sm font-bold">
                   {t("Restaurant map")}
                 </div>
               </button>
@@ -2060,25 +2165,27 @@ export default function Profile() {
                   darkMode ? "border-white/12 bg-[#151515] text-white" : "border-black/10 bg-white text-black"
                 }`}
               >
-                <div className={`flex h-[5.35rem] flex-col justify-between p-2.5 ${darkMode ? "bg-[#101010]" : "bg-[#F8F3EA]"}`}>
+                <div className={`flex h-[4.65rem] flex-col justify-between p-2.5 ${darkMode ? "bg-[#101010]" : "bg-[#F9F7F2]"}`}>
                   <div className="flex items-center justify-between">
-                    <div className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/38" : "text-black/38"}`}>{t("Calendar")}</div>
-                    <CalendarDays className="h-5 w-5 text-[#1FA463]" strokeWidth={2.1} />
+                    <div className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
+                      {getCalendarMonthLabel(new Date(), language)}
+                    </div>
+                    <CalendarDays className={`h-5 w-5 ${darkMode ? "text-white/75" : "text-black/75"}`} strokeWidth={2.1} />
                   </div>
-                  <div className="grid grid-cols-7 gap-0.5 rounded-[0.75rem]">
+                  <div className="grid grid-cols-7 gap-1 rounded-[0.75rem]">
                     {Array.from({ length: 21 }).map((_, index) => {
-                      const active = index < Math.min(storyCalendarCount, 14);
+                      const active = index < Math.min(storyCalendarCount, 8);
                       return (
                         <div
                           key={index}
-                          className={`h-1.5 rounded-full ${active ? "bg-[#1FA463]" : darkMode ? "bg-white/10" : "bg-white"}`}
+                          className={`h-2 rounded-[0.25rem] ${active ? darkMode ? "bg-white/70" : "bg-black/70" : darkMode ? "bg-white/10" : "bg-black/8"}`}
                         />
                       );
                     })}
                   </div>
                 </div>
-                <div className="px-3 py-2 text-sm font-bold">
-                  {t("Meal calendar")}
+                <div className="px-3 py-1.5 text-sm font-bold">
+                  {t("Calendar")}
                 </div>
               </button>
             </div>
@@ -3890,6 +3997,31 @@ export default function Profile() {
                     </div>
                   </div>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    setProfileCalendarOpen(true);
+                    openMealCalendarEntry(getStoryCalendarKey(Date.now()));
+                  }}
+                  className={`w-full rounded-[1.45rem] border-2 px-5 py-4 text-left transition-transform hover:scale-[1.01] ${
+                    darkMode
+                      ? "border-white/14 bg-white/7 text-white"
+                      : "border-black/10 bg-[#F7F5EF] text-black"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xl font-semibold leading-tight">{t("Calendar only")}</p>
+                      <p className={`mt-1.5 text-sm leading-snug ${darkMode ? "text-white/58" : "text-black/58"}`}>
+                        {t("This will not post a story.")}
+                      </p>
+                    </div>
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] ${darkMode ? "bg-white/12 text-white" : "bg-black text-white"}`}>
+                      <CalendarDays size={23} />
+                    </div>
+                  </div>
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -3953,7 +4085,7 @@ export default function Profile() {
                     {t("What you ate")}
                   </div>
                   <h3 className={`mt-2 text-[1.6rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                    {t("Meal calendar")}
+                    {t("Calendar")}
                   </h3>
                 </div>
                 <button
@@ -3992,10 +4124,11 @@ export default function Profile() {
                 ))}
               </div>
               <div className={`rounded-[1.25rem] border p-2.5 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
-                <div className="grid auto-rows-[3.25rem] grid-cols-7 gap-1.5">
+                <div className="grid auto-rows-[3.8rem] grid-cols-7 gap-1.5">
                   {profileCalendarCells.map((cell) => {
                     const items = storyCalendarByDay.get(cell.dayKey) || [];
                     const selected = cell.dayKey === profileCalendarSelectedDay;
+                    const firstImageItem = items.find((item) => item.imageDish);
                     return (
                       <button
                         key={cell.dayKey}
@@ -4003,31 +4136,34 @@ export default function Profile() {
                         onClick={() => setProfileCalendarSelectedDay(cell.dayKey)}
                         className={`relative min-w-0 rounded-[0.8rem] border p-1 text-left transition ${
                           selected
-                            ? "border-[#1FA463] bg-[#E9FFF0] text-black shadow-[0_8px_18px_rgba(31,164,99,0.14)]"
+                            ? darkMode
+                              ? "border-[#4CCB7F] bg-[#173320] text-white shadow-[0_8px_18px_rgba(76,203,127,0.12)]"
+                              : "border-black bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
                             : cell.inMonth
                               ? darkMode ? "border-white/10 bg-[#171717] text-white" : "border-black/8 bg-white text-black"
                               : darkMode ? "border-white/5 bg-white/[0.025] text-white/26" : "border-black/5 bg-white/42 text-black/28"
                         }`}
                       >
                         <div className="flex items-start justify-between">
-                          <span className={`text-[11px] font-bold leading-none ${cell.isToday ? "text-[#1FA463]" : ""}`}>
+                          <span className={`text-[12px] font-bold leading-none ${
+                            cell.isToday
+                              ? selected ? "text-white" : darkMode ? "text-white" : "text-black"
+                              : ""
+                          }`}>
                             {cell.date.getDate()}
                           </span>
-                          {items.length ? (
-                            <span className="rounded-full bg-[#1FA463] px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
-                              {items.length}
-                            </span>
-                          ) : null}
                         </div>
-                        {items[0] ? (
+                        {firstImageItem ? (
                           <img
-                            src={getDishImageUrl(items[0].imageDish, "thumb")}
+                            src={getDishImageUrl(firstImageItem.imageDish, "thumb")}
                             alt=""
-                            className="absolute bottom-1 left-1 h-5 w-5 rounded-[0.42rem] object-cover"
+                            className="absolute bottom-1.5 left-1.5 h-6 w-6 rounded-[0.5rem] object-cover"
                             onError={(event) => {
                               event.currentTarget.style.display = "none";
                             }}
                           />
+                        ) : items.length ? (
+                          <span className={`absolute bottom-2 left-2 h-2.5 w-2.5 rounded-full ${selected ? "bg-white" : darkMode ? "bg-white/65" : "bg-black/65"}`} />
                         ) : null}
                       </button>
                     );
@@ -4035,50 +4171,146 @@ export default function Profile() {
                 </div>
               </div>
               <div className={`mt-3 min-h-0 flex-1 overflow-y-auto rounded-[1.25rem] border p-3 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
-                <div className={`mb-2 text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/48" : "text-black/45"}`}>
-                  {new Date(`${profileCalendarSelectedDay}T12:00:00`).toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className={`text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                    {new Date(`${profileCalendarSelectedDay}T12:00:00`).toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openMealCalendarEntry(profileCalendarSelectedDay)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
+                      darkMode ? "bg-white text-black" : "bg-black text-white"
+                    }`}
+                  >
+                    {profileCalendarSelectedDay === getStoryCalendarKey(Date.now()) ? t("Add today") : t("Add")}
+                  </button>
                 </div>
                 {profileCalendarSelectedItems.length ? (
                   <div className="space-y-2">
-                    {profileCalendarSelectedItems.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.dishId ? `/dish/${item.dishId}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile")}` : "#"}
-                        onClick={(event) => {
-                          if (!item.dishId) event.preventDefault();
-                        }}
-                        className={`flex items-center gap-3 rounded-[1rem] p-2.5 ${darkMode ? "bg-black/24" : "bg-[#F7F2E8]"}`}
-                      >
-                        <img
-                          src={getDishImageUrl(item.imageDish, "thumb")}
-                          alt={item.name}
-                          className="h-14 w-14 shrink-0 rounded-[0.9rem] object-cover"
-                          onError={(event) => {
-                            event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                          }}
-                        />
-                        <div className="min-w-0">
-                          <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>
-                          <div className={`mt-0.5 text-[11px] ${darkMode ? "text-white/45" : "text-black/45"}`}>
-                            {new Date(item.ms).toLocaleTimeString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                    {profileCalendarSelectedItems.map((item) => {
+                      const content = (
+                        <>
+                          {item.calendarOnly ? (
+                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[0.9rem] ${darkMode ? "bg-white/10 text-white" : "bg-black/8 text-black"}`}>
+                              <CalendarDays size={22} />
+                            </div>
+                          ) : (
+                            <img
+                              src={getDishImageUrl(item.imageDish, "thumb")}
+                              alt={item.name}
+                              className="h-14 w-14 shrink-0 rounded-[0.9rem] object-cover"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>
+                            <div className={`mt-0.5 text-[11px] ${darkMode ? "text-white/45" : "text-black/45"}`}>
+                              {item.calendarOnly
+                                ? t("Calendar only")
+                                : new Date(item.ms).toLocaleTimeString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                            </div>
                           </div>
+                        </>
+                      );
+                      const rowClassName = `flex items-center gap-3 rounded-[1rem] p-2.5 ${darkMode ? "bg-black/24" : "bg-[#F7F2E8]"}`;
+                      return item.calendarOnly || !item.dishId ? (
+                        <div key={item.id} className={rowClassName}>
+                          {content}
                         </div>
-                      </Link>
-                    ))}
+                      ) : (
+                        <Link
+                          key={item.id}
+                          href={`/dish/${item.dishId}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile")}`}
+                          className={rowClassName}
+                        >
+                          {content}
+                        </Link>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className={`flex h-20 items-center justify-center rounded-[1rem] text-center text-sm ${darkMode ? "bg-black/20 text-white/45" : "bg-[#F7F2E8] text-black/45"}`}>
-                    {t("No story meals that day.")}
+                    {t("No calendar entries that day.")}
                   </div>
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+        {mealCalendarEntryOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[105] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMealCalendarEntryOpen(false)}
+          >
+            <motion.div
+              className={`w-full max-w-sm rounded-[1.5rem] border p-4 shadow-2xl ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-white text-black"
+              }`}
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.98, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                    {new Date(`${profileCalendarSelectedDay}T12:00:00`).toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                  <h3 className="mt-2 text-2xl font-semibold leading-tight">{t("Write what you ate")}</h3>
+                  <p className={`mt-1 text-sm ${darkMode ? "text-white/54" : "text-black/54"}`}>
+                    {t("This will not post a story.")}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMealCalendarEntryOpen(false)}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/55"}`}
+                  aria-label="Close calendar entry"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+              <label className={`mb-2 block text-xs font-bold uppercase tracking-[0.14em] ${darkMode ? "text-white/45" : "text-black/45"}`}>
+                {t("What did you eat?")}
+              </label>
+              <input
+                value={mealCalendarEntryName}
+                onChange={(event) => setMealCalendarEntryName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") saveMealCalendarEntry();
+                }}
+                className={`w-full rounded-[1rem] border px-4 py-3 text-base font-semibold outline-none ${
+                  darkMode ? "border-white/12 bg-white/8 text-white placeholder:text-white/28" : "border-black/10 bg-[#F7F5EF] text-black placeholder:text-black/28"
+                }`}
+                placeholder={t("Dish name")}
+                autoFocus
+              />
+              <button
+                type="button"
+                disabled={!mealCalendarEntryName.trim() || mealCalendarEntrySaving}
+                onClick={saveMealCalendarEntry}
+                className={`mt-4 w-full rounded-full px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                  darkMode ? "bg-white text-black" : "bg-black text-white"
+                }`}
+              >
+                {mealCalendarEntrySaving ? t("Saving...") : t("Save to calendar")}
+              </button>
             </motion.div>
           </motion.div>
         ) : null}

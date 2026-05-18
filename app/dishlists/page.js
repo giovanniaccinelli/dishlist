@@ -25,7 +25,7 @@ import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { Plus, Search, Send } from "lucide-react";
+import { CalendarDays, Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
 import { getDarkTagChipClass, getTagChipClass } from "../lib/tags";
@@ -722,6 +722,30 @@ export default function Dishlists() {
                     <div className={`space-y-2 text-sm ${darkMode ? "text-white/58" : "text-black/65"}`}>
                       <p>Pick from your uploaded dishes or Your Classics.</p>
                       <p>Share it instantly to your story.</p>
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStoryActionOpen(false);
+                    router.push("/profile?calendarEntry=1");
+                  }}
+                  className={`w-full rounded-[1.45rem] border-2 px-5 py-4 text-left transition-transform hover:scale-[1.01] ${
+                    darkMode
+                      ? "border-white/14 bg-white/7 text-white"
+                      : "border-black/10 bg-[#F7F5EF] text-black"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xl font-semibold leading-tight">{t("Calendar only")}</p>
+                      <p className={`mt-1.5 text-sm leading-snug ${darkMode ? "text-white/58" : "text-black/58"}`}>
+                        {t("This will not post a story.")}
+                      </p>
+                    </div>
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] ${darkMode ? "bg-white/12 text-white" : "bg-black text-white"}`}>
+                      <CalendarDays size={23} />
                     </div>
                   </div>
                 </button>

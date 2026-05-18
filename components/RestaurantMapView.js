@@ -13,8 +13,11 @@ const RESTAURANT_PIN_SVG = encodeURIComponent(`
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="#E64646"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="white" stroke-width="3"/>
   <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
-  <circle cx="23" cy="19.8" r="5.1" stroke="white" stroke-width="1.9"/>
-  <path d="M19.1 25H26.9" stroke="white" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.15 15.75V25.2" stroke="white" stroke-width="1.65" stroke-linecap="round"/>
+  <path d="M16.9 15.75V19.25" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M19.4 15.75V19.25" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M27 15.65V25.2" stroke="white" stroke-width="1.65" stroke-linecap="round"/>
+  <path d="M23.6 19.9C23.6 17.45 24.85 16.05 27 15.65" stroke="white" stroke-width="1.65" stroke-linecap="round"/>
 </svg>`);
 
 function getRestaurantMarkerIcon() {

@@ -1181,12 +1181,20 @@ export default function PublicProfile() {
               }`}
               aria-label="Open calendar"
             >
-              <div className="relative flex h-full flex-col p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className={`h-1.5 w-12 rounded-full ${darkMode ? "bg-white/24" : "bg-black/18"}`} />
-                  <div className={`h-1.5 w-5 rounded-full ${darkMode ? "bg-white/12" : "bg-black/10"}`} />
+              <div className="relative flex h-full flex-col">
+                <div className={`relative h-6 border-b ${darkMode ? "border-white/8 bg-white/10" : "border-black/8 bg-[#ECE7DA]"}`}>
+                  <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-4">
+                    {[0, 1, 2].map((item) => (
+                      <span
+                        key={item}
+                        className={`h-2 w-2 rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.24)] ${
+                          darkMode ? "bg-[#181818]" : "bg-[#FBFAF6]"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="grid flex-1 grid-cols-7 gap-1.5">
+                <div className="grid flex-1 grid-cols-7 gap-1.5 p-3">
                   {calendarPreviewCells.slice(0, 28).map((cell) => {
                     const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
                     return (

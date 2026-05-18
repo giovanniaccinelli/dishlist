@@ -44,24 +44,8 @@ export default function IngredientBulletTextarea({
     });
   };
 
-  const addBullet = () => {
-    const node = textareaRef.current;
-    if (!node) {
-      updateValue(ensureBulletValue(value));
-      return;
-    }
-    const current = ensureBulletValue(node.value);
-    if (current !== node.value) {
-      updateValue(current, current.length);
-      return;
-    }
-    const prefix = current.endsWith("\n") || !current ? "" : "\n";
-    const next = insertAtCursor(node, `${prefix}${BULLET}`);
-    updateValue(next.value, next.cursor);
-  };
-
   return (
-    <div>
+    <>
       <textarea
         ref={textareaRef}
         placeholder={placeholder}
@@ -69,7 +53,10 @@ export default function IngredientBulletTextarea({
         onFocus={() => {
           if (!String(value || "").trim()) updateValue(BULLET, BULLET.length);
         }}
-        onChange={(event) => onChange?.(event.target.value)}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          onChange?.(nextValue.trim() ? ensureBulletValue(nextValue) : "");
+        }}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
           event.preventDefault();
@@ -80,14 +67,6 @@ export default function IngredientBulletTextarea({
         rows={rows}
         disabled={disabled}
       />
-      <button
-        type="button"
-        onClick={addBullet}
-        disabled={disabled}
-        className="mt-2 inline-flex items-center rounded-full border border-black/10 bg-white/80 px-3 py-1.5 text-xs font-bold text-black/60 transition active:scale-[0.98] disabled:opacity-45"
-      >
-        + ingrediente
-      </button>
-    </div>
+    </>
   );
 }

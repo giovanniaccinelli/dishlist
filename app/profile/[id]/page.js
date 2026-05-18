@@ -1182,7 +1182,7 @@ export default function PublicProfile() {
               aria-label="Open calendar"
             >
               <div className="relative flex h-full flex-col">
-                <div className="relative h-6 border-b border-[#D9B84F]/45 bg-[#F2D46D]">
+                <div className="relative h-6 border-b border-[#C78400]/35 bg-[#F0A623]">
                   <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-8">
                     {[0, 1].map((item) => (
                       <span
@@ -1202,11 +1202,11 @@ export default function PublicProfile() {
                         key={cell.dayKey}
                         className={`relative rounded-[0.32rem] ${
                           cell.isToday
-                            ? "border border-[#F2D46D] bg-transparent"
+                            ? "border border-[#F0A623] bg-transparent"
                             : darkMode ? "bg-white/12" : "bg-black/8"
                         }`}
                       >
-                        {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#F2D46D]" /> : null}
+                        {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#F0A623]" /> : null}
                       </div>
                     );
                   })}

@@ -123,8 +123,9 @@ function getCalendarTimelineCells(days = [], selectedDayKey = getStoryCalendarKe
   const selectedMs = new Date(`${selectedDayKey}T12:00:00`).getTime();
   const entryMs = days.map((day) => Number(day.ms || 0)).filter((ms) => Number.isFinite(ms) && ms > 0);
   const defaultStart = todayMs - 119 * 86400000;
+  const defaultEnd = todayMs + 90 * 86400000;
   const minMs = Math.min(defaultStart, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
-  const maxMs = Math.max(todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
+  const maxMs = Math.max(defaultEnd, todayMs, Number.isFinite(selectedMs) ? selectedMs : todayMs, ...entryMs);
   const start = new Date(minMs);
   const end = new Date(maxMs);
   const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
@@ -388,6 +389,7 @@ export default function Profile() {
   const [storyPushStats, setStoryPushStats] = useState({});
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
+  const [profileCalendarVisibleDay, setProfileCalendarVisibleDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [mealCalendarEntries, setMealCalendarEntries] = useState([]);
   const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
   const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
@@ -1670,11 +1672,32 @@ export default function Profile() {
     () => getCalendarTimelineCells(storyCalendarDays, profileCalendarSelectedDay),
     [profileCalendarSelectedDay, storyCalendarDays]
   );
+  const updateProfileCalendarVisibleMonth = () => {
+    const rail = profileCalendarRailRef.current;
+    if (!rail) return;
+    const railRect = rail.getBoundingClientRect();
+    const railCenter = railRect.left + railRect.width / 2;
+    let closestDay = "";
+    let closestDistance = Infinity;
+    Array.from(rail.querySelectorAll("[data-calendar-day]")).forEach((node) => {
+      const rect = node.getBoundingClientRect();
+      const distance = Math.abs(rect.left + rect.width / 2 - railCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestDay = node.getAttribute("data-calendar-day") || "";
+      }
+    });
+    if (closestDay) setProfileCalendarVisibleDay(closestDay);
+  };
   useEffect(() => {
     if (!profileCalendarOpen) return undefined;
     const frame = window.requestAnimationFrame(() => {
       const rail = profileCalendarRailRef.current;
-      if (rail) rail.scrollLeft = rail.scrollWidth;
+      const todayButton = rail?.querySelector(`[data-calendar-day="${getStoryCalendarKey(Date.now())}"]`);
+      if (todayButton) {
+        todayButton.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
+        setProfileCalendarVisibleDay(getStoryCalendarKey(Date.now()));
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, [profileCalendarOpen, profileCalendarCells.length]);
@@ -1682,13 +1705,17 @@ export default function Profile() {
     () => new Date(`${profileCalendarSelectedDay}T12:00:00`),
     [profileCalendarSelectedDay]
   );
+  const profileCalendarVisibleDate = useMemo(
+    () => new Date(`${profileCalendarVisibleDay || profileCalendarSelectedDay}T12:00:00`),
+    [profileCalendarSelectedDay, profileCalendarVisibleDay]
+  );
   const profileCalendarMonthLabel = useMemo(
     () =>
-      profileCalendarSelectedDate.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+      profileCalendarVisibleDate.toLocaleDateString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
         month: "long",
         year: "numeric",
       }),
-    [language, profileCalendarSelectedDate]
+    [language, profileCalendarVisibleDate]
   );
   const profileCalendarSelectedItems = storyCalendarByDay.get(profileCalendarSelectedDay) || [];
   const calendarDaysWithEntries = storyCalendarDays.length;
@@ -4128,6 +4155,7 @@ export default function Profile() {
               <div className={`rounded-[1rem] border p-2 ${darkMode ? "border-white/10 bg-white/5" : "border-black/8 bg-white/86"}`}>
                 <div
                   ref={profileCalendarRailRef}
+                  onScroll={updateProfileCalendarVisibleMonth}
                   className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {profileCalendarCells.map((cell, index) => {
@@ -4140,9 +4168,17 @@ export default function Profile() {
                       <button
                         key={cell.dayKey}
                         type="button"
-                        onClick={() => setProfileCalendarSelectedDay(cell.dayKey)}
+                        data-calendar-day={cell.dayKey}
+                        onClick={() => {
+                          setProfileCalendarSelectedDay(cell.dayKey);
+                          setProfileCalendarVisibleDay(cell.dayKey);
+                        }}
                         className={`relative flex h-[6.1rem] w-[4.85rem] min-w-[4.85rem] snap-start flex-col items-center justify-center rounded-[1rem] border p-2 text-center transition ${
-                          selected
+                          cell.isToday
+                            ? darkMode
+                              ? "border-[#2BD36B] bg-[#171717] text-white shadow-[0_0_0_1px_rgba(43,211,107,0.38),0_0_18px_rgba(43,211,107,0.18)]"
+                              : "border-[#21B85A] bg-white text-black shadow-[0_0_0_1px_rgba(33,184,90,0.32),0_0_18px_rgba(33,184,90,0.18)]"
+                          : selected
                             ? darkMode
                               ? "border-white bg-white text-black shadow-[0_8px_18px_rgba(255,255,255,0.12)]"
                               : "border-black bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
@@ -4151,19 +4187,19 @@ export default function Profile() {
                       >
                         <span className={`absolute left-2 top-2 text-[9px] font-black uppercase leading-none ${
                           monthChanged || cell.isToday || selected
-                            ? selected ? darkMode ? "text-black/50" : "text-white/62" : "text-[#E64646]"
+                            ? cell.isToday ? "text-[#21B85A]" : selected ? darkMode ? "text-black/50" : "text-white/62" : "text-[#E64646]"
                             : "text-transparent"
                         }`}>
                           {monthLabel}
                         </span>
-                        <span className={`text-[10px] font-bold uppercase leading-none ${selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
+                        <span className={`text-[10px] font-bold uppercase leading-none ${cell.isToday ? "text-[#21B85A]" : selected ? darkMode ? "text-black/52" : "text-white/58" : darkMode ? "text-white/45" : "text-black/45"}`}>
                           {weekday}
                         </span>
-                        <span className={`mt-1 text-2xl font-black leading-none ${cell.isToday && !selected ? "text-[#E64646]" : ""}`}>
+                        <span className={`mt-1 text-2xl font-black leading-none ${cell.isToday ? "text-[#21B85A]" : ""}`}>
                           {cell.date.getDate()}
                         </span>
                         {items.length ? (
-                          <span className={`mt-1.5 rounded-full px-1.5 py-1 text-[10px] font-bold leading-none ${selected ? darkMode ? "bg-black/8 text-black/60" : "bg-white/16 text-white/78" : darkMode ? "bg-white/10 text-white/58" : "bg-black/7 text-black/54"}`}>
+                          <span className={`mt-1.5 rounded-full px-1.5 py-1 text-[10px] font-bold leading-none ${cell.isToday ? darkMode ? "bg-[#2BD36B]/15 text-[#7AF0A2]" : "bg-[#2BD36B]/12 text-[#168944]" : selected ? darkMode ? "bg-black/8 text-black/60" : "bg-white/16 text-white/78" : darkMode ? "bg-white/10 text-white/58" : "bg-black/7 text-black/54"}`}>
                             {items.length} {t(items.length === 1 ? "Dish" : "Dishes").toLowerCase()}
                           </span>
                         ) : null}

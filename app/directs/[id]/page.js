@@ -57,7 +57,7 @@ const isSameDay = (left, right) => {
 export default function DirectChat() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { darkMode } = useLanguage();
+  const { darkMode, t } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -188,12 +188,12 @@ export default function DirectChat() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center text-black">
+      <div className={`min-h-screen bg-transparent flex items-center justify-center ${darkMode ? "text-white" : "text-black"}`}>
         <button
           onClick={() => setShowAuthPrompt(true)}
-          className="bg-black text-white px-6 py-3 rounded-full font-semibold"
+          className={`${darkMode ? "bg-white text-black" : "bg-black text-white"} px-6 py-3 rounded-full font-semibold`}
         >
-          Sign in to message
+          {t("Sign in to message")}
         </button>
         <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
       </div>
@@ -201,13 +201,22 @@ export default function DirectChat() {
   }
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent text-black relative flex flex-col">
-      <div className="app-top-nav px-4 pb-2 flex items-start justify-between shrink-0">
+    <div className={`bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent relative flex flex-col ${darkMode ? "text-white" : "text-black"}`}>
+      <div className="app-top-nav flex shrink-0 items-center justify-between px-4 pb-2">
         <AppBackButton fallback="/directs" />
-        <div className="flex-1 px-4 text-center">
-          <div className="text-xl font-bold leading-none">{otherUser?.displayName || "Chat"}</div>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-3">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-black ${
+            darkMode ? "bg-white/10 text-white/70" : "bg-black/7 text-black/62"
+          }`}>
+            {otherUser?.photoURL ? (
+              <img src={otherUser.photoURL} alt={otherUser?.displayName || "Profile"} className="h-full w-full object-cover" />
+            ) : (
+              otherUser?.displayName?.[0] || "U"
+            )}
+          </div>
+          <div className="min-w-0 truncate text-xl font-bold leading-none">{otherUser?.displayName || t("Chat")}</div>
         </div>
-        <div className="w-[74px]" />
+        <div className="w-[44px]" />
       </div>
 
       <div className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
@@ -228,7 +237,7 @@ export default function DirectChat() {
               <div key={m.id}>
                 {showDayDivider && dayLabel ? (
                   <div className="flex justify-center py-1">
-                    <div className="no-accent-border rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
+                    <div className={`no-accent-border rounded-full px-3 py-1 text-[11px] font-medium ${darkMode ? "bg-white/8 text-white/42" : "bg-black/6 text-black/45"}`}>
                       {dayLabel}
                     </div>
                   </div>
@@ -250,7 +259,7 @@ export default function DirectChat() {
                   <div className="relative w-full max-w-[78%]">
                     {messageTime ? (
                       <div
-                        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] text-black/42 ${
+	                        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] ${darkMode ? "text-white/38" : "text-black/42"} ${
                           isMine ? "right-0 text-right" : "left-0 text-left"
                         }`}
                         style={{ opacity: timeOpacity }}
@@ -309,7 +318,7 @@ export default function DirectChat() {
             <div key={m.id}>
               {showDayDivider && dayLabel ? (
                 <div className="flex justify-center py-1">
-                  <div className="rounded-full bg-black/6 px-3 py-1 text-[11px] font-medium text-black/45">
+                  <div className={`rounded-full px-3 py-1 text-[11px] font-medium ${darkMode ? "bg-white/8 text-white/42" : "bg-black/6 text-black/45"}`}>
                     {dayLabel}
                   </div>
                 </div>
@@ -331,7 +340,7 @@ export default function DirectChat() {
                 <div className="relative max-w-[78%]">
                   {messageTime ? (
                     <div
-                      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] text-black/42 ${
+	                      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[11px] ${darkMode ? "text-white/38" : "text-black/42"} ${
                         isMine ? "right-0 text-right" : "left-0 text-left"
                       }`}
                       style={{ opacity: timeOpacity }}
@@ -371,7 +380,11 @@ export default function DirectChat() {
       </div>
 
       <div className="bottom-nav-chat-bar fixed left-0 right-0 z-40 px-4">
-        <div className="mx-auto w-full max-w-md rounded-[24px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+        <div className={`mx-auto w-full max-w-md rounded-[24px] border p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.12)] ${
+          darkMode
+            ? "border-white/10 bg-[linear-gradient(180deg,rgba(28,28,26,0.98)_0%,rgba(13,13,12,0.98)_100%)]"
+            : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,241,232,0.98)_100%)]"
+        }`}>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -380,7 +393,9 @@ export default function DirectChat() {
                 setConfirmDish(null);
                 setPickerSearch("");
               }}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] border border-black/10 bg-white text-black shadow-[0_8px_20px_rgba(0,0,0,0.07)]"
+	              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.1rem] border shadow-[0_8px_20px_rgba(0,0,0,0.07)] ${
+                  darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"
+                }`}
               aria-label="Share a dish"
             >
               <Plus size={22} />
@@ -389,8 +404,12 @@ export default function DirectChat() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Message..."
-              className="h-12 min-w-0 flex-1 rounded-[1.1rem] border border-black/10 bg-white px-4 text-black focus:outline-none focus:ring-2 focus:ring-[#2B74B8]/20"
+	              placeholder={t("Message...")}
+	              className={`h-12 min-w-0 flex-1 rounded-[1.1rem] border px-4 focus:outline-none focus:ring-2 ${
+                  darkMode
+                    ? "border-white/12 bg-white/8 text-white placeholder:text-white/35 focus:ring-white/18"
+                    : "border-black/10 bg-white text-black placeholder:text-black/35 focus:ring-[#2B74B8]/20"
+                }`}
             />
             <button
               onClick={sendText}

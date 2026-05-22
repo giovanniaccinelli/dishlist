@@ -31,7 +31,7 @@ import {
   normalizeProfilePhotoURL,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Search, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
@@ -311,6 +311,8 @@ export default function PublicProfile() {
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [dishes, setDishes] = useState([]);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
+  const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
+  const [dishlistSearch, setDishlistSearch] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState("");
@@ -520,6 +522,11 @@ export default function PublicProfile() {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
   }, [activeDishlistId, customDishlists, canonicalDishlists, canonicalDishlistsLoaded, pathname, router]);
+
+  useEffect(() => {
+    setDishlistSearchOpen(false);
+    setDishlistSearch("");
+  }, [activeDishlistId]);
 
   const selectDishlist = (dishlistId) => {
     if (dishlistId !== "overview") setSelectedDishMode(DISH_MODE_ALL);
@@ -847,6 +854,20 @@ export default function PublicProfile() {
   const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
+  const dishlistSearchTerm = dishlistSearch.trim().toLowerCase();
+  const dishMatchesSearch = (dish) => {
+    if (!dishlistSearchTerm) return true;
+    return [
+      dish?.name,
+      dish?.description,
+      dish?.restaurantName,
+      dish?.placeName,
+      dish?.taggedUser,
+      ...(Array.isArray(dish?.tags) ? dish.tags : []),
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(dishlistSearchTerm));
+  };
   const getVisibleDishlistDishes = (dishlist) =>
     orderDishesForProfileList((dishlist?.dishes || []).filter((dish) => dishModeMatches(dish, selectedDishMode)));
   const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
@@ -858,6 +879,7 @@ export default function PublicProfile() {
         dishes: getVisibleDishlistDishes(unfilteredActiveDishlist),
       }
     : null;
+  const searchedActiveDishlistDishes = activeDishlist?.dishes?.filter(dishMatchesSearch) || [];
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(dishes),
@@ -1264,23 +1286,59 @@ export default function PublicProfile() {
             dishlistDetailSwipeRef.current = null;
           }}
         >
-          <div
-            className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
-          >
-            <button
-              type="button"
+	          <div
+	            className="mb-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
+	          >
+	            <button
+	              type="button"
               onClick={() => selectDishlist("overview")}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
                 darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
               }`}
               aria-label={t("Back")}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
-            <span className="h-10 w-10 justify-self-end" aria-hidden="true" />
-          </div>
-          <div className="mb-3 flex items-center justify-between">
+	            >
+	              <ChevronLeft size={16} />
+	            </button>
+	            <DishModeFilterButton value={selectedDishMode} onSelect={setSelectedDishMode} />
+	            <button
+	              type="button"
+	              onClick={() => {
+	                setDishlistSearchOpen((open) => !open);
+	                if (dishlistSearchOpen) setDishlistSearch("");
+	              }}
+	              className={`inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-full border text-sm font-semibold ${
+	                darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
+	              }`}
+	              aria-label={t("Search dishes")}
+	            >
+	              {dishlistSearchOpen ? <X size={16} /> : <Search size={16} />}
+	            </button>
+	          </div>
+	          {dishlistSearchOpen ? (
+	            <div
+	              className="mb-3"
+	              onPointerDown={(event) => event.stopPropagation()}
+	              onPointerUp={(event) => event.stopPropagation()}
+	              onClick={(event) => event.stopPropagation()}
+	            >
+	              <div className={`flex h-11 items-center gap-2 rounded-[1.15rem] border px-3 ${
+	                darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"
+	              }`}>
+	                <Search size={16} className={darkMode ? "text-white/45" : "text-black/40"} />
+	                <input
+	                  autoFocus
+	                  type="search"
+	                  value={dishlistSearch}
+	                  onChange={(event) => setDishlistSearch(event.target.value)}
+	                  placeholder={t("Search dishes...")}
+	                  className={`min-w-0 flex-1 bg-transparent text-base outline-none ${
+	                    darkMode ? "placeholder:text-white/35" : "placeholder:text-black/35"
+	                  }`}
+	                />
+	              </div>
+	            </div>
+	          ) : null}
+	          <div className="mb-3 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
               {activeDishlist?.name || "All dishes"}
               <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
@@ -1288,20 +1346,20 @@ export default function PublicProfile() {
             <button
               onClick={() => openShuffleDeck(activeDishlist?.id || "all_dishes")}
               className="profile-shuffle-btn inline-flex items-center gap-2 bg-[linear-gradient(135deg,#111111_0%,#1E8A4C_58%,#F59E0B_100%)] text-white py-2 px-4 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.18)] disabled:opacity-40"
-              disabled={(activeDishlist?.dishes || []).length === 0}
+	              disabled={searchedActiveDishlistDishes.length === 0}
             >
               <Shuffle size={14} />
               {t("Shuffle")}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
-        {(activeDishlist?.dishes || []).length === 0 ? (
-          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
-            {t("No dishes here.")}
-          </div>
-        ) : (
-          <AnimatePresence initial={false}>
-            {(activeDishlist?.dishes || []).map((dish, index) => {
+	        {searchedActiveDishlistDishes.length === 0 ? (
+	          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
+	            {dishlistSearchTerm ? t("No matching dishes.") : t("No dishes here.")}
+	          </div>
+	        ) : (
+	          <AnimatePresence initial={false}>
+	            {searchedActiveDishlistDishes.map((dish, index) => {
               if (isTextOnlyDish(dish)) {
                 return (
                   <motion.div
@@ -1321,7 +1379,7 @@ export default function PublicProfile() {
               >
                 <Link
                   href={(() => {
-                    const deckParam = encodeURIComponent((activeDishlist?.dishes || []).map((item) => item.id).filter(Boolean).join(","));
+	                    const deckParam = encodeURIComponent(searchedActiveDishlistDishes.map((item) => item.id).filter(Boolean).join(","));
                     const returnParam = encodeURIComponent(buildProfileReturnTo());
                     return activeDishlist?.type === "custom"
                       ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`

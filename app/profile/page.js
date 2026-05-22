@@ -398,6 +398,8 @@ export default function Profile() {
   const [profileContentReady, setProfileContentReady] = useState(false);
   const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
+  const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
+  const [dishlistSearch, setDishlistSearch] = useState("");
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
@@ -827,6 +829,11 @@ export default function Profile() {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
   }, [activeDishlistId, customDishlists]);
+
+  useEffect(() => {
+    setDishlistSearchOpen(false);
+    setDishlistSearch("");
+  }, [activeDishlistId]);
 
   useEffect(() => {
     if (!createDishlistOpen || createDishlistStep !== 0) return;
@@ -1613,6 +1620,20 @@ export default function Profile() {
       : resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
 
   const showingDishlistOverview = activeDishlistId === "overview";
+  const dishlistSearchTerm = dishlistSearch.trim().toLowerCase();
+  const dishMatchesSearch = (dish) => {
+    if (!dishlistSearchTerm) return true;
+    return [
+      dish?.name,
+      dish?.description,
+      dish?.restaurantName,
+      dish?.placeName,
+      dish?.taggedUser,
+      ...(Array.isArray(dish?.tags) ? dish.tags : []),
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(dishlistSearchTerm));
+  };
   const getVisibleDishlistDishes = (dishlist) => {
     const sourceDishes = Array.isArray(dishlist?.dishes) ? dishlist.dishes : [];
     const filteredDishes = sourceDishes.filter((dish) => dishModeMatches(dish, selectedDishMode));
@@ -1632,6 +1653,7 @@ export default function Profile() {
     const mode = take?.questionDishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
     return mode === selectedDishMode;
   });
+  const searchedActiveDishlistDishes = activeDishlist?.dishes?.filter(dishMatchesSearch) || [];
   const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const profileCounts = useMemo(
     () => ({
@@ -1959,7 +1981,7 @@ export default function Profile() {
     );
   }
 
-  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true, onRemovePreview }) => (
+  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true, onRemovePreview, emptyText }) => (
     <>
       {showHeader && title ? (
         <div className="mt-4 mb-3 flex items-center justify-between">
@@ -1974,12 +1996,12 @@ export default function Profile() {
           </button>
         </div>
       ) : null}
-      <div className="grid grid-cols-2 gap-3">
-        {dishes.length === 0 ? (
-          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
-            No dishes here.
-          </div>
-        ) : (
+	      <div className="grid grid-cols-2 gap-3">
+	        {dishes.length === 0 ? (
+	          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
+	            {emptyText || t("No dishes here.")}
+	          </div>
+	        ) : (
           <AnimatePresence initial={false}>
             {dishes.map((dish, index) => {
               const textOnly = isTextOnlyDish(dish);
@@ -2398,9 +2420,9 @@ export default function Profile() {
                 >
                   <DishModeFilterButton value={selectedDishMode} onSelect={handleDishModeSelect} />
                 </div>
-                <div className="flex justify-end">
-                  {activeDishlist?.type === "custom" ? (
-                    <button
+	                <div className="flex justify-end">
+	                  {activeDishlist?.type === "custom" ? (
+	                    <button
                       type="button"
                       onClick={() => {
                         setDishlistRenameTarget(activeDishlist);
@@ -2412,24 +2434,62 @@ export default function Profile() {
                       aria-label="Edit dishlist"
                     >
                       <Pencil size={16} />
+	                    </button>
+	                  ) : (
+	                    null
+	                  )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDishlistSearchOpen((open) => !open);
+                        if (dishlistSearchOpen) setDishlistSearch("");
+                      }}
+                      className={`ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+                        darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
+                      }`}
+                      aria-label={t("Search dishes")}
+                    >
+                      {dishlistSearchOpen ? <X size={16} /> : <Search size={16} />}
                     </button>
-                  ) : (
-                    <span className="h-10 w-10" aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-              <DishGrid
+	                </div>
+	              </div>
+                {dishlistSearchOpen ? (
+                  <div
+                    className="mb-3 px-2"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onPointerUp={(event) => event.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className={`flex h-11 items-center gap-2 rounded-[1.15rem] border px-3 ${
+                      darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"
+                    }`}>
+                      <Search size={16} className={darkMode ? "text-white/45" : "text-black/40"} />
+                      <input
+                        autoFocus
+                        type="search"
+                        value={dishlistSearch}
+                        onChange={(event) => setDishlistSearch(event.target.value)}
+                        placeholder={t("Search dishes...")}
+                        className={`min-w-0 flex-1 bg-transparent text-base outline-none ${
+                          darkMode ? "placeholder:text-white/35" : "placeholder:text-black/35"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+	              <DishGrid
                 title={
                   <span className="inline-flex items-center gap-2">
                     {activeDishlist?.name || "All dishes"}
                     <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
                   </span>
                 }
-                dishes={activeDishlist?.dishes || []}
-                allowDelete={false}
-                source={activeDishlist?.id || "all_dishes"}
-                onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
-              />
+	                dishes={searchedActiveDishlistDishes}
+	                allowDelete={false}
+	                source={activeDishlist?.id || "all_dishes"}
+	                onRemovePreview={(dish) => handleDishPreviewRemove(dish, activeDishlist?.type === "custom" ? activeDishlist.id : activeDishlist?.id)}
+	                emptyText={dishlistSearchTerm ? t("No matching dishes.") : t("No dishes here.")}
+	              />
             </div>
           )}
         </>

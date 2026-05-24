@@ -28,7 +28,10 @@ import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CalendarDays, Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
+import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getDarkTagChipClass, getTagChipClass } from "../lib/tags";
+
+const PEOPLE_CACHE_KEY = "people:main";
 
 function StoryStatIcon({ size = 10, className = "" }) {
   return (
@@ -91,14 +94,15 @@ export default function Dishlists() {
   const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
-  const [users, setUsers] = useState([]);
-  const [allUsersPool, setAllUsersPool] = useState(null);
+  const cachedPeople = getSessionPageCache(PEOPLE_CACHE_KEY)?.value;
+  const [users, setUsers] = useState(() => cachedPeople?.users || []);
+  const [allUsersPool, setAllUsersPool] = useState(() => cachedPeople?.allUsersPool || null);
   const [search, setSearch] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(() => !cachedPeople);
   const [searchLoading, setSearchLoading] = useState(false);
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
-  const [hasMoreUsers, setHasMoreUsers] = useState(true);
-  const [visibleUsersLimit, setVisibleUsersLimit] = useState(INITIAL_USERS_LIMIT);
+  const [hasMoreUsers, setHasMoreUsers] = useState(() => cachedPeople?.hasMoreUsers ?? true);
+  const [visibleUsersLimit, setVisibleUsersLimit] = useState(() => cachedPeople?.visibleUsersLimit || INITIAL_USERS_LIMIT);
   const [storyGroups, setStoryGroups] = useState([]);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
@@ -229,6 +233,16 @@ export default function Dishlists() {
   };
 
   const fetchUsers = async () => {
+    const cached = getSessionPageCache(PEOPLE_CACHE_KEY)?.value;
+    if (cached) {
+      setUsers(cached.users || []);
+      setAllUsersPool(cached.allUsersPool || cached.users || []);
+      setVisibleUsersLimit(cached.visibleUsersLimit || INITIAL_USERS_LIMIT);
+      setHasMoreUsers(cached.hasMoreUsers ?? true);
+      setLoadingUsers(false);
+      return;
+    }
+
     setLoadingUsers(true);
     try {
       const [snapshot, allDishes] = await Promise.all([
@@ -303,6 +317,16 @@ export default function Dishlists() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (loadingUsers || (!users.length && !allUsersPool?.length)) return;
+    setSessionPageCache(PEOPLE_CACHE_KEY, {
+      users,
+      allUsersPool,
+      visibleUsersLimit,
+      hasMoreUsers,
+    });
+  }, [allUsersPool, hasMoreUsers, loadingUsers, users, visibleUsersLimit]);
 
   useEffect(() => {
     if (!search.trim()) return;

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { RestaurantMapIcon } from "./DishModeControls";
 
-const MILAN_CENTER = { lat: 45.4642, lng: 9.19 };
+const EUROPE_PREVIEW_CENTER = { lat: 50.8, lng: 12.2 };
 const PIN_SVG = encodeURIComponent(`
 <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
@@ -42,8 +42,8 @@ export default function MapPreview({ className = "", groups = [] }) {
       .then((google) => {
         if (!mounted || !mapNodeRef.current) return;
         mapRef.current = new google.maps.Map(mapNodeRef.current, {
-          center: MILAN_CENTER,
-          zoom: 11,
+          center: EUROPE_PREVIEW_CENTER,
+          zoom: 4,
           disableDefaultUI: true,
           clickableIcons: false,
           draggable: false,

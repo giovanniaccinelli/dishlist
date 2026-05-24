@@ -34,6 +34,7 @@ import { getAllDishesFromFirestore, getLeaderboardQuestions, getTrendingStoryDis
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import MapPreview from "../../components/MapPreview";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import { RatingStars } from "../../components/RatingStars";
@@ -52,6 +53,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
 const TAP_MOVE_THRESHOLD = 10;
+const EXPLORE_CACHE_KEY = "explore:main";
 
 function toTitleCase(value = "") {
   return String(value || "")
@@ -709,10 +711,11 @@ export default function Explore() {
   const { user } = useAuth();
   const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
-  const [allDishes, setAllDishes] = useState([]);
-  const [trendingDishes, setTrendingDishes] = useState([]);
-  const [leaderboardQuestions, setLeaderboardQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedExplore = getSessionPageCache(EXPLORE_CACHE_KEY)?.value;
+  const [allDishes, setAllDishes] = useState(() => cachedExplore?.allDishes || []);
+  const [trendingDishes, setTrendingDishes] = useState(() => cachedExplore?.trendingDishes || []);
+  const [leaderboardQuestions, setLeaderboardQuestions] = useState(() => cachedExplore?.leaderboardQuestions || []);
+  const [loading, setLoading] = useState(() => !cachedExplore);
   const [search, setSearch] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
@@ -738,6 +741,16 @@ export default function Explore() {
   };
 
   useEffect(() => {
+    const cached = getSessionPageCache(EXPLORE_CACHE_KEY)?.value;
+    if (cached) {
+      setAllDishes(cached.allDishes || []);
+      setTrendingDishes(cached.trendingDishes || []);
+      setLeaderboardQuestions(cached.leaderboardQuestions || []);
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
     (async () => {
       setLoading(true);
       const [all, trending, questions] = await Promise.all([
@@ -745,11 +758,21 @@ export default function Explore() {
         getTrendingStoryDishes(20),
         getLeaderboardQuestions(8),
       ]);
-      setAllDishes(all.filter((dish) => dish.isPublic !== false));
+      if (!active) return;
+      const publicDishes = all.filter((dish) => dish.isPublic !== false);
+      setAllDishes(publicDishes);
       setTrendingDishes(trending);
       setLeaderboardQuestions(questions);
+      setSessionPageCache(EXPLORE_CACHE_KEY, {
+        allDishes: publicDishes,
+        trendingDishes: trending,
+        leaderboardQuestions: questions,
+      });
       setLoading(false);
     })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const visibleLeaderboardQuestions = useMemo(() => {

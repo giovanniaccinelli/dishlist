@@ -25,7 +25,7 @@ import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CalendarDays, ChevronDown, Plus, Search, Send } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
@@ -608,7 +608,7 @@ export default function Dishlists() {
                         e.stopPropagation();
                         handleFollow(u.id, alreadyFollowing);
                       }}
-                      className={`people-follow-button no-accent-border inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-[0.78rem] border px-3 text-[10.5px] font-bold leading-none shadow-[0_7px_16px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
+                      className={`people-follow-button no-accent-border inline-flex h-8 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-[0.78rem] border px-2.5 text-[10.5px] font-bold leading-none shadow-[0_7px_16px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
                         darkMode
                           ? alreadyFollowing
                             ? "border-white/10 bg-white/[0.055] text-white/62 shadow-none"
@@ -618,6 +618,7 @@ export default function Dishlists() {
                             : "border-[#C9E8CF] bg-[#F0FAF2] text-[#177A3D]"
                       }`}
                     >
+                      {alreadyFollowing ? <UserCheck size={12} strokeWidth={2.3} /> : <UserPlus size={12} strokeWidth={2.3} />}
                       {alreadyFollowing ? t("Unfollow") : t("Follow")}
                     </button>
                   ) : null}

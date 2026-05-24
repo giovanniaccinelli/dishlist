@@ -446,12 +446,16 @@ export default function RestaurantMapView({
                     >
                       {selectedGroup.users.map((user) => (
                         <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 snap-start flex-col">
-                          <div className="restaurant-accent-border mb-2 flex items-center gap-2 rounded-full border-2 bg-black/[0.04] px-2.5 py-1.5">
+                          <button
+                            type="button"
+                            onClick={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
+                            className="restaurant-accent-border mb-2 flex min-h-10 items-center gap-2 rounded-full border-2 bg-white px-2 py-1.5 text-left shadow-[0_8px_18px_rgba(0,0,0,0.09)] transition active:scale-[0.98]"
+                          >
                             <Avatar user={user} />
-                            <span className="max-w-[6.4rem] truncate text-xs font-medium text-black/72">
+                            <span className="max-w-[6.2rem] truncate text-[12px] font-bold leading-none text-black">
                               {user.name || "User"}
                             </span>
-                          </div>
+                          </button>
                           {user.dishes?.[0] ? (
                             <button
                               type="button"

@@ -25,7 +25,7 @@ import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CalendarDays, ChevronDown, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, Search, Send } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
@@ -608,17 +608,16 @@ export default function Dishlists() {
                         e.stopPropagation();
                         handleFollow(u.id, alreadyFollowing);
                       }}
-                      className={`people-follow-button no-accent-border inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[0.95rem] border-2 px-3.5 text-[11px] font-black uppercase tracking-[0.06em] shadow-[0_10px_22px_rgba(0,0,0,0.12)] transition active:scale-[0.97] ${
+                      className={`people-follow-button no-accent-border inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-[0.78rem] border px-3 text-[10.5px] font-bold leading-none shadow-[0_7px_16px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
                         darkMode
                           ? alreadyFollowing
-                            ? "border-white/12 bg-[#202020] text-white/72 shadow-black/25"
-                            : "border-[#2BD36B]/75 bg-[#2BD36B] text-black shadow-[0_10px_24px_rgba(43,211,107,0.22)]"
+                            ? "border-white/10 bg-white/[0.055] text-white/62 shadow-none"
+                            : "border-[#2BD36B]/35 bg-[#142217] text-[#86E8A3]"
                           : alreadyFollowing
-                            ? "border-[#D9D3C4] bg-[#F7F5EF] text-[#5F5748] shadow-[0_10px_22px_rgba(62,50,25,0.08)]"
-                            : "border-[#22B95F] bg-[#2BD36B] text-black shadow-[0_10px_24px_rgba(43,211,107,0.22)]"
+                            ? "border-black/8 bg-[#F4F1EA] text-black/52 shadow-none"
+                            : "border-[#C9E8CF] bg-[#F0FAF2] text-[#177A3D]"
                       }`}
                     >
-                      {alreadyFollowing ? <UserCheck size={14} strokeWidth={2.4} /> : <UserPlus size={14} strokeWidth={2.4} />}
                       {alreadyFollowing ? t("Unfollow") : t("Follow")}
                     </button>
                   ) : null}
@@ -637,13 +636,13 @@ export default function Dishlists() {
                 <button
                   type="button"
                   onClick={loadMoreUsers}
-                  className={`no-accent-border inline-flex min-h-12 w-full max-w-[18rem] items-center justify-center gap-2 rounded-[1.15rem] border-2 px-5 text-sm font-black transition active:scale-[0.98] ${
+                  className={`no-accent-border inline-flex min-h-11 w-full max-w-[15rem] items-center justify-center gap-2 rounded-[1rem] border px-4 text-[13px] font-bold transition active:scale-[0.98] ${
                     darkMode
-                      ? "border-white/12 bg-[#171717] text-white shadow-[0_14px_28px_rgba(0,0,0,0.28)]"
-                      : "border-[#E6D4A6] bg-[linear-gradient(180deg,#FFF9E7_0%,#F4E7C0_100%)] text-[#5E4510] shadow-[0_14px_28px_rgba(110,80,20,0.12)]"
+                      ? "border-white/10 bg-[#151515] text-white/78 shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
+                      : "border-black/8 bg-[#F7F4EC] text-black/62 shadow-[0_10px_22px_rgba(54,43,23,0.08)]"
                   }`}
                 >
-                  <ChevronDown size={17} strokeWidth={2.5} />
+                  <ChevronDown size={15} strokeWidth={2.3} />
                   {t("Load more")}
                 </button>
               )}

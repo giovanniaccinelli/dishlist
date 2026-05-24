@@ -14,7 +14,6 @@ import AppBackButton from "../../../components/AppBackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getAllDishlistsForUser,
-  getAllDishlistsForUserAliases,
   getCustomDishlistsForUser,
   getUploadedDishesForUserAliases,
   getConversationId,
@@ -306,8 +305,6 @@ export default function PublicProfile() {
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
-  const [canonicalDishlists, setCanonicalDishlists] = useState([]);
-  const [canonicalDishlistsLoaded, setCanonicalDishlistsLoaded] = useState(false);
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [dishes, setDishes] = useState([]);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
@@ -483,37 +480,8 @@ export default function PublicProfile() {
   }, []);
 
   useEffect(() => {
-    if (!canonicalProfileIds.length) {
-      setCanonicalDishlists([]);
-      setCanonicalDishlistsLoaded(false);
-      return undefined;
-    }
-    let cancelled = false;
-    setCanonicalDishlistsLoaded(false);
-    (async () => {
-      try {
-        const lists = await getAllDishlistsForUserAliases(canonicalProfileIds);
-        if (!cancelled) {
-          setCanonicalDishlists(lists);
-          setCanonicalDishlistsLoaded(true);
-        }
-      } catch (error) {
-        console.error("Failed to load canonical public-profile dishlists:", error);
-        if (!cancelled) {
-          setCanonicalDishlists([]);
-          setCanonicalDishlistsLoaded(true);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profileAliasKey, profileDocId, savedDishes.length, toTryDishes.length, dishes.length, customDishlists.length]);
-
-  useEffect(() => {
     if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
-    if ([...customDishlists, ...canonicalDishlists].some((dishlist) => dishlist.id === activeDishlistId)) return;
-    if (!canonicalDishlistsLoaded) return;
+    if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("overview");
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -521,7 +489,7 @@ export default function PublicProfile() {
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }
-  }, [activeDishlistId, customDishlists, canonicalDishlists, canonicalDishlistsLoaded, pathname, router]);
+  }, [activeDishlistId, customDishlists, pathname, router]);
 
   useEffect(() => {
     setDishlistSearchOpen(false);
@@ -849,7 +817,7 @@ export default function PublicProfile() {
       dishes: dishlist.dishes || [],
     })),
   ].map(normalizeProfileDishlist);
-  const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishlists = localDishlists.map(normalizeProfileDishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
 

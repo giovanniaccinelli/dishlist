@@ -597,24 +597,54 @@ export default function UploadPage() {
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-                <IngredientBulletTextarea
-                  placeholder="Ingredients"
-                  value={dishRecipeIngredients}
-                  onChange={setDishRecipeIngredients}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-3 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  rows={3}
-                  disabled={loadingUpload}
-                />
-                <textarea
-                  placeholder="Method"
-                  value={dishRecipeMethod}
-                  onChange={(e) => setDishRecipeMethod(e.target.value)}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#67C587]/20"} focus:outline-none focus:ring-2`}
-                  rows={5}
-                  disabled={loadingUpload}
-                />
-              </>
-            ) : null}
+	                <IngredientBulletTextarea
+	                  placeholder="Ingredients"
+	                  value={dishRecipeIngredients}
+	                  onChange={setDishRecipeIngredients}
+	                  className="w-full p-4 rounded-[1.5rem] bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FFF7_100%)] text-black mb-3 border-2 default-accent-border shadow-[0_12px_26px_rgba(43,211,107,0.12)] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
+	                  rows={3}
+	                  disabled={loadingUpload}
+	                />
+	                <textarea
+	                  placeholder="Method"
+	                  value={dishRecipeMethod}
+	                  onChange={(e) => setDishRecipeMethod(e.target.value)}
+	                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border-2 border-black/10 focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
+	                  rows={2}
+	                  disabled={loadingUpload}
+	                />
+	                <div className="mb-3 grid grid-cols-2 gap-2">
+	                  <button
+	                    type="button"
+	                    onClick={() => setShowLinkField((prev) => !prev)}
+	                    className="rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65"
+	                  >
+	                    {showLinkField || dishLink ? "Dish link" : "Add link"}
+	                  </button>
+	                  <button
+	                    type="button"
+	                    onClick={() => setTagUserPickerOpen(true)}
+	                    className="truncate rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65"
+	                    disabled={loadingUpload}
+	                  >
+	                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+	                  </button>
+	                </div>
+	                {showLinkField || dishLink ? (
+	                  <input
+	                    type="text"
+	                    placeholder="https://..."
+	                    value={dishLink}
+	                    onChange={(e) => setDishLink(e.target.value)}
+	                    className="mb-4 w-full rounded-full border-2 default-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
+	                    disabled={loadingUpload}
+	                    autoCapitalize="none"
+	                    autoCorrect="off"
+	                    spellCheck={false}
+	                  />
+	                ) : null}
+	              </>
+	            ) : null}
 
             {uploadStep === 2 ? (
               <>
@@ -626,11 +656,11 @@ export default function UploadPage() {
                 <textarea
                   placeholder="Description"
                   value={dishDescription}
-                  onChange={(e) => setDishDescription(e.target.value)}
-                  className={`w-full p-4 rounded-[1.5rem] bg-white text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
-                  rows={2}
-                  disabled={loadingUpload}
-                />
+	                  onChange={(e) => setDishDescription(e.target.value)}
+	                  className={`w-full p-4 rounded-[1.5rem] bg-white text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
+	                  rows={1}
+	                  disabled={loadingUpload}
+	                />
                 {isRestaurantUpload ? (
                   <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
                     <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
@@ -639,7 +669,8 @@ export default function UploadPage() {
                     <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
                   </div>
                 ) : null}
-                <div className="mb-4">
+	                {isRestaurantUpload ? (
+	                <div className="mb-4">
                   <button
                     type="button"
                     onClick={() => setShowLinkField((prev) => !prev)}
@@ -660,8 +691,10 @@ export default function UploadPage() {
                       spellCheck={false}
                     />
                   ) : null}
-                </div>
-                <div className="mb-4">
+	                </div>
+	                ) : null}
+	                {isRestaurantUpload ? (
+	                <div className="mb-4">
                   <p className="mb-2 text-sm font-medium text-black">
                     {language === "it" ? "Tagga un utente" : "Tag a user"}
                   </p>
@@ -691,8 +724,9 @@ export default function UploadPage() {
                         <X size={16} />
                       </button>
                     ) : null}
-                  </div>
-                </div>
+	                  </div>
+	                </div>
+	                ) : null}
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>

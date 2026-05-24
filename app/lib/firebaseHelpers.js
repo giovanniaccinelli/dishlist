@@ -653,9 +653,10 @@ export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
     : baseQuery;
 
   const snapshot = await getDocs(pagedQuery);
-  const items = snapshot.docs
+  const rawItems = snapshot.docs
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
+  const items = await enrichWithOwnerPhotos(rawItems);
   const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
   const result = { items, lastDoc };
   if (cacheKey) dataCache.set(cacheKey, { value: result, cachedAt: Date.now() });

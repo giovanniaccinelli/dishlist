@@ -15,7 +15,6 @@ import {
   saveDishToFirestore,
   getUploadedDishesForUserAliases,
   getAllDishlistsForUser,
-  getAllDishlistsForUserAliases,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   removeDishFromAllUsers,
@@ -390,8 +389,6 @@ export default function Profile() {
   const [savedDishes, setSavedDishes] = useState([]);
   const [toTryDishes, setToTryDishes] = useState([]);
   const [customDishlists, setCustomDishlists] = useState([]);
-  const [canonicalDishlists, setCanonicalDishlists] = useState([]);
-  const [canonicalDishlistsLoaded, setCanonicalDishlistsLoaded] = useState(false);
   const [profileOwnerId, setProfileOwnerId] = useState("");
   const [profileAliasIds, setProfileAliasIds] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
@@ -687,34 +684,6 @@ export default function Profile() {
       document.body.style.overflow = previousOverflow;
     };
   }, [editProfileModal]);
-
-  useEffect(() => {
-    if (!canonicalProfileIds.length) {
-      setCanonicalDishlists([]);
-      setCanonicalDishlistsLoaded(false);
-      return undefined;
-    }
-    let cancelled = false;
-    setCanonicalDishlistsLoaded(false);
-    (async () => {
-      try {
-        const lists = await getAllDishlistsForUserAliases(canonicalProfileIds);
-        if (!cancelled) {
-          setCanonicalDishlists(lists);
-          setCanonicalDishlistsLoaded(true);
-        }
-      } catch (error) {
-        console.error("Failed to load canonical own-profile dishlists:", error);
-        if (!cancelled) {
-          setCanonicalDishlists([]);
-          setCanonicalDishlistsLoaded(true);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profileAliasKey, profileDocId, savedDishes.length, toTryDishes.length, uploadedDishes.length, customDishlists.length]);
 
   useEffect(() => {
     if (!editProfileModal) return;
@@ -1612,7 +1581,7 @@ export default function Profile() {
       dishes: dishlist.dishes || [],
     })),
   ].map(normalizeProfileDishlist);
-  const allDishlists = (canonicalDishlistsLoaded ? canonicalDishlists : localDishlists).map(normalizeProfileDishlist);
+  const allDishlists = localDishlists.map(normalizeProfileDishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags =
     profileMeta.representativeTags === null

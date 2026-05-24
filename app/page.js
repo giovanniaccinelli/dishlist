@@ -11,11 +11,11 @@ import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
-  getAllDishesFromFirestore,
   getAllDishlistsForUser,
   getCommentsForDish,
   getCommentsForStory,
   getDishesFromFirestore,
+  getDishesPage,
   getFollowingForUser,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
@@ -87,6 +87,7 @@ const ACTIVITY_STYLE = {
 };
 const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
+const FEED_INITIAL_PAGE_SIZE = 220;
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -333,7 +334,7 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       try {
-        const allItems = await getAllDishesFromFirestore();
+        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
         const seenIds = new Set(viewedDishIdsRef.current);
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
@@ -504,12 +505,12 @@ export default function Feed() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const recountFlagKey = "dishlist-save-recount-v3";
-    const shouldRecount = params.get("recountSaves") === "1" || window.localStorage.getItem(recountFlagKey) !== "done";
+    const shouldRecount = params.get("recountSaves") === "1";
     if (!shouldRecount) return;
     recountDishSavesFromUsers()
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
-        return getAllDishesFromFirestore().then((items) => {
+        return getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE }).then(({ items }) => {
           const seenIds = new Set(getStoredViewedDishIds());
           const publicItems = items.filter(
             (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
@@ -647,7 +648,7 @@ export default function Feed() {
         setViewedDishIds([]);
         await setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: [] }, { merge: true });
       }
-      const items = await getAllDishesFromFirestore();
+      const { items } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
       const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
       const ordered = publicItems
         .slice()

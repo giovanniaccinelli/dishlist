@@ -329,6 +329,61 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.26) !important;
 }
 
+.dish-public-toggle {
+  border-radius: 1.35rem !important;
+  border: 2px solid rgba(17, 17, 17, 0.1) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 241, 232, 0.96) 100%) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dish-public-toggle--active {
+  border-color: rgba(31, 164, 99, 0.52) !important;
+  background: linear-gradient(180deg, #F0FFF5 0%, #DDF9E8 100%) !important;
+  box-shadow: 0 16px 34px rgba(31, 164, 99, 0.16) !important;
+}
+
+.dish-public-toggle__switch {
+  width: 3.1rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: rgba(0, 0, 0, 0.16);
+  transition: background 160ms ease-out;
+}
+
+.dish-public-toggle--active .dish-public-toggle__switch {
+  background: #1FA463;
+}
+
+.dish-public-toggle__knob {
+  display: block;
+  height: 1.35rem;
+  width: 1.35rem;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 160ms ease-out;
+}
+
+.dish-public-toggle--active .dish-public-toggle__knob {
+  transform: translateX(1.35rem);
+}
+
+.dish-edit-action-bar {
+  border-radius: 1.55rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  padding: 0.55rem !important;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.09) !important;
+}
+
+.dish-edit-action-btn {
+  min-height: 3.05rem;
+  border-radius: 1.05rem !important;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
 .bottom-nav-spacer {
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.35rem);
 }

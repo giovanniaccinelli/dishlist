@@ -28,6 +28,7 @@ import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
+import { clearSessionPageCache } from "../lib/sessionPageCache";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#E64646" },
@@ -246,6 +247,9 @@ export default function UploadPage() {
           createdAt: new Date(),
         };
         const dishId = await saveDishToFirestore(dishPayload);
+        clearSessionPageCache("feed:");
+        clearSessionPageCache("explore:");
+        clearSessionPageCache("people:");
         if (dishId) {
           await dispatchPushEvent("dish_posted", {
             ownerId: user.uid,
@@ -806,15 +810,25 @@ export default function UploadPage() {
                     </div>
                   </div>
                 </div>
-                <label className="flex items-center gap-2 mb-5 text-sm font-medium text-black">
-                  <input
-                    type="checkbox"
-                    checked={dishIsPublic}
-                    onChange={(e) => setDishIsPublic(e.target.checked)}
+                {!storyMode ? (
+                  <button
+                    type="button"
+                    onClick={() => setDishIsPublic((value) => !value)}
                     disabled={loadingUpload}
-                  />
-                  Public dish (visible in feed)
-                </label>
+                    className={`dish-public-toggle ${dishIsPublic ? "dish-public-toggle--active" : ""} mb-5 flex w-full items-center justify-between gap-4 px-4 py-3 text-left`}
+                    aria-pressed={dishIsPublic}
+                  >
+                    <span>
+                      <span className={`block text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t("Public dish")}</span>
+                      <span className={`mt-0.5 block text-xs font-semibold ${darkMode ? "text-white/58" : "text-black/54"}`}>
+                        {dishIsPublic ? t("Visible in feed") : t("Hidden from feed")}
+                      </span>
+                    </span>
+                    <span className="dish-public-toggle__switch no-accent-border shrink-0">
+                      <span className="dish-public-toggle__knob no-accent-border" />
+                    </span>
+                  </button>
+                ) : null}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={openDishlistPicker}

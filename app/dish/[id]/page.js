@@ -45,6 +45,7 @@ import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMap
 import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import { useLanguage } from "../../../components/LanguageProvider";
+import { clearSessionPageCache } from "../../lib/sessionPageCache";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -638,6 +639,9 @@ export default function DishDetail() {
       };
 
       await updateDishAndSavedCopies(editingDish.id, updates);
+      clearSessionPageCache("feed:");
+      clearSessionPageCache("explore:");
+      clearSessionPageCache("people:");
 
       setDish((prev) => (prev?.id === editingDish.id ? { ...prev, ...updates } : prev));
       setDeckList((prev) =>
@@ -1363,16 +1367,24 @@ export default function DishDetail() {
                     </div>
                   </div>
                 </div>
-                <label className="flex items-center gap-2 mb-5 text-sm font-medium text-black">
-                  <input
-                    type="checkbox"
-                    checked={editIsPublic}
-                    onChange={(e) => setEditIsPublic(e.target.checked)}
-                    disabled={savingEdit}
-                  />
-                  Public dish (visible in feed)
-                </label>
-                <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditIsPublic((value) => !value)}
+                  disabled={savingEdit}
+                  className={`dish-public-toggle ${editIsPublic ? "dish-public-toggle--active" : ""} mb-5 flex w-full items-center justify-between gap-4 px-4 py-3 text-left`}
+                  aria-pressed={editIsPublic}
+                >
+                  <span>
+                    <span className={`block text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t("Public dish")}</span>
+                    <span className={`mt-0.5 block text-xs font-semibold ${darkMode ? "text-white/58" : "text-black/54"}`}>
+                      {editIsPublic ? t("Visible in feed") : t("Hidden from feed")}
+                    </span>
+                  </span>
+                  <span className="dish-public-toggle__switch no-accent-border shrink-0">
+                    <span className="dish-public-toggle__knob no-accent-border" />
+                  </span>
+                </button>
+                <div className="dish-edit-action-bar grid grid-cols-[auto_1fr_1fr] gap-2">
                   <button
                     type="button"
                     onClick={() => setEditStep(2)}
@@ -1385,7 +1397,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleDeleteEditedDish}
-                    className="py-3 px-4 rounded-full bg-red-500 text-white font-semibold"
+                    className="dish-edit-action-btn bg-[#FFE8E8] px-4 text-[#C92F2F]"
                     disabled={savingEdit}
                   >
                     Delete
@@ -1393,7 +1405,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className={`flex-1 py-3 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
+                    className={`dish-edit-action-btn border bg-white px-4 text-black/70 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
                     disabled={savingEdit}
                   >
                     Cancel
@@ -1401,7 +1413,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="flex-1 rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] py-3 font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
+                    className="dish-edit-action-btn border-2 border-[#45C47A]/55 bg-[#1FA463] px-4 text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}

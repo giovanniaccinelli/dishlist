@@ -74,7 +74,7 @@ import {
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
-import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
+import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -1024,6 +1024,9 @@ export default function Profile() {
         ownerPhotoURL: effectiveProfilePhotoURL || "",
         createdAt: new Date(),
       });
+      clearSessionPageCache("feed:");
+      clearSessionPageCache("explore:");
+      clearSessionPageCache("people:");
       if (dishId) {
         await dispatchPushEvent("dish_posted", {
           ownerId: user.uid,
@@ -2597,15 +2600,23 @@ export default function Profile() {
                   })}
                 </div>
               </div>
-              <label className="flex items-center gap-2 mb-4 text-sm font-medium text-black">
-                <input
-                  type="checkbox"
-                  checked={dishIsPublic}
-                  onChange={(e) => setDishIsPublic(e.target.checked)}
-                  disabled={loadingUpload}
-                />
-                Public dish (visible in feed)
-              </label>
+              <button
+                type="button"
+                onClick={() => setDishIsPublic((value) => !value)}
+                disabled={loadingUpload}
+                className={`dish-public-toggle ${dishIsPublic ? "dish-public-toggle--active" : ""} mb-4 flex w-full items-center justify-between gap-4 px-4 py-3 text-left`}
+                aria-pressed={dishIsPublic}
+              >
+                <span>
+                  <span className={`block text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t("Public dish")}</span>
+                  <span className={`mt-0.5 block text-xs font-semibold ${darkMode ? "text-white/58" : "text-black/54"}`}>
+                    {dishIsPublic ? t("Visible in feed") : t("Hidden from feed")}
+                  </span>
+                </span>
+                <span className="dish-public-toggle__switch no-accent-border shrink-0">
+                  <span className="dish-public-toggle__knob no-accent-border" />
+                </span>
+              </button>
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -3601,12 +3612,29 @@ export default function Profile() {
                         Popular names
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {popularDishlistNames.map((name) => (
+                        {popularDishlistNames.map((name, index) => (
                           <button
                             key={name}
                             type="button"
                             onClick={() => setNewDishlistName(name)}
-                            className="rounded-full border border-[#8FD7AE] bg-[#F3FFF7] px-3 py-1.5 text-[11px] font-semibold text-[#176A37]"
+                            className={[
+                              "rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-[0_8px_18px_rgba(0,0,0,0.06)]",
+                              darkMode
+                                ? [
+                                    "border-[#F0A623]/45 bg-[#2A1D08] text-[#FFD986]",
+                                    "border-[#E64646]/42 bg-[#2B1010] text-[#FFB7B7]",
+                                    "border-[#5FA8F2]/42 bg-[#0D2034] text-[#B9DAFF]",
+                                    "border-[#B779FF]/42 bg-[#231333] text-[#E2C9FF]",
+                                    "border-[#2BD36B]/42 bg-[#0D2717] text-[#B8F8CC]",
+                                  ][index % 5]
+                                : [
+                                    "border-[#F0A623]/45 bg-[#FFF3C7] text-[#8A5A00]",
+                                    "border-[#E64646]/36 bg-[#FFE7E7] text-[#A92F2F]",
+                                    "border-[#5FA8F2]/38 bg-[#E8F3FF] text-[#195C9A]",
+                                    "border-[#B779FF]/36 bg-[#F4EAFF] text-[#6B2AA0]",
+                                    "border-[#2BD36B]/35 bg-[#EAFBF0] text-[#176A37]",
+                                  ][index % 5],
+                            ].join(" ")}
                           >
                             {name}
                           </button>

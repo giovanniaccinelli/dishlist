@@ -426,7 +426,7 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title, t }) {
+function DishPreview({ dish, title, t, priority = false }) {
   return (
     <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
@@ -434,7 +434,8 @@ function DishPreview({ dish, title, t }) {
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
         className="w-full h-28 object-cover"
         onError={(e) => {
@@ -511,7 +512,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
   );
 }
 
-function ExploreRow({ row, onExpand, t, darkMode = false }) {
+function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
   const { title, dishes } = row;
   if (row.type === "map") {
     return (
@@ -581,9 +582,9 @@ function ExploreRow({ row, onExpand, t, darkMode = false }) {
         ) : null}
       </div>
       <div className="no-accent-border flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory shadow-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {visible.map((dish) => (
+        {visible.map((dish, index) => (
           <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
-            <DishPreview dish={dish} title={title} t={t} />
+            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 3} />
           </div>
         ))}
       </div>
@@ -1049,9 +1050,9 @@ export default function Explore() {
           {!categoryRows.some((item) => item.type === "map") ? (
             <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
           ) : null}
-          {categoryRows.map((row) => (
+          {categoryRows.map((row, index) => (
             <div key={row.key}>
-              <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} />
+              <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />
               {row.type === "map" ? <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} /> : null}
             </div>
           ))}

@@ -1384,31 +1384,14 @@ export default function DishDetail() {
                     <span className="dish-public-toggle__knob no-accent-border" />
                   </span>
                 </button>
-                <div className="dish-edit-action-bar grid grid-cols-[auto_0.82fr_1.35fr] gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditStep(2)}
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : "bg-white text-black"}`}
-                    disabled={savingEdit}
-                    aria-label="Previous step"
-                  >
-                    <ArrowLeft size={20} />
-                  </button>
+                <div className="dish-edit-action-bar grid grid-cols-[0.9fr_1.35fr] gap-2">
                   <button
                     type="button"
                     onClick={handleDeleteEditedDish}
-                    className={`dish-edit-action-btn px-4 ${darkMode ? "bg-[#351313] text-[#FF8B8B]" : "bg-[#FFE8E8] text-[#C92F2F]"}`}
+                    className={`dish-edit-action-btn dish-edit-action-btn--delete px-4 ${darkMode ? "bg-[#2A1010] text-[#FF9B9B]" : "bg-[#FFF0F0] text-[#B72E2E]"}`}
                     disabled={savingEdit}
                   >
                     Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeEditModal}
-                    className={`dish-edit-action-btn border px-4 ${darkMode ? "bg-[#1A1A1A] text-white/66" : "bg-white text-black/70"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
-                    disabled={savingEdit}
-                  >
-                    Cancel
                   </button>
                   <button
                     type="button"

@@ -255,6 +255,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   disabled = false,
   currentUser = null,
   onCardViewed,
+  onIndexChange,
   fitHeight = false,
   storyPushStatsByDish = {},
   showStoryHistoryCounter = false,
@@ -355,6 +356,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [dishes, deck, currentIndex, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+
+  useEffect(() => {
+    if (typeof onIndexChange === "function") {
+      onIndexChange(currentIndex, currentCard);
+    }
+  }, [currentIndex, currentCard?._key, onIndexChange]);
 
   useEffect(() => {
     setShowRecipe(isRecipeOnlyDish(currentCard));

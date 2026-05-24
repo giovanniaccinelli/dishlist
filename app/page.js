@@ -53,12 +53,15 @@ const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
+const followingSeenStorageKey = (userId) => `feed:followingSeenAt:${userId}`;
 const FEED_VIEWED_FIELD = "feedViewedDishIds";
+const FEED_FOLLOWING_SEEN_FIELD = "feedFollowingSeenAt";
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 const activitySeenStorageKey = (userId) => `feed:activitySeenAt:${userId}`;
 
 function timestampToMs(value) {
   if (!value) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value.toMillis === "function") return value.toMillis();
   if (typeof value.seconds === "number") return value.seconds * 1000;
   const parsed = Date.parse(value);
@@ -102,9 +105,11 @@ export default function Feed() {
 	  const viewedDishIdsRef = useRef([]);
   const initialFeedCache = getSessionPageCache(getFeedCacheKey(userId, "guest"))?.value;
 
-	  const [activeFeed, setActiveFeed] = useState("for_you");
+		  const [activeFeed, setActiveFeed] = useState(() => initialFeedCache?.activeFeed || "for_you");
   const [forYouDeck, setForYouDeck] = useState(() => initialFeedCache?.forYouDeck || []);
   const [followingDeck, setFollowingDeck] = useState(() => initialFeedCache?.followingDeck || []);
+  const [forYouIndex, setForYouIndex] = useState(() => initialFeedCache?.forYouIndex || 0);
+  const [followingIndex, setFollowingIndex] = useState(() => initialFeedCache?.followingIndex || 0);
   const [addedDishIds, setAddedDishIds] = useState(() => new Set(initialFeedCache?.addedDishIds || []));
   const [loadingDishes, setLoadingDishes] = useState(() => !initialFeedCache);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -125,6 +130,7 @@ export default function Feed() {
   const [guestSavedIds, setGuestSavedIds] = useState([]);
   const [followingIds, setFollowingIds] = useState(() => initialFeedCache?.followingIds || []);
   const [followingSinceById, setFollowingSinceById] = useState(() => initialFeedCache?.followingSinceById || {});
+  const [followingSeenAt, setFollowingSeenAt] = useState(() => initialFeedCache?.followingSeenAt || 0);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
@@ -289,12 +295,16 @@ export default function Feed() {
   useEffect(() => {
     if (userId && !viewedHydrated) return;
     const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
-    if (cachedFeed) {
-      setForYouDeck(Array.isArray(cachedFeed.forYouDeck) ? cachedFeed.forYouDeck : []);
-      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
-      setFollowingIds(Array.isArray(cachedFeed.followingIds) ? cachedFeed.followingIds : []);
-      setFollowingSinceById(cachedFeed.followingSinceById || {});
-      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
+	    if (cachedFeed) {
+	      setActiveFeed(cachedFeed.activeFeed || "for_you");
+	      setForYouDeck(Array.isArray(cachedFeed.forYouDeck) ? cachedFeed.forYouDeck : []);
+	      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
+	      setForYouIndex(Number(cachedFeed.forYouIndex || 0));
+	      setFollowingIndex(Number(cachedFeed.followingIndex || 0));
+	      setFollowingIds(Array.isArray(cachedFeed.followingIds) ? cachedFeed.followingIds : []);
+	      setFollowingSinceById(cachedFeed.followingSinceById || {});
+	      setFollowingSeenAt(Number(cachedFeed.followingSeenAt || 0));
+	      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
       setLoadingDishes(false);
       return;
     }
@@ -406,9 +416,11 @@ export default function Feed() {
         }
 
         setFollowingIds(nextFollowingIds);
-        setForYouDeck(forYou);
-        setFollowingDeck(following);
-      } catch (err) {
+	        setForYouDeck(forYou);
+	        setFollowingDeck(following);
+	        setForYouIndex(0);
+	        setFollowingIndex(0);
+	      } catch (err) {
         console.error("Failed to load feed dishes:", err);
         setFollowingIds([]);
         setFollowingSinceById({});
@@ -425,11 +437,35 @@ export default function Feed() {
     setSessionPageCache(feedCacheKey, {
       forYouDeck,
       followingDeck,
+      activeFeed,
+      forYouIndex,
+      followingIndex,
       followingIds,
       followingSinceById,
+      followingSeenAt,
       addedDishIds: Array.from(addedDishIds),
     });
-  }, [addedDishIds, feedCacheKey, followingDeck, followingIds, followingSinceById, forYouDeck, loadingDishes]);
+  }, [activeFeed, addedDishIds, feedCacheKey, followingDeck, followingIds, followingIndex, followingSeenAt, followingSinceById, forYouDeck, forYouIndex, loadingDishes]);
+
+  useEffect(() => {
+    if (!userId || typeof window === "undefined") {
+      setFollowingSeenAt(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const localSeen = Number(localStorage.getItem(followingSeenStorageKey(userId)) || 0);
+      let remoteSeen = 0;
+      try {
+        const snap = await getDoc(doc(db, "users", userId));
+        remoteSeen = timestampToMs(snap.data()?.[FEED_FOLLOWING_SEEN_FIELD]);
+      } catch {}
+      if (!cancelled) setFollowingSeenAt(Math.max(localSeen, remoteSeen));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -541,11 +577,12 @@ export default function Feed() {
           const publicItems = items.filter(
             (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
           );
-          const ordered = publicItems
-            .slice()
-            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
-          setForYouDeck(shuffleArray(ordered));
-        });
+	          const ordered = publicItems
+	            .slice()
+	            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
+	          setForYouDeck(shuffleArray(ordered));
+	          setForYouIndex(0);
+	        });
       })
       .catch((err) => console.error("Failed to recount saves:", err));
   }, [loading, userId]);
@@ -573,31 +610,11 @@ export default function Feed() {
     [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]
   );
 
-  useEffect(() => {
-    if (!userId || !orderedFollowing.length) {
-      setFollowingHasUpdate(false);
-      return;
-    }
-    const getDishCreatedMs = (dish) => {
-      const raw = dish?.createdAt;
-      if (raw?.toMillis) return raw.toMillis();
-      if (raw?.seconds) return raw.seconds * 1000;
-      if (raw instanceof Date) return raw.getTime();
-      const numeric = Number(raw || 0);
-      return Number.isFinite(numeric) ? numeric : 0;
-    };
-    const viewed = new Set(viewedDishIds);
-    setFollowingHasUpdate(
-      orderedFollowing.some((dish) => {
-        const followSince = Number(followingSinceById[dish?.owner] || 0);
-        if (!followSince) return false;
-        return getDishCreatedMs(dish) > followSince && !viewed.has(dish.id);
-      })
-    );
-  }, [userId, orderedFollowing, viewedDishIds, followingSinceById]);
-
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
+    if (tab === "following") {
+      markFollowingSeen();
+    }
   };
 
   const handleDishViewed = (dish) => {
@@ -682,8 +699,10 @@ export default function Feed() {
       if (feedType === "following") {
         const followedSet = new Set(followingIds);
         setFollowingDeck(ordered.filter((dish) => followedSet.has(dish.owner)));
+        setFollowingIndex(0);
       } else {
         setForYouDeck(shuffleArray(ordered));
+        setForYouIndex(0);
       }
     } catch (err) {
       console.error("Failed to reset feed:", err);
@@ -707,6 +726,48 @@ export default function Feed() {
       setSaversLoading(false);
     }
   };
+
+  const getDishCreatedMs = (dish) => timestampToMs(dish?.createdAt);
+
+  const latestFollowingUploadMs = useMemo(
+    () => orderedFollowing.reduce((latest, dish) => Math.max(latest, getDishCreatedMs(dish)), 0),
+    [orderedFollowing]
+  );
+
+  useEffect(() => {
+    if (!userId || !latestFollowingUploadMs) {
+      setFollowingHasUpdate(false);
+      return;
+    }
+    setFollowingHasUpdate(latestFollowingUploadMs > Number(followingSeenAt || 0));
+  }, [followingSeenAt, latestFollowingUploadMs, userId]);
+
+  useEffect(() => {
+    if (!userId || !latestFollowingUploadMs) return;
+    if (followingSeenAt > 0) return;
+    setFollowingSeenAt(latestFollowingUploadMs);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(followingSeenStorageKey(userId), String(latestFollowingUploadMs));
+    }
+    setDoc(doc(db, "users", userId), { [FEED_FOLLOWING_SEEN_FIELD]: new Date(latestFollowingUploadMs) }, { merge: true }).catch(() => {});
+  }, [followingSeenAt, latestFollowingUploadMs, userId]);
+
+  const markFollowingSeen = () => {
+    if (!userId || !latestFollowingUploadMs) return;
+    const nextSeenAt = Math.max(Date.now(), latestFollowingUploadMs);
+    setFollowingSeenAt(nextSeenAt);
+    setFollowingHasUpdate(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(followingSeenStorageKey(userId), String(nextSeenAt));
+    }
+    setDoc(doc(db, "users", userId), { [FEED_FOLLOWING_SEEN_FIELD]: new Date(nextSeenAt) }, { merge: true }).catch(() => {});
+  };
+
+  useEffect(() => {
+    if (activeFeed === "following") {
+      markFollowingSeen();
+    }
+  }, [activeFeed, latestFollowingUploadMs]);
 
   const handleShare = (dish) => {
     if (!userId) {
@@ -1080,9 +1141,11 @@ export default function Feed() {
           <SwipeDeck
             ref={forYouDeckRef}
             key={`for-you-${filterVersion}-${excludedTags.join("|")}`}
-            dishes={orderedForYou}
-            preserveContinuity
-            onAction={handleAdd}
+	            dishes={orderedForYou}
+	            preserveContinuity
+	            initialIndex={forYouIndex}
+	            onIndexChange={(index) => setForYouIndex(index)}
+	            onAction={handleAdd}
             onRightSwipe={handleRightSwipeToTry}
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
@@ -1132,9 +1195,11 @@ export default function Feed() {
             <SwipeDeck
               ref={followingDeckRef}
               key={`following-${filterVersion}-${excludedTags.join("|")}`}
-              dishes={orderedFollowing}
-              preserveContinuity
-              onAction={handleAdd}
+	              dishes={orderedFollowing}
+	              preserveContinuity
+	              initialIndex={followingIndex}
+	              onIndexChange={(index) => setFollowingIndex(index)}
+	              onAction={handleAdd}
               onRightSwipe={handleRightSwipeToTry}
               onSavesPress={handleOpenSavers}
               onSharePress={handleShare}

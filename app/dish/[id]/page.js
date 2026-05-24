@@ -46,6 +46,21 @@ import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import { useLanguage } from "../../../components/LanguageProvider";
 
+function StoryStatIcon({ size = 10 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M0.2 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function DishDetail() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -944,7 +959,7 @@ export default function DishDetail() {
                   }`}
                 >
                   <span>{t("Add to story")}</span>
-                  <Camera size={16} />
+                  <StoryStatIcon size={17} />
                 </button>
                 {profileCardActionsDish?.owner === userId && !isForeignProfileContext && !isPublicSource ? (
                   <button

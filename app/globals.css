@@ -314,13 +314,19 @@
 }
 
 .dish-mode-control-btn--home.dish-mode-control-btn--selected {
-  background: #fff1c8 !important;
-  color: #c78400 !important;
+  background: linear-gradient(180deg, #F0A623 0%, #D88E08 100%) !important;
+  color: #111111 !important;
+  box-shadow:
+    0 14px 30px rgba(240, 166, 35, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
 }
 
 .dish-mode-control-btn--restaurant.dish-mode-control-btn--selected {
-  background: #ffe0e0 !important;
-  color: #d53333 !important;
+  background: linear-gradient(180deg, #E64646 0%, #C92F2F 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 14px 30px rgba(230, 70, 70, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26) !important;
 }
 
 .bottom-nav-spacer {
@@ -399,11 +405,19 @@ html.dark .dish-mode-filter--large .dish-mode-control-btn .dish-mode-restaurant-
 }
 
 html.dark .dish-mode-control-btn--home.dish-mode-control-btn--selected {
-  background: rgba(240, 166, 35, 0.18) !important;
+  background: linear-gradient(180deg, #F0A623 0%, #D88E08 100%) !important;
+  color: #111111 !important;
+  box-shadow:
+    0 14px 30px rgba(240, 166, 35, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
 }
 
 html.dark .dish-mode-control-btn--restaurant.dish-mode-control-btn--selected {
-  background: rgba(230, 70, 70, 0.18) !important;
+  background: linear-gradient(180deg, #E64646 0%, #C92F2F 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 14px 30px rgba(230, 70, 70, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
 }
 
 html.dark .bottom-nav-shell {

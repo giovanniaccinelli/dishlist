@@ -52,6 +52,7 @@ import {
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
+import { getSessionPageCache, setSessionPageCache } from "../../lib/sessionPageCache";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -298,15 +299,16 @@ export default function PublicProfile() {
   const routeProfileId = decodeURIComponent(String(id || ""));
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
-  const { t, darkMode, language } = useLanguage();
-  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
-  const [profileUser, setProfileUser] = useState(null);
-  const [savedDishes, setSavedDishes] = useState([]);
-  const [toTryDishes, setToTryDishes] = useState([]);
-  const [customDishlists, setCustomDishlists] = useState([]);
-  const [profileAliasIds, setProfileAliasIds] = useState([]);
-  const [dishes, setDishes] = useState([]);
+	  const { user } = useAuth();
+	  const { t, darkMode, language } = useLanguage();
+	  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
+  const cachedPublicProfile = getSessionPageCache(`profile:public:${routeProfileId}`)?.value;
+  const [profileUser, setProfileUser] = useState(() => cachedPublicProfile?.profileUser || null);
+  const [savedDishes, setSavedDishes] = useState(() => cachedPublicProfile?.savedDishes || []);
+  const [toTryDishes, setToTryDishes] = useState(() => cachedPublicProfile?.toTryDishes || []);
+  const [customDishlists, setCustomDishlists] = useState(() => cachedPublicProfile?.customDishlists || []);
+  const [profileAliasIds, setProfileAliasIds] = useState(() => cachedPublicProfile?.profileAliasIds || []);
+  const [dishes, setDishes] = useState(() => cachedPublicProfile?.dishes || []);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
   const [dishlistSearch, setDishlistSearch] = useState("");
@@ -326,9 +328,9 @@ export default function PublicProfile() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
-  const [activeStories, setActiveStories] = useState([]);
+  const [activeStories, setActiveStories] = useState(() => cachedPublicProfile?.activeStories || []);
   const [storiesOpen, setStoriesOpen] = useState(false);
-  const [storyPushStats, setStoryPushStats] = useState({});
+  const [storyPushStats, setStoryPushStats] = useState(() => cachedPublicProfile?.storyPushStats || {});
   const [leaderboardTakes, setLeaderboardTakes] = useState([]);
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
@@ -356,9 +358,23 @@ export default function PublicProfile() {
     profileDocId;
   const isViewingOwnProfile = Boolean(user?.uid && profileIdCandidates.includes(user.uid));
 
-  useEffect(() => {
+	  useEffect(() => {
     if (!routeProfileId) return;
     let cancelled = false;
+    const cacheKey = `profile:public:${routeProfileId}`;
+    const cachedProfile = getSessionPageCache(cacheKey)?.value;
+    if (cachedProfile) {
+      setProfileUser(cachedProfile.profileUser || null);
+      setProfileAliasIds(cachedProfile.profileAliasIds || []);
+      setDishes(cachedProfile.dishes || []);
+      setSavedDishes(cachedProfile.savedDishes || []);
+      setToTryDishes(cachedProfile.toTryDishes || []);
+      setCustomDishlists(cachedProfile.customDishlists || []);
+      setActiveStories(cachedProfile.activeStories || []);
+      setStoryPushStats(cachedProfile.storyPushStats || {});
+      setProfileLoadFailed(false);
+      return undefined;
+    }
 
     (async () => {
       setProfileLoadFailed(false);
@@ -425,7 +441,32 @@ export default function PublicProfile() {
     return () => {
       cancelled = true;
     };
-  }, [routeProfileId]);
+	  }, [routeProfileId]);
+
+  useEffect(() => {
+    if (!routeProfileId || profileLoadFailed || !profileUser) return;
+    setSessionPageCache(`profile:public:${routeProfileId}`, {
+      profileUser,
+      profileAliasIds,
+      dishes,
+      savedDishes,
+      toTryDishes,
+      customDishlists,
+      activeStories,
+      storyPushStats,
+    });
+  }, [
+    activeStories,
+    customDishlists,
+    dishes,
+    profileAliasIds,
+    profileLoadFailed,
+    profileUser,
+    routeProfileId,
+    savedDishes,
+    storyPushStats,
+    toTryDishes,
+  ]);
 
   useEffect(() => {
     let cancelled = false;

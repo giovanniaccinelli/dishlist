@@ -74,6 +74,7 @@ import {
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
+import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -379,21 +380,22 @@ function mergeStoryStats(groups = []) {
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { language, setLanguage, darkMode, setDarkMode, t } = useLanguage();
-  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
-  const router = useRouter();
-  const pathname = usePathname();
+	  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
+	  const router = useRouter();
+	  const pathname = usePathname();
+  const cachedOwnProfile = user?.uid ? getSessionPageCache(`profile:own:${user.uid}`)?.value : null;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editProfileModal, setEditProfileModal] = useState(false);
-  const [uploadedDishes, setUploadedDishes] = useState([]);
-  const [savedDishes, setSavedDishes] = useState([]);
-  const [toTryDishes, setToTryDishes] = useState([]);
-  const [customDishlists, setCustomDishlists] = useState([]);
-  const [profileOwnerId, setProfileOwnerId] = useState("");
-  const [profileAliasIds, setProfileAliasIds] = useState([]);
-  const [profileUser, setProfileUser] = useState(null);
-  const [profileContentReady, setProfileContentReady] = useState(false);
-  const [profileMeta, setProfileMeta] = useState({ followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
+	  const [isModalOpen, setIsModalOpen] = useState(false);
+	  const [editProfileModal, setEditProfileModal] = useState(false);
+  const [uploadedDishes, setUploadedDishes] = useState(() => cachedOwnProfile?.uploadedDishes || []);
+  const [savedDishes, setSavedDishes] = useState(() => cachedOwnProfile?.savedDishes || []);
+  const [toTryDishes, setToTryDishes] = useState(() => cachedOwnProfile?.toTryDishes || []);
+  const [customDishlists, setCustomDishlists] = useState(() => cachedOwnProfile?.customDishlists || []);
+  const [profileOwnerId, setProfileOwnerId] = useState(() => cachedOwnProfile?.profileOwnerId || "");
+  const [profileAliasIds, setProfileAliasIds] = useState(() => cachedOwnProfile?.profileAliasIds || []);
+  const [profileUser, setProfileUser] = useState(() => cachedOwnProfile?.profileUser || null);
+  const [profileContentReady, setProfileContentReady] = useState(() => Boolean(cachedOwnProfile));
+  const [profileMeta, setProfileMeta] = useState(() => cachedOwnProfile?.profileMeta || { followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
   const [dishlistSearch, setDishlistSearch] = useState("");
@@ -436,19 +438,19 @@ export default function Profile() {
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
   const [saversUsers, setSaversUsers] = useState([]);
-  const [activeStories, setActiveStories] = useState([]);
+  const [activeStories, setActiveStories] = useState(() => cachedOwnProfile?.activeStories || []);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
-  const [storyPushStats, setStoryPushStats] = useState({});
+  const [storyPushStats, setStoryPushStats] = useState(() => cachedOwnProfile?.storyPushStats || {});
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [profileCalendarVisibleDay, setProfileCalendarVisibleDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [profileCalendarMonthDate, setProfileCalendarMonthDate] = useState(() => getCalendarMonthDate(new Date()));
-  const [mealCalendarEntries, setMealCalendarEntries] = useState([]);
+  const [mealCalendarEntries, setMealCalendarEntries] = useState(() => cachedOwnProfile?.mealCalendarEntries || []);
   const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
   const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
   const [mealCalendarEntrySaving, setMealCalendarEntrySaving] = useState(false);
-  const [leaderboardTakes, setLeaderboardTakes] = useState([]);
+  const [leaderboardTakes, setLeaderboardTakes] = useState(() => cachedOwnProfile?.leaderboardTakes || []);
   const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
   const [leaderboardAdminPassword, setLeaderboardAdminPassword] = useState("");
   const [leaderboardQuestionTitle, setLeaderboardQuestionTitle] = useState("");
@@ -554,13 +556,31 @@ export default function Profile() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
+	  useEffect(() => {
     if (!user) {
       setProfileContentReady(false);
       return undefined;
     }
 
     let cancelled = false;
+    const cacheKey = `profile:own:${user.uid}`;
+    const cachedProfile = getSessionPageCache(cacheKey)?.value;
+    if (cachedProfile) {
+      setProfileAliasIds(cachedProfile.profileAliasIds || [user.uid]);
+      setProfileOwnerId(cachedProfile.profileOwnerId || user.uid);
+      setProfileUser(cachedProfile.profileUser || null);
+      setProfileMeta(cachedProfile.profileMeta || { followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
+      setUploadedDishes(cachedProfile.uploadedDishes || []);
+      setSavedDishes(cachedProfile.savedDishes || []);
+      setToTryDishes(cachedProfile.toTryDishes || []);
+      setCustomDishlists(cachedProfile.customDishlists || []);
+      setActiveStories(cachedProfile.activeStories || []);
+      setStoryPushStats(cachedProfile.storyPushStats || {});
+      setMealCalendarEntries(cachedProfile.mealCalendarEntries || []);
+      setLeaderboardTakes(cachedProfile.leaderboardTakes || []);
+      setProfileContentReady(true);
+      return undefined;
+    }
     setProfileContentReady(false);
     (async () => {
       try {
@@ -637,7 +657,40 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+	  }, [user]);
+
+  useEffect(() => {
+    if (!user?.uid || !profileContentReady) return;
+    setSessionPageCache(`profile:own:${user.uid}`, {
+      profileAliasIds,
+      profileOwnerId,
+      profileUser,
+      profileMeta,
+      uploadedDishes,
+      savedDishes,
+      toTryDishes,
+      customDishlists,
+      activeStories,
+      storyPushStats,
+      mealCalendarEntries,
+      leaderboardTakes,
+    });
+  }, [
+    activeStories,
+    customDishlists,
+    leaderboardTakes,
+    mealCalendarEntries,
+    profileAliasIds,
+    profileContentReady,
+    profileMeta,
+    profileOwnerId,
+    profileUser,
+    savedDishes,
+    storyPushStats,
+    toTryDishes,
+    uploadedDishes,
+    user?.uid,
+  ]);
 
   useEffect(() => {
     if (!user?.uid || !profileAliasIds.length) return;

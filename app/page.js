@@ -45,6 +45,7 @@ import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
 import { resolveRepresentativeTags } from "./lib/profileTags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { useLanguage } from "../components/LanguageProvider";
+import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -89,20 +90,23 @@ const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
 const FEED_INITIAL_PAGE_SIZE = 220;
 
+const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
+
 export default function Feed() {
   const { user, loading } = useAuth();
   const { t, darkMode } = useLanguage();
   const userId = user?.uid || null;
   const router = useRouter();
-  const forYouDeckRef = useRef(null);
-  const followingDeckRef = useRef(null);
-  const viewedDishIdsRef = useRef([]);
+	  const forYouDeckRef = useRef(null);
+	  const followingDeckRef = useRef(null);
+	  const viewedDishIdsRef = useRef([]);
+  const initialFeedCache = getSessionPageCache(getFeedCacheKey(userId, "guest"))?.value;
 
-  const [activeFeed, setActiveFeed] = useState("for_you");
-  const [forYouDeck, setForYouDeck] = useState([]);
-  const [followingDeck, setFollowingDeck] = useState([]);
-  const [addedDishIds, setAddedDishIds] = useState(() => new Set());
-  const [loadingDishes, setLoadingDishes] = useState(true);
+	  const [activeFeed, setActiveFeed] = useState("for_you");
+  const [forYouDeck, setForYouDeck] = useState(() => initialFeedCache?.forYouDeck || []);
+  const [followingDeck, setFollowingDeck] = useState(() => initialFeedCache?.followingDeck || []);
+  const [addedDishIds, setAddedDishIds] = useState(() => new Set(initialFeedCache?.addedDishIds || []));
+  const [loadingDishes, setLoadingDishes] = useState(() => !initialFeedCache);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
@@ -119,8 +123,8 @@ export default function Feed() {
   const [toastVariant, setToastVariant] = useState("success");
   const [guestMode, setGuestMode] = useState(null);
   const [guestSavedIds, setGuestSavedIds] = useState([]);
-  const [followingIds, setFollowingIds] = useState([]);
-  const [followingSinceById, setFollowingSinceById] = useState({});
+  const [followingIds, setFollowingIds] = useState(() => initialFeedCache?.followingIds || []);
+  const [followingSinceById, setFollowingSinceById] = useState(() => initialFeedCache?.followingSinceById || {});
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
@@ -138,6 +142,7 @@ export default function Feed() {
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
+  const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
   const unseenActivityItems = useMemo(
@@ -283,6 +288,16 @@ export default function Feed() {
 
   useEffect(() => {
     if (userId && !viewedHydrated) return;
+    const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
+    if (cachedFeed) {
+      setForYouDeck(Array.isArray(cachedFeed.forYouDeck) ? cachedFeed.forYouDeck : []);
+      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
+      setFollowingIds(Array.isArray(cachedFeed.followingIds) ? cachedFeed.followingIds : []);
+      setFollowingSinceById(cachedFeed.followingSinceById || {});
+      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
+      setLoadingDishes(false);
+      return;
+    }
     const sortNewest = (items) =>
       items
         .slice()
@@ -403,7 +418,18 @@ export default function Feed() {
         setLoadingDishes(false);
       }
     })();
-  }, [userId, viewedHydrated]);
+  }, [userId, viewedHydrated, feedCacheKey]);
+
+  useEffect(() => {
+    if (loadingDishes) return;
+    setSessionPageCache(feedCacheKey, {
+      forYouDeck,
+      followingDeck,
+      followingIds,
+      followingSinceById,
+      addedDishIds: Array.from(addedDishIds),
+    });
+  }, [addedDishIds, feedCacheKey, followingDeck, followingIds, followingSinceById, forYouDeck, loadingDishes]);
 
   useEffect(() => {
     if (!userId) return;

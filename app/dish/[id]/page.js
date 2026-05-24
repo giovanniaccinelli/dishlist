@@ -1384,7 +1384,7 @@ export default function DishDetail() {
                     <span className="dish-public-toggle__knob no-accent-border" />
                   </span>
                 </button>
-                <div className="dish-edit-action-bar grid grid-cols-[auto_1fr_1fr] gap-2">
+                <div className="dish-edit-action-bar grid grid-cols-[auto_0.82fr_1.35fr] gap-2">
                   <button
                     type="button"
                     onClick={() => setEditStep(2)}
@@ -1397,7 +1397,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleDeleteEditedDish}
-                    className="dish-edit-action-btn bg-[#FFE8E8] px-4 text-[#C92F2F]"
+                    className={`dish-edit-action-btn px-4 ${darkMode ? "bg-[#351313] text-[#FF8B8B]" : "bg-[#FFE8E8] text-[#C92F2F]"}`}
                     disabled={savingEdit}
                   >
                     Delete
@@ -1405,7 +1405,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className={`dish-edit-action-btn border bg-white px-4 text-black/70 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
+                    className={`dish-edit-action-btn border px-4 ${darkMode ? "bg-[#1A1A1A] text-white/66" : "bg-white text-black/70"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}
                     disabled={savingEdit}
                   >
                     Cancel
@@ -1413,7 +1413,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="dish-edit-action-btn border-2 border-[#45C47A]/55 bg-[#1FA463] px-4 text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
+                    className="dish-edit-action-btn dish-edit-action-btn--save border-2 border-[#45C47A]/55 bg-[#1FA463] px-4 text-white shadow-[0_14px_30px_rgba(31,164,99,0.28)] ring-2 ring-[#2BD36B]/20 transition hover:brightness-105"
                     disabled={savingEdit}
                   >
                     {savingEdit ? "Saving..." : "Save"}

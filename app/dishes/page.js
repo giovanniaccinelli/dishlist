@@ -73,6 +73,8 @@ const matchesFlexibleDishSearch = (dish, rawTerm) => {
   return matchedTokens.length >= Math.max(1, Math.ceil(tokens.length * 0.6));
 };
 
+const onlyPublicDishes = (items = []) => items.filter((dish) => dish?.isPublic !== false);
+
 function StoryPlateIcon({ size = 16, className = "" }) {
   return (
     <svg
@@ -179,7 +181,7 @@ export default function Dishes() {
     setLoadError("");
     try {
       const firstPage = await getDishesPage({ pageSize: DISHES_PAGE_SIZE });
-      setDishes(firstPage.items);
+      setDishes(onlyPublicDishes(firstPage.items));
       setLastDoc(firstPage.lastDoc);
       setHasMore(Boolean(firstPage.lastDoc));
       setFallbackPool([]);
@@ -188,11 +190,12 @@ export default function Dishes() {
       console.error("Failed to load dishes page:", err);
       try {
         const all = await getAllDishesFromFirestore();
-        setDishes(all.slice(0, DISHES_PAGE_SIZE));
-        setFallbackPool(all);
+        const publicAll = onlyPublicDishes(all);
+        setDishes(publicAll.slice(0, DISHES_PAGE_SIZE));
+        setFallbackPool(publicAll);
         setUsingFallbackPagination(true);
         setLastDoc(null);
-        setHasMore(all.length > DISHES_PAGE_SIZE);
+        setHasMore(publicAll.length > DISHES_PAGE_SIZE);
       } catch (fallbackErr) {
         console.error("Fallback dishes load failed:", fallbackErr);
         setLoadError("Failed to load dishes.");
@@ -231,6 +234,10 @@ export default function Dishes() {
           pageSize: DISHES_PAGE_SIZE,
           cursor,
         });
+        nextPage = {
+          ...nextPage,
+          items: onlyPublicDishes(nextPage.items),
+        };
         if (nextPage.items.length > 0 || !nextPage.lastDoc) break;
         cursor = nextPage.lastDoc;
         guard += 1;
@@ -248,7 +255,7 @@ export default function Dishes() {
     } catch (err) {
       console.error("Failed to load more dishes:", err);
       try {
-        const all = await getAllDishesFromFirestore();
+        const all = onlyPublicDishes(await getAllDishesFromFirestore());
         setFallbackPool(all);
         setUsingFallbackPagination(true);
         let mergedLength = 0;
@@ -293,7 +300,7 @@ export default function Dishes() {
     setAllDishesLoading(true);
     setLoadError("");
     try {
-      const all = await getAllDishesFromFirestore();
+      const all = onlyPublicDishes(await getAllDishesFromFirestore());
       setAllDishesPool(all);
       return all;
     } catch (err) {
@@ -312,7 +319,7 @@ export default function Dishes() {
     const run = async () => {
       setAllDishesLoading(true);
       try {
-        const all = await getAllDishesFromFirestore();
+        const all = onlyPublicDishes(await getAllDishesFromFirestore());
         if (!cancelled) setAllDishesPool(all);
       } catch (err) {
         console.error("Failed to load full search pool:", err);
@@ -355,10 +362,9 @@ export default function Dishes() {
     const searchFiltered = term
       ? tagFiltered.filter((dish) => matchesFlexibleDishSearch(dish, term))
       : tagFiltered;
-    return searchFiltered
-      .filter((dish) => dishModeMatches(dish, selectedDishMode))
-      .slice()
-      .sort((leftDish, rightDish) => {
+    const modeFiltered = searchFiltered.filter((dish) => dishModeMatches(dish, selectedDishMode));
+    if (!usingGlobalFilter) return modeFiltered;
+    return modeFiltered.slice().sort((leftDish, rightDish) => {
         const savesDelta = Number(rightDish?.saves || 0) - Number(leftDish?.saves || 0);
         if (savesDelta !== 0) return savesDelta;
         const recencyDelta =

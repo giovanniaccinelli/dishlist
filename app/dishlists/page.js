@@ -25,7 +25,7 @@ import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
 import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CalendarDays, Plus, Search, Send } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
@@ -608,16 +608,17 @@ export default function Dishlists() {
                         e.stopPropagation();
                         handleFollow(u.id, alreadyFollowing);
                       }}
-                      className={`people-follow-button no-accent-border shrink-0 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-bold transition ${
+                      className={`people-follow-button no-accent-border inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[0.95rem] border-2 px-3.5 text-[11px] font-black uppercase tracking-[0.06em] shadow-[0_10px_22px_rgba(0,0,0,0.12)] transition active:scale-[0.97] ${
                         darkMode
                           ? alreadyFollowing
-                            ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
-                            : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
+                            ? "border-white/12 bg-[#202020] text-white/72 shadow-black/25"
+                            : "border-[#2BD36B]/75 bg-[#2BD36B] text-black shadow-[0_10px_24px_rgba(43,211,107,0.22)]"
                           : alreadyFollowing
-                            ? "border-[#D8C9AF] bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418]"
-                            : "border-[#C7E3CB] bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32]"
+                            ? "border-[#D9D3C4] bg-[#F7F5EF] text-[#5F5748] shadow-[0_10px_22px_rgba(62,50,25,0.08)]"
+                            : "border-[#22B95F] bg-[#2BD36B] text-black shadow-[0_10px_24px_rgba(43,211,107,0.22)]"
                       }`}
                     >
+                      {alreadyFollowing ? <UserCheck size={14} strokeWidth={2.4} /> : <UserPlus size={14} strokeWidth={2.4} />}
                       {alreadyFollowing ? t("Unfollow") : t("Follow")}
                     </button>
                   ) : null}
@@ -636,8 +637,13 @@ export default function Dishlists() {
                 <button
                   type="button"
                   onClick={loadMoreUsers}
-                  className="rounded-full border-2 border-[#D9B550] bg-[linear-gradient(180deg,#FFF2C9_0%,#F3D88C_100%)] px-5 py-3 text-sm font-semibold text-[#7A5400] shadow-[0_12px_26px_rgba(217,181,80,0.24)]"
+                  className={`no-accent-border inline-flex min-h-12 w-full max-w-[18rem] items-center justify-center gap-2 rounded-[1.15rem] border-2 px-5 text-sm font-black transition active:scale-[0.98] ${
+                    darkMode
+                      ? "border-white/12 bg-[#171717] text-white shadow-[0_14px_28px_rgba(0,0,0,0.28)]"
+                      : "border-[#E6D4A6] bg-[linear-gradient(180deg,#FFF9E7_0%,#F4E7C0_100%)] text-[#5E4510] shadow-[0_14px_28px_rgba(110,80,20,0.12)]"
+                  }`}
                 >
+                  <ChevronDown size={17} strokeWidth={2.5} />
                   {t("Load more")}
                 </button>
               )}

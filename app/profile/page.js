@@ -2291,11 +2291,7 @@ export default function Profile() {
       ) : (
         <>
           {showingDishlistOverview ? (
-            <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
-          ) : null}
-
-          {showingDishlistOverview ? (
-            <div className="mx-auto -mt-2 mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
+            <div className="mx-auto mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
               <div>
                 <div className="mb-2 flex items-center gap-2 leading-none">
                   <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
@@ -2360,6 +2356,10 @@ export default function Profile() {
                 </button>
               </div>
             </div>
+          ) : null}
+
+          {showingDishlistOverview ? (
+            <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
           ) : null}
 
           {showingDishlistOverview ? (

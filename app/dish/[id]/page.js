@@ -67,7 +67,7 @@ export default function DishDetail() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { darkMode, t } = useLanguage();
+  const { darkMode, language, t } = useLanguage();
 
   const source = searchParams.get("source") || "saved";
   const mode = searchParams.get("mode") || "single";
@@ -642,6 +642,7 @@ export default function DishDetail() {
       clearSessionPageCache("feed:");
       clearSessionPageCache("explore:");
       clearSessionPageCache("people:");
+      clearSessionPageCache("profile:");
 
       setDish((prev) => (prev?.id === editingDish.id ? { ...prev, ...updates } : prev));
       setDeckList((prev) =>
@@ -1047,9 +1048,6 @@ export default function DishDetail() {
                   />
                 ))}
               </div>
-              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-black/35">
-                    {editStep === 0 ? "Basics" : editStep === 1 ? "Recipe" : editStep === 2 ? "Details" : "Review"}
-              </div>
               <button
                 type="button"
                 onClick={closeEditModal}
@@ -1063,10 +1061,9 @@ export default function DishDetail() {
             {editStep === 0 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Step 1
-                  </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Name and photo</h2>
+                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {language === "it" ? "Nome e foto" : "Name and photo"}
+                  </h2>
                 </div>
                 <div className="mb-4 grid grid-cols-2 gap-2.5">
   <button
@@ -1082,8 +1079,8 @@ export default function DishDetail() {
         <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
-        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Home</div>
-        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Recipe to cook at home</div>
+        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>{t("Home")}</div>
+        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>{t("Recipe to cook at home")}</div>
       </div>
     </div>
   </button>
@@ -1098,8 +1095,8 @@ export default function DishDetail() {
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.05} />
       </span>
       <div className="min-w-0">
-        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Restaurant</div>
-        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Suggestion to eat out</div>
+        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>{t("Restaurant")}</div>
+        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>{t("Suggestion to eat out")}</div>
       </div>
     </div>
   </button>
@@ -1109,7 +1106,7 @@ export default function DishDetail() {
                     <RestaurantPlacePicker
                       value={editRestaurant}
                       onChange={setEditRestaurant}
-                      placeholder="Search where you ate it"
+                      placeholder={t("Search where you ate it")}
                       accent="restaurant"
                     />
                   </div>
@@ -1118,7 +1115,7 @@ export default function DishDetail() {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Dish name"
+                  placeholder={t("Dish name")}
                   className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
@@ -1175,7 +1172,7 @@ export default function DishDetail() {
                       }`}>
                         <Camera size={28} />
                       </div>
-                      <div className="text-sm font-medium">Change photo</div>
+                      <div className="text-sm font-medium">{t("Change photo")}</div>
                     </div>
                   )}
                 </button>
@@ -1185,13 +1182,13 @@ export default function DishDetail() {
             {editStep === 1 && editDishMode !== DISH_MODE_RESTAURANT ? (
               <>
                 <div className="mb-4 text-center">
-                  <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
+                  <div className={`text-[11px] font-semibold tracking-[0.22em] uppercase ${darkMode ? "text-white/40" : "text-black/35"}`}>{t("Optional")}</div>
                 </div>
-                <h2 className="text-[2rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
+                <h2 className={`text-[1.75rem] leading-none font-semibold mb-4 text-center ${darkMode ? "text-white" : "text-black"}`}>{t("Ingredients and recipe")}</h2>
 	                <IngredientBulletTextarea
 	                  value={editRecipeIngredients}
 	                  onChange={setEditRecipeIngredients}
-	                  placeholder="Ingredients"
+	                  placeholder={t("Ingredients")}
 	                  rows={3}
 	                  className="w-full p-4 rounded-[1.5rem] bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FFF7_100%)] text-black mb-3 border-2 default-accent-border shadow-[0_12px_26px_rgba(43,211,107,0.12)] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
 	                  disabled={savingEdit}
@@ -1199,14 +1196,14 @@ export default function DishDetail() {
 	                <textarea
 	                  value={editRecipeMethod}
 	                  onChange={(e) => setEditRecipeMethod(e.target.value)}
-	                  placeholder="Method"
+	                  placeholder={t("Method")}
 	                  rows={2}
 	                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border-2 border-black/10 focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
 	                  disabled={savingEdit}
 	                />
 	                <div className="mb-3 grid grid-cols-2 gap-2">
 	                  <div className="rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65">
-	                    {editDishLink.trim() ? "Dish link" : "Add link"}
+	                    {editDishLink.trim() ? t("Dish link") : t("Add link")}
 	                  </div>
 	                  <button
 	                    type="button"
@@ -1214,7 +1211,7 @@ export default function DishDetail() {
 	                    className="truncate rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65"
 	                    disabled={savingEdit}
 	                  >
-	                    {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : "Tag user"}
+	                    {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user")}
 	                  </button>
 	                </div>
 	                <input
@@ -1234,22 +1231,19 @@ export default function DishDetail() {
             {editStep === 2 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Step 3
-                  </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Description and tags</h2>
+                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Description and tags")}</h2>
                 </div>
                 <textarea
                   value={editDescription}
 	                  onChange={(e) => setEditDescription(e.target.value)}
-	                  placeholder="Description"
+	                  placeholder={t("Description")}
 	                  rows={1}
 	                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
 	                  disabled={savingEdit}
 	                />
                 {editDishMode === DISH_MODE_RESTAURANT ? (
                   <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>Rating</div>
+                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Rating")}</div>
                     <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
                   </div>
                 ) : null}
@@ -1259,7 +1253,7 @@ export default function DishDetail() {
                     type="button"
                     className={`inline-flex items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55`}
                   >
-                    {editDishLink.trim() ? "Dish link" : "Add link"}
+                    {editDishLink.trim() ? t("Dish link") : t("Add link")}
                   </button>
                   <input
                     type="text"
@@ -1276,7 +1270,7 @@ export default function DishDetail() {
 	                ) : null}
 	                {editDishMode === DISH_MODE_RESTAURANT ? (
 	                <div className="mb-4">
-                  <p className="mb-2 text-sm font-medium text-black">Tag a user</p>
+                  <p className={`mb-2 text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tag a user")}</p>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -1284,7 +1278,7 @@ export default function DishDetail() {
                       className={`flex-1 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-left text-sm text-black focus:outline-none focus:ring-2`}
                       disabled={savingEdit}
                     >
-                      {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : "Select user (optional)"}
+                      {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user (optional)")}
                     </button>
                     {editTaggedUser ? (
                       <button
@@ -1304,7 +1298,7 @@ export default function DishDetail() {
 	                ) : null}
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-black">Tags</p>
+                    <p className={`text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tags")}</p>
                     <p className="text-xs text-black/60">{editTags.length}/6</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1329,10 +1323,7 @@ export default function DishDetail() {
             {editStep === 3 ? (
               <>
                 <div className="mb-4">
-                  <div className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/55">
-                    Final Step
-                  </div>
-                  <h2 className="text-[2rem] leading-none font-semibold mt-3 text-black">Review changes</h2>
+                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Review and upload")}</h2>
                 </div>
                 <div className={`${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} rounded-[2rem] border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
@@ -1349,15 +1340,15 @@ export default function DishDetail() {
                       ) : (
                         <img
                           src={editPreview || getDishImageUrl(editingDish)}
-                          alt={editName || "Dish preview"}
+                          alt={editName || t("Dish preview")}
                           className="w-full h-full object-cover"
                         />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-lg font-semibold leading-tight">{editName || "Untitled dish"}</h3>
+                      <h3 className="text-lg font-semibold leading-tight">{editName || t("Untitled dish")}</h3>
                       <p className={`text-sm mt-1 line-clamp-3 ${darkMode ? "text-white/65" : "text-black/65"}`}>
-                        {editDescription || "No description"}
+                        {editDescription || t("No description")}
                       </p>
                       {editTaggedUser.trim() ? (
                         <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
@@ -1391,7 +1382,7 @@ export default function DishDetail() {
                     className={`dish-edit-action-btn dish-edit-action-btn--delete px-4 ${darkMode ? "bg-[#2A1010] text-[#FF9B9B]" : "bg-[#FFF0F0] text-[#B72E2E]"}`}
                     disabled={savingEdit}
                   >
-                    Delete
+                    {t("Delete")}
                   </button>
                   <button
                     type="button"
@@ -1399,7 +1390,7 @@ export default function DishDetail() {
                     className="dish-edit-action-btn dish-edit-action-btn--save border-2 border-[#45C47A]/55 bg-[#1FA463] px-4 text-white shadow-[0_14px_30px_rgba(31,164,99,0.28)] ring-2 ring-[#2BD36B]/20 transition hover:brightness-105"
                     disabled={savingEdit}
                   >
-                    {savingEdit ? "Saving..." : "Save"}
+                    {savingEdit ? t("Saving...") : t("Save")}
                   </button>
                 </div>
               </>

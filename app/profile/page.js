@@ -579,9 +579,9 @@ export default function Profile() {
       setMealCalendarEntries(cachedProfile.mealCalendarEntries || []);
       setLeaderboardTakes(cachedProfile.leaderboardTakes || []);
       setProfileContentReady(true);
-      return undefined;
+    } else {
+      setProfileContentReady(false);
     }
-    setProfileContentReady(false);
     (async () => {
       try {
         const loadUserDoc = async () => {
@@ -640,7 +640,9 @@ export default function Profile() {
         ]);
         const [uploadedRes, savedRes, toTryRes, customRes, storiesRes, statsRes, mealCalendarRes, takesRes] = results;
         if (cancelled) return;
-        setUploadedDishes(uploadedRes.status === "fulfilled" ? mergeUniqueById([uploadedRes.value]) : []);
+        if (uploadedRes.status === "fulfilled") {
+          setUploadedDishes(mergeUniqueById([uploadedRes.value]));
+        }
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
         setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
         setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
@@ -1027,6 +1029,7 @@ export default function Profile() {
       clearSessionPageCache("feed:");
       clearSessionPageCache("explore:");
       clearSessionPageCache("people:");
+      clearSessionPageCache("profile:");
       if (dishId) {
         await dispatchPushEvent("dish_posted", {
           ownerId: user.uid,

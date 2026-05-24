@@ -102,6 +102,8 @@ const translations = {
     "Tags saved": "Tag salvati",
     "Could not update tags": "Impossibile aggiornare i tag",
     "Saving...": "Salvataggio...",
+    "Dish preview": "Anteprima piatto",
+    "No description": "Nessuna descrizione",
     "Light mode": "Modalita chiara",
     "Save profile": "Salva profilo",
     "Display name": "Nome",

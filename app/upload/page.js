@@ -250,6 +250,7 @@ export default function UploadPage() {
         clearSessionPageCache("feed:");
         clearSessionPageCache("explore:");
         clearSessionPageCache("people:");
+        clearSessionPageCache("profile:");
         if (dishId) {
           await dispatchPushEvent("dish_posted", {
             ownerId: user.uid,

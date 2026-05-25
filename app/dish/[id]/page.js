@@ -624,8 +624,8 @@ export default function DishDetail() {
         }
       }
 
-      const normalizedEditPrice = Number(String(editPrice).replace(",", "."));
-      const editPricePayload = editDishMode === DISH_MODE_RESTAURANT && Number.isFinite(normalizedEditPrice) && normalizedEditPrice > 0
+      const normalizedEditPrice = Number(String(editPrice).replace(/[^\d.,]/g, "").replace(",", "."));
+      const editPricePayload = Number.isFinite(normalizedEditPrice) && normalizedEditPrice > 0
         ? normalizedEditPrice
         : null;
       const updates = {
@@ -641,8 +641,8 @@ export default function DishDetail() {
         price: editPricePayload,
         priceAmount: editPricePayload,
         restaurantPrice: editPricePayload,
-        priceCurrency: editDishMode === DISH_MODE_RESTAURANT ? editPriceCurrency : "",
-        currency: editDishMode === DISH_MODE_RESTAURANT ? editPriceCurrency : "",
+        priceCurrency: editPricePayload ? editPriceCurrency : "",
+        currency: editPricePayload ? editPriceCurrency : "",
         isPublic: editIsPublic,
         dishMode: editDishMode,
         restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,
@@ -1129,6 +1129,7 @@ export default function DishDetail() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder={t("Dish name")}
+                  enterKeyHint="next"
                   className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
                   disabled={savingEdit}
                 />
@@ -1207,10 +1208,9 @@ export default function DishDetail() {
                     </div>
                     <div className="mb-4 grid grid-cols-[1fr_auto] gap-2">
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
                         inputMode="decimal"
+                        enterKeyHint="done"
                         placeholder={language === "it" ? "Prezzo" : "Price"}
                         value={editPrice}
                         onChange={(e) => setEditPrice(e.target.value)}
@@ -1220,6 +1220,7 @@ export default function DishDetail() {
                       <select
                         value={editPriceCurrency}
                         onChange={(e) => setEditPriceCurrency(e.target.value)}
+                        inputMode="none"
                         className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={savingEdit}
                       >
@@ -1237,6 +1238,8 @@ export default function DishDetail() {
                         placeholder="https://..."
                         value={editDishLink}
                         onChange={(e) => setEditDishLink(e.target.value)}
+                        inputMode="url"
+                        enterKeyHint="done"
                         className="mt-3 w-full rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={savingEdit}
                         autoCapitalize="none"
@@ -1311,6 +1314,8 @@ export default function DishDetail() {
 	                  placeholder="https://..."
 	                  value={editDishLink}
 	                  onChange={(e) => setEditDishLink(e.target.value)}
+	                  inputMode="url"
+	                  enterKeyHint="done"
 	                  className="mb-4 w-full rounded-full border-2 default-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
 	                  disabled={savingEdit}
 	                  autoCapitalize="none"

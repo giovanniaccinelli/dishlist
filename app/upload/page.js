@@ -329,7 +329,7 @@ export default function UploadPage() {
   );
   const isRestaurantUpload = dishMode === DISH_MODE_RESTAURANT;
   const visibleUploadSteps = UPLOAD_STEP_PREVIEW;
-  const normalizedDishPrice = Number(String(dishPrice).replace(",", "."));
+  const normalizedDishPrice = Number(String(dishPrice).replace(/[^\d.,]/g, "").replace(",", "."));
   const dishPricePayload = isRestaurantUpload && Number.isFinite(normalizedDishPrice) && normalizedDishPrice > 0
     ? normalizedDishPrice
     : null;
@@ -537,6 +537,7 @@ export default function UploadPage() {
                   placeholder="Dish name"
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
+                  enterKeyHint="next"
                     className={`w-full p-4 rounded-full bg-white text-black mb-4 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border shadow-[0_10px_24px_rgba(230,70,70,0.14)] focus:ring-[#E64646]/25" : "border-[#E5C15A] shadow-[0_10px_24px_rgba(229,193,90,0.14)] focus:ring-[#E5C15A]/30"} focus:outline-none focus:ring-2 text-base`}
                   disabled={loadingUpload}
                 />
@@ -629,10 +630,9 @@ export default function UploadPage() {
                     </div>
                     <div className="mb-4 grid grid-cols-[1fr_auto] gap-2">
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
                         inputMode="decimal"
+                        enterKeyHint="done"
                         placeholder={language === "it" ? "Prezzo" : "Price"}
                         value={dishPrice}
                         onChange={(e) => setDishPrice(e.target.value)}
@@ -642,6 +642,7 @@ export default function UploadPage() {
                       <select
                         value={dishPriceCurrency}
                         onChange={(e) => setDishPriceCurrency(e.target.value)}
+                        inputMode="none"
                         className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={loadingUpload}
                       >
@@ -664,6 +665,8 @@ export default function UploadPage() {
                           placeholder="https://..."
                           value={dishLink}
                           onChange={(e) => setDishLink(e.target.value)}
+                          inputMode="url"
+                          enterKeyHint="done"
                           className="mt-3 w-full rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                           disabled={loadingUpload}
                           autoCapitalize="none"
@@ -750,6 +753,8 @@ export default function UploadPage() {
 	                    placeholder="https://..."
 	                    value={dishLink}
 	                    onChange={(e) => setDishLink(e.target.value)}
+	                    inputMode="url"
+	                    enterKeyHint="done"
 	                    className="mb-4 w-full rounded-full border-2 default-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
 	                    disabled={loadingUpload}
 	                    autoCapitalize="none"

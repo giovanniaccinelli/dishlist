@@ -579,7 +579,7 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className={`mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 ${selectedGroup.users.length === 1 ? "justify-center" : ""}`}
+                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {selectedGroup.users.map((user) => (
@@ -629,15 +629,15 @@ export default function RestaurantMapView({
                             <button
                               type="button"
                               onClick={() => router.push(`/leaderboard/${user.leaderboardAnswers[0].questionId}`)}
-                              className={`restaurant-accent-border ${user.dishes?.[0] ? "mt-2 min-h-[4.2rem]" : "h-40"} w-full rounded-[1.25rem] border-2 bg-[linear-gradient(180deg,#FFF4F4_0%,#FFFFFF_100%)] px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition active:scale-[0.98]`}
+                              className={`restaurant-accent-border ${user.dishes?.[0] ? "mt-2 min-h-[4.2rem]" : "h-40"} w-full rounded-[1.25rem] border-2 bg-[linear-gradient(145deg,#261010_0%,#3A1515_52%,#120909_100%)] px-3 py-3 text-left shadow-[0_12px_26px_rgba(0,0,0,0.22)] transition active:scale-[0.98]`}
                             >
-                              <div className="line-clamp-2 text-[12px] font-black leading-tight text-black">
+                              <div className="line-clamp-2 text-[12px] font-bold leading-tight text-white/86">
                                 {user.leaderboardAnswers[0].questionTitle || "Leaderboard"}
                               </div>
-                              <div className="mt-2 truncate text-[13px] font-bold text-[#E64646]">
+                              <div className="mt-2 truncate text-[13px] font-bold text-[#FFB4B4]">
                                 {user.leaderboardAnswers[0].text || selectedGroup.name}
                               </div>
-                              <div className="mt-2 inline-flex items-center rounded-full bg-[#E64646]/10 px-2 py-1 text-[10px] font-black text-[#E64646]">
+                              <div className="mt-2 inline-flex items-center rounded-full border border-[#E64646]/35 bg-[#E64646]/18 px-2 py-1 text-[10px] font-black text-[#FFD7D7]">
                                 {Math.max(0, Number(user.leaderboardAnswers[0].voteCount || 0))} voti
                               </div>
                             </button>

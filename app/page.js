@@ -1236,9 +1236,14 @@ export default function Feed() {
             />
           </div>
           {showFeedMapStrip ? (
-            <div className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]">
-              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={15} />
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
+              className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
+              aria-label={`Open ${activeFeedRestaurant.name} on map`}
+            >
+              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} />
+            </button>
           ) : null}
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
@@ -1302,9 +1307,14 @@ export default function Feed() {
                 />
               </div>
               {showFeedMapStrip ? (
-                <div className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]">
-                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={15} />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
+                  className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
+                  aria-label={`Open ${activeFeedRestaurant.name} on map`}
+                >
+                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} />
+                </button>
               ) : null}
             </div>
           )}

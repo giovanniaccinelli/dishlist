@@ -7,7 +7,7 @@ import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AppToast from "../components/AppToast";
 import MapPreview from "../components/MapPreview";
-import { FeedLoading } from "../components/AppLoadingState";
+import { FeedLoading, FeedLogoLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
@@ -1118,7 +1118,7 @@ export default function Feed() {
   }
 
   if (loading || (loadingDishes && !hasLoadedFeedCards)) {
-    return <FeedLoading onModeSelect={setSelectedDishMode} />;
+    return <FeedLogoLoading />;
   }
 
   return (

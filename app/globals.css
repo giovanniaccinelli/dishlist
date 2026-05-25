@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes dishlist-logo-shrink-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(0.9);
+  }
+}
+
+.dishlist-loading-logo {
+  animation: dishlist-logo-shrink-pulse 0.9s ease-in-out infinite;
+}
+
 /* --- Font & Base Style --- */
 @layer base {
   html, body {

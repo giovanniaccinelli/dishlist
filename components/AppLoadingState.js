@@ -36,6 +36,21 @@ export function FeedLoading({ onModeSelect }) {
   );
 }
 
+export function FeedLogoLoading() {
+  return (
+    <div className="h-[100dvh] bg-[#000000] px-4 text-black">
+      <div className="app-top-nav pb-2" />
+      <div className="flex h-[78vh] items-center justify-center px-4 pt-16">
+        <img
+          src="/logo-real.png"
+          alt="DishList"
+          className="h-24 w-24 object-contain dishlist-loading-logo"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function PeopleGridLoading({ searching = false }) {
   return (
     <div>

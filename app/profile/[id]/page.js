@@ -51,7 +51,6 @@ import {
   usePersistentDishMode,
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
-import { formatDishPrice } from "../../lib/dishPrice";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "../../lib/sessionPageCache";
 
@@ -1399,11 +1398,6 @@ export default function PublicProfile() {
                   <span className="sr-only">Open dish card</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
-                {formatDishPrice(dish) ? (
-                  <div className="pointer-events-none absolute right-1.5 top-1.5 z-30 rounded-full bg-black/58 px-2 py-1 text-[11px] font-black leading-none text-white shadow-[0_6px_14px_rgba(0,0,0,0.25)] backdrop-blur-md">
-                    {formatDishPrice(dish)}
-                  </div>
-                ) : null}
                 <img
                   src={getDishImageUrl(dish, "thumb")}
                   alt={dish.name}

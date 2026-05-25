@@ -1368,7 +1368,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     )
                   ) : null}
                   {currentCard?.dishMode === "restaurant" ? (
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <div className="mt-1 flex flex-col items-start gap-1">
                       <RatingStars value={currentCard.rating} size="text-[1.05rem]" readOnly />
                       {currentDishPriceLabel ? (
                         <span

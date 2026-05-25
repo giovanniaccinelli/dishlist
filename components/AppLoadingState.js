@@ -44,7 +44,7 @@ export function FeedLogoLoading() {
         <img
           src="/logo-real.png"
           alt="DishList"
-          className="h-24 w-24 object-contain dishlist-loading-logo"
+          className="h-36 w-36 object-contain dishlist-loading-logo"
         />
       </div>
     </div>

@@ -641,8 +641,8 @@ export async function getAllDishesFromFirestore() {
 }
 
 // Get a paginated page of dishes, newest first
-export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
-  const cacheKey = cursor ? null : `dishes:page:first:${pageSize}`;
+export async function getDishesPage({ pageSize = 20, cursor = null, enrichOwners = true } = {}) {
+  const cacheKey = cursor ? null : `dishes:page:first:${pageSize}:${enrichOwners ? "owners" : "raw"}`;
   if (cacheKey) {
     const cached = getCache(cacheKey);
     if (cached) return cached;
@@ -666,7 +666,7 @@ export async function getDishesPage({ pageSize = 20, cursor = null } = {}) {
   const rawItems = snapshot.docs
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter((dish) => typeof dish.name === "string" && dish.name.trim().length > 0);
-  const items = await enrichWithOwnerPhotos(rawItems);
+  const items = enrichOwners ? await enrichWithOwnerPhotos(rawItems) : rawItems;
   const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
   const result = { items, lastDoc };
   if (cacheKey) dataCache.set(cacheKey, { value: result, cachedAt: Date.now() });

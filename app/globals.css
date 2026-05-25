@@ -14,7 +14,7 @@
 }
 
 .dishlist-loading-logo {
-  animation: dishlist-logo-shrink-pulse 0.9s ease-in-out infinite;
+  animation: dishlist-logo-shrink-pulse 1.45s ease-in-out infinite;
 }
 
 /* --- Font & Base Style --- */

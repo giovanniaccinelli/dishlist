@@ -1104,6 +1104,8 @@ export default function Feed() {
     setDoc(doc(db, "users", userId), { feedActivitySeenAt: new Date(now) }, { merge: true }).catch(() => {});
   };
 
+  const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
+
   if (needsOpeningDishMode) {
     return (
       <FeedLoading
@@ -1115,7 +1117,7 @@ export default function Feed() {
     );
   }
 
-  if (loading || loadingDishes) {
+  if (loading || (loadingDishes && !hasLoadedFeedCards)) {
     return <FeedLoading onModeSelect={setSelectedDishMode} />;
   }
 

@@ -530,8 +530,8 @@ export default function DishDetail() {
     setEditTaggedUser(dishToEdit?.taggedUserName || "");
     setEditTaggedUserId(dishToEdit?.taggedUserId || "");
     setEditRating(Number(dishToEdit?.rating || 0));
-    setEditPrice(dishToEdit?.price ? String(dishToEdit.price) : "");
-    setEditPriceCurrency(dishToEdit?.priceCurrency || "EUR");
+    setEditPrice(dishToEdit?.price || dishToEdit?.priceAmount || dishToEdit?.restaurantPrice ? String(dishToEdit.price || dishToEdit.priceAmount || dishToEdit.restaurantPrice) : "");
+    setEditPriceCurrency(dishToEdit?.priceCurrency || dishToEdit?.currency || "EUR");
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
     const normalizedTags = Array.isArray(dishToEdit?.tags)
@@ -639,7 +639,10 @@ export default function DishDetail() {
         tags: editTags,
         rating: editDishMode === DISH_MODE_RESTAURANT ? editRating : 0,
         price: editPricePayload,
+        priceAmount: editPricePayload,
+        restaurantPrice: editPricePayload,
         priceCurrency: editDishMode === DISH_MODE_RESTAURANT ? editPriceCurrency : "",
+        currency: editDishMode === DISH_MODE_RESTAURANT ? editPriceCurrency : "",
         isPublic: editIsPublic,
         dishMode: editDishMode,
         restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,

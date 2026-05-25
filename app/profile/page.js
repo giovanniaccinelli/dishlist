@@ -13,6 +13,7 @@ import {
   uploadProfileImage,
   deleteImageByUrl,
   saveDishToFirestore,
+  getDishesFromFirestore,
   getUploadedDishesForUserAliases,
   getAllDishlistsForUser,
   getSavedDishesFromFirestore,
@@ -73,6 +74,7 @@ import {
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { formatDishPrice } from "../lib/dishPrice";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 
@@ -582,6 +584,17 @@ export default function Profile() {
     } else {
       setProfileContentReady(false);
     }
+
+    getDishesFromFirestore(user.uid)
+      .then((directUploaded) => {
+        if (!cancelled && Array.isArray(directUploaded)) {
+          setUploadedDishes(directUploaded);
+        }
+      })
+      .catch((error) => {
+        console.error("Fast own uploaded dishes fetch failed:", error);
+      });
+
     (async () => {
       try {
         const loadUserDoc = async () => {
@@ -2076,6 +2089,11 @@ export default function Profile() {
                   <span className="sr-only">Open dish</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
+                {formatDishPrice(dish) ? (
+                  <div className="pointer-events-none absolute right-1.5 top-1.5 z-30 rounded-full bg-black/58 px-2 py-1 text-[11px] font-black leading-none text-white shadow-[0_6px_14px_rgba(0,0,0,0.25)] backdrop-blur-md">
+                    {formatDishPrice(dish)}
+                  </div>
+                ) : null}
                 {(() => {
                   const imageSrc = getDishImageUrl(dish, "thumb");
                   return (

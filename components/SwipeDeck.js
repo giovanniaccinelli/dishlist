@@ -21,23 +21,7 @@ import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
-
-const PRICE_CURRENCY_SYMBOLS = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-  CHF: "Fr.",
-  JPY: "¥",
-};
-
-function formatDishPrice(dish) {
-  const rawPrice = Number(dish?.price);
-  if (!Number.isFinite(rawPrice) || rawPrice <= 0) return "";
-  const code = String(dish?.priceCurrency || "EUR").toUpperCase();
-  const symbol = PRICE_CURRENCY_SYMBOLS[code] || code || "€";
-  const amount = rawPrice % 1 === 0 ? String(rawPrice) : rawPrice.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-  return code === "USD" || code === "GBP" || code === "JPY" ? `${symbol}${amount}` : `${amount}${symbol}`;
-}
+import { formatDishPrice } from "../app/lib/dishPrice";
 
 function DeckAutoplayVideo({
   src,

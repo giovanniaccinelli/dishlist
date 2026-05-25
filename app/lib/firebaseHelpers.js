@@ -62,6 +62,10 @@ function clearReadCache(userId = null) {
     if (key.startsWith("dishes:page:")) dataCache.delete(key);
     if (userId && key.includes(`:${userId}:`)) dataCache.delete(key);
   });
+  Array.from(pendingCache.keys()).forEach((key) => {
+    if (key === "dishes:all" || key.startsWith("dishes:page:")) pendingCache.delete(key);
+    if (userId && key.includes(`:${userId}:`)) pendingCache.delete(key);
+  });
 }
 
 function normalizeTags(tags) {
@@ -154,8 +158,8 @@ function buildDishPayload(dishId, dishData = null) {
         recipeIngredients: dishData.recipeIngredients || "",
         recipeMethod: dishData.recipeMethod || "",
         rating: Math.max(0, Math.min(5, Math.round((Number(dishData.rating) || 0) * 2) / 2)),
-        price: Number.isFinite(Number(dishData.price)) && Number(dishData.price) > 0 ? Number(dishData.price) : null,
-        priceCurrency: dishData.priceCurrency || "",
+        price: Number.isFinite(Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice)) && Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice) > 0 ? Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice) : null,
+        priceCurrency: dishData.priceCurrency || dishData.currency || "",
         tags: normalizeTags(dishData.tags),
         isPublic: dishData.isPublic !== false,
         cardURL: dishData.cardURL || dishData.imageURL || dishData.imageUrl || "",
@@ -195,8 +199,8 @@ async function hydrateDishPayload(dishId, payload) {
       recipeIngredients: data.recipeIngredients || payload?.recipeIngredients || "",
       recipeMethod: data.recipeMethod || payload?.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(data.rating ?? payload?.rating) || 0) * 2) / 2)),
-      price: Number.isFinite(Number(data.price ?? payload?.price)) && Number(data.price ?? payload?.price) > 0 ? Number(data.price ?? payload?.price) : null,
-      priceCurrency: data.priceCurrency || payload?.priceCurrency || "",
+      price: Number.isFinite(Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice)) && Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice) > 0 ? Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice) : null,
+      priceCurrency: data.priceCurrency || data.currency || payload?.priceCurrency || payload?.currency || "",
       tags: normalizeTags(data.tags || payload?.tags),
       isPublic: data.isPublic !== false,
       cardURL: data.cardURL || data.imageURL || data.imageUrl || payload?.cardURL || "",
@@ -280,8 +284,8 @@ async function mergeDishesWithCanonical(dishes = []) {
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
-      price: Number.isFinite(Number(canonical.price ?? dish.price)) && Number(canonical.price ?? dish.price) > 0 ? Number(canonical.price ?? dish.price) : null,
-      priceCurrency: canonical.priceCurrency || dish.priceCurrency || "",
+      price: Number.isFinite(Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice)) && Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) > 0 ? Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) : null,
+      priceCurrency: canonical.priceCurrency || canonical.currency || dish.priceCurrency || dish.currency || "",
       tags: normalizeTags(canonical.tags || dish.tags),
       isPublic: canonical.isPublic !== false,
       cardURL:
@@ -2005,8 +2009,8 @@ export async function getSavedDishesFromFirestore(userId) {
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
-      price: Number.isFinite(Number(canonical.price ?? dish.price)) && Number(canonical.price ?? dish.price) > 0 ? Number(canonical.price ?? dish.price) : null,
-      priceCurrency: canonical.priceCurrency || dish.priceCurrency || "",
+      price: Number.isFinite(Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice)) && Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) > 0 ? Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) : null,
+      priceCurrency: canonical.priceCurrency || canonical.currency || dish.priceCurrency || dish.currency || "",
       tags: normalizeTags(canonical.tags || dish.tags),
       isPublic: canonical.isPublic !== false,
       cardURL:

@@ -30,7 +30,7 @@ import {
   normalizeProfilePhotoURL,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
-import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Search, Send, Shuffle, Trophy, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Search, Send, Shuffle, Trophy, Upload, UserCheck, UserPlus, Users, X } from "lucide-react";
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
@@ -51,6 +51,7 @@ import {
   usePersistentDishMode,
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
+import { formatDishPrice } from "../../lib/dishPrice";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "../../lib/sessionPageCache";
 
@@ -1027,16 +1028,17 @@ export default function PublicProfile() {
             {!isViewingOwnProfile ? (
               <button
                 onClick={handleFollow}
-                className={`people-follow-button no-accent-border h-[2.2rem] shrink-0 whitespace-nowrap px-2.5 py-0 rounded-full text-[0.64rem] font-semibold border transition ${
+                className={`people-follow-button no-accent-border inline-flex h-8 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-[0.78rem] border px-2.5 text-[10.5px] font-bold leading-none shadow-[0_7px_16px_rgba(0,0,0,0.08)] transition active:scale-[0.98] ${
                   darkMode
                     ? isFollowing
-                      ? "border-[#E64646] bg-[#2A1212] text-[#FFD5D5]"
-                      : "border-[#2BD36B] bg-[#102817] text-[#D9FFE3]"
+                      ? "border-white/10 bg-white/[0.055] text-white/62 shadow-none"
+                      : "border-[#2BD36B]/35 bg-[#142217] text-[#86E8A3]"
                     : isFollowing
-                      ? "bg-[linear-gradient(135deg,#F4E9D5_0%,#FCF5E7_100%)] text-[#2B2418] border-[#D8C9AF]"
-                      : "bg-[linear-gradient(135deg,#EAF7EE_0%,#F4FBF2_100%)] text-[#165D32] border-[#C7E3CB]"
+                      ? "border-black/8 bg-[#F4F1EA] text-black/52 shadow-none"
+                      : "border-[#C9E8CF] bg-[#F0FAF2] text-[#177A3D]"
                 }`}
               >
+                {isFollowing ? <UserCheck size={12} strokeWidth={2.3} /> : <UserPlus size={12} strokeWidth={2.3} />}
                 {isFollowing ? t("Unfollow") : t("Follow")}
               </button>
             ) : null}
@@ -1397,6 +1399,11 @@ export default function PublicProfile() {
                   <span className="sr-only">Open dish card</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
+                {formatDishPrice(dish) ? (
+                  <div className="pointer-events-none absolute right-1.5 top-1.5 z-30 rounded-full bg-black/58 px-2 py-1 text-[11px] font-black leading-none text-white shadow-[0_6px_14px_rgba(0,0,0,0.25)] backdrop-blur-md">
+                    {formatDishPrice(dish)}
+                  </div>
+                ) : null}
                 <img
                   src={getDishImageUrl(dish, "thumb")}
                   alt={dish.name}

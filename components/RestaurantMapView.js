@@ -241,10 +241,7 @@ export default function RestaurantMapView({
 
     const timeoutId = window.setTimeout(() => {
       autocompleteServiceRef.current?.getPlacePredictions(
-        {
-          input: trimmed,
-          types: ["establishment"],
-        },
+        { input: trimmed },
         (results, status) => {
           if (requestRef.current !== requestId) return;
           const googleResults =
@@ -252,7 +249,13 @@ export default function RestaurantMapView({
               ? results
               : [];
           const seen = new Set();
-          const merged = [...localMatches, ...googleResults].filter((item) => {
+          const merged = [
+            ...localMatches.map((item) => ({
+              ...item,
+              _pinnedGroup: groups.find((group) => group.placeId === item.place_id) || null,
+            })),
+            ...googleResults,
+          ].filter((item) => {
             const key = item.place_id || item.description;
             if (!key || seen.has(key)) return false;
             seen.add(key);
@@ -456,25 +459,49 @@ export default function RestaurantMapView({
             ) : null}
             {showPredictions ? (
               <div className="max-h-52 overflow-y-auto border-t border-black/6 bg-[#FFFCF7]">
-                {predictions.map((prediction) => (
-                  <button
-                    key={prediction.place_id || prediction.description}
-                    type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => handlePredictionSelect(prediction)}
-                    className="flex w-full items-start gap-2 border-b border-black/6 px-3 py-2.5 text-left last:border-b-0 hover:bg-black/[0.03]"
-                  >
-                    <MapPin size={14} className="mt-0.5 shrink-0 text-[#E64646]" />
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-black">
-                        {prediction.structured_formatting?.main_text || prediction.description}
+                {predictions.map((prediction) => {
+                  const pinnedUsers = prediction._pinnedGroup?.users?.slice(0, 3) || [];
+                  return (
+                    <button
+                      key={prediction.place_id || prediction.description}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => handlePredictionSelect(prediction)}
+                      className="flex w-full items-start gap-2 border-b border-black/6 px-3 py-2.5 text-left last:border-b-0 hover:bg-black/[0.03]"
+                    >
+                      <MapPin size={14} className="mt-0.5 shrink-0 text-[#E64646]" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-black">
+                          {prediction.structured_formatting?.main_text || prediction.description}
+                        </div>
+                        <div className="truncate text-xs text-black/45">
+                          {prediction.structured_formatting?.secondary_text || prediction.description}
+                        </div>
                       </div>
-                      <div className="truncate text-xs text-black/45">
-                        {prediction.structured_formatting?.secondary_text || prediction.description}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                      {pinnedUsers.length ? (
+                        <div className="ml-auto flex shrink-0 items-center pt-0.5">
+                          {pinnedUsers.map((mapUser, index) => (
+                            mapUser.photoURL ? (
+                              <img
+                                key={`${prediction.place_id}-${mapUser.id}`}
+                                src={mapUser.photoURL}
+                                alt={mapUser.name || "User"}
+                                className={`h-6 w-6 rounded-full object-cover shadow-sm ${index > 0 ? "-ml-2" : ""}`}
+                              />
+                            ) : (
+                              <span
+                                key={`${prediction.place_id}-${mapUser.id}`}
+                                className={`flex h-6 w-6 items-center justify-center rounded-full bg-black text-[9px] font-black text-white shadow-sm ${index > 0 ? "-ml-2" : ""}`}
+                              >
+                                {(mapUser.name || "U").slice(0, 1).toUpperCase()}
+                              </span>
+                            )
+                          ))}
+                        </div>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
           </div>
@@ -552,7 +579,7 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
+                    <div className={`mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 ${selectedGroup.users.length === 1 ? "justify-center" : ""}`}
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {selectedGroup.users.map((user) => (
@@ -585,7 +612,7 @@ export default function RestaurantMapView({
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
                                   }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/72 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/88 via-black/48 to-transparent px-2.5 pb-2.5 pt-8 text-white pointer-events-none flex flex-col justify-end gap-0.5">
                                   <div className="truncate text-sm font-semibold">
                                     {user.dishes[0].name || "Untitled dish"}
                                   </div>
@@ -595,6 +622,23 @@ export default function RestaurantMapView({
                                     </div>
                                   ) : null}
                                 </div>
+                              </div>
+                            </button>
+                          ) : null}
+                          {user.leaderboardAnswers?.[0] ? (
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/leaderboard/${user.leaderboardAnswers[0].questionId}`)}
+                              className={`restaurant-accent-border ${user.dishes?.[0] ? "mt-2 min-h-[4.2rem]" : "h-40"} w-full rounded-[1.25rem] border-2 bg-[linear-gradient(180deg,#FFF4F4_0%,#FFFFFF_100%)] px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition active:scale-[0.98]`}
+                            >
+                              <div className="line-clamp-2 text-[12px] font-black leading-tight text-black">
+                                {user.leaderboardAnswers[0].questionTitle || "Leaderboard"}
+                              </div>
+                              <div className="mt-2 truncate text-[13px] font-bold text-[#E64646]">
+                                {user.leaderboardAnswers[0].text || selectedGroup.name}
+                              </div>
+                              <div className="mt-2 inline-flex items-center rounded-full bg-[#E64646]/10 px-2 py-1 text-[10px] font-black text-[#E64646]">
+                                {Math.max(0, Number(user.leaderboardAnswers[0].voteCount || 0))} voti
                               </div>
                             </button>
                           ) : null}

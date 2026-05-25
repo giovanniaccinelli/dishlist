@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, animate, useMotionValue, useTransform } from "framer-motion";
-import { ArrowLeft, Flame, Lock, LockOpen, Users, X } from "lucide-react";
+import { ArrowLeft, Flame, Lock, LockOpen, MapPin, Users, X } from "lucide-react";
 import { useAuth } from "../../lib/auth";
 import {
   addLeaderboardAnswer,
@@ -14,6 +14,8 @@ import {
   voteLeaderboardAnswer,
 } from "../../lib/firebaseHelpers";
 import { useLanguage } from "../../../components/LanguageProvider";
+import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
+import { clearSessionPageCache } from "../../lib/sessionPageCache";
 
 function getQuestionTone(question) {
   return question?.dishMode === "home"
@@ -48,6 +50,7 @@ export default function LeaderboardQuestionPage() {
   const [loading, setLoading] = useState(true);
   const [answersLoading, setAnswersLoading] = useState(false);
   const [answerText, setAnswerText] = useState("");
+  const [answerRestaurant, setAnswerRestaurant] = useState(null);
   const [anonymous, setAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
@@ -135,11 +138,15 @@ export default function LeaderboardQuestionPage() {
       router.push("/?auth=1");
       return;
     }
-    if (!answerText.trim() || submitting) return;
+    const finalText = answerRestaurant?.name || answerText.trim();
+    if (!finalText || submitting) return;
     setSubmitting(true);
-    const ok = await addLeaderboardAnswer(activeQuestionId, user, { text: answerText, anonymous });
+    const ok = await addLeaderboardAnswer(activeQuestionId, user, { text: finalText, anonymous, restaurant: question?.dishMode === "home" ? null : answerRestaurant });
     if (ok) {
       setAnswerText("");
+      setAnswerRestaurant(null);
+      clearSessionPageCache("explore:");
+      clearSessionPageCache("profile:");
       await loadAnswers(activeQuestionId);
     }
     setSubmitting(false);
@@ -322,7 +329,21 @@ export default function LeaderboardQuestionPage() {
                       {index + 1}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
+                      {answer.restaurant?.placeId ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            router.push(`/map?placeId=${encodeURIComponent(answer.restaurant.placeId)}`);
+                          }}
+                          className="inline-flex max-w-full items-center gap-1 truncate text-left text-[0.95rem] font-black underline-offset-2 hover:underline"
+                        >
+                          <MapPin size={14} className="shrink-0" style={{ color: accent.main }} />
+                          <span className="truncate">{answer.text}</span>
+                        </button>
+                      ) : (
+                        <div className="truncate text-[0.95rem] font-black">{answer.text}</div>
+                      )}
                       <div className="mt-1 truncate text-xs text-white/45">
                         {answer.anonymous ? "Anonimo" : answer.userName || "User"}
                       </div>
@@ -346,17 +367,44 @@ export default function LeaderboardQuestionPage() {
               onTouchStartCapture={stopCardDrag}
             >
               <div className="mb-2 text-base font-black">Aggiungi la tua risposta</div>
-              <input
-                data-no-question-swipe="true"
-                value={answerText}
-                onChange={(event) => setAnswerText(event.target.value)}
-                placeholder="Scrivi la tua risposta"
-                className="mb-2 w-full rounded-[1rem] border border-white/12 bg-[#050505] px-4 py-3 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
-              />
+              {question?.dishMode === "home" ? (
+                <input
+                  data-no-question-swipe="true"
+                  value={answerText}
+                  onChange={(event) => setAnswerText(event.target.value)}
+                  placeholder="Scrivi la tua risposta"
+                  className="mb-2 w-full rounded-[1rem] border border-white/12 bg-[#050505] px-4 py-3 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
+                />
+              ) : (
+                <>
+                  <div className="leaderboard-restaurant-picker mb-2">
+                    <RestaurantPlacePicker
+                      value={answerRestaurant}
+                      onChange={(restaurant) => {
+                        setAnswerRestaurant(restaurant);
+                        if (restaurant?.name) setAnswerText(restaurant.name);
+                      }}
+                      label=""
+                      placeholder="Cerca ristorante o luogo"
+                      accent="restaurant"
+                    />
+                  </div>
+                  <input
+                    data-no-question-swipe="true"
+                    value={answerText}
+                    onChange={(event) => {
+                      setAnswerText(event.target.value);
+                      if (answerRestaurant && event.target.value.trim() !== answerRestaurant.name) setAnswerRestaurant(null);
+                    }}
+                    placeholder="Oppure scrivi la tua risposta"
+                    className="mb-2 w-full rounded-[1rem] border border-white/12 bg-[#050505] px-4 py-3 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
+                  />
+                </>
+              )}
               <button
                 type="button"
                 onClick={submitAnswer}
-                disabled={submitting || !answerText.trim()}
+                disabled={submitting || !(answerRestaurant?.name || answerText.trim())}
                 data-no-question-swipe="true"
                 className="w-full rounded-[1rem] px-5 py-3 text-sm font-black text-white disabled:opacity-45"
                 style={{ background: accent.main }}

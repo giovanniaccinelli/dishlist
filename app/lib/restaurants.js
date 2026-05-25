@@ -29,7 +29,7 @@ export function normalizeRestaurant(restaurant) {
   };
 }
 
-export function getRestaurantDishGroups(dishes = []) {
+export function getRestaurantDishGroups(dishes = [], leaderboardAnswers = []) {
   const groups = new Map();
 
   (dishes || []).forEach((dish) => {
@@ -68,11 +68,52 @@ export function getRestaurantDishGroups(dishes = []) {
     groups.set(restaurant.placeId, existing);
   });
 
+  (leaderboardAnswers || []).forEach((answer) => {
+    const restaurant = normalizeRestaurant(answer?.restaurant);
+    if (!restaurant) return;
+    const existing =
+      groups.get(restaurant.placeId) ||
+      {
+        ...restaurant,
+        dishes: [],
+        users: [],
+        leaderboardAnswers: [],
+      };
+    existing.leaderboardAnswers = existing.leaderboardAnswers || [];
+    if (answer?.id && !existing.leaderboardAnswers.some((item) => item.id === answer.id && item.questionId === answer.questionId)) {
+      existing.leaderboardAnswers.push(answer);
+    }
+
+    const userId = String(answer?.userId || "").trim();
+    if (userId) {
+      let userEntry = existing.users.find((item) => item.id === userId);
+      if (!userEntry) {
+        userEntry = {
+          id: userId,
+          name: answer?.anonymous ? "Anonimo" : answer?.userName || "User",
+          photoURL: answer?.anonymous ? "" : answer?.userPhotoURL || "",
+          dishes: [],
+          leaderboardAnswers: [],
+        };
+        existing.users.push(userEntry);
+      }
+      userEntry.leaderboardAnswers = userEntry.leaderboardAnswers || [];
+      if (answer?.id && !userEntry.leaderboardAnswers.some((item) => item.id === answer.id && item.questionId === answer.questionId)) {
+        userEntry.leaderboardAnswers.push(answer);
+      }
+    }
+
+    groups.set(restaurant.placeId, existing);
+  });
+
   return Array.from(groups.values())
     .map((group) => ({
       ...group,
       users: (group.users || []).sort(
-        (a, b) => (b.dishes?.length || 0) - (a.dishes?.length || 0) || (a.name || "").localeCompare(b.name || "")
+        (a, b) =>
+          ((b.dishes?.length || 0) + (b.leaderboardAnswers?.length || 0)) -
+            ((a.dishes?.length || 0) + (a.leaderboardAnswers?.length || 0)) ||
+          (a.name || "").localeCompare(b.name || "")
       ),
     }))
     .sort((a, b) => {

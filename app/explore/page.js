@@ -30,7 +30,7 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
-import { getAllDishesFromFirestore, getLeaderboardQuestions, getTrendingStoryDishes } from "../lib/firebaseHelpers";
+import { getAllDishesFromFirestore, getLeaderboardQuestions, getLeaderboardRestaurantAnswers, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
@@ -716,6 +716,7 @@ export default function Explore() {
   const [allDishes, setAllDishes] = useState(() => cachedExplore?.allDishes || []);
   const [trendingDishes, setTrendingDishes] = useState(() => cachedExplore?.trendingDishes || []);
   const [leaderboardQuestions, setLeaderboardQuestions] = useState(() => cachedExplore?.leaderboardQuestions || []);
+  const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState(() => cachedExplore?.leaderboardRestaurantAnswers || []);
   const [loading, setLoading] = useState(() => !cachedExplore);
   const [search, setSearch] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
@@ -747,6 +748,7 @@ export default function Explore() {
       setAllDishes(cached.allDishes || []);
       setTrendingDishes(cached.trendingDishes || []);
       setLeaderboardQuestions(cached.leaderboardQuestions || []);
+      setLeaderboardRestaurantAnswers(cached.leaderboardRestaurantAnswers || []);
       setLoading(false);
       return;
     }
@@ -754,20 +756,23 @@ export default function Explore() {
     let active = true;
     (async () => {
       setLoading(true);
-      const [all, trending, questions] = await Promise.all([
+      const [all, trending, questions, restaurantAnswers] = await Promise.all([
         getAllDishesFromFirestore(),
         getTrendingStoryDishes(20),
         getLeaderboardQuestions(8),
+        getLeaderboardRestaurantAnswers(),
       ]);
       if (!active) return;
       const publicDishes = all.filter((dish) => dish.isPublic !== false);
       setAllDishes(publicDishes);
       setTrendingDishes(trending);
       setLeaderboardQuestions(questions);
+      setLeaderboardRestaurantAnswers(restaurantAnswers);
       setSessionPageCache(EXPLORE_CACHE_KEY, {
         allDishes: publicDishes,
         trendingDishes: trending,
         leaderboardQuestions: questions,
+        leaderboardRestaurantAnswers: restaurantAnswers,
       });
       setLoading(false);
     })();
@@ -825,7 +830,7 @@ export default function Explore() {
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     if (selectedDishMode === DISH_MODE_RESTAURANT) {
-      const restaurantGroups = getRestaurantDishGroups(modePool);
+      const restaurantGroups = getRestaurantDishGroups(modePool, leaderboardRestaurantAnswers);
       const restaurantRows = restaurantGroups
         .map((group) => {
           const ratedDishes = (group.dishes || [])
@@ -860,7 +865,7 @@ export default function Explore() {
 
     const rows = [];
     if (selectedDishMode !== DISH_MODE_COOKING) {
-      const mapGroups = getRestaurantDishGroups(modePool);
+      const mapGroups = getRestaurantDishGroups(modePool, leaderboardRestaurantAnswers);
       rows.push({
         key: "map",
         type: "map",
@@ -909,7 +914,7 @@ export default function Explore() {
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
+  }, [allDishes, leaderboardRestaurantAnswers, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

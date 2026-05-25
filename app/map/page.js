@@ -8,7 +8,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useAuth } from "../lib/auth";
-import { getAllDishesFromFirestore } from "../lib/firebaseHelpers";
+import { getAllDishesFromFirestore, getLeaderboardRestaurantAnswers } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { useLanguage } from "../../components/LanguageProvider";
 
@@ -18,6 +18,7 @@ function MapPageContent() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const [dishes, setDishes] = useState([]);
+  const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState([]);
   const [loadingMapData, setLoadingMapData] = useState(true);
 
   useEffect(() => {
@@ -25,12 +26,19 @@ function MapPageContent() {
     (async () => {
       setLoadingMapData(true);
       try {
-        const allDishes = await getAllDishesFromFirestore();
+        const [allDishes, restaurantAnswers] = await Promise.all([
+          getAllDishesFromFirestore(),
+          getLeaderboardRestaurantAnswers(),
+        ]);
         if (cancelled) return;
         setDishes(allDishes.filter((dish) => dish?.isPublic !== false));
+        setLeaderboardRestaurantAnswers(restaurantAnswers);
       } catch (error) {
         console.error("Failed to load restaurant map dishes:", error);
-        if (!cancelled) setDishes([]);
+        if (!cancelled) {
+          setDishes([]);
+          setLeaderboardRestaurantAnswers([]);
+        }
       } finally {
         if (!cancelled) setLoadingMapData(false);
       }
@@ -41,7 +49,7 @@ function MapPageContent() {
     };
   }, []);
 
-  const groups = useMemo(() => getRestaurantDishGroups(dishes), [dishes]);
+  const groups = useMemo(() => getRestaurantDishGroups(dishes, leaderboardRestaurantAnswers), [dishes, leaderboardRestaurantAnswers]);
   const selectedPlaceId = searchParams.get("placeId") || "";
 
   if (loading || loadingMapData) {

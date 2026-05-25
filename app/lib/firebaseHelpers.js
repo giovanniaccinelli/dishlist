@@ -1370,6 +1370,7 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
     batch.set(refDoc, {
       text,
       note: String(answer?.note || "").trim(),
+      restaurant: answer?.restaurant || null,
       anonymous: Boolean(answer?.anonymous),
       userId: user.uid,
       userName: user.displayName || "User",
@@ -1389,6 +1390,38 @@ export async function addLeaderboardAnswer(questionId, user, answer) {
   } catch (err) {
     console.error("Failed to add leaderboard answer:", err);
     return null;
+  }
+}
+
+export async function getLeaderboardRestaurantAnswers(maxQuestions = 50) {
+  try {
+    const questionsSnap = await getDocs(
+      query(leaderboardQuestionsCollection(), orderBy("createdAt", "desc"), limitResults(maxQuestions))
+    );
+    const groups = await Promise.all(
+      questionsSnap.docs.map(async (questionDoc) => {
+        const question = { id: questionDoc.id, ...questionDoc.data() };
+        if ((question.dishMode || "restaurant") === "home") return [];
+        const answersSnap = await getDocs(leaderboardAnswersCollection(question.id));
+        return answersSnap.docs
+          .map((answerDoc) => ({ id: answerDoc.id, ...answerDoc.data() }))
+          .filter((answer) => normalizeRestaurant(answer.restaurant))
+          .map((answer) => ({
+            ...answer,
+            kind: "leaderboardAnswer",
+            questionId: question.id,
+            questionTitle: question.title,
+            questionLabel: question.label,
+            questionAccent: question.accent,
+            questionDishMode: question.dishMode || "restaurant",
+            voteCount: Array.isArray(answer.votes) ? answer.votes.length : 0,
+          }));
+      })
+    );
+    return groups.flat();
+  } catch (err) {
+    console.error("Failed to load leaderboard restaurant answers:", err);
+    return [];
   }
 }
 

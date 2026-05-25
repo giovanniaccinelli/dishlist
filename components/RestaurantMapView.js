@@ -13,7 +13,7 @@ import DishRatingBadge from "./DishRatingBadge";
 const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="#E64646"/>
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="3.2"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.1"/>
   <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
   <g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
@@ -26,10 +26,11 @@ const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
   </g>
 </svg>`);
 
-function getRestaurantMarkerIcon(hasFollowedUser = false) {
+function getRestaurantMarkerIcon(markerTone = "default") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
+  const strokeColor = markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(hasFollowedUser ? "#F2C94C" : "white")}`,
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor)}`,
     scaledSize: new window.google.maps.Size(36, 42),
     anchor: new window.google.maps.Point(18, 42),
   };
@@ -121,6 +122,60 @@ function Avatar({ user }) {
   return (
     <div className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#F6F1E8] text-xs font-semibold text-black/65">
       {(user.name || "U").slice(0, 1).toUpperCase()}
+    </div>
+  );
+}
+
+function RestaurantVisitCard({ user, onOpenProfile, onOpenDish }) {
+  const primaryDish = user?.dishes?.[0] || null;
+  return (
+    <div className="restaurant-accent-border w-[11.2rem] shrink-0 snap-start overflow-hidden rounded-[1.25rem] border-2 bg-white text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
+      {primaryDish ? (
+        <button
+          type="button"
+          onClick={() => onOpenDish(primaryDish)}
+          className="block h-[8.6rem] w-full text-left"
+        >
+          <div className="relative h-full w-full overflow-hidden bg-[#F3F0E8]">
+            <DishRatingBadge dish={primaryDish} className="text-[9px]" />
+            <img
+              src={getDishImageUrl(primaryDish, "thumb")}
+              alt={primaryDish.name || "Dish"}
+              className="h-full w-full object-cover"
+              onError={(event) => {
+                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+              }}
+            />
+            <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 via-black/38 to-transparent px-2.5 pb-2.5 pt-8 text-white pointer-events-none">
+              <div className="truncate text-[13px] font-bold leading-tight">
+                {primaryDish.name || "Untitled dish"}
+              </div>
+              {(user.dishes?.length || 0) > 1 ? (
+                <div className="mt-0.5 text-[10px] font-semibold text-white/82">
+                  +{user.dishes.length - 1} more here
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </button>
+      ) : (
+        <div className="h-[8.6rem] bg-[#F3F0E8]" />
+      )}
+      <button
+        type="button"
+        onClick={onOpenProfile}
+        className="flex min-h-12 w-full items-center gap-2 px-2.5 py-2 text-left transition active:scale-[0.99]"
+      >
+        <Avatar user={user} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[12.5px] font-bold leading-tight text-black">
+            {user.name || "User"}
+          </span>
+          <span className="mt-0.5 block text-[10px] font-semibold leading-none text-black/45">
+            {(user.dishes?.length || 0) === 1 ? "1 dish" : `${user.dishes?.length || 0} dishes`}
+          </span>
+        </span>
+      </button>
     </div>
   );
 }
@@ -302,20 +357,23 @@ export default function RestaurantMapView({
     groups.forEach((group) => {
       const position = { lat: group.lat, lng: group.lng };
       const followedUsers = (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim()));
+      const ownUsers = (group.users || []).filter((groupUser) => String(groupUser.id || "").trim() === String(user?.uid || "").trim());
       const hasFollowedUser = followedUsers.length > 0;
+      const hasOwnUser = ownUsers.length > 0;
+      const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => String(groupUser.id || "").trim() !== String(user?.uid || "").trim())];
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(hasFollowedUser),
+        icon: getRestaurantMarkerIcon(hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default"),
       });
       marker.addListener("click", () => setSelectedPlaceId(group.placeId));
       markersRef.current.push(marker);
-      if (hasFollowedUser) {
+      if (markerUsers.length) {
         const overlay = createFollowedAvatarOverlay({
           map: mapRef.current,
           position,
-          users: followedUsers,
+          users: markerUsers,
           onClick: () => setSelectedPlaceId(group.placeId),
         });
         if (overlay) markersRef.current.push(overlay);
@@ -346,7 +404,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [followingIdSet, groups, mapState]);
+  }, [followingIdSet, groups, mapState, user?.uid]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;
@@ -548,51 +606,16 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
+                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-x-contain pb-1"
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-[10.4rem] shrink-0 snap-start flex-col">
-                          <button
-                            type="button"
-                            onClick={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
-                            className="restaurant-accent-border mb-2 flex min-h-10 items-center gap-2 rounded-full border-2 bg-white px-2 py-1.5 text-left shadow-[0_8px_18px_rgba(0,0,0,0.09)] transition active:scale-[0.98]"
-                          >
-                            <Avatar user={user} />
-                            <span className="max-w-[6.2rem] truncate text-[12px] font-bold leading-none text-black">
-                              {user.name || "User"}
-                            </span>
-                          </button>
-                          {user.dishes?.[0] ? (
-                            <button
-                              type="button"
-                              onClick={() => openDish(user.dishes[0])}
-                              className="restaurant-accent-border flex h-40 overflow-hidden rounded-[1.35rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
-                            >
-                              <div className="relative h-full w-full overflow-hidden">
-                                <DishRatingBadge dish={user.dishes[0]} className="text-[10px]" />
-                                <img
-                                  src={getDishImageUrl(user.dishes[0], "thumb")}
-                                  alt={user.dishes[0].name || "Dish"}
-                                  className="h-full w-full object-cover"
-                                  onError={(event) => {
-                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                  }}
-                                />
-                                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-                                  <div className="truncate text-sm font-semibold">
-                                    {user.dishes[0].name || "Untitled dish"}
-                                  </div>
-                                  {(user.dishes?.length || 0) > 1 ? (
-                                    <div className="mt-0.5 text-[10px] text-white/80">
-                                      +{user.dishes.length - 1} more here
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </button>
-                          ) : null}
-                        </div>
+                        <RestaurantVisitCard
+                          key={`${selectedGroup.placeId}-${user.id}`}
+                          user={user}
+                          onOpenProfile={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
+                          onOpenDish={openDish}
+                        />
                       ))}
                     </div>
                   ) : null}

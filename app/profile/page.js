@@ -4553,14 +4553,14 @@ export default function Profile() {
         ) : null}
         {profileMapOpen ? (
           <motion.div
-            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-sm"
+            className="fixed inset-0 z-[90] flex items-start justify-center bg-black/45 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[calc(var(--app-top-nav-offset)+0.55rem)] backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="mx-auto flex h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-1.5rem)] max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-1.5rem)] w-full max-w-[46rem] flex-col overflow-hidden"
+              className="mx-auto flex h-[calc(100dvh-var(--app-top-nav-offset)-env(safe-area-inset-bottom,0px)-2rem)] max-h-[calc(100dvh-var(--app-top-nav-offset)-env(safe-area-inset-bottom,0px)-2rem)] w-full max-w-[46rem] flex-col overflow-hidden"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}

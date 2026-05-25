@@ -81,18 +81,12 @@ function MapPageContent() {
         </button>
       </div>
 
-      <div className="mb-2 px-1">
-        <h1 className="text-[2rem] leading-none font-semibold text-black">
-          {t("Restaurants map")}
-        </h1>
-      </div>
-
       <RestaurantMapView
         groups={groups}
         initialSelectedPlaceId={selectedPlaceId}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
-        className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-7.5rem)] min-h-[24rem] max-h-none w-full max-w-[42rem]"
+        className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-4.25rem)] min-h-[27rem] max-h-none w-full max-w-[42rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
       />
 

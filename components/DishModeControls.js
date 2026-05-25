@@ -63,6 +63,15 @@ export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.95 }) 
   return <Utensils className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
 }
 
+export function UnknownDishModeIcon({ className = "", strokeWidth = 2.15 }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M8.7 8.1c.4-1.7 1.8-2.8 3.7-2.8 2.1 0 3.7 1.3 3.7 3.2 0 1.5-.8 2.3-2.2 3.3-1.2.8-1.7 1.5-1.7 2.7" />
+      <path d="M12.2 18.6h.1" />
+    </svg>
+  );
+}
+
 export function dishModeMatches(dish, selectedMode) {
   if (!selectedMode || selectedMode === DISH_MODE_ALL) return true;
   return String(dish?.dishMode || "").toLowerCase() === selectedMode;
@@ -173,7 +182,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <span className="text-[1.95rem] font-black leading-none">?</span> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
   ];
 
   return (
@@ -251,7 +260,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <span className="text-[1.95rem] font-black leading-none">?</span> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
   ];
 
   useEffect(() => {

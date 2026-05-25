@@ -8,7 +8,7 @@ function PulseBlock({ className = "" }) {
 
 export function FullScreenLoading({ title = "Loading" }) {
   return (
-    <div className="min-h-screen bg-transparent px-4 pt-10 text-black">
+    <div className="min-h-screen bg-[#000000] px-4 pt-10 text-black">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-8 flex items-center justify-between">
           <PulseBlock className="h-11 w-24 rounded-[1.1rem]" />
@@ -27,7 +27,7 @@ export function FullScreenLoading({ title = "Loading" }) {
 
 export function FeedLoading({ onModeSelect }) {
   return (
-    <div className="h-[100dvh] bg-[#050505] px-4 text-black">
+    <div className="h-[100dvh] bg-[#000000] px-4 text-black">
       <div className="app-top-nav pb-2" />
       <div className="flex h-[78vh] flex-col items-center justify-center px-4 pt-16">
         <DiningModeOpeningSelection onSelect={onModeSelect} intro />

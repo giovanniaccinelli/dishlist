@@ -59,10 +59,10 @@ function createFollowedAvatarOverlay({ map, position, users, onClick }) {
 
     users.slice(0, 3).forEach((user, index) => {
       const avatar = document.createElement(user.photoURL ? "img" : "span");
-      avatar.style.width = "20px";
-      avatar.style.height = "20px";
+      avatar.style.width = "23px";
+      avatar.style.height = "23px";
       avatar.style.borderRadius = "999px";
-      avatar.style.border = "2px solid #F2C94C";
+      avatar.style.border = "0";
       avatar.style.background = "#111111";
       avatar.style.color = "white";
       avatar.style.boxShadow = "0 5px 12px rgba(0,0,0,0.24)";
@@ -70,9 +70,9 @@ function createFollowedAvatarOverlay({ map, position, users, onClick }) {
       avatar.style.display = "flex";
       avatar.style.alignItems = "center";
       avatar.style.justifyContent = "center";
-      avatar.style.fontSize = "9px";
+      avatar.style.fontSize = "10px";
       avatar.style.fontWeight = "800";
-      if (index > 0) avatar.style.marginLeft = "-6px";
+      if (index > 0) avatar.style.marginLeft = "-7px";
       if (user.photoURL) {
         avatar.src = user.photoURL;
         avatar.alt = user.name || "User";

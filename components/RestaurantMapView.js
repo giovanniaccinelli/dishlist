@@ -6,12 +6,14 @@ import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import { getFollowingForUser } from "../app/lib/firebaseHelpers";
+import { useAuth } from "../app/lib/auth";
 import DishRatingBadge from "./DishRatingBadge";
 
-const RESTAURANT_PIN_SVG = encodeURIComponent(`
+const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="#E64646"/>
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="white" stroke-width="3"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="3.2"/>
   <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
   <g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
@@ -24,13 +26,85 @@ const RESTAURANT_PIN_SVG = encodeURIComponent(`
   </g>
 </svg>`);
 
-function getRestaurantMarkerIcon() {
+function getRestaurantMarkerIcon(hasFollowedUser = false) {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${RESTAURANT_PIN_SVG}`,
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(hasFollowedUser ? "#F2C94C" : "white")}`,
     scaledSize: new window.google.maps.Size(36, 42),
     anchor: new window.google.maps.Point(18, 42),
   };
+}
+
+function createFollowedAvatarOverlay({ map, position, users, onClick }) {
+  if (typeof window === "undefined" || !window.google?.maps || !users?.length) return null;
+  const overlay = new window.google.maps.OverlayView();
+  let node = null;
+
+  overlay.onAdd = function onAdd() {
+    node = document.createElement("button");
+    node.type = "button";
+    node.setAttribute("aria-label", "Open restaurant");
+    node.style.position = "absolute";
+    node.style.display = "flex";
+    node.style.alignItems = "center";
+    node.style.justifyContent = "center";
+    node.style.gap = "0";
+    node.style.padding = "0";
+    node.style.border = "0";
+    node.style.background = "transparent";
+    node.style.cursor = "pointer";
+    node.style.transform = "translate(-50%, -100%) translateY(-44px)";
+    node.style.zIndex = "4";
+    node.addEventListener("click", onClick);
+
+    users.slice(0, 3).forEach((user, index) => {
+      const avatar = document.createElement(user.photoURL ? "img" : "span");
+      avatar.style.width = "20px";
+      avatar.style.height = "20px";
+      avatar.style.borderRadius = "999px";
+      avatar.style.border = "2px solid #F2C94C";
+      avatar.style.background = "#111111";
+      avatar.style.color = "white";
+      avatar.style.boxShadow = "0 5px 12px rgba(0,0,0,0.24)";
+      avatar.style.objectFit = "cover";
+      avatar.style.display = "flex";
+      avatar.style.alignItems = "center";
+      avatar.style.justifyContent = "center";
+      avatar.style.fontSize = "9px";
+      avatar.style.fontWeight = "800";
+      if (index > 0) avatar.style.marginLeft = "-6px";
+      if (user.photoURL) {
+        avatar.src = user.photoURL;
+        avatar.alt = user.name || "User";
+      } else {
+        avatar.textContent = (user.name || "U").slice(0, 1).toUpperCase();
+      }
+      node.appendChild(avatar);
+    });
+
+    this.getPanes()?.overlayMouseTarget.appendChild(node);
+  };
+
+  overlay.draw = function draw() {
+    if (!node) return;
+    const projection = this.getProjection();
+    if (!projection) return;
+    const point = projection.fromLatLngToDivPixel(new window.google.maps.LatLng(position.lat, position.lng));
+    if (!point) return;
+    node.style.left = `${point.x}px`;
+    node.style.top = `${point.y}px`;
+  };
+
+  overlay.onRemove = function onRemove() {
+    if (node) {
+      node.removeEventListener("click", onClick);
+      node.remove();
+      node = null;
+    }
+  };
+
+  overlay.setMap(map);
+  return overlay;
 }
 
 function Avatar({ user }) {
@@ -61,6 +135,7 @@ export default function RestaurantMapView({
   className = "",
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -74,7 +149,9 @@ export default function RestaurantMapView({
   const [searchFocused, setSearchFocused] = useState(false);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [sheetDirection, setSheetDirection] = useState(0);
+  const [followingIds, setFollowingIds] = useState([]);
   const swipeStartRef = useRef(null);
+  const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
 
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
@@ -86,6 +163,25 @@ export default function RestaurantMapView({
     if (!initialSelectedPlaceId) return;
     setSelectedPlaceId(initialSelectedPlaceId);
   }, [initialSelectedPlaceId]);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setFollowingIds([]);
+      return undefined;
+    }
+    let cancelled = false;
+    getFollowingForUser(user.uid)
+      .then((ids) => {
+        if (!cancelled) setFollowingIds(Array.isArray(ids) ? ids : []);
+      })
+      .catch((error) => {
+        console.error("Failed to load following for restaurant map:", error);
+        if (!cancelled) setFollowingIds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!selectedGroup || !mapRef.current) return;
@@ -205,14 +301,25 @@ export default function RestaurantMapView({
     const bounds = new window.google.maps.LatLngBounds();
     groups.forEach((group) => {
       const position = { lat: group.lat, lng: group.lng };
+      const followedUsers = (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim()));
+      const hasFollowedUser = followedUsers.length > 0;
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(),
+        icon: getRestaurantMarkerIcon(hasFollowedUser),
       });
       marker.addListener("click", () => setSelectedPlaceId(group.placeId));
       markersRef.current.push(marker);
+      if (hasFollowedUser) {
+        const overlay = createFollowedAvatarOverlay({
+          map: mapRef.current,
+          position,
+          users: followedUsers,
+          onClick: () => setSelectedPlaceId(group.placeId),
+        });
+        if (overlay) markersRef.current.push(overlay);
+      }
       bounds.extend(position);
     });
 
@@ -239,7 +346,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [groups, mapState]);
+  }, [followingIdSet, groups, mapState]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;

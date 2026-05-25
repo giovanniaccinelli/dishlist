@@ -2004,6 +2004,9 @@ export async function getSavedDishesFromFirestore(userId) {
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
+      rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
+      price: Number.isFinite(Number(canonical.price ?? dish.price)) && Number(canonical.price ?? dish.price) > 0 ? Number(canonical.price ?? dish.price) : null,
+      priceCurrency: canonical.priceCurrency || dish.priceCurrency || "",
       tags: normalizeTags(canonical.tags || dish.tags),
       isPublic: canonical.isPublic !== false,
       cardURL:

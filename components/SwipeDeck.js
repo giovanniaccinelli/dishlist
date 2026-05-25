@@ -22,6 +22,23 @@ import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 
+const PRICE_CURRENCY_SYMBOLS = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+  CHF: "Fr.",
+  JPY: "¥",
+};
+
+function formatDishPrice(dish) {
+  const rawPrice = Number(dish?.price);
+  if (!Number.isFinite(rawPrice) || rawPrice <= 0) return "";
+  const code = String(dish?.priceCurrency || "EUR").toUpperCase();
+  const symbol = PRICE_CURRENCY_SYMBOLS[code] || code || "€";
+  const amount = rawPrice % 1 === 0 ? String(rawPrice) : rawPrice.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  return code === "USD" || code === "GBP" || code === "JPY" ? `${symbol}${amount}` : `${amount}${symbol}`;
+}
+
 function DeckAutoplayVideo({
   src,
   className = "",
@@ -457,6 +474,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
+  const currentDishPriceLabel = formatDishPrice(currentCard);
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
   const currentCardIsRestaurant = isRestaurantDish(currentCard);
@@ -1366,8 +1384,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     )
                   ) : null}
                   {currentCard?.dishMode === "restaurant" ? (
-                    <div className="mt-1 block">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <RatingStars value={currentCard.rating} size="text-[1.05rem]" readOnly />
+                      {currentDishPriceLabel ? (
+                        <span
+                          className={darkMode
+                            ? "no-accent-border inline-flex rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-black text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                            : `inline-flex rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-black text-white/92 backdrop-blur-[6px]`
+                          }
+                        >
+                          {currentDishPriceLabel}
+                        </span>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

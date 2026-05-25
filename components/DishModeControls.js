@@ -66,8 +66,8 @@ export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.95 }) 
 export function UnknownDishModeIcon({ className = "", strokeWidth = 2.15 }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M8.2 8.8c.4-1.7 1.8-2.8 3.7-2.8 2.1 0 3.7 1.3 3.7 3.2 0 1.5-.8 2.3-2.2 3.3-1.2.8-1.7 1.5-1.7 2.7" />
-      <path d="M11.7 19.1h.35" />
+      <path d="M7.4 9.6c.4-1.7 1.8-2.8 3.7-2.8 2.1 0 3.7 1.3 3.7 3.2 0 1.5-.8 2.3-2.2 3.3-1.2.8-1.7 1.5-1.7 2.7" />
+      <path d="M10.95 19.8h.55" />
     </svg>
   );
 }

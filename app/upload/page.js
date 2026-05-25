@@ -37,7 +37,13 @@ const UPLOAD_STEP_PREVIEW = [
   { label: "Upload", color: "#111111" },
 ];
 
-const PRICE_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
+const PRICE_CURRENCIES = [
+  { code: "EUR", symbol: "€" },
+  { code: "USD", symbol: "$" },
+  { code: "GBP", symbol: "£" },
+  { code: "CHF", symbol: "Fr." },
+  { code: "JPY", symbol: "¥" },
+];
 
 export default function UploadPage() {
   const router = useRouter();
@@ -624,17 +630,17 @@ export default function UploadPage() {
                         placeholder={language === "it" ? "Prezzo" : "Price"}
                         value={dishPrice}
                         onChange={(e) => setDishPrice(e.target.value)}
-                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-[16px] text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={loadingUpload}
                       />
                       <select
                         value={dishPriceCurrency}
                         onChange={(e) => setDishPriceCurrency(e.target.value)}
-                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-sm font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={loadingUpload}
                       >
                         {PRICE_CURRENCIES.map((currency) => (
-                          <option key={currency} value={currency}>{currency}</option>
+                          <option key={currency.code} value={currency.code}>{currency.symbol}</option>
                         ))}
                       </select>
                     </div>

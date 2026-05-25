@@ -62,7 +62,13 @@ function StoryStatIcon({ size = 10 }) {
   );
 }
 
-const PRICE_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
+const PRICE_CURRENCIES = [
+  { code: "EUR", symbol: "€" },
+  { code: "USD", symbol: "$" },
+  { code: "GBP", symbol: "£" },
+  { code: "CHF", symbol: "Fr." },
+  { code: "JPY", symbol: "¥" },
+];
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -1205,17 +1211,17 @@ export default function DishDetail() {
                         placeholder={language === "it" ? "Prezzo" : "Price"}
                         value={editPrice}
                         onChange={(e) => setEditPrice(e.target.value)}
-                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-[16px] text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={savingEdit}
                       />
                       <select
                         value={editPriceCurrency}
                         onChange={(e) => setEditPriceCurrency(e.target.value)}
-                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-sm font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
                         disabled={savingEdit}
                       >
                         {PRICE_CURRENCIES.map((currency) => (
-                          <option key={currency} value={currency}>{currency}</option>
+                          <option key={currency.code} value={currency.code}>{currency.symbol}</option>
                         ))}
                       </select>
                     </div>

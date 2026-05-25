@@ -516,7 +516,6 @@ export default function PublicProfile() {
     const params = new URLSearchParams(window.location.search);
     const queryDishlistId = params.get("list");
     if (!queryDishlistId) return;
-    setSelectedDishMode(DISH_MODE_ALL);
     setActiveDishlistId(queryDishlistId);
   }, []);
 
@@ -538,7 +537,6 @@ export default function PublicProfile() {
   }, [activeDishlistId]);
 
   const selectDishlist = (dishlistId) => {
-    if (dishlistId !== "overview") setSelectedDishMode(DISH_MODE_ALL);
     setActiveDishlistId(dishlistId);
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);

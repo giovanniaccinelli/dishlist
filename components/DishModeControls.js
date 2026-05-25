@@ -2,12 +2,15 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Utensils, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "./LanguageProvider";
 
 export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
 export const DISH_MODE_RESTAURANT = "restaurant";
+const GLOBAL_DISH_MODE_KEY = "dish-mode:global";
+const OPENING_CHOICE_KEY = "dish-mode:opening-choice-shown";
+let openingChoiceShownThisRuntime = false;
 
 export function CookingHomeIcon({ className = "", strokeWidth = 1.95 }) {
   return (
@@ -39,29 +42,50 @@ export function dishModeMatches(dish, selectedMode) {
   return String(dish?.dishMode || "").toLowerCase() === selectedMode;
 }
 
-export function usePersistentDishMode(storageKey, defaultMode = DISH_MODE_ALL) {
-  const [mode, setMode] = useState(defaultMode);
+export function usePersistentDishMode(storageKey, defaultMode = DISH_MODE_RESTAURANT) {
+  const initialMode = defaultMode === DISH_MODE_ALL ? DISH_MODE_RESTAURANT : defaultMode;
+  const [mode, setMode] = useState(initialMode);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !storageKey) return;
+    if (typeof window === "undefined") return;
     try {
-      const stored = String(window.localStorage.getItem(storageKey) || "").trim().toLowerCase();
+      const stored = String(window.localStorage.getItem(GLOBAL_DISH_MODE_KEY) || "").trim().toLowerCase();
       if (
         stored === DISH_MODE_ALL ||
         stored === DISH_MODE_COOKING ||
         stored === DISH_MODE_RESTAURANT
       ) {
         setMode(stored);
+      } else {
+        setMode(DISH_MODE_RESTAURANT);
+        window.localStorage.setItem(GLOBAL_DISH_MODE_KEY, DISH_MODE_RESTAURANT);
       }
     } catch {}
-  }, [storageKey]);
+  }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !storageKey) return;
+    if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(storageKey, mode || DISH_MODE_ALL);
+      window.localStorage.setItem(GLOBAL_DISH_MODE_KEY, mode || DISH_MODE_RESTAURANT);
+      window.dispatchEvent(new CustomEvent("dish-mode:change", { detail: mode || DISH_MODE_RESTAURANT }));
     } catch {}
-  }, [mode, storageKey]);
+  }, [mode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleModeChange = (event) => {
+      const nextMode = String(event?.detail || window.localStorage.getItem(GLOBAL_DISH_MODE_KEY) || "").trim().toLowerCase();
+      if ([DISH_MODE_ALL, DISH_MODE_COOKING, DISH_MODE_RESTAURANT].includes(nextMode)) {
+        setMode(nextMode);
+      }
+    };
+    window.addEventListener("dish-mode:change", handleModeChange);
+    window.addEventListener("storage", handleModeChange);
+    return () => {
+      window.removeEventListener("dish-mode:change", handleModeChange);
+      window.removeEventListener("storage", handleModeChange);
+    };
+  }, []);
 
   return [mode, setMode];
 }
@@ -81,158 +105,107 @@ export function DishModeBadge({ dishMode, className = "" }) {
 }
 
 export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect, className = "" }) {
-  const { t, darkMode } = useLanguage();
-  const [flashMessage, setFlashMessage] = useState("");
-  const [flashMode, setFlashMode] = useState(DISH_MODE_ALL);
-  const flashTimerRef = useRef(null);
-  const isLarge = className.includes("dish-mode-filter--large");
-  const useLargeSize = false;
-  const buttonSizeClass = useLargeSize ? "!h-[3.65rem] !w-[4.05rem] !min-w-[4.05rem]" : "!h-[3.1rem] !w-[3.45rem] !min-w-[3.45rem]";
-  const iconSizeClass = useLargeSize ? "h-[2.24rem] w-[2.24rem]" : "h-[1.9rem] w-[1.9rem]";
-  const restaurantIconSizeClass = "dish-mode-restaurant-icon h-[1.55rem] w-[1.55rem]";
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  useEffect(() => () => {
-    if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
-  }, []);
-
-  const showFlashMessage = (mode) => {
-    const nextMessage =
-      mode === DISH_MODE_COOKING
-        ? t("Eat in")
-        : mode === DISH_MODE_RESTAURANT
-          ? t("Eat out")
-          : t("Show all");
-    setFlashMessage(nextMessage);
-    setFlashMode(mode);
-    if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
-    flashTimerRef.current = window.setTimeout(() => setFlashMessage(""), 1300);
-  };
-
-  const handlePress = (mode) => {
-    const nextMode = value === mode ? DISH_MODE_ALL : mode;
-    if (typeof onSelect === "function") {
-      onSelect(nextMode);
-      showFlashMessage(nextMode);
-      return;
+  useEffect(() => {
+    if (typeof window === "undefined" || openingChoiceShownThisRuntime) return;
+    const alreadyShown = window.sessionStorage.getItem(OPENING_CHOICE_KEY) === "1";
+    openingChoiceShownThisRuntime = true;
+    if (!alreadyShown) {
+      window.sessionStorage.setItem(OPENING_CHOICE_KEY, "1");
+      onSelect?.(DISH_MODE_RESTAURANT);
+      setPickerOpen(true);
     }
-    onClick?.();
-  };
+  }, [onSelect]);
 
   return (
-    <div className={`relative flex items-center gap-2 ${className}`} aria-label="Filter dish mode">
+    <div className={`relative ${className}`} aria-label="Filter dish mode">
       <button
         type="button"
-        onClick={() => handlePress(DISH_MODE_COOKING)}
-        className={`dish-mode-control-btn dish-mode-control-btn--home ${value === DISH_MODE_COOKING ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
-        aria-label="Filter home dishes"
-        style={{
-          border: "2px solid #F0A623",
+        onClick={() => {
+          onClick?.();
+          setPickerOpen(true);
         }}
+        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] flex-col justify-center gap-1.5 rounded-[1rem] border border-white/12 bg-black/72 px-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
+        aria-label="Open dish mode selection"
       >
-        <CookingHomeIcon className={iconSizeClass} strokeWidth={1.55} />
+        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_RESTAURANT ? "bg-[#E64646]" : "bg-[#E64646]/55"}`} />
+        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_COOKING ? "bg-[#F0A623]" : "bg-[#F0A623]/55"}`} />
+        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_ALL ? "bg-[#2BD36B]" : "bg-[#2BD36B]/55"}`} />
       </button>
-      <button
-        type="button"
-        onClick={() => handlePress(DISH_MODE_RESTAURANT)}
-        className={`dish-mode-control-btn dish-mode-control-btn--restaurant ${value === DISH_MODE_RESTAURANT ? "dish-mode-control-btn--selected" : ""} relative ${buttonSizeClass}`}
-        aria-label="Filter restaurant dishes"
-        style={{
-          border: "2px solid #E64646",
+      <DishModeFilterModal
+        open={pickerOpen}
+        value={value}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(mode) => {
+          onSelect?.(mode);
+          setPickerOpen(false);
         }}
-      >
-        <RestaurantForkKnifeIcon className={restaurantIconSizeClass} strokeWidth={1.55} />
-      </button>
-      <AnimatePresence>
-        {flashMessage ? (
-          <motion.div
-            initial={{ opacity: 0, y: -14, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="pointer-events-none fixed inset-x-4 z-[120] flex justify-center"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 7.25rem)" }}
-          >
-            <div
-              className={`max-w-[18rem] rounded-[1.15rem] border px-4 py-3 text-center text-[0.84rem] font-semibold leading-[1.15] shadow-[0_18px_40px_rgba(0,0,0,0.16)] backdrop-blur-xl ${
-                darkMode
-                  ? flashMode === DISH_MODE_RESTAURANT
-                    ? "border-[#E64646]/35 bg-[#1F1010] text-[#FFB7B7]"
-                    : flashMode === DISH_MODE_COOKING
-                      ? "border-[#F0A623]/35 bg-[#211806] text-[#FFD986]"
-                      : "border-white/16 bg-[#151515] text-white/88"
-                  : flashMode === DISH_MODE_RESTAURANT
-                    ? "border-[#E64646]/20 bg-[linear-gradient(180deg,rgba(255,239,239,0.96)_0%,rgba(255,230,230,0.96)_100%)] text-[#B92E2E]"
-                    : flashMode === DISH_MODE_COOKING
-                      ? "border-[#F0A623]/25 bg-[linear-gradient(180deg,rgba(255,248,226,0.97)_0%,rgba(255,241,198,0.97)_100%)] text-[#A66A00]"
-                      : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(246,246,242,0.97)_100%)] text-black/78"
-              }`}
-            >
-              {flashMessage}
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      />
     </div>
   );
 }
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
+  const choices = [
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", color: "#E64646", icon: <RestaurantForkKnifeIcon className="h-8 w-8" strokeWidth={1.7} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", color: "#F0A623", icon: <CookingHomeIcon className="h-8 w-8" strokeWidth={1.7} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", color: "#2BD36B", icon: null },
+  ];
+
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[95] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/78 p-5 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-xs rounded-[1.8rem] border border-black/10 bg-white p-4 shadow-[0_26px_60px_rgba(0,0,0,0.18)]"
+            className="w-full max-w-[24rem]"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Dish mode</div>
-                <div className="mt-1 text-lg font-semibold text-black">Show dishes from</div>
-              </div>
+            <div className="mb-5 flex items-center justify-between">
+              <div className="text-[1.65rem] font-black leading-none text-white">Dove vuoi mangiare?</div>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-black/60"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70"
                 aria-label="Close dish mode filter"
               >
                 <X size={16} />
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => onSelect(DISH_MODE_COOKING)}
-                className={`rounded-[1.45rem] border-2 px-4 py-4 text-center ${value === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#FFF5DA]" : "border-black/10 bg-[#FFFDFC]"}`}
-              >
-                <CookingHomeIcon className="mx-auto h-8 w-8 text-[#F0A623]" />
-                <div className="mt-2 text-sm font-semibold text-black">Home</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelect(DISH_MODE_RESTAURANT)}
-                className={`rounded-[1.45rem] border-2 px-4 py-4 text-center ${value === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#FFE7E7]" : "border-black/10 bg-[#FFFDFC]"}`}
-              >
-                <RestaurantForkKnifeIcon className="mx-auto h-8 w-8 text-[#E64646]" />
-                <div className="mt-2 text-sm font-semibold text-black">Restaurant</div>
-              </button>
+            <div className="space-y-3">
+              {choices.map((choice) => {
+                const selected = value === choice.mode;
+                return (
+                  <button
+                    key={choice.mode}
+                    type="button"
+                    onClick={() => onSelect(choice.mode)}
+                    className="group grid h-[4.9rem] w-full grid-cols-[4.9rem,1fr] items-stretch overflow-hidden rounded-[1.35rem] text-left shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition active:scale-[0.985]"
+                    style={{ backgroundColor: choice.color }}
+                  >
+                    <span className="relative flex items-center justify-center text-black">
+                      <span className="absolute inset-y-0 left-0 w-[5.55rem] rounded-r-[2rem] bg-white/92" style={{ clipPath: "polygon(0 0, 100% 50%, 0 100%)" }} />
+                      <span className="relative z-10 -ml-3 flex h-12 w-12 items-center justify-center text-black">
+                        {choice.icon}
+                      </span>
+                    </span>
+                    <span className="flex min-w-0 items-center justify-between pr-5">
+                      <span className="truncate text-[1.35rem] font-black leading-none text-black">{choice.label}</span>
+                      {selected ? <span className="h-3 w-3 rounded-full bg-black" /> : null}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <button
-              type="button"
-              onClick={() => onSelect(DISH_MODE_ALL)}
-              className={`mt-3 w-full rounded-full border px-4 py-2.5 text-sm font-semibold ${value === DISH_MODE_ALL ? "border-black bg-black text-white" : "border-black/12 bg-white text-black"}`}
-            >
-              Show all
-            </button>
           </motion.div>
         </motion.div>
       ) : null}

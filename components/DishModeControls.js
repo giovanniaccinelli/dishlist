@@ -170,6 +170,12 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 }
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
+  const choices = [
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.78rem] w-[1.78rem]" strokeWidth={2.05} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
+  ];
+
   return (
     <AnimatePresence>
       {open ? (
@@ -198,7 +204,14 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 <X size={16} />
               </button>
             </div>
-            <DishModeLogoSelector onSelect={onSelect} />
+            <div className="space-y-3">
+              {choices.map((choice) => {
+                const selected = value === choice.mode;
+                return (
+                  <DishModeChoiceLine key={choice.mode} choice={choice} selected={selected} onClick={() => onSelect(choice.mode)} />
+                );
+              })}
+            </div>
           </motion.div>
         </motion.div>
       ) : null}
@@ -206,56 +219,60 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
   );
 }
 
-function DishModeLogoSelector({ onSelect }) {
-  const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", top: "27.2%", iconLeft: "21.3%", textLeft: "39.2%", icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.12} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", top: "44.2%", iconLeft: "21.3%", textLeft: "39.2%", icon: <CookingHomeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.08} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", top: "61.1%", iconLeft: "21.3%", textLeft: "39.2%", icon: null },
-  ];
-
+function DishModeChoiceLine({ choice, onClick }) {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[27rem]">
-      <img src="/logo-real.png" alt="" className="absolute inset-0 h-full w-full object-contain" />
-      {choices.map((choice) => (
-        <button
-          key={choice.mode}
-          type="button"
-          onClick={() => onSelect(choice.mode)}
-          className="absolute left-[15%] h-[10.8%] w-[70%] -translate-y-1/2 transition active:scale-[0.985]"
-          style={{ top: choice.top }}
-          aria-label={choice.label}
-        >
-          <span
-            className="absolute top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[#050505]"
-            style={{ left: choice.iconLeft }}
-          >
-            {choice.icon}
-          </span>
-          <span
-            className="absolute top-1/2 -translate-y-[43%] text-[1.36rem] font-semibold leading-none text-[#050505]"
-            style={{ left: choice.textLeft }}
-          >
-            {choice.label}
-          </span>
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative h-[5.35rem] w-full text-left transition active:scale-[0.985]"
+    >
+      <svg
+        viewBox={`150 ${choice.cropY} 670 150`}
+        className="absolute inset-0 h-full w-full"
+        aria-hidden="true"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <image href="/logo-real.png" x="0" y="0" width="953" height="953" />
+      </svg>
+      <span className="absolute left-[1.42rem] top-[53%] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#050505]">
+        {choice.icon}
+      </span>
+      <span className="absolute inset-y-0 left-[7.15rem] right-8 flex items-center">
+        <span className="translate-y-[0.22rem] truncate text-[1.42rem] font-extrabold leading-[0.95] text-[#050505]">{choice.label}</span>
+      </span>
+    </button>
   );
 }
 
 export function DiningModeOpeningSelection({ className = "", onSelect }) {
   const { t } = useLanguage();
+  const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
+  const choices = [
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.78rem] w-[1.78rem]" strokeWidth={2.05} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
+  ];
 
   const choose = (nextMode) => {
+    setMode(nextMode);
     setGlobalDishMode(nextMode);
     markOpeningDishModeChosen();
     onSelect?.(nextMode);
   };
 
   return (
-    <div className={`w-full max-w-[27rem] ${className}`}>
+    <div className={`w-full max-w-[24rem] ${className}`}>
       <div className="mb-5 text-center text-[1.65rem] font-bold leading-none text-white">{t("Dove vuoi mangiare?")}</div>
-      <DishModeLogoSelector onSelect={choose} />
+      <div className="space-y-3">
+        {choices.map((choice) => (
+          <DishModeChoiceLine
+            key={choice.mode}
+            choice={choice}
+            selected={mode === choice.mode}
+            onClick={() => choose(choice.mode)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

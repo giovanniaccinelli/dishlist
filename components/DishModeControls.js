@@ -238,7 +238,7 @@ function DishModeChoiceLine({ choice, onClick }) {
         {choice.icon}
       </span>
       <span className="absolute inset-y-0 left-[7.15rem] right-8 flex items-center">
-        <span className="translate-y-[0.2rem] truncate text-[1.38rem] font-semibold leading-[0.95] text-[#050505]">{choice.label}</span>
+        <span className="translate-y-[0.2rem] truncate text-[1.34rem] font-bold leading-[0.95] text-[#17110A] antialiased [text-shadow:0_1px_0_rgba(255,255,255,0.18),0_1.5px_2px_rgba(0,0,0,0.12)]">{choice.label}</span>
       </span>
     </button>
   );

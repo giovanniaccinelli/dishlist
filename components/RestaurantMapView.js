@@ -613,7 +613,7 @@ export default function RestaurantMapView({
                                   }}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end gap-0.5 bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
-                                  <div className="rounded-md bg-black/18 px-1 py-0.5 truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                  <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
                                     {user.dishes[0].name || "Untitled dish"}
                                   </div>
                                   {(user.dishes?.length || 0) > 1 ? (

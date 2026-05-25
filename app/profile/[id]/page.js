@@ -1699,32 +1699,32 @@ export default function PublicProfile() {
         ) : null}
         {profileMapOpen ? (
           <motion.div
-            className="fixed inset-0 z-[88] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[88] flex items-center justify-center bg-black/45 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setProfileMapOpen(false)}
           >
             <motion.div
-              className="restaurant-accent-border mx-auto flex h-[calc(100dvh-7.5rem)] max-h-[calc(100dvh-7.5rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[1.6rem] border-2 bg-[#F6F6F2] p-3 shadow-2xl"
+              className="mx-auto flex h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-1.5rem)] max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-1.5rem)] w-full max-w-[46rem] flex-col overflow-hidden"
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.98, opacity: 0 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="mb-2 flex items-center justify-between gap-3 px-1 text-white">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/38">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
                     Profile map
                   </div>
-                  <h3 className="mt-2 text-[1.6rem] leading-none font-semibold text-black">
+                  <h3 className="mt-1.5 text-[1.45rem] leading-none font-semibold text-white">
                     Restaurants {profileUser?.displayName || "this user"} pinned
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setProfileMapOpen(false)}
-                  className="restaurant-accent-border flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white text-black/55"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/16 bg-white/12 text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
                   aria-label="Close profile map"
                 >
                   <X size={16} />

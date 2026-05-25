@@ -58,7 +58,7 @@ function MapPageContent() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-3 flex items-center justify-between">
+      <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => router.back()}
@@ -81,11 +81,8 @@ function MapPageContent() {
         </button>
       </div>
 
-      <div className="mb-4 px-1">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/36">
-          {t("World map")}
-        </div>
-        <h1 className="mt-2 text-[2rem] leading-none font-semibold text-black">
+      <div className="mb-2 px-1">
+        <h1 className="text-[2rem] leading-none font-semibold text-black">
           {t("Restaurants map")}
         </h1>
       </div>
@@ -95,7 +92,7 @@ function MapPageContent() {
         initialSelectedPlaceId={selectedPlaceId}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
-        className="mb-5 mx-auto h-[calc(100dvh-14rem)] min-h-[28rem] max-h-none w-full max-w-[42rem]"
+        className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-7.5rem)] min-h-[24rem] max-h-none w-full max-w-[42rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
       />
 

@@ -257,6 +257,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
   const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const [introVisible, setIntroVisible] = useState(Boolean(intro));
+  const [closingMode, setClosingMode] = useState(null);
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
@@ -270,11 +271,18 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
     return () => window.clearTimeout(timeout);
   }, [intro]);
 
+  useEffect(() => {
+    if (!closingMode) return undefined;
+    const timeout = window.setTimeout(() => onSelect?.(closingMode), 520);
+    return () => window.clearTimeout(timeout);
+  }, [closingMode, onSelect]);
+
   const choose = (nextMode) => {
+    if (closingMode) return;
     setMode(nextMode);
     setGlobalDishMode(nextMode);
     markOpeningDishModeChosen();
-    onSelect?.(nextMode);
+    setClosingMode(nextMode);
   };
 
   const selector = (
@@ -282,7 +290,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
       key="selector"
       initial={intro ? { opacity: 0, scale: 0.42 } : false}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.7 }}
+      exit={{ opacity: 0, scale: 0.42 }}
       transition={{ type: "spring", stiffness: 230, damping: 24, mass: 0.82 }}
       className="w-full"
     >
@@ -300,27 +308,31 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
     </motion.div>
   );
 
+  const logo = (
+    <motion.div
+      key="logo"
+      className="flex h-[19rem] items-center justify-center"
+      initial={{ opacity: 0, scale: introVisible ? 0.82 : 1.18 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.22 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+    >
+      <motion.img
+        src="/logo-real.png"
+        alt="DishList"
+        className="h-36 w-36 object-contain"
+        animate={{ scale: [1, 0.94, 1] }}
+        transition={{ duration: 1.45, repeat: Infinity, ease: "easeInOut" }}
+      />
+    </motion.div>
+  );
+
   return (
     <div className={`w-full max-w-[24rem] ${className}`}>
       {intro ? (
         <AnimatePresence mode="wait">
-          {introVisible ? (
-            <motion.div
-              key="logo"
-              className="flex h-[19rem] items-center justify-center"
-              initial={{ opacity: 0, scale: 0.82 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.22 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <motion.img
-                src="/logo-real.png"
-                alt="DishList"
-                className="h-36 w-36 object-contain"
-                animate={{ scale: [1, 0.94, 1] }}
-                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-              />
-            </motion.div>
+          {introVisible || closingMode ? (
+            logo
           ) : (
             selector
           )}

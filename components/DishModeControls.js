@@ -171,8 +171,8 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
 
@@ -249,8 +249,8 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const [introVisible, setIntroVisible] = useState(Boolean(intro));
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
 

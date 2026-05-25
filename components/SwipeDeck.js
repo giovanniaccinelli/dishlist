@@ -1430,7 +1430,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       darkMode ? "bg-[#1A1A1A] text-white" : "bg-white"
                     }`}
                   >
-                    <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="mb-1 pr-10">
                       <h3 className={`text-[13px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/45"}`}>Ingredients</h3>
                       {recipePanelOverflow.ingredients ? (
                         <button
@@ -1453,7 +1453,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("ingredients");
                           }}
-                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
+                          className={`pointer-events-auto absolute right-3 top-3 z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
                             darkMode ? "bg-[#242424] text-white/70" : "bg-[#F7F5EF] text-black/65"
                           }`}
                           style={{ touchAction: "manipulation" }}
@@ -1476,7 +1476,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       darkMode ? "bg-[#1A1A1A] text-white" : "bg-white"
                     }`}
                   >
-                    <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="mb-1 pr-10">
                       <h3 className={`text-[13px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/45" : "text-black/45"}`}>Method</h3>
                       {recipePanelOverflow.method ? (
                         <button
@@ -1499,7 +1499,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                             e.preventDefault();
                             openRecipePanelModal("method");
                           }}
-                          className={`pointer-events-auto relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
+                          className={`pointer-events-auto absolute right-3 top-3 z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${restaurantAccentBorder} ${
                             darkMode ? "bg-[#242424] text-white/70" : "bg-[#F7F5EF] text-black/65"
                           }`}
                           style={{ touchAction: "manipulation" }}

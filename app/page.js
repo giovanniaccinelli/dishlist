@@ -1157,6 +1157,18 @@ export default function Feed() {
           </div>
         </div>
       )}
+      {showFeedMapStrip ? (
+        <div className="px-4 pt-1">
+          <button
+            type="button"
+            onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
+            className="restaurant-accent-border h-24 w-full overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
+            aria-label={`Open ${activeFeedRestaurant.name} on map`}
+          >
+            <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} verticalOffsetPx={-18} />
+          </button>
+        </div>
+      ) : null}
       <div className="px-4 pt-1 grid grid-cols-[48px_1fr_48px] items-end gap-3">
         <button
           type="button"
@@ -1205,46 +1217,34 @@ export default function Feed() {
         </button>
       </div>
       <div className="bottom-nav-spacer px-4 pt-1 flex-1 min-h-0 overflow-hidden relative">
-        <div className={activeFeed === "for_you" ? "flex h-full flex-col gap-2" : "hidden h-full"}>
-          <div className="min-h-0 flex-1">
-            <SwipeDeck
-              ref={forYouDeckRef}
-              key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
-	              dishes={orderedForYou}
-	              preserveContinuity
-	              initialIndex={currentForYouIndex}
-	              onIndexChange={(index, card) => {
-	                setForYouIndex(index);
-	                setCurrentForYouCard(card || null);
-	                updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
-	              }}
-	              onAction={handleAdd}
-              onRightSwipe={handleRightSwipeToTry}
-              onSavesPress={handleOpenSavers}
-              onSharePress={handleShare}
-              currentUser={user}
-              fitHeight
-              actionOnRightSwipe={false}
-              dismissOnAction={false}
-              actionLabel="+"
-              actionClassName="add-action-btn w-14 h-14 text-[36px]"
-              actionToast="Added to DishList"
-              trackSwipes={false}
-              onAuthRequired={() => setShowAuthPrompt(true)}
-              onResetFeed={() => handleResetFeed("for_you")}
-              onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
-            />
-          </div>
-          {showFeedMapStrip ? (
-            <button
-              type="button"
-              onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
-              className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
-              aria-label={`Open ${activeFeedRestaurant.name} on map`}
-            >
-              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} verticalOffsetPx={-18} />
-            </button>
-          ) : null}
+        <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
+          <SwipeDeck
+            ref={forYouDeckRef}
+            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+	            dishes={orderedForYou}
+	            preserveContinuity
+	            initialIndex={currentForYouIndex}
+	            onIndexChange={(index, card) => {
+	              setForYouIndex(index);
+	              setCurrentForYouCard(card || null);
+	              updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
+	            }}
+	            onAction={handleAdd}
+            onRightSwipe={handleRightSwipeToTry}
+            onSavesPress={handleOpenSavers}
+            onSharePress={handleShare}
+            currentUser={user}
+            fitHeight
+            actionOnRightSwipe={false}
+            dismissOnAction={false}
+            actionLabel="+"
+            actionClassName="add-action-btn w-14 h-14 text-[36px]"
+            actionToast="Added to DishList"
+            trackSwipes={false}
+            onAuthRequired={() => setShowAuthPrompt(true)}
+            onResetFeed={() => handleResetFeed("for_you")}
+            onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
+          />
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
           {!userId ? (
@@ -1276,47 +1276,33 @@ export default function Feed() {
               </div>
             </div>
           ) : (
-            <div className="flex h-full flex-col gap-2">
-              <div className="min-h-0 flex-1">
-                <SwipeDeck
-                  ref={followingDeckRef}
-                  key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
-	                  dishes={orderedFollowing}
-	                  preserveContinuity
-	                  initialIndex={currentFollowingIndex}
-	                  onIndexChange={(index, card) => {
-	                    setFollowingIndex(index);
-	                    setCurrentFollowingCard(card || null);
-	                    updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
-	                  }}
-	                  onAction={handleAdd}
-                  onRightSwipe={handleRightSwipeToTry}
-                  onSavesPress={handleOpenSavers}
-                  onSharePress={handleShare}
-                  currentUser={user}
-                  fitHeight
-                  actionOnRightSwipe={false}
-                  dismissOnAction={false}
-                  actionLabel="+"
-                  actionClassName="add-action-btn w-14 h-14 text-[36px]"
-                  actionToast="Added to DishList"
-                  trackSwipes={false}
-                  onAuthRequired={() => setShowAuthPrompt(true)}
-                  onResetFeed={() => handleResetFeed("following")}
-                  onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
-                />
-              </div>
-              {showFeedMapStrip ? (
-                <button
-                  type="button"
-                  onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
-                  className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
-                  aria-label={`Open ${activeFeedRestaurant.name} on map`}
-                >
-                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} verticalOffsetPx={-18} />
-                </button>
-              ) : null}
-            </div>
+            <SwipeDeck
+              ref={followingDeckRef}
+              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+	              dishes={orderedFollowing}
+	              preserveContinuity
+	              initialIndex={currentFollowingIndex}
+	              onIndexChange={(index, card) => {
+	                setFollowingIndex(index);
+	                setCurrentFollowingCard(card || null);
+	                updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
+	              }}
+	              onAction={handleAdd}
+              onRightSwipe={handleRightSwipeToTry}
+              onSavesPress={handleOpenSavers}
+              onSharePress={handleShare}
+              currentUser={user}
+              fitHeight
+              actionOnRightSwipe={false}
+              dismissOnAction={false}
+              actionLabel="+"
+              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionToast="Added to DishList"
+              trackSwipes={false}
+              onAuthRequired={() => setShowAuthPrompt(true)}
+              onResetFeed={() => handleResetFeed("following")}
+              onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
+            />
           )}
         </div>
       </div>

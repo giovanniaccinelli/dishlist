@@ -7,6 +7,32 @@ import { useAuth } from "../app/lib/auth";
 import { RestaurantMapIcon } from "./DishModeControls";
 
 const MILAN_PREVIEW_CENTER = { lat: 45.4642, lng: 9.19 };
+const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
+
+function projectLatLng({ lat, lng }, zoom) {
+  const worldSize = 256 * Math.pow(2, zoom);
+  const siny = clampSiny(Math.sin((lat * Math.PI) / 180));
+  return {
+    x: ((lng + 180) / 360) * worldSize,
+    y: (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)) * worldSize,
+  };
+}
+
+function unprojectLatLng({ x, y }, zoom) {
+  const worldSize = 256 * Math.pow(2, zoom);
+  const lng = (x / worldSize) * 360 - 180;
+  const n = Math.PI - (2 * Math.PI * y) / worldSize;
+  const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+  return { lat, lng };
+}
+
+function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
+  if (!Number.isFinite(group?.lat) || !Number.isFinite(group?.lng)) return MILAN_PREVIEW_CENTER;
+  if (!verticalOffsetPx) return { lat: group.lat, lng: group.lng };
+  const point = projectLatLng({ lat: group.lat, lng: group.lng }, zoom);
+  return unprojectLatLng({ x: point.x, y: point.y + verticalOffsetPx }, zoom);
+}
+
 const getPinSvg = (strokeColor = "white") => encodeURIComponent(`
 <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
@@ -138,9 +164,11 @@ export default function MapPreview({
     loadGoogleMaps()
       .then((google) => {
         if (!mounted || !mapNodeRef.current) return;
+        const focusedGroup = focusSingleGroup && groups.length === 1 ? groups[0] : null;
+        const initialZoom = focusedGroup ? singleGroupZoom : 4;
         mapRef.current = new google.maps.Map(mapNodeRef.current, {
-          center: MILAN_PREVIEW_CENTER,
-          zoom: 4,
+          center: focusedGroup ? getOffsetCenter(focusedGroup, initialZoom, verticalOffsetPx) : MILAN_PREVIEW_CENTER,
+          zoom: initialZoom,
           disableDefaultUI: true,
           clickableIcons: false,
           draggable: false,
@@ -193,12 +221,7 @@ export default function MapPreview({
       const group = groups[0];
       if (Number.isFinite(group?.lat) && Number.isFinite(group?.lng)) {
         mapRef.current.setZoom(singleGroupZoom);
-        mapRef.current.panTo({ lat: group.lat, lng: group.lng });
-        if (verticalOffsetPx) {
-          window.requestAnimationFrame(() => {
-            mapRef.current?.panBy(0, verticalOffsetPx);
-          });
-        }
+        mapRef.current.setCenter(getOffsetCenter(group, singleGroupZoom, verticalOffsetPx));
       }
     }
     return () => {

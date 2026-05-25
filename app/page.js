@@ -92,7 +92,7 @@ const ACTIVITY_STYLE = {
 };
 const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
-const FEED_INITIAL_PAGE_SIZE = 220;
+const FEED_INITIAL_PAGE_SIZE = 600;
 
 const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
 
@@ -111,6 +111,8 @@ export default function Feed() {
   const [followingDeck, setFollowingDeck] = useState(() => initialFeedCache?.followingDeck || []);
   const [forYouIndex, setForYouIndex] = useState(() => initialFeedCache?.forYouIndex || 0);
   const [followingIndex, setFollowingIndex] = useState(() => initialFeedCache?.followingIndex || 0);
+  const [forYouIndexByMode, setForYouIndexByMode] = useState(() => initialFeedCache?.forYouIndexByMode || {});
+  const [followingIndexByMode, setFollowingIndexByMode] = useState(() => initialFeedCache?.followingIndexByMode || {});
   const [addedDishIds, setAddedDishIds] = useState(() => new Set(initialFeedCache?.addedDishIds || []));
   const [loadingDishes, setLoadingDishes] = useState(() => !initialFeedCache);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -303,6 +305,8 @@ export default function Feed() {
 	      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
 	      setForYouIndex(Number(cachedFeed.forYouIndex || 0));
 	      setFollowingIndex(Number(cachedFeed.followingIndex || 0));
+	      setForYouIndexByMode(cachedFeed.forYouIndexByMode || {});
+	      setFollowingIndexByMode(cachedFeed.followingIndexByMode || {});
 	      setFollowingIds(Array.isArray(cachedFeed.followingIds) ? cachedFeed.followingIds : []);
 	      setFollowingSinceById(cachedFeed.followingSinceById || {});
 	      setFollowingSeenAt(Number(cachedFeed.followingSeenAt || 0));
@@ -422,6 +426,8 @@ export default function Feed() {
 	        setFollowingDeck(following);
 	        setForYouIndex(0);
 	        setFollowingIndex(0);
+	        setForYouIndexByMode({});
+	        setFollowingIndexByMode({});
 	      } catch (err) {
         console.error("Failed to load feed dishes:", err);
         setFollowingIds([]);
@@ -442,12 +448,14 @@ export default function Feed() {
       activeFeed,
       forYouIndex,
       followingIndex,
+      forYouIndexByMode,
+      followingIndexByMode,
       followingIds,
       followingSinceById,
       followingSeenAt,
       addedDishIds: Array.from(addedDishIds),
     });
-  }, [activeFeed, addedDishIds, feedCacheKey, followingDeck, followingIds, followingIndex, followingSeenAt, followingSinceById, forYouDeck, forYouIndex, loadingDishes]);
+  }, [activeFeed, addedDishIds, feedCacheKey, followingDeck, followingIds, followingIndex, followingIndexByMode, followingSeenAt, followingSinceById, forYouDeck, forYouIndex, forYouIndexByMode, loadingDishes]);
 
   useEffect(() => {
     if (!userId || typeof window === "undefined") {
@@ -584,6 +592,7 @@ export default function Feed() {
 	            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
 	          setForYouDeck(shuffleArray(ordered));
 	          setForYouIndex(0);
+	          setForYouIndexByMode({});
 	        });
       })
       .catch((err) => console.error("Failed to recount saves:", err));
@@ -611,6 +620,22 @@ export default function Feed() {
     () => followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode)),
     [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]
   );
+
+  const getModeIndex = (map, fallbackIndex = 0) => {
+    const stored = Number(map?.[selectedDishMode]);
+    return Number.isFinite(stored) && stored >= 0 ? stored : fallbackIndex;
+  };
+
+  const updateModeIndex = (setter, mode, index) => {
+    setter((prev) => {
+      const safeIndex = Math.max(0, Number(index || 0));
+      if (Number(prev?.[mode] || 0) === safeIndex) return prev;
+      return { ...(prev || {}), [mode]: safeIndex };
+    });
+  };
+
+  const currentForYouIndex = getModeIndex(forYouIndexByMode, forYouIndex);
+  const currentFollowingIndex = getModeIndex(followingIndexByMode, followingIndex);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
@@ -702,9 +727,11 @@ export default function Feed() {
         const followedSet = new Set(followingIds);
         setFollowingDeck(ordered.filter((dish) => followedSet.has(dish.owner)));
         setFollowingIndex(0);
+        setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
       } else {
         setForYouDeck(shuffleArray(ordered));
         setForYouIndex(0);
+        setForYouIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
       }
     } catch (err) {
       console.error("Failed to reset feed:", err);
@@ -1153,11 +1180,14 @@ export default function Feed() {
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}
-            key={`for-you-${filterVersion}-${excludedTags.join("|")}`}
+            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
 	            dishes={orderedForYou}
 	            preserveContinuity
-	            initialIndex={forYouIndex}
-	            onIndexChange={(index) => setForYouIndex(index)}
+	            initialIndex={currentForYouIndex}
+	            onIndexChange={(index) => {
+	              setForYouIndex(index);
+	              updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
+	            }}
 	            onAction={handleAdd}
             onRightSwipe={handleRightSwipeToTry}
             onSavesPress={handleOpenSavers}
@@ -1207,11 +1237,14 @@ export default function Feed() {
           ) : (
             <SwipeDeck
               ref={followingDeckRef}
-              key={`following-${filterVersion}-${excludedTags.join("|")}`}
+              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
 	              dishes={orderedFollowing}
 	              preserveContinuity
-	              initialIndex={followingIndex}
-	              onIndexChange={(index) => setFollowingIndex(index)}
+	              initialIndex={currentFollowingIndex}
+	              onIndexChange={(index) => {
+	                setFollowingIndex(index);
+	                updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
+	              }}
 	              onAction={handleAdd}
               onRightSwipe={handleRightSwipeToTry}
               onSavesPress={handleOpenSavers}

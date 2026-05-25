@@ -302,7 +302,6 @@ export default function Feed() {
   }, [userId]);
 
   useEffect(() => {
-    if (userId && !viewedHydrated) return;
     const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
 	    if (cachedFeed) {
 	      setActiveFeed(cachedFeed.activeFeed || "for_you");
@@ -371,10 +370,12 @@ export default function Feed() {
       setLoadingDishes(true);
       try {
         const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
-        const seenIds = new Set(viewedDishIdsRef.current);
+        const seenIds = new Set(getStoredViewedDishIds());
         const publicItems = allItems.filter(
-          (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
+          (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
         );
+        const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
+        const seenPublicItems = publicItems.filter((dish) => seenIds.has(String(dish.id)));
 
         let nextFollowingIds = [];
         let forYou = [];
@@ -418,10 +419,19 @@ export default function Feed() {
           setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
           const representativeTags = resolveRepresentativeTags(userData?.representativeTags, [...saved, ...toTry, ...uploaded]);
-          forYou = buildForYouFeed(publicItems, tagCounts, followedSet, representativeTags);
-          following = sortNewest(publicItems.filter((dish) => followedSet.has(dish.owner)));
+          forYou = [
+            ...buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags),
+            ...buildForYouFeed(seenPublicItems, tagCounts, followedSet, representativeTags),
+          ];
+          following = [
+            ...sortNewest(unseenPublicItems.filter((dish) => followedSet.has(dish.owner))),
+            ...sortNewest(seenPublicItems.filter((dish) => followedSet.has(dish.owner))),
+          ];
         } else {
-          forYou = shuffleArray(sortNewest(publicItems));
+          forYou = [
+            ...shuffleArray(sortNewest(unseenPublicItems)),
+            ...shuffleArray(sortNewest(seenPublicItems)),
+          ];
           following = [];
           setFollowingSinceById({});
         }
@@ -443,7 +453,7 @@ export default function Feed() {
         setLoadingDishes(false);
       }
     })();
-  }, [userId, viewedHydrated, feedCacheKey]);
+  }, [userId, feedCacheKey]);
 
   useEffect(() => {
     if (loadingDishes) return;
@@ -588,9 +598,8 @@ export default function Feed() {
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
         return getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE }).then(({ items }) => {
-          const seenIds = new Set(getStoredViewedDishIds());
           const publicItems = items.filter(
-            (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish) && !seenIds.has(dish.id)
+            (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
           );
 	          const ordered = publicItems
 	            .slice()

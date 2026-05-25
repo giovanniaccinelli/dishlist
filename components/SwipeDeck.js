@@ -318,6 +318,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${i}`,
     }));
 
+    if (formatted.length > 0 && deckEmpty && currentIndex < formatted.length) {
+      setDeckEmpty(false);
+    }
+
     if (!deckInitialized) {
       if (formatted.length > 0) {
         setDeck(formatted);

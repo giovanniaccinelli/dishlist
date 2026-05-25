@@ -1,5 +1,7 @@
 "use client";
 
+import { DiningModeOpeningSelection } from "./DishModeControls";
+
 function PulseBlock({ className = "" }) {
   return <div className={`animate-pulse rounded-[1rem] bg-black/[0.06] ${className}`} />;
 }
@@ -25,19 +27,10 @@ export function FullScreenLoading({ title = "Loading" }) {
 
 export function FeedLoading() {
   return (
-    <div className="h-[100dvh] bg-transparent px-4 text-black">
+    <div className="h-[100dvh] bg-[#050505] px-4 text-black">
       <div className="app-top-nav pb-2" />
-      <div className="flex h-[68vh] flex-col items-center justify-center px-4 pt-8">
-        <div className="max-w-[16.5rem] text-center text-[2.15rem] font-semibold leading-[0.92] tracking-[-0.03em] text-black/84">
-          What&apos;s your next meal?
-        </div>
-        <div className="mt-12 animate-pulse">
-          <img
-            src="/logo-real.png"
-            alt="DishList"
-            className="h-44 w-44 object-contain"
-          />
-        </div>
+      <div className="flex h-[72vh] flex-col items-center justify-center px-4 pt-8">
+        <DiningModeOpeningSelection />
       </div>
     </div>
   );

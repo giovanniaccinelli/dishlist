@@ -76,6 +76,7 @@ const translations = {
     "Leaderboard question updated": "Domanda leaderboard aggiornata",
     "Could not publish question": "Impossibile pubblicare la domanda",
     "Swipe between leaderboard questions": "Scorri tra le domande leaderboard",
+    "Dove vuoi mangiare?": "Dove vuoi mangiare?",
     Account: "Account",
     "Log in required": "Accesso richiesto",
     "Create account": "Crea account",

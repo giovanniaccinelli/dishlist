@@ -12,6 +12,15 @@ const GLOBAL_DISH_MODE_KEY = "dish-mode:global";
 const OPENING_CHOICE_KEY = "dish-mode:opening-choice-shown";
 let openingChoiceShownThisRuntime = false;
 
+export function setGlobalDishMode(mode) {
+  if (typeof window === "undefined") return;
+  const nextMode = [DISH_MODE_ALL, DISH_MODE_COOKING, DISH_MODE_RESTAURANT].includes(mode) ? mode : DISH_MODE_RESTAURANT;
+  try {
+    window.localStorage.setItem(GLOBAL_DISH_MODE_KEY, nextMode);
+    window.dispatchEvent(new CustomEvent("dish-mode:change", { detail: nextMode }));
+  } catch {}
+}
+
 export function CookingHomeIcon({ className = "", strokeWidth = 1.95 }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -66,8 +75,7 @@ export function usePersistentDishMode(storageKey, defaultMode = DISH_MODE_RESTAU
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(GLOBAL_DISH_MODE_KEY, mode || DISH_MODE_RESTAURANT);
-      window.dispatchEvent(new CustomEvent("dish-mode:change", { detail: mode || DISH_MODE_RESTAURANT }));
+      setGlobalDishMode(mode || DISH_MODE_RESTAURANT);
     } catch {}
   }, [mode]);
 
@@ -126,12 +134,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           onClick?.();
           setPickerOpen(true);
         }}
-        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] flex-col justify-center gap-1.5 rounded-[1rem] border border-white/12 bg-black/72 px-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
+        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] items-center justify-center rounded-[1rem] border border-white/12 bg-black/72 p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
         aria-label="Open dish mode selection"
       >
-        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_RESTAURANT ? "bg-[#E64646]" : "bg-[#E64646]/55"}`} />
-        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_COOKING ? "bg-[#F0A623]" : "bg-[#F0A623]/55"}`} />
-        <span className={`block h-2.5 rounded-full ${value === DISH_MODE_ALL ? "bg-[#2BD36B]" : "bg-[#2BD36B]/55"}`} />
+        <img src="/logo-mark.svg" alt="" className="h-full w-full object-contain" />
       </button>
       <DishModeFilterModal
         open={pickerOpen}
@@ -185,24 +191,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
               {choices.map((choice) => {
                 const selected = value === choice.mode;
                 return (
-                  <button
-                    key={choice.mode}
-                    type="button"
-                    onClick={() => onSelect(choice.mode)}
-                    className="group grid h-[4.9rem] w-full grid-cols-[4.9rem,1fr] items-stretch overflow-hidden rounded-[1.35rem] text-left shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition active:scale-[0.985]"
-                    style={{ backgroundColor: choice.color }}
-                  >
-                    <span className="relative flex items-center justify-center text-black">
-                      <span className="absolute inset-y-0 left-0 w-[5.55rem] rounded-r-[2rem] bg-white/92" style={{ clipPath: "polygon(0 0, 100% 50%, 0 100%)" }} />
-                      <span className="relative z-10 -ml-3 flex h-12 w-12 items-center justify-center text-black">
-                        {choice.icon}
-                      </span>
-                    </span>
-                    <span className="flex min-w-0 items-center justify-between pr-5">
-                      <span className="truncate text-[1.35rem] font-black leading-none text-black">{choice.label}</span>
-                      {selected ? <span className="h-3 w-3 rounded-full bg-black" /> : null}
-                    </span>
-                  </button>
+                  <DishModeChoiceLine key={choice.mode} choice={choice} selected={selected} onClick={() => onSelect(choice.mode)} />
                 );
               })}
             </div>
@@ -210,5 +199,67 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function DishModeChoiceLine({ choice, selected = false, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative h-[4.9rem] w-full text-left transition active:scale-[0.985]"
+    >
+      <svg viewBox="0 0 360 78" className="absolute inset-0 h-full w-full drop-shadow-[0_18px_28px_rgba(0,0,0,0.26)]" aria-hidden="true">
+        <path d="M8 14L44 39L8 64V14Z" fill={choice.color} />
+        <rect x="58" y="12" width="292" height="54" rx="27" fill={choice.color} />
+      </svg>
+      <span className="absolute left-[0.45rem] top-1/2 flex h-14 w-11 -translate-y-1/2 items-center justify-center text-black">
+        {choice.icon}
+      </span>
+      <span className="absolute inset-y-0 left-[4.55rem] right-5 flex items-center justify-between">
+        <span className="truncate text-[1.32rem] font-black leading-none text-black">{choice.label}</span>
+        {selected ? <span className="h-3 w-3 rounded-full bg-black" /> : null}
+      </span>
+    </button>
+  );
+}
+
+export function DiningModeOpeningSelection({ className = "" }) {
+  const { t } = useLanguage();
+  const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
+  const choices = [
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", color: "#E64646", icon: <RestaurantForkKnifeIcon className="h-8 w-8" strokeWidth={1.7} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", color: "#F0A623", icon: <CookingHomeIcon className="h-8 w-8" strokeWidth={1.7} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", color: "#2BD36B", icon: null },
+  ];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      openingChoiceShownThisRuntime = true;
+      window.sessionStorage.setItem(OPENING_CHOICE_KEY, "1");
+      setGlobalDishMode(DISH_MODE_RESTAURANT);
+    } catch {}
+  }, []);
+
+  const choose = (nextMode) => {
+    setMode(nextMode);
+    setGlobalDishMode(nextMode);
+  };
+
+  return (
+    <div className={`w-full max-w-[24rem] ${className}`}>
+      <div className="mb-5 text-center text-[1.65rem] font-black leading-none text-white">{t("Dove vuoi mangiare?")}</div>
+      <div className="space-y-3">
+        {choices.map((choice) => (
+          <DishModeChoiceLine
+            key={choice.mode}
+            choice={choice}
+            selected={mode === choice.mode}
+            onClick={() => choose(choice.mode)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

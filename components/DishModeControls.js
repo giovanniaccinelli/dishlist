@@ -21,6 +21,23 @@ export function setGlobalDishMode(mode) {
   } catch {}
 }
 
+export function hasChosenOpeningDishMode() {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.sessionStorage.getItem(OPENING_CHOICE_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+
+export function markOpeningDishModeChosen() {
+  if (typeof window === "undefined") return;
+  try {
+    openingChoiceShownThisRuntime = true;
+    window.sessionStorage.setItem(OPENING_CHOICE_KEY, "1");
+  } catch {}
+}
+
 export function CookingHomeIcon({ className = "", strokeWidth = 1.95 }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -134,10 +151,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           onClick?.();
           setPickerOpen(true);
         }}
-        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] items-center justify-center rounded-[1rem] border border-white/12 bg-black/72 p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
+        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] items-center justify-center rounded-[1rem] border border-white/12 bg-black/72 p-0.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
         aria-label="Open dish mode selection"
       >
-        <img src="/logo-mark.svg" alt="" className="h-full w-full object-contain" />
+        <img src="/logo-real.png" alt="" className="h-full w-full object-contain" />
       </button>
       <DishModeFilterModal
         open={pickerOpen}
@@ -154,9 +171,9 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", color: "#E64646", icon: <RestaurantForkKnifeIcon className="h-8 w-8" strokeWidth={1.7} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", color: "#F0A623", icon: <CookingHomeIcon className="h-8 w-8" strokeWidth={1.7} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", color: "#2BD36B", icon: null },
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.08rem] w-[1.08rem]" strokeWidth={2.1} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.12rem] w-[1.12rem]" strokeWidth={2.15} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
 
   return (
@@ -207,44 +224,41 @@ function DishModeChoiceLine({ choice, selected = false, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="relative h-[4.9rem] w-full text-left transition active:scale-[0.985]"
+      className="relative h-[5.35rem] w-full text-left transition active:scale-[0.985]"
     >
-      <svg viewBox="0 0 360 78" className="absolute inset-0 h-full w-full drop-shadow-[0_18px_28px_rgba(0,0,0,0.26)]" aria-hidden="true">
-        <path d="M8 14L44 39L8 64V14Z" fill={choice.color} />
-        <rect x="58" y="12" width="292" height="54" rx="27" fill={choice.color} />
+      <svg
+        viewBox={`150 ${choice.cropY} 670 150`}
+        className="absolute inset-0 h-full w-full"
+        aria-hidden="true"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <image href="/logo-real.png" x="0" y="0" width="953" height="953" />
       </svg>
-      <span className="absolute left-[0.45rem] top-1/2 flex h-14 w-11 -translate-y-1/2 items-center justify-center text-black">
+      <span className="absolute left-[2.05rem] top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center text-black">
         {choice.icon}
       </span>
-      <span className="absolute inset-y-0 left-[4.55rem] right-5 flex items-center justify-between">
-        <span className="truncate text-[1.32rem] font-black leading-none text-black">{choice.label}</span>
-        {selected ? <span className="h-3 w-3 rounded-full bg-black" /> : null}
+      <span className="absolute inset-y-0 left-[7.25rem] right-8 flex items-center justify-between">
+        <span className="truncate text-[1.24rem] font-black leading-none text-black">{choice.label}</span>
+        {selected ? <span className="h-2.5 w-2.5 rounded-full bg-black/85 shadow-[0_0_0_3px_rgba(255,255,255,0.16)]" /> : null}
       </span>
     </button>
   );
 }
 
-export function DiningModeOpeningSelection({ className = "" }) {
+export function DiningModeOpeningSelection({ className = "", onSelect }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", color: "#E64646", icon: <RestaurantForkKnifeIcon className="h-8 w-8" strokeWidth={1.7} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", color: "#F0A623", icon: <CookingHomeIcon className="h-8 w-8" strokeWidth={1.7} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", color: "#2BD36B", icon: null },
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.08rem] w-[1.08rem]" strokeWidth={2.1} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.12rem] w-[1.12rem]" strokeWidth={2.15} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      openingChoiceShownThisRuntime = true;
-      window.sessionStorage.setItem(OPENING_CHOICE_KEY, "1");
-      setGlobalDishMode(DISH_MODE_RESTAURANT);
-    } catch {}
-  }, []);
 
   const choose = (nextMode) => {
     setMode(nextMode);
     setGlobalDishMode(nextMode);
+    markOpeningDishModeChosen();
+    onSelect?.(nextMode);
   };
 
   return (

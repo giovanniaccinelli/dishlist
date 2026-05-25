@@ -35,6 +35,7 @@ import {
   DISH_MODE_COOKING,
   DishModeFilterButton,
   DishModeFilterModal,
+  hasChosenOpeningDishMode,
   usePersistentDishMode,
 } from "../components/DishModeControls";
 import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
@@ -147,6 +148,7 @@ export default function Feed() {
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
+  const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(() => !hasChosenOpeningDishMode());
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
@@ -1036,8 +1038,19 @@ export default function Feed() {
     setDoc(doc(db, "users", userId), { feedActivitySeenAt: new Date(now) }, { merge: true }).catch(() => {});
   };
 
+  if (needsOpeningDishMode) {
+    return (
+      <FeedLoading
+        onModeSelect={(mode) => {
+          setSelectedDishMode(mode);
+          setNeedsOpeningDishMode(false);
+        }}
+      />
+    );
+  }
+
   if (loading || loadingDishes) {
-    return <FeedLoading />;
+    return <FeedLoading onModeSelect={setSelectedDishMode} />;
   }
 
   return (

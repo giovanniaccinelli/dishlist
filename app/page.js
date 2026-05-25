@@ -95,7 +95,6 @@ const ACTIVITY_STYLE = {
 };
 const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
-const FEED_QUICK_PAGE_SIZE = 140;
 const FEED_INITIAL_PAGE_SIZE = 600;
 
 const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
@@ -370,17 +369,17 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       try {
-        const { items: quickItems } = await getDishesPage({ pageSize: FEED_QUICK_PAGE_SIZE, enrichOwners: false });
+        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
         const seenIds = new Set(getStoredViewedDishIds());
-        const quickPublicItems = quickItems.filter(
+        const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
         );
-        const quickUnseenPublicItems = quickPublicItems.filter((dish) => !seenIds.has(String(dish.id)));
-        const quickSeenPublicItems = quickPublicItems.filter((dish) => seenIds.has(String(dish.id)));
+        const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
+        const seenPublicItems = publicItems.filter((dish) => seenIds.has(String(dish.id)));
 
         const quickForYou = [
-          ...shuffleArray(sortNewest(quickUnseenPublicItems)),
-          ...shuffleArray(sortNewest(quickSeenPublicItems)),
+          ...shuffleArray(sortNewest(unseenPublicItems)),
+          ...shuffleArray(sortNewest(seenPublicItems)),
         ];
         setForYouDeck(quickForYou);
         setForYouIndex(0);
@@ -392,21 +391,6 @@ export default function Feed() {
           setFollowingSinceById({});
         }
         setLoadingDishes(false);
-
-        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
-        const publicItems = allItems.filter(
-          (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
-        );
-        const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
-        const seenPublicItems = publicItems.filter((dish) => seenIds.has(String(dish.id)));
-        if (!userId) {
-          setForYouDeck([
-            ...shuffleArray(sortNewest(unseenPublicItems)),
-            ...shuffleArray(sortNewest(seenPublicItems)),
-          ]);
-          setForYouIndex(0);
-          setForYouIndexByMode({});
-        }
 
         let nextFollowingIds = [];
         let following = [];

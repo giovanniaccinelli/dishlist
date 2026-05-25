@@ -171,9 +171,9 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 194, icon: <RestaurantForkKnifeIcon className="h-[1.66rem] w-[1.66rem]" strokeWidth={2.25} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 355, icon: <CookingHomeIcon className="h-[2.02rem] w-[2.02rem]" strokeWidth={2.2} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 516, icon: null },
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 208, icon: <RestaurantForkKnifeIcon className="h-[1.62rem] w-[1.62rem]" strokeWidth={2.18} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 369, icon: <CookingHomeIcon className="h-[1.98rem] w-[1.98rem]" strokeWidth={2.12} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 531, icon: null },
   ];
 
   return (
@@ -224,21 +224,21 @@ function DishModeChoiceLine({ choice, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="relative h-[6.15rem] w-full text-left transition active:scale-[0.985]"
+      className="relative h-[5.9rem] w-full overflow-hidden text-left transition active:scale-[0.985]"
     >
       <svg
-        viewBox={`150 ${choice.cropY} 670 116`}
-        className="absolute inset-0 h-full w-full"
+        viewBox={`172 ${choice.cropY} 620 90`}
+        className="absolute inset-0 h-full w-full overflow-hidden"
         aria-hidden="true"
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
       >
         <image href="/logo-real.png" x="0" y="0" width="953" height="953" />
       </svg>
-      <span className="absolute left-[1.16rem] top-[54%] flex h-12 w-12 -translate-y-1/2 items-center justify-center text-[#050505]">
+      <span className="absolute left-[1.18rem] top-[53.5%] flex h-12 w-12 -translate-y-1/2 items-center justify-center text-[#050505]">
         {choice.icon}
       </span>
-      <span className="absolute inset-y-0 left-[8.15rem] right-9 flex items-center">
-        <span className="translate-y-[0.24rem] truncate text-[1.54rem] font-bold leading-[0.95] text-[#050505]">{choice.label}</span>
+      <span className="absolute inset-y-0 left-[8rem] right-9 flex items-center">
+        <span className="translate-y-[0.2rem] truncate text-[1.48rem] font-semibold leading-[0.95] text-[#050505]">{choice.label}</span>
       </span>
     </button>
   );
@@ -248,9 +248,9 @@ export function DiningModeOpeningSelection({ className = "", onSelect }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 194, icon: <RestaurantForkKnifeIcon className="h-[1.66rem] w-[1.66rem]" strokeWidth={2.25} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 355, icon: <CookingHomeIcon className="h-[2.02rem] w-[2.02rem]" strokeWidth={2.2} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 516, icon: null },
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 208, icon: <RestaurantForkKnifeIcon className="h-[1.62rem] w-[1.62rem]" strokeWidth={2.18} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 369, icon: <CookingHomeIcon className="h-[1.98rem] w-[1.98rem]" strokeWidth={2.12} /> },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 531, icon: null },
   ];
 
   const choose = (nextMode) => {

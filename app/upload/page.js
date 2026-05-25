@@ -493,30 +493,28 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                    className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+                    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623]/65 bg-[#F0A623] text-black" : darkMode ? "border-white/10 bg-white/[0.055] text-white/64" : "border-black/8 bg-white/72 text-black/58"}`}
                   >
-                      <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-                        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]">
-                          <CookingHomeIcon className="h-5 w-5" strokeWidth={2.05} />
+                      <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
+                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_COOKING ? "bg-black/10 text-black" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"}`}>
+                          <CookingHomeIcon className="h-5 w-5" strokeWidth={2.35} />
                         </span>
                         <div className="min-w-0">
-	                        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Home</div>
-	                        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Recipe to cook at home</div>
+	                        <div className="truncate text-[14px] font-black leading-none">Casa</div>
                         </div>
                       </div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-	                      className={`rounded-[1.25rem] border-2 px-3 py-2.5 text-left ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC]"}`}
+	                      className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646]/65 bg-[#E64646] text-black" : darkMode ? "border-white/10 bg-white/[0.055] text-white/64" : "border-black/8 bg-white/72 text-black/58"}`}
                     >
-                      <div className="grid min-h-[3.55rem] grid-cols-[2.3rem,1fr] items-center gap-2">
-                        <span className="restaurant-accent-border inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.72rem] border-2 bg-[#FFE2E2] text-[#E64646]">
-                          <RestaurantForkKnifeIcon className="h-5 w-5" strokeWidth={2.05} />
+                      <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
+                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_RESTAURANT ? "bg-black/10 text-black" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
+                          <RestaurantForkKnifeIcon className="h-5 w-5" strokeWidth={2.35} />
                         </span>
                         <div className="min-w-0">
-	                        <div className={`text-[13px] font-semibold leading-none ${darkMode ? "text-current" : "text-black"}`}>Restaurant</div>
-	                        <div className={`mt-1 text-[8.5px] leading-[1.15] ${darkMode ? "text-current opacity-70" : "text-black/55"}`}>Suggestion to eat out</div>
+	                        <div className="truncate text-[14px] font-black leading-none">Ristorante</div>
                         </div>
                       </div>
                     </button>

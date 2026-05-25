@@ -384,21 +384,15 @@ export default function LeaderboardQuestionPage() {
                         setAnswerRestaurant(restaurant);
                         if (restaurant?.name) setAnswerText(restaurant.name);
                       }}
+                      onQueryChange={(text) => {
+                        setAnswerText(text);
+                        if (answerRestaurant && text.trim() !== answerRestaurant.name) setAnswerRestaurant(null);
+                      }}
                       label=""
-                      placeholder="Cerca ristorante o luogo"
+                      placeholder="Cerca un ristorante o scrivi la tua risposta"
                       accent="restaurant"
                     />
                   </div>
-                  <input
-                    data-no-question-swipe="true"
-                    value={answerText}
-                    onChange={(event) => {
-                      setAnswerText(event.target.value);
-                      if (answerRestaurant && event.target.value.trim() !== answerRestaurant.name) setAnswerRestaurant(null);
-                    }}
-                    placeholder="Oppure scrivi la tua risposta"
-                    className="mb-2 w-full rounded-[1rem] border border-white/12 bg-[#050505] px-4 py-3 text-[16px] text-white placeholder:text-white/28 focus:outline-none focus:ring-2 focus:ring-white/10"
-                  />
                 </>
               )}
               <button

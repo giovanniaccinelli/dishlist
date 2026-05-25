@@ -21,6 +21,7 @@ function buildRestaurantFromPlace(place) {
 export default function RestaurantPlacePicker({
   value = null,
   onChange,
+  onQueryChange,
   label = "Restaurant (optional)",
   placeholder = "Search restaurant",
   className = "",
@@ -130,6 +131,7 @@ export default function RestaurantPlacePicker({
         const restaurant = buildRestaurantFromPlace(place);
         if (!restaurant) return;
         setQuery(restaurant.name);
+        onQueryChange?.(restaurant.name);
         setPredictions([]);
         setIsFocused(false);
         onChange?.(restaurant);
@@ -140,6 +142,7 @@ export default function RestaurantPlacePicker({
   const handleClear = () => {
     setQuery("");
     setPredictions([]);
+    onQueryChange?.("");
     onChange?.(null);
   };
 
@@ -172,6 +175,7 @@ export default function RestaurantPlacePicker({
             onChange={(event) => {
               const nextValue = event.target.value;
               setQuery(nextValue);
+              onQueryChange?.(nextValue);
               if (value?.placeId && nextValue.trim() !== value.name) {
                 onChange?.(null);
               }

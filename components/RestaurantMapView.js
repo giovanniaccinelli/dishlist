@@ -126,60 +126,6 @@ function Avatar({ user }) {
   );
 }
 
-function RestaurantVisitCard({ user, onOpenProfile, onOpenDish }) {
-  const primaryDish = user?.dishes?.[0] || null;
-  return (
-    <div className="restaurant-accent-border w-[11.2rem] shrink-0 snap-start overflow-hidden rounded-[1.25rem] border-2 bg-white text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
-      {primaryDish ? (
-        <button
-          type="button"
-          onClick={() => onOpenDish(primaryDish)}
-          className="block h-[8.6rem] w-full text-left"
-        >
-          <div className="relative h-full w-full overflow-hidden bg-[#F3F0E8]">
-            <DishRatingBadge dish={primaryDish} className="text-[9px]" />
-            <img
-              src={getDishImageUrl(primaryDish, "thumb")}
-              alt={primaryDish.name || "Dish"}
-              className="h-full w-full object-cover"
-              onError={(event) => {
-                event.currentTarget.src = DEFAULT_DISH_IMAGE;
-              }}
-            />
-            <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 via-black/38 to-transparent px-2.5 pb-2.5 pt-8 text-white pointer-events-none">
-              <div className="truncate text-[13px] font-bold leading-tight">
-                {primaryDish.name || "Untitled dish"}
-              </div>
-              {(user.dishes?.length || 0) > 1 ? (
-                <div className="mt-0.5 text-[10px] font-semibold text-white/82">
-                  +{user.dishes.length - 1} more here
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </button>
-      ) : (
-        <div className="h-[8.6rem] bg-[#F3F0E8]" />
-      )}
-      <button
-        type="button"
-        onClick={onOpenProfile}
-        className="flex min-h-12 w-full items-center gap-2 px-2.5 py-2 text-left transition active:scale-[0.99]"
-      >
-        <Avatar user={user} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12.5px] font-bold leading-tight text-black">
-            {user.name || "User"}
-          </span>
-          <span className="mt-0.5 block text-[10px] font-semibold leading-none text-black/45">
-            {(user.dishes?.length || 0) === 1 ? "1 dish" : `${user.dishes?.length || 0} dishes`}
-          </span>
-        </span>
-      </button>
-    </div>
-  );
-}
-
 export default function RestaurantMapView({
   groups = [],
   emptyTitle = "No restaurant dishes yet",
@@ -606,16 +552,53 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-x-contain pb-1"
+                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {selectedGroup.users.map((user) => (
-                        <RestaurantVisitCard
-                          key={`${selectedGroup.placeId}-${user.id}`}
-                          user={user}
-                          onOpenProfile={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
-                          onOpenDish={openDish}
-                        />
+                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-40 shrink-0 snap-start flex-col">
+                          <button
+                            type="button"
+                            onClick={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
+                            className="restaurant-accent-border mb-2 flex h-10 w-full items-center gap-2 rounded-[1rem] border-2 bg-white px-2 text-left shadow-[0_8px_18px_rgba(0,0,0,0.08)] transition active:scale-[0.98]"
+                          >
+                            <Avatar user={user} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[12px] font-bold leading-none text-black">
+                                {user.name || "User"}
+                              </span>
+                            </span>
+                          </button>
+                          {user.dishes?.[0] ? (
+                            <button
+                              type="button"
+                              onClick={() => openDish(user.dishes[0])}
+                              className="restaurant-accent-border flex h-40 w-full overflow-hidden rounded-[1.25rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                            >
+                              <div className="relative h-full w-full overflow-hidden">
+                                <DishRatingBadge dish={user.dishes[0]} className="text-[10px]" />
+                                <img
+                                  src={getDishImageUrl(user.dishes[0], "thumb")}
+                                  alt={user.dishes[0].name || "Dish"}
+                                  className="h-full w-full object-cover"
+                                  onError={(event) => {
+                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                  }}
+                                />
+                                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/72 to-transparent px-2.5 py-2 text-white pointer-events-none flex flex-col justify-end gap-0.5">
+                                  <div className="truncate text-sm font-semibold">
+                                    {user.dishes[0].name || "Untitled dish"}
+                                  </div>
+                                  {(user.dishes?.length || 0) > 1 ? (
+                                    <div className="mt-0.5 text-[10px] text-white/80">
+                                      +{user.dishes.length - 1} more here
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </button>
+                          ) : null}
+                        </div>
                       ))}
                     </div>
                   ) : null}

@@ -825,7 +825,8 @@ export default function Explore() {
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     if (selectedDishMode === DISH_MODE_RESTAURANT) {
-      const restaurantRows = getRestaurantDishGroups(modePool)
+      const restaurantGroups = getRestaurantDishGroups(modePool);
+      const restaurantRows = restaurantGroups
         .map((group) => {
           const ratedDishes = (group.dishes || [])
             .map((dish) => Math.max(0, Math.min(5, Number(dish?.rating) || 0)))
@@ -851,7 +852,7 @@ export default function Explore() {
           type: "map",
           title: "Mappa",
           dishes: [{}],
-          groups: restaurantRows,
+          groups: restaurantGroups,
         },
         ...restaurantRows,
       ];

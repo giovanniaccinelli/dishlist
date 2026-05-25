@@ -1242,7 +1242,7 @@ export default function Feed() {
               className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
               aria-label={`Open ${activeFeedRestaurant.name} on map`}
             >
-              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} />
+              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} showAvatars={false} verticalOffsetPx={-18} />
             </button>
           ) : null}
         </div>
@@ -1313,7 +1313,7 @@ export default function Feed() {
                   className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
                   aria-label={`Open ${activeFeedRestaurant.name} on map`}
                 >
-                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} />
+                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} showAvatars={false} verticalOffsetPx={-18} />
                 </button>
               ) : null}
             </div>

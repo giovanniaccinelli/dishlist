@@ -95,7 +95,14 @@ function createPreviewAvatarOverlay({ map, position, users }) {
   return overlay;
 }
 
-export default function MapPreview({ className = "", groups = [], focusSingleGroup = false, singleGroupZoom = 15 }) {
+export default function MapPreview({
+  className = "",
+  groups = [],
+  focusSingleGroup = false,
+  singleGroupZoom = 15,
+  showAvatars = true,
+  verticalOffsetPx = 0,
+}) {
   const { user } = useAuth();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
@@ -105,6 +112,10 @@ export default function MapPreview({ className = "", groups = [], focusSingleGro
   const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
 
   useEffect(() => {
+    if (!showAvatars) {
+      setFollowingIds([]);
+      return undefined;
+    }
     if (!user?.uid) {
       setFollowingIds([]);
       return undefined;
@@ -120,7 +131,7 @@ export default function MapPreview({ className = "", groups = [], focusSingleGro
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [showAvatars, user?.uid]);
 
   useEffect(() => {
     let mounted = true;
@@ -157,8 +168,8 @@ export default function MapPreview({ className = "", groups = [], focusSingleGro
     markersRef.current = [];
     groups.forEach((group) => {
       if (!Number.isFinite(group?.lat) || !Number.isFinite(group?.lng)) return;
-      const ownUsers = (group.users || []).filter((groupUser) => String(groupUser.id || "").trim() === String(user?.uid || "").trim());
-      const followedUsers = (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim()));
+      const ownUsers = showAvatars ? (group.users || []).filter((groupUser) => String(groupUser.id || "").trim() === String(user?.uid || "").trim()) : [];
+      const followedUsers = showAvatars ? (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim())) : [];
       const hasOwnUser = ownUsers.length > 0;
       const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => String(groupUser.id || "").trim() !== String(user?.uid || "").trim())];
       const marker = new window.google.maps.Marker({
@@ -181,15 +192,20 @@ export default function MapPreview({ className = "", groups = [], focusSingleGro
     if (focusSingleGroup && groups.length === 1) {
       const group = groups[0];
       if (Number.isFinite(group?.lat) && Number.isFinite(group?.lng)) {
-        mapRef.current.setCenter({ lat: group.lat, lng: group.lng });
         mapRef.current.setZoom(singleGroupZoom);
+        mapRef.current.panTo({ lat: group.lat, lng: group.lng });
+        if (verticalOffsetPx) {
+          window.requestAnimationFrame(() => {
+            mapRef.current?.panBy(0, verticalOffsetPx);
+          });
+        }
       }
     }
     return () => {
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
-  }, [focusSingleGroup, followingIdSet, groups, singleGroupZoom, state, user?.uid]);
+  }, [focusSingleGroup, followingIdSet, groups, showAvatars, singleGroupZoom, state, user?.uid, verticalOffsetPx]);
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className}`}>

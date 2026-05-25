@@ -32,10 +32,12 @@ import { clearSessionPageCache } from "../lib/sessionPageCache";
 
 const UPLOAD_STEP_PREVIEW = [
   { label: "Name", color: "#E64646" },
-  { label: "Recipe", color: "#F59E0B" },
-  { label: "Details", color: "#23C268" },
+  { label: "Info", color: "#F59E0B" },
+  { label: "Tags", color: "#23C268" },
   { label: "Upload", color: "#111111" },
 ];
+
+const PRICE_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
 
 export default function UploadPage() {
   const router = useRouter();
@@ -52,6 +54,8 @@ export default function UploadPage() {
   const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
   const [dishTags, setDishTags] = useState([]);
   const [dishRating, setDishRating] = useState(0);
+  const [dishPrice, setDishPrice] = useState("");
+  const [dishPriceCurrency, setDishPriceCurrency] = useState("EUR");
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -210,6 +214,8 @@ export default function UploadPage() {
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           rating: isRestaurantUpload ? dishRating : 0,
+          price: dishPricePayload,
+          priceCurrency: isRestaurantUpload ? dishPriceCurrency : "",
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           ...imageFields,
@@ -237,6 +243,8 @@ export default function UploadPage() {
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           rating: isRestaurantUpload ? dishRating : 0,
+          price: dishPricePayload,
+          priceCurrency: isRestaurantUpload ? dishPriceCurrency : "",
           taggedUserName: storyTaggedUser.trim(),
           taggedUserId: storyTaggedUserId || "",
           isPublic: dishIsPublic,
@@ -269,6 +277,8 @@ export default function UploadPage() {
         setToast("Dish uploaded");
         setTimeout(() => navigateBackToOrigin(), 1200);
         setDishRating(0);
+        setDishPrice("");
+        setDishPriceCurrency("EUR");
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);
@@ -306,19 +316,15 @@ export default function UploadPage() {
     (candidate.displayName || "").toLowerCase().includes(tagUserSearch.trim().toLowerCase())
   );
   const isRestaurantUpload = dishMode === DISH_MODE_RESTAURANT;
-  const visibleUploadSteps = isRestaurantUpload
-    ? UPLOAD_STEP_PREVIEW.filter((step) => step.label !== "Recipe")
-    : UPLOAD_STEP_PREVIEW;
+  const visibleUploadSteps = UPLOAD_STEP_PREVIEW;
+  const normalizedDishPrice = Number(String(dishPrice).replace(",", "."));
+  const dishPricePayload = isRestaurantUpload && Number.isFinite(normalizedDishPrice) && normalizedDishPrice > 0
+    ? normalizedDishPrice
+    : null;
 
   useEffect(() => {
     if (!isRestaurantUpload && dishRating !== 0) setDishRating(0);
   }, [dishRating, isRestaurantUpload]);
-
-  useEffect(() => {
-    if (isRestaurantUpload && uploadStep === 1) {
-      setUploadStep(2);
-    }
-  }, [isRestaurantUpload, uploadStep]);
 
   const goToNextStep = () => {
     if (uploadStep === 0 && !dishName.trim()) {
@@ -328,7 +334,6 @@ export default function UploadPage() {
       return;
     }
     setUploadStep((prev) => {
-      if (isRestaurantUpload && prev === 0) return 2;
       return Math.min(prev + 1, 3);
     });
   };
@@ -352,7 +357,6 @@ export default function UploadPage() {
 
   const goToPreviousStep = () => {
     setUploadStep((prev) => {
-      if (isRestaurantUpload && prev === 2) return 0;
       return Math.max(prev - 1, 0);
     });
   };
@@ -422,7 +426,7 @@ export default function UploadPage() {
             <div className="flex items-center justify-between mb-5">
               <div className="h-11 w-11" />
               <div className="flex gap-2">
-                {(isRestaurantUpload ? [0, 2, 3] : [0, 1, 2, 3]).map((step) => (
+                {[0, 1, 2, 3].map((step) => (
                   <span
                     key={step}
                     className={`no-accent-border h-1.5 rounded-full transition-all ${
@@ -596,8 +600,101 @@ export default function UploadPage() {
               </>
             ) : null}
 
-            {uploadStep === 1 && !isRestaurantUpload ? (
+            {uploadStep === 1 ? (
               <>
+                {isRestaurantUpload ? (
+                  <>
+                    <div className="mb-4">
+                      <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                        {language === "it" ? "Dettagli ristorante" : "Restaurant details"}
+                      </h2>
+                    </div>
+                    <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
+                      <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                        {language === "it" ? "Valutazione" : "Rating"}
+                      </div>
+                      <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
+                    </div>
+                    <div className="mb-4 grid grid-cols-[1fr_auto] gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder={language === "it" ? "Prezzo" : "Price"}
+                        value={dishPrice}
+                        onChange={(e) => setDishPrice(e.target.value)}
+                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        disabled={loadingUpload}
+                      />
+                      <select
+                        value={dishPriceCurrency}
+                        onChange={(e) => setDishPriceCurrency(e.target.value)}
+                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-sm font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        disabled={loadingUpload}
+                      >
+                        {PRICE_CURRENCIES.map((currency) => (
+                          <option key={currency} value={currency}>{currency}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowLinkField((prev) => !prev)}
+                        className="inline-flex items-center rounded-full border-2 restaurant-accent-border bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55"
+                      >
+                        {showLinkField || dishLink ? "Dish link" : "Add link"}
+                      </button>
+                      {showLinkField || dishLink ? (
+                        <input
+                          type="text"
+                          placeholder="https://..."
+                          value={dishLink}
+                          onChange={(e) => setDishLink(e.target.value)}
+                          className="mt-3 w-full rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                          disabled={loadingUpload}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                        />
+                      ) : null}
+                    </div>
+                    <div className="mb-4">
+                      <p className={`mb-2 text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>
+                        {language === "it" ? "Tagga un utente" : "Tag a user"}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTagUserPickerOpen(true)}
+                          className="flex-1 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-left text-base text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                          disabled={loadingUpload}
+                        >
+                          {storyTaggedUser
+                            ? `@${storyTaggedUser.replace(/^@+/, "")}`
+                            : language === "it"
+                              ? "Seleziona utente (opzionale)"
+                              : "Select user (optional)"}
+                        </button>
+                        {storyTaggedUser ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStoryTaggedUser("");
+                              setStoryTaggedUserId("");
+                            }}
+                            className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                            aria-label="Clear tagged user"
+                          >
+                            <X size={16} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 <div className="mb-4 text-center">
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
@@ -648,6 +745,8 @@ export default function UploadPage() {
 	                    spellCheck={false}
 	                  />
 	                ) : null}
+                  </>
+                )}
 	              </>
 	            ) : null}
 
@@ -666,72 +765,6 @@ export default function UploadPage() {
 	                  rows={1}
 	                  disabled={loadingUpload}
 	                />
-                {isRestaurantUpload ? (
-                  <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                      {language === "it" ? "Valutazione" : "Rating"}
-                    </div>
-                    <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
-                  </div>
-                ) : null}
-	                {isRestaurantUpload ? (
-	                <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowLinkField((prev) => !prev)}
-                    className={`inline-flex items-center rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55`}
-                  >
-                    {showLinkField || dishLink ? "Dish link" : "Add link"}
-                  </button>
-                  {showLinkField || dishLink ? (
-                    <input
-                      type="text"
-                      placeholder="https://..."
-                      value={dishLink}
-                      onChange={(e) => setDishLink(e.target.value)}
-                      className={`mt-3 w-full rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-base text-black focus:outline-none focus:ring-2`}
-                      disabled={loadingUpload}
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                    />
-                  ) : null}
-	                </div>
-	                ) : null}
-	                {isRestaurantUpload ? (
-	                <div className="mb-4">
-                  <p className="mb-2 text-sm font-medium text-black">
-                    {language === "it" ? "Tagga un utente" : "Tag a user"}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTagUserPickerOpen(true)}
-                      className={`flex-1 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-left text-base text-black focus:outline-none focus:ring-2`}
-                      disabled={loadingUpload}
-                    >
-                      {storyTaggedUser
-                        ? `@${storyTaggedUser.replace(/^@+/, "")}`
-                        : language === "it"
-                          ? "Seleziona utente (opzionale)"
-                          : "Select user (optional)"}
-                    </button>
-                    {storyTaggedUser ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStoryTaggedUser("");
-                          setStoryTaggedUserId("");
-                        }}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
-                        aria-label="Clear tagged user"
-                      >
-                        <X size={16} />
-                      </button>
-                    ) : null}
-	                  </div>
-	                </div>
-	                ) : null}
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>

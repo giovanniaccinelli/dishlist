@@ -62,6 +62,8 @@ function StoryStatIcon({ size = 10 }) {
   );
 }
 
+const PRICE_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
+
 export default function DishDetail() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -94,6 +96,8 @@ export default function DishDetail() {
   const [editTaggedUserId, setEditTaggedUserId] = useState("");
   const [editTags, setEditTags] = useState([]);
   const [editRating, setEditRating] = useState(0);
+  const [editPrice, setEditPrice] = useState("");
+  const [editPriceCurrency, setEditPriceCurrency] = useState("EUR");
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editDishMode, setEditDishMode] = useState(DISH_MODE_COOKING);
   const [editRestaurant, setEditRestaurant] = useState(null);
@@ -520,6 +524,8 @@ export default function DishDetail() {
     setEditTaggedUser(dishToEdit?.taggedUserName || "");
     setEditTaggedUserId(dishToEdit?.taggedUserId || "");
     setEditRating(Number(dishToEdit?.rating || 0));
+    setEditPrice(dishToEdit?.price ? String(dishToEdit.price) : "");
+    setEditPriceCurrency(dishToEdit?.priceCurrency || "EUR");
     setEditRecipeIngredients(dishToEdit?.recipeIngredients || "");
     setEditRecipeMethod(dishToEdit?.recipeMethod || "");
     const normalizedTags = Array.isArray(dishToEdit?.tags)
@@ -572,12 +578,6 @@ export default function DishDetail() {
   }, [dish, editOpen, loadingDish, openEditOnLoad, userId]);
 
   useEffect(() => {
-    if (editOpen && editDishMode === DISH_MODE_RESTAURANT && editStep === 1) {
-      setEditStep(2);
-    }
-  }, [editDishMode, editOpen, editStep]);
-
-  useEffect(() => {
     if (editOpen && editDishMode !== DISH_MODE_RESTAURANT && editRating !== 0) {
       setEditRating(0);
     }
@@ -618,6 +618,10 @@ export default function DishDetail() {
         }
       }
 
+      const normalizedEditPrice = Number(String(editPrice).replace(",", "."));
+      const editPricePayload = editDishMode === DISH_MODE_RESTAURANT && Number.isFinite(normalizedEditPrice) && normalizedEditPrice > 0
+        ? normalizedEditPrice
+        : null;
       const updates = {
         name: editName.trim(),
         description: editDescription.trim(),
@@ -628,6 +632,8 @@ export default function DishDetail() {
         recipeMethod: editDishMode === DISH_MODE_RESTAURANT ? "" : editRecipeMethod.trim(),
         tags: editTags,
         rating: editDishMode === DISH_MODE_RESTAURANT ? editRating : 0,
+        price: editPricePayload,
+        priceCurrency: editDishMode === DISH_MODE_RESTAURANT ? editPriceCurrency : "",
         isPublic: editIsPublic,
         dishMode: editDishMode,
         restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,
@@ -790,14 +796,12 @@ export default function DishDetail() {
       return;
     }
     setEditStep((prev) => {
-      if (editDishMode === DISH_MODE_RESTAURANT && prev === 0) return 2;
       return Math.min(prev + 1, 3);
     });
   };
 
   const goToPreviousEditStep = () => {
     setEditStep((prev) => {
-      if (editDishMode === DISH_MODE_RESTAURANT && prev === 2) return 0;
       return Math.max(prev - 1, 0);
     });
   };
@@ -1179,8 +1183,87 @@ export default function DishDetail() {
               </>
             ) : null}
 
-            {editStep === 1 && editDishMode !== DISH_MODE_RESTAURANT ? (
+            {editStep === 1 ? (
               <>
+                {editDishMode === DISH_MODE_RESTAURANT ? (
+                  <>
+                    <div className="mb-4">
+                      <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                        {language === "it" ? "Dettagli ristorante" : "Restaurant details"}
+                      </h2>
+                    </div>
+                    <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
+                      <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Rating")}</div>
+                      <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
+                    </div>
+                    <div className="mb-4 grid grid-cols-[1fr_auto] gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder={language === "it" ? "Prezzo" : "Price"}
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        disabled={savingEdit}
+                      />
+                      <select
+                        value={editPriceCurrency}
+                        onChange={(e) => setEditPriceCurrency(e.target.value)}
+                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-sm font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        disabled={savingEdit}
+                      >
+                        {PRICE_CURRENCIES.map((currency) => (
+                          <option key={currency} value={currency}>{currency}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-5">
+                      <div className="inline-flex items-center rounded-full border-2 restaurant-accent-border bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55">
+                        {editDishLink.trim() ? t("Dish link") : t("Add link")}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="https://..."
+                        value={editDishLink}
+                        onChange={(e) => setEditDishLink(e.target.value)}
+                        className="mt-3 w-full rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                        disabled={savingEdit}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <p className={`mb-2 text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tag a user")}</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditTagUserPickerOpen(true)}
+                          className="flex-1 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-left text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
+                          disabled={savingEdit}
+                        >
+                          {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user (optional)")}
+                        </button>
+                        {editTaggedUser ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditTaggedUser("");
+                              setEditTaggedUserId("");
+                            }}
+                            className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
+                            aria-label="Clear tagged user"
+                          >
+                            <X size={16} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 <div className="mb-4 text-center">
                   <div className={`text-[11px] font-semibold tracking-[0.22em] uppercase ${darkMode ? "text-white/40" : "text-black/35"}`}>{t("Optional")}</div>
                 </div>
@@ -1225,6 +1308,8 @@ export default function DishDetail() {
 	                  autoCorrect="off"
 	                  spellCheck={false}
 	                />
+                  </>
+                )}
 	              </>
 	            ) : null}
 
@@ -1241,61 +1326,6 @@ export default function DishDetail() {
 	                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
 	                  disabled={savingEdit}
 	                />
-                {editDishMode === DISH_MODE_RESTAURANT ? (
-                  <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Rating")}</div>
-                    <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
-                  </div>
-                ) : null}
-	                {editDishMode === DISH_MODE_RESTAURANT ? (
-	                <div className="mb-5">
-                  <button
-                    type="button"
-                    className={`inline-flex items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55`}
-                  >
-                    {editDishLink.trim() ? t("Dish link") : t("Add link")}
-                  </button>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    value={editDishLink}
-                    onChange={(e) => setEditDishLink(e.target.value)}
-                    className={`mt-3 w-full rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2`}
-                    disabled={savingEdit}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                  />
-	                </div>
-	                ) : null}
-	                {editDishMode === DISH_MODE_RESTAURANT ? (
-	                <div className="mb-4">
-                  <p className={`mb-2 text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tag a user")}</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditTagUserPickerOpen(true)}
-                      className={`flex-1 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} bg-white px-4 py-3 text-left text-sm text-black focus:outline-none focus:ring-2`}
-                      disabled={savingEdit}
-                    >
-                      {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user (optional)")}
-                    </button>
-                    {editTaggedUser ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditTaggedUser("");
-                          setEditTaggedUserId("");
-                        }}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
-                        aria-label="Clear tagged user"
-                      >
-                        <X size={16} />
-                      </button>
-                    ) : null}
-	                  </div>
-	                </div>
-	                ) : null}
                 <div className="mb-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className={`text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tags")}</p>

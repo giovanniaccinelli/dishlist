@@ -151,7 +151,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
           onClick?.();
           setPickerOpen(true);
         }}
-        className="dish-mode-logo-button no-accent-border flex h-[3.1rem] w-[3.7rem] min-w-[3.7rem] items-center justify-center rounded-[1rem] border border-white/12 bg-black/72 p-0.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
+        className="dish-mode-logo-button no-accent-border flex h-[3.45rem] w-[4.15rem] min-w-[4.15rem] items-center justify-center rounded-[1.05rem] border border-white/12 bg-black/72 p-0.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md"
         aria-label="Open dish mode selection"
       >
         <img src="/logo-real.png" alt="" className="h-full w-full object-contain" />
@@ -171,8 +171,8 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.08rem] w-[1.08rem]" strokeWidth={2.1} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.12rem] w-[1.12rem]" strokeWidth={2.15} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.36rem] w-[1.36rem]" strokeWidth={2.05} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.05} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
 
@@ -180,7 +180,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/78 p-5 backdrop-blur-md"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black p-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -194,7 +194,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
-              <div className="text-[1.65rem] font-black leading-none text-white">Dove vuoi mangiare?</div>
+              <div className="text-[1.65rem] font-bold leading-none text-white">Dove vuoi mangiare?</div>
               <button
                 type="button"
                 onClick={onClose}
@@ -234,12 +234,12 @@ function DishModeChoiceLine({ choice, selected = false, onClick }) {
       >
         <image href="/logo-real.png" x="0" y="0" width="953" height="953" />
       </svg>
-      <span className="absolute left-[2.05rem] top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center text-black">
+      <span className="absolute left-[1.9rem] top-[50.5%] flex h-9 w-9 -translate-y-1/2 items-center justify-center text-black">
         {choice.icon}
       </span>
-      <span className="absolute inset-y-0 left-[7.25rem] right-8 flex items-center justify-between">
-        <span className="truncate text-[1.24rem] font-black leading-none text-black">{choice.label}</span>
-        {selected ? <span className="h-2.5 w-2.5 rounded-full bg-black/85 shadow-[0_0_0_3px_rgba(255,255,255,0.16)]" /> : null}
+      <span className="absolute inset-y-0 left-[7.25rem] right-8 flex items-center">
+        <span className="translate-y-[0.08rem] truncate text-[1.24rem] font-bold leading-none text-black">{choice.label}</span>
+        {selected ? <span className="ml-auto h-8 w-1.5 translate-y-[0.08rem] rounded-full bg-black/45" /> : null}
       </span>
     </button>
   );
@@ -249,8 +249,8 @@ export function DiningModeOpeningSelection({ className = "", onSelect }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.08rem] w-[1.08rem]" strokeWidth={2.1} /> },
-    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.12rem] w-[1.12rem]" strokeWidth={2.15} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.36rem] w-[1.36rem]" strokeWidth={2.05} /> },
+    { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.05} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
 
@@ -263,7 +263,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect }) {
 
   return (
     <div className={`w-full max-w-[24rem] ${className}`}>
-      <div className="mb-5 text-center text-[1.65rem] font-black leading-none text-white">{t("Dove vuoi mangiare?")}</div>
+      <div className="mb-5 text-center text-[1.65rem] font-bold leading-none text-white">{t("Dove vuoi mangiare?")}</div>
       <div className="space-y-3">
         {choices.map((choice) => (
           <DishModeChoiceLine

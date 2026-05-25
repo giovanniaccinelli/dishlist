@@ -29,7 +29,7 @@ export function FeedLoading({ onModeSelect }) {
   return (
     <div className="h-[100dvh] bg-[#050505] px-4 text-black">
       <div className="app-top-nav pb-2" />
-      <div className="flex h-[72vh] flex-col items-center justify-center px-4 pt-8">
+      <div className="flex h-[78vh] flex-col items-center justify-center px-4 pt-16">
         <DiningModeOpeningSelection onSelect={onModeSelect} />
       </div>
     </div>

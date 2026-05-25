@@ -171,7 +171,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
     { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.78rem] w-[1.78rem]" strokeWidth={2.05} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];
@@ -237,8 +237,8 @@ function DishModeChoiceLine({ choice, onClick }) {
       <span className="absolute left-[1.42rem] top-[53%] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#050505]">
         {choice.icon}
       </span>
-      <span className="absolute inset-y-0 left-[7.25rem] right-8 flex items-center">
-        <span className="translate-y-[0.08rem] truncate text-[1.24rem] font-bold leading-none text-[#050505]">{choice.label}</span>
+      <span className="absolute inset-y-0 left-[7.15rem] right-8 flex items-center">
+        <span className="translate-y-[0.22rem] truncate text-[1.42rem] font-extrabold leading-[0.95] text-[#050505]">{choice.label}</span>
       </span>
     </button>
   );
@@ -248,7 +248,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect }) {
   const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Restaurant", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.42rem] w-[1.42rem]" strokeWidth={2.08} /> },
     { mode: DISH_MODE_COOKING, label: "Home", cropY: 337, icon: <CookingHomeIcon className="h-[1.78rem] w-[1.78rem]" strokeWidth={2.05} /> },
     { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
   ];

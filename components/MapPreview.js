@@ -95,7 +95,7 @@ function createPreviewAvatarOverlay({ map, position, users }) {
   return overlay;
 }
 
-export default function MapPreview({ className = "", groups = [] }) {
+export default function MapPreview({ className = "", groups = [], focusSingleGroup = false, singleGroupZoom = 15 }) {
   const { user } = useAuth();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
@@ -178,11 +178,18 @@ export default function MapPreview({ className = "", groups = [] }) {
         if (overlay) markersRef.current.push(overlay);
       }
     });
+    if (focusSingleGroup && groups.length === 1) {
+      const group = groups[0];
+      if (Number.isFinite(group?.lat) && Number.isFinite(group?.lng)) {
+        mapRef.current.setCenter({ lat: group.lat, lng: group.lng });
+        mapRef.current.setZoom(singleGroupZoom);
+      }
+    }
     return () => {
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
-  }, [followingIdSet, groups, state, user?.uid]);
+  }, [focusSingleGroup, followingIdSet, groups, singleGroupZoom, state, user?.uid]);
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className}`}>

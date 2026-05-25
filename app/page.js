@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AppToast from "../components/AppToast";
+import MapPreview from "../components/MapPreview";
 import { FeedLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
@@ -33,6 +34,7 @@ import {
   dishModeMatches,
   DISH_MODE_ALL,
   DISH_MODE_COOKING,
+  DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
   hasChosenOpeningDishMode,
@@ -47,6 +49,7 @@ import { resolveRepresentativeTags } from "./lib/profileTags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { useLanguage } from "../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache";
+import { normalizeRestaurant } from "./lib/restaurants";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -113,6 +116,8 @@ export default function Feed() {
   const [followingIndex, setFollowingIndex] = useState(() => initialFeedCache?.followingIndex || 0);
   const [forYouIndexByMode, setForYouIndexByMode] = useState(() => initialFeedCache?.forYouIndexByMode || {});
   const [followingIndexByMode, setFollowingIndexByMode] = useState(() => initialFeedCache?.followingIndexByMode || {});
+  const [currentForYouCard, setCurrentForYouCard] = useState(null);
+  const [currentFollowingCard, setCurrentFollowingCard] = useState(null);
   const [addedDishIds, setAddedDishIds] = useState(() => new Set(initialFeedCache?.addedDishIds || []));
   const [loadingDishes, setLoadingDishes] = useState(() => !initialFeedCache);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -636,6 +641,29 @@ export default function Feed() {
 
   const currentForYouIndex = getModeIndex(forYouIndexByMode, forYouIndex);
   const currentFollowingIndex = getModeIndex(followingIndexByMode, followingIndex);
+  const activeFeedCard = activeFeed === "following" ? currentFollowingCard : currentForYouCard;
+  const activeFeedRestaurant = normalizeRestaurant(activeFeedCard?.restaurant);
+  const showFeedMapStrip = selectedDishMode === DISH_MODE_RESTAURANT && Boolean(activeFeedRestaurant);
+  const feedMapGroups = useMemo(() => {
+    if (!showFeedMapStrip || !activeFeedRestaurant) return [];
+    const ownerId = String(activeFeedCard?.owner || activeFeedCard?.ownerId || activeFeedCard?.userId || "").trim();
+    return [
+      {
+        ...activeFeedRestaurant,
+        dishes: activeFeedCard ? [activeFeedCard] : [],
+        users: ownerId
+          ? [
+              {
+                id: ownerId,
+                name: activeFeedCard?.ownerName || "User",
+                photoURL: activeFeedCard?.ownerPhotoURL || "",
+                dishes: activeFeedCard ? [activeFeedCard] : [],
+              },
+            ]
+          : [],
+      },
+    ];
+  }, [activeFeedCard, activeFeedRestaurant, showFeedMapStrip]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
@@ -1177,33 +1205,41 @@ export default function Feed() {
         </button>
       </div>
       <div className="bottom-nav-spacer px-4 pt-1 flex-1 min-h-0 overflow-hidden relative">
-        <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
-          <SwipeDeck
-            ref={forYouDeckRef}
-            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
-	            dishes={orderedForYou}
-	            preserveContinuity
-	            initialIndex={currentForYouIndex}
-	            onIndexChange={(index) => {
-	              setForYouIndex(index);
-	              updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
-	            }}
-	            onAction={handleAdd}
-            onRightSwipe={handleRightSwipeToTry}
-            onSavesPress={handleOpenSavers}
-            onSharePress={handleShare}
-            currentUser={user}
-            fitHeight
-            actionOnRightSwipe={false}
-            dismissOnAction={false}
-            actionLabel="+"
-            actionClassName="add-action-btn w-14 h-14 text-[36px]"
-            actionToast="Added to DishList"
-            trackSwipes={false}
-            onAuthRequired={() => setShowAuthPrompt(true)}
-            onResetFeed={() => handleResetFeed("for_you")}
-            onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
-          />
+        <div className={activeFeed === "for_you" ? "flex h-full flex-col gap-2" : "hidden h-full"}>
+          <div className="min-h-0 flex-1">
+            <SwipeDeck
+              ref={forYouDeckRef}
+              key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+	              dishes={orderedForYou}
+	              preserveContinuity
+	              initialIndex={currentForYouIndex}
+	              onIndexChange={(index, card) => {
+	                setForYouIndex(index);
+	                setCurrentForYouCard(card || null);
+	                updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
+	              }}
+	              onAction={handleAdd}
+              onRightSwipe={handleRightSwipeToTry}
+              onSavesPress={handleOpenSavers}
+              onSharePress={handleShare}
+              currentUser={user}
+              fitHeight
+              actionOnRightSwipe={false}
+              dismissOnAction={false}
+              actionLabel="+"
+              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionToast="Added to DishList"
+              trackSwipes={false}
+              onAuthRequired={() => setShowAuthPrompt(true)}
+              onResetFeed={() => handleResetFeed("for_you")}
+              onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
+            />
+          </div>
+          {showFeedMapStrip ? (
+            <div className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]">
+              <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={15} />
+            </div>
+          ) : null}
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
           {!userId ? (
@@ -1235,32 +1271,42 @@ export default function Feed() {
               </div>
             </div>
           ) : (
-            <SwipeDeck
-              ref={followingDeckRef}
-              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
-	              dishes={orderedFollowing}
-	              preserveContinuity
-	              initialIndex={currentFollowingIndex}
-	              onIndexChange={(index) => {
-	                setFollowingIndex(index);
-	                updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
-	              }}
-	              onAction={handleAdd}
-              onRightSwipe={handleRightSwipeToTry}
-              onSavesPress={handleOpenSavers}
-              onSharePress={handleShare}
-              currentUser={user}
-              fitHeight
-              actionOnRightSwipe={false}
-              dismissOnAction={false}
-              actionLabel="+"
-              actionClassName="add-action-btn w-14 h-14 text-[36px]"
-              actionToast="Added to DishList"
-              trackSwipes={false}
-              onAuthRequired={() => setShowAuthPrompt(true)}
-              onResetFeed={() => handleResetFeed("following")}
-              onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
-            />
+            <div className="flex h-full flex-col gap-2">
+              <div className="min-h-0 flex-1">
+                <SwipeDeck
+                  ref={followingDeckRef}
+                  key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+	                  dishes={orderedFollowing}
+	                  preserveContinuity
+	                  initialIndex={currentFollowingIndex}
+	                  onIndexChange={(index, card) => {
+	                    setFollowingIndex(index);
+	                    setCurrentFollowingCard(card || null);
+	                    updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
+	                  }}
+	                  onAction={handleAdd}
+                  onRightSwipe={handleRightSwipeToTry}
+                  onSavesPress={handleOpenSavers}
+                  onSharePress={handleShare}
+                  currentUser={user}
+                  fitHeight
+                  actionOnRightSwipe={false}
+                  dismissOnAction={false}
+                  actionLabel="+"
+                  actionClassName="add-action-btn w-14 h-14 text-[36px]"
+                  actionToast="Added to DishList"
+                  trackSwipes={false}
+                  onAuthRequired={() => setShowAuthPrompt(true)}
+                  onResetFeed={() => handleResetFeed("following")}
+                  onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
+                />
+              </div>
+              {showFeedMapStrip ? (
+                <div className="restaurant-accent-border h-24 shrink-0 overflow-hidden rounded-[1.35rem] border-2 bg-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]">
+                  <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={15} />
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

@@ -377,8 +377,22 @@ export default function Feed() {
         const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
         const seenPublicItems = publicItems.filter((dish) => seenIds.has(String(dish.id)));
 
+        const quickForYou = [
+          ...shuffleArray(sortNewest(unseenPublicItems)),
+          ...shuffleArray(sortNewest(seenPublicItems)),
+        ];
+        setForYouDeck(quickForYou);
+        setForYouIndex(0);
+        setForYouIndexByMode({});
+        if (!userId) {
+          setFollowingDeck([]);
+          setFollowingIndex(0);
+          setFollowingIndexByMode({});
+          setFollowingSinceById({});
+        }
+        setLoadingDishes(false);
+
         let nextFollowingIds = [];
-        let forYou = [];
         let following = [];
 
         if (userId) {
@@ -419,7 +433,7 @@ export default function Feed() {
           setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
           const representativeTags = resolveRepresentativeTags(userData?.representativeTags, [...saved, ...toTry, ...uploaded]);
-          forYou = [
+          const forYou = [
             ...buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags),
             ...buildForYouFeed(seenPublicItems, tagCounts, followedSet, representativeTags),
           ];
@@ -427,22 +441,10 @@ export default function Feed() {
             ...sortNewest(unseenPublicItems.filter((dish) => followedSet.has(dish.owner))),
             ...sortNewest(seenPublicItems.filter((dish) => followedSet.has(dish.owner))),
           ];
-        } else {
-          forYou = [
-            ...shuffleArray(sortNewest(unseenPublicItems)),
-            ...shuffleArray(sortNewest(seenPublicItems)),
-          ];
-          following = [];
-          setFollowingSinceById({});
+          setFollowingIds(nextFollowingIds);
+          setForYouDeck(forYou);
+          setFollowingDeck(following);
         }
-
-        setFollowingIds(nextFollowingIds);
-	        setForYouDeck(forYou);
-	        setFollowingDeck(following);
-	        setForYouIndex(0);
-	        setFollowingIndex(0);
-	        setForYouIndexByMode({});
-	        setFollowingIndexByMode({});
 	      } catch (err) {
         console.error("Failed to load feed dishes:", err);
         setFollowingIds([]);

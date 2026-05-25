@@ -173,7 +173,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <span className="text-[1.95rem] font-black leading-none">?</span> },
   ];
 
   return (
@@ -251,7 +251,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: null },
+    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <span className="text-[1.95rem] font-black leading-none">?</span> },
   ];
 
   useEffect(() => {

@@ -1103,7 +1103,7 @@ export default function DishDetail() {
 	    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
   >
     <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
-      <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#FFE2E2] text-[#E64646]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
+      <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
         <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.35} />
       </span>
       <div className="min-w-0">

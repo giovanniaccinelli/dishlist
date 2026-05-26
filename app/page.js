@@ -155,7 +155,8 @@ export default function Feed() {
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
-  const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(() => !hasChosenOpeningDishMode());
+  const [feedClientReady, setFeedClientReady] = useState(false);
+  const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
@@ -172,6 +173,11 @@ export default function Feed() {
       .filter(Boolean)
       .some((value) => String(value) === String(userId));
   };
+
+  useEffect(() => {
+    setNeedsOpeningDishMode(!hasChosenOpeningDishMode());
+    setFeedClientReady(true);
+  }, []);
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -1106,7 +1112,7 @@ export default function Feed() {
 
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
 
-  if (needsOpeningDishMode) {
+  if (!feedClientReady || needsOpeningDishMode) {
     return (
       <FeedLoading
         onModeSelect={(mode) => {

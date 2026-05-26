@@ -272,6 +272,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
+  const [currentMediaReady, setCurrentMediaReady] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -369,6 +370,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentIndex, currentCard?._key, onIndexChange]);
 
   useEffect(() => {
+    setCurrentMediaReady(isDishVideo(currentCard));
     setShowRecipe(isRecipeOnlyDish(currentCard));
     setRecipePanelModal(null);
     setDescriptionModalOpen(false);
@@ -905,9 +907,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <img
         src={imageSrc}
         alt={dish.name}
-        className="block w-full h-full object-cover"
+        className={`block w-full h-full object-cover transition-opacity duration-200 ${active && !currentMediaReady ? "opacity-0" : "opacity-100"}`}
+        onLoad={() => {
+          if (active) setCurrentMediaReady(true);
+        }}
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
+          if (active) setCurrentMediaReady(true);
         }}
       />
     );
@@ -1045,7 +1051,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
             </div>
           ) : null}
-          {darkMode && !visibleRecipe ? (
+          {darkMode && !visibleRecipe && currentMediaReady ? (
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
@@ -1246,7 +1252,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-hidden="true"
                 />
               ) : null}
-              {!visibleRecipe ? (
+              {!visibleRecipe && currentMediaReady ? (
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{
@@ -1256,7 +1262,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   }}
                 />
               ) : null}
-              {!visibleRecipe ? (
+              {!visibleRecipe && currentMediaReady ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">

@@ -897,7 +897,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         <DeckAutoplayVideo
           src={imageSrc}
           onVideoRef={onVideoRef}
-          className="pointer-events-none w-full h-full object-cover"
+          className="pointer-events-none block w-full h-full object-cover"
         />
       );
     }
@@ -905,7 +905,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <img
         src={imageSrc}
         alt={dish.name}
-        className="w-full h-full object-cover"
+        className="block w-full h-full object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}

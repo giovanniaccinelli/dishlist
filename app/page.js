@@ -369,7 +369,7 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       try {
-        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
+        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
         const seenIds = new Set(getStoredViewedDishIds());
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)

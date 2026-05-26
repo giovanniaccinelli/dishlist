@@ -951,7 +951,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         onTouchStartCapture={handleDeckMediaUnlock}
         onClickCapture={handleDeckMediaUnlock}
       >
-        {nextCard ? (
+        {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}

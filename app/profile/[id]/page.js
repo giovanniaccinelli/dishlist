@@ -1176,70 +1176,22 @@ export default function PublicProfile() {
       </div>
 
       {showingDishlistOverview ? (
-        <div className="mx-auto mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
-          <div>
-            <div className="mb-2 flex items-center gap-2 leading-none">
-              <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
-              <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
-            </div>
-            <button
-              type="button"
-              onClick={() => setProfileMapOpen(true)}
-              className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-              }`}
-              aria-label="Open map"
-            >
-              <MapPreview groups={uploadedRestaurantGroups} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-            </button>
+        <div className="mx-auto mb-4 w-full max-w-3xl px-2">
+          <div className="mb-2 flex items-center gap-2 leading-none">
+            <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
+            <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
           </div>
-          <div>
-            <div className="mb-2 flex items-center gap-2 leading-none">
-              <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Calendar")}</span>
-              <CalendarDays className={`h-[1.05rem] w-[1.05rem] shrink-0 ${darkMode ? "text-white/72" : "text-black/72"}`} strokeWidth={2.05} />
-            </div>
-            <button
-              type="button"
-              onClick={() => setProfileCalendarOpen(true)}
-              className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                darkMode ? "border-white/10 bg-[#181818]" : "border-black/10 bg-[#FBFAF6]"
-              }`}
-              aria-label="Open calendar"
-            >
-              <div className="relative flex h-full flex-col">
-                <div className="relative h-6 border-b border-[#C78400]/35 bg-[#F0A623]">
-                  <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-8">
-                    {[0, 1].map((item) => (
-                      <span
-                        key={item}
-                        className={`h-3 w-3 rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.24)] ${
-                          darkMode ? "bg-[#181818]" : "bg-[#FBFAF6]"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="grid flex-1 grid-cols-7 gap-1.5 p-3">
-                  {calendarPreviewCells.slice(0, 28).map((cell) => {
-                    const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
-                    return (
-                      <div
-                        key={cell.dayKey}
-                        className={`relative rounded-[0.32rem] ${
-                          cell.isToday
-                            ? "border border-[#F0A623] bg-transparent"
-                            : darkMode ? "bg-white/12" : "bg-black/8"
-                        }`}
-                      >
-                        {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#F0A623]" /> : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setProfileMapOpen(true)}
+            className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+              darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+            }`}
+            aria-label="Open map"
+          >
+            <MapPreview groups={uploadedRestaurantGroups} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          </button>
         </div>
       ) : null}
 

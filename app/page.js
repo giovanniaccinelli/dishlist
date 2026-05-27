@@ -180,6 +180,11 @@ export default function Feed() {
       .filter(Boolean)
       .some((value) => String(value) === String(userId));
   };
+  const getDishOwnerIds = (dish) =>
+    [dish?.owner, dish?.ownerId, dish?.userId, dish?.uploadedBy, dish?.createdBy]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+  const isFromFollowedUser = (dish, followedSet) => getDishOwnerIds(dish).some((ownerId) => followedSet.has(ownerId));
 
   useEffect(() => {
     setNeedsOpeningDishMode(!hasChosenOpeningDishMode());
@@ -376,7 +381,7 @@ export default function Feed() {
             : [];
           const overlap = dishTags.reduce((sum, tag) => sum + (tagCounts.get(tag) || 0), 0);
           const representativeOverlap = dishTags.reduce((sum, tag) => sum + (representativeTagSet.has(tag) ? 1 : 0), 0);
-          const followBoost = followedOwners.has(dish.owner) ? 4 : 0;
+          const followBoost = isFromFollowedUser(dish, followedOwners) ? 4 : 0;
           const recency = dish?.createdAt?.seconds || 0;
           return {
             ...dish,
@@ -462,8 +467,8 @@ export default function Feed() {
             ...buildForYouFeed(seenPublicItems, tagCounts, followedSet, representativeTags),
           ];
           following = [
-            ...sortNewest(unseenPublicItems.filter((dish) => followedSet.has(dish.owner))),
-            ...sortNewest(seenPublicItems.filter((dish) => followedSet.has(dish.owner))),
+            ...sortNewest(unseenPublicItems.filter((dish) => isFromFollowedUser(dish, followedSet))),
+            ...sortNewest(seenPublicItems.filter((dish) => isFromFollowedUser(dish, followedSet))),
           ];
           setFollowingIds(nextFollowingIds);
           setForYouDeck(forYou);
@@ -800,7 +805,7 @@ export default function Feed() {
         .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
       if (feedType === "following") {
         const followedSet = new Set(followingIds);
-        setFollowingDeck(ordered.filter((dish) => followedSet.has(dish.owner)));
+        setFollowingDeck(ordered.filter((dish) => isFromFollowedUser(dish, followedSet)));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
       } else {
@@ -1274,7 +1279,7 @@ export default function Feed() {
           </button>
         </div>
       ) : null}
-      <div className="-mt-2 px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+      <div className="-mt-1 px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
@@ -1321,7 +1326,7 @@ export default function Feed() {
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
-      <div className="bottom-nav-spacer px-4 pt-3 flex-1 min-h-0 overflow-hidden relative">
+      <div className="bottom-nav-spacer px-4 pt-2 flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

@@ -9,6 +9,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
 import { useAuth } from "../app/lib/auth";
 import DishRatingBadge from "./DishRatingBadge";
+import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 
 const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
@@ -138,6 +139,7 @@ export default function RestaurantMapView({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -185,6 +187,10 @@ export default function RestaurantMapView({
       )
       .filter((item) => item.dish?.id);
   }, [selectedGroupUsers]);
+  const selectedDishUsers = useMemo(
+    () => selectedGroupUsers.filter((groupUser) => (groupUser.dishes || []).some((dish) => dish?.id)),
+    [selectedGroupUsers]
+  );
   const selectedGroupRating = useMemo(() => {
     const ratings = selectedGroupDishes
       .map((item) => Math.max(0, Math.min(5, Number(item.dish?.rating) || 0)))
@@ -613,7 +619,7 @@ export default function RestaurantMapView({
                       <div className="mt-1 flex items-center gap-2">
                         <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
                         <span className="text-[11px] font-bold text-black/45">
-                          {selectedGroupUsers.length} {selectedGroupUsers.length === 1 ? "person" : "people"}
+                          {selectedDishUsers.length} {t(selectedDishUsers.length === 1 ? "person count" : "people count")}
                         </span>
                       </div>
                       <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
@@ -628,9 +634,9 @@ export default function RestaurantMapView({
                     </button>
                   </div>
 
-                  {selectedGroupUsers.length ? (
+                  {selectedDishUsers.length ? (
                     <div className="mt-3 flex max-h-[13.4rem] flex-col gap-4 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {selectedGroupUsers.map((dishUser) => {
+                      {selectedDishUsers.map((dishUser) => {
                         const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
                         if (!userDishes.length) return null;
                         return (

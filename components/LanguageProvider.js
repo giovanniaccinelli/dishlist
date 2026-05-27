@@ -25,6 +25,8 @@ const translations = {
     explore: "Esplora",
     upload: "Carica",
     people: "Persone",
+    "person count": "persona",
+    "people count": "persone",
     People: "Persone",
     profile: "Profilo",
     "Edit Profile": "Modifica profilo",

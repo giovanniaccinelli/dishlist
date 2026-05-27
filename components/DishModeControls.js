@@ -74,7 +74,9 @@ export function UnknownDishModeIcon({ className = "", strokeWidth = 2.15 }) {
 
 export function dishModeMatches(dish, selectedMode) {
   if (!selectedMode || selectedMode === DISH_MODE_ALL) return true;
-  return String(dish?.dishMode || "").toLowerCase() === selectedMode;
+  const mode = String(dish?.dishMode || "").toLowerCase();
+  if (selectedMode === DISH_MODE_COOKING) return mode === DISH_MODE_COOKING || mode === "home";
+  return mode === selectedMode;
 }
 
 export function usePersistentDishMode(storageKey, defaultMode = DISH_MODE_RESTAURANT) {

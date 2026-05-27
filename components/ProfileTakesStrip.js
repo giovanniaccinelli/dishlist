@@ -26,7 +26,7 @@ export default function ProfileTakesStrip({ takes = [], darkMode = true, t = (va
     <section className="mx-auto mb-5 w-full max-w-3xl px-2">
       <div className="mb-3 flex items-center gap-2 px-1">
         <h2 className={`text-[1.15rem] font-bold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Takes")}</h2>
-        {hasHotTake ? <Flame size={18} className="text-[#E64646]" fill="none" /> : null}
+        <Flame size={18} className={hasHotTake ? "text-[#E64646]" : "text-[#D7B443]"} fill="none" />
       </div>
       <div className="grid auto-cols-[calc((100%-0.75rem)/2)] grid-flow-col snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {sortedTakes.slice(0, 12).map((take, index) => {

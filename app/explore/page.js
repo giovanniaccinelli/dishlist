@@ -540,7 +540,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap 
           </button>
         </div>
         <div
-          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-bottom-nav-height)-13.25rem)] min-h-[20rem] max-h-[calc(100dvh-var(--app-bottom-nav-height)-13.25rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-bottom-nav-height)-17.5rem)] min-h-[14rem] max-h-[calc(100dvh-var(--app-bottom-nav-height)-17.5rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
         >
@@ -983,7 +983,8 @@ export default function Explore() {
           placeholder={t("Search dishes or tags")}
         />
       ) : null}
-      <div className={`relative ${selectedDishMode === DISH_MODE_RESTAURANT ? "mb-3" : "mb-6"}`}>
+      {selectedDishMode !== DISH_MODE_RESTAURANT ? (
+      <div className="relative mb-6">
         <div className="flex flex-wrap gap-2 items-center">
           {selectedTagsApplied.map((tag) => (
             <span
@@ -1064,6 +1065,7 @@ export default function Explore() {
           </div>
         )}
       </div>
+      ) : null}
       {loading ? (
         <CategoryRowsLoading />
       ) : selectedDishMode === DISH_MODE_RESTAURANT && restaurantMapRow ? (

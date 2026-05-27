@@ -250,6 +250,13 @@ export default function Feed() {
       router.replace("/onboarding");
       return;
     }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("onboarding") === "feed") {
+      sessionStorage.setItem(MODE_KEY, "feed");
+      if (!sessionStorage.getItem(SAVED_KEY)) {
+        sessionStorage.setItem(SAVED_KEY, JSON.stringify([]));
+      }
+    }
     const mode = sessionStorage.getItem(MODE_KEY);
     setGuestMode(mode || null);
     try {
@@ -711,9 +718,17 @@ export default function Feed() {
     });
   };
 
+  const isGuestFeedOnboarding = () => {
+    if (guestMode === "feed") return true;
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("onboarding") === "feed" || sessionStorage.getItem(MODE_KEY) === "feed";
+  };
+
   const handleAdd = async (dishToAdd, variant = "sheet") => {
     if (!userId) {
-      if (guestMode === "feed") {
+      if (isGuestFeedOnboarding()) {
+        if (!dishToAdd?.id) return false;
         const nextIds = Array.from(new Set([...guestSavedIds, dishToAdd.id])).slice(0, 3);
         setGuestSavedIds(nextIds);
         if (typeof window !== "undefined") {
@@ -752,7 +767,7 @@ export default function Feed() {
 
   const handleRightSwipeToTry = async (dishToAdd) => {
     if (!userId) {
-      if (guestMode === "feed") return false;
+      if (isGuestFeedOnboarding()) return handleAdd(dishToAdd, "swipe");
       setShowAuthPrompt(true);
       return false;
     }

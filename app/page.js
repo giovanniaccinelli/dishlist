@@ -408,7 +408,8 @@ export default function Feed() {
 
     setAddedDishIds(new Set());
     (async () => {
-      setLoadingDishes(true);
+      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length && (!userId || cachedFeed?.followingDeck?.length));
+      setLoadingDishes(!cachedHasBothDecks);
       setFollowingLoading(Boolean(userId));
       setFollowingResolved(false);
       try {
@@ -435,7 +436,6 @@ export default function Feed() {
           setFollowingLoading(false);
           setFollowingResolved(true);
         }
-        setLoadingDishes(false);
 
         let nextFollowingIds = [];
         let following = [];
@@ -1253,7 +1253,7 @@ export default function Feed() {
     );
   }
 
-  if (loading || (loadingDishes && !hasLoadedFeedCards)) {
+  if (loading || loadingDishes) {
     return <FeedLogoLoading />;
   }
 

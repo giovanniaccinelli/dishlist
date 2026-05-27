@@ -492,9 +492,10 @@ export default function Feed() {
                 .map((dish) => [dish.id, dish])
             ).values()
           );
+          const followingSourceItems = followedUniqueItems.length || !nextFollowingIds.length ? followedUniqueItems : publicItems;
           following = [
-            ...sortNewest(followedUniqueItems.filter((dish) => !seenIds.has(String(dish.id)))),
-            ...sortNewest(followedUniqueItems.filter((dish) => seenIds.has(String(dish.id)))),
+            ...sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id)))),
+            ...sortNewest(followingSourceItems.filter((dish) => seenIds.has(String(dish.id)))),
           ];
           setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
@@ -687,10 +688,11 @@ export default function Feed() {
     [forYouDeck, addedDishIds, excludedTagSet, selectedDishMode]
   );
 
-  const orderedFollowing = useMemo(
-    () => followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode)),
-    [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]
-  );
+  const orderedFollowing = useMemo(() => {
+    const base = followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d));
+    const modeFiltered = base.filter((d) => dishModeMatches(d, selectedDishMode));
+    return modeFiltered.length ? modeFiltered : base;
+  }, [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]);
 
   const getModeIndex = (map, fallbackIndex = 0) => {
     const stored = Number(map?.[selectedDishMode]);
@@ -848,7 +850,7 @@ export default function Feed() {
               .map((dish) => [dish.id, dish])
           ).values()
         );
-        setFollowingDeck(sortNewest(followedUniqueItems));
+        setFollowingDeck(sortNewest(followedUniqueItems.length || !expandedFollowingIds.length ? followedUniqueItems : ordered));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
       } else {

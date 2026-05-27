@@ -20,7 +20,6 @@ import {
   getFollowingForUser,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
-  getUploadedDishesForUserAliases,
   getUsersByIds,
   getUsersWhoSavedDish,
   recountDishSavesFromUsers,
@@ -477,22 +476,8 @@ export default function Feed() {
             ...buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags),
             ...buildForYouFeed(seenPublicItems, tagCounts, followedSet, representativeTags),
           ];
-          const followedUploaded = await getUploadedDishesForUserAliases(expandedFollowingIds);
-          const followedPublicItems = followedUploaded.filter(
-            (dish) =>
-              dish.isPublic !== false &&
-              !isOwnDish(dish) &&
-              !isTextOnlyDish(dish) &&
-              isFromFollowedUser(dish, followedSet)
-          );
-          const followedUniqueItems = Array.from(
-            new Map(
-              [...followedPublicItems, ...publicItems.filter((dish) => isFromFollowedUser(dish, followedSet))]
-                .filter((dish) => dish?.id)
-                .map((dish) => [dish.id, dish])
-            ).values()
-          );
-          const followingSourceItems = followedUniqueItems.length || !nextFollowingIds.length ? followedUniqueItems : publicItems;
+          const matchedFollowingItems = publicItems.filter((dish) => isFromFollowedUser(dish, followedSet));
+          const followingSourceItems = matchedFollowingItems.length || !nextFollowingIds.length ? matchedFollowingItems : publicItems;
           following = [
             ...sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id)))),
             ...sortNewest(followingSourceItems.filter((dish) => seenIds.has(String(dish.id)))),
@@ -835,22 +820,8 @@ export default function Feed() {
         const expandedFollowingIds = await expandFollowingIds(followingIds);
         const followedSet = new Set(expandedFollowingIds);
         setFollowingIds(expandedFollowingIds);
-        const followedUploaded = await getUploadedDishesForUserAliases(expandedFollowingIds);
-        const followedPublicItems = followedUploaded.filter(
-          (dish) =>
-            dish.isPublic !== false &&
-            !isOwnDish(dish) &&
-            !isTextOnlyDish(dish) &&
-            isFromFollowedUser(dish, followedSet)
-        );
-        const followedUniqueItems = Array.from(
-          new Map(
-            [...followedPublicItems, ...ordered.filter((dish) => isFromFollowedUser(dish, followedSet))]
-              .filter((dish) => dish?.id)
-              .map((dish) => [dish.id, dish])
-          ).values()
-        );
-        setFollowingDeck(sortNewest(followedUniqueItems.length || !expandedFollowingIds.length ? followedUniqueItems : ordered));
+        const matchedFollowingItems = ordered.filter((dish) => isFromFollowedUser(dish, followedSet));
+        setFollowingDeck(sortNewest(matchedFollowingItems.length || !expandedFollowingIds.length ? matchedFollowingItems : ordered));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
       } else {

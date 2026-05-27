@@ -806,13 +806,15 @@ export default function Profile() {
     });
 
     const savedRef = collection(db, "users", user.uid, "saved");
-    const unsubscribeSaved = onSnapshot(savedRef, async () => {
+    const unsubscribeSaved = onSnapshot(savedRef, async (snap) => {
+      setSavedDishes(snap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() })));
       const saved = await getSavedDishesFromFirestore(user.uid, { force: true });
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
-    const unsubscribeToTry = onSnapshot(toTryRef, async () => {
+    const unsubscribeToTry = onSnapshot(toTryRef, async (snap) => {
+      setToTryDishes(snap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() })));
       const items = await getToTryDishesFromFirestore(user.uid, { force: true });
       setToTryDishes(items);
     });
@@ -830,7 +832,21 @@ export default function Profile() {
     });
 
     const mealCalendarRef = collection(db, "users", user.uid, "mealCalendar");
-    const unsubscribeMealCalendar = onSnapshot(mealCalendarRef, async () => {
+    const unsubscribeMealCalendar = onSnapshot(mealCalendarRef, async (snap) => {
+      setMealCalendarEntries(
+        snap.docs.map((itemDoc) => {
+          const data = itemDoc.data() || {};
+          const ateAtMs = Number(data.ateAtMs || 0) || getStoryCalendarMillis(data.createdAt);
+          return {
+            id: itemDoc.id,
+            name: data.name || data.title || "",
+            dayKey: data.dayKey || getStoryCalendarKey(ateAtMs),
+            ms: ateAtMs,
+            createdAt: data.createdAt || null,
+            calendarOnly: true,
+          };
+        })
+      );
       const entries = await getMealCalendarEntriesForUserIds([user.uid]);
       setMealCalendarEntries(entries);
     });
@@ -2357,15 +2373,17 @@ export default function Profile() {
                         return (
                           <div
                             key={cell.dayKey}
-                            className={`relative rounded-[0.32rem] border ${
+                            className={`relative rounded-[0.32rem] border-2 ${
                               hasItems
-                                ? "border-[#F0A623]"
+                                ? "border-[#F0A623] bg-[#F0A623]/18 shadow-[0_0_0_1px_rgba(240,166,35,0.2)]"
                                 : cell.isToday
-                                  ? "border-[#2BD36B]"
+                                  ? "border-[#2BD36B] bg-[#2BD36B]/10"
                                   : "border-transparent"
                             } ${
                               cell.isToday
                                 ? "bg-transparent"
+                                : hasItems
+                                  ? ""
                                 : darkMode ? "bg-white/12" : "bg-black/8"
                             }`}
                           />
@@ -4405,13 +4423,13 @@ export default function Profile() {
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-2 text-sm font-black ${
                             items.length
                               ? selected
-                                ? "border-[#F0A623] bg-[#F0A623] text-black shadow-[0_0_10px_rgba(240,166,35,0.24)]"
+                                ? "border-[#F0A623] bg-[#F0A623] text-black shadow-[0_0_14px_rgba(240,166,35,0.32)]"
                                 : darkMode
-                                  ? "border-[#F0A623] bg-[#171717] text-white"
-                                  : "border-[#F0A623] bg-white text-black"
+                                  ? "border-[#F0A623] bg-[#F0A623]/12 text-white shadow-[0_0_0_1px_rgba(240,166,35,0.18)]"
+                                  : "border-[#F0A623] bg-[#F0A623]/10 text-black shadow-[0_0_0_1px_rgba(240,166,35,0.16)]"
                               : cell.isToday
                               ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
                               : selected

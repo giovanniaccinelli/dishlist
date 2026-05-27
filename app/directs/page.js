@@ -46,7 +46,7 @@ const isUserOnline = (user) => {
 
 const formatActiveStatus = (user, t) => {
   const lastActiveMs = getLastActiveMs(user);
-  if (!lastActiveMs) return "";
+  if (!lastActiveMs) return t("Active recently");
   if (Date.now() - lastActiveMs < 2 * 60 * 1000) return t("Online");
   const diffMinutes = Math.max(1, Math.round((Date.now() - lastActiveMs) / 60000));
   if (diffMinutes < 60) return `${t("Active")} ${diffMinutes}m`;
@@ -196,7 +196,7 @@ export default function Directs() {
                       ) : null}
                     </div>
                     {c.activeLabel ? (
-                      <div className={`mt-0.5 text-[11px] font-semibold leading-none ${c.otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/38" : "text-black/38"}`}>
+                      <div className={`mt-0.5 text-[11px] font-semibold leading-none ${c.otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/56" : "text-black/50"}`}>
                         {c.activeLabel}
                       </div>
                     ) : null}

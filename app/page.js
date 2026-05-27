@@ -13,8 +13,6 @@ import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
   getAllDishlistsForUser,
-  getCommentsForDish,
-  getCommentsForStory,
   getDishesFromFirestore,
   getDishesPage,
   getFollowingForUser,
@@ -27,7 +25,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Heart, Send, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import {
@@ -912,12 +910,6 @@ export default function Feed() {
     if (!userId) return [];
     setActivityLoading(true);
     try {
-      const [userSnap, uploadedDishes] = await Promise.all([
-        getDoc(doc(db, "users", userId)),
-        getDishesFromFirestore(userId),
-      ]);
-      const userData = userSnap.exists() ? userSnap.data() || {} : {};
-      const followers = Array.isArray(userData.followers) ? userData.followers : [];
       const activitySnap = await getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
         console.error("Failed to load timestamped activity:", error);
         return { docs: [] };
@@ -943,19 +935,6 @@ export default function Feed() {
           timeMs: timestampToMs(event.createdAt || event.updatedAt),
         };
       });
-      const followerUsers = await getUsersByIds(followers).catch((error) => {
-        console.error("Failed to load follower activity:", error);
-        return [];
-      });
-      const followerItems = followerUsers.map((follower) => ({
-        id: `follow-${follower.id}`,
-        kind: "follow",
-        icon: UserPlus,
-        actor: follower.displayName || follower.name || "Someone",
-        text: t("started following you"),
-        href: `/profile/${follower.id}`,
-        timeMs: timestampToMs(userData.followersSince?.[follower.id] || follower.followingSince?.[userId]),
-      }));
 
       const followedPostItems = followingDeck
         .filter((dish) => {
@@ -974,58 +953,8 @@ export default function Feed() {
           timeMs: timestampToMs(dish.createdAt),
         }));
 
-      const dishCommentGroups = await Promise.all(
-        uploadedDishes.slice(0, 8).map(async (dish) => {
-          const comments = await getCommentsForDish(dish.id, 8, "dish").catch((error) => {
-            console.error("Failed to load dish activity comments:", error);
-            return [];
-          });
-          return comments
-            .filter((comment) => comment.userId !== userId)
-            .map((comment) => ({
-              id: `dish-comment-${dish.id}-${comment.id}`,
-              kind: "comment",
-              icon: MessageCircle,
-              actor: comment.userName || "Someone",
-              text: t("commented on your dish"),
-              detail: dish.name || "",
-              href: `/dish/${dish.id}?source=uploaded&mode=single`,
-              timeMs: timestampToMs(comment.createdAt),
-            }));
-        })
-      );
-
-      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(6))).catch((error) => {
-        console.error("Failed to load story activity:", error);
-        return { docs: [] };
-      });
-      const storyCommentGroups = await Promise.all(
-        storySnap.docs.map(async (storyDoc) => {
-          const story = { id: storyDoc.id, ...storyDoc.data() };
-          const comments = await getCommentsForStory(userId, storyDoc.id, 8).catch((error) => {
-            console.error("Failed to load story activity comments:", error);
-            return [];
-          });
-          return comments
-            .filter((comment) => comment.userId !== userId)
-            .map((comment) => ({
-              id: `story-comment-${storyDoc.id}-${comment.id}`,
-              kind: "comment",
-              icon: MessageCircle,
-              actor: comment.userName || "Someone",
-              text: t("commented on your story"),
-              detail: story.name || story.dishName || "",
-              href: "/profile",
-              timeMs: timestampToMs(comment.createdAt),
-            }));
-        })
-      );
-
       const items = [
-        ...followerItems,
         ...followedPostItems,
-        ...dishCommentGroups.flat(),
-        ...storyCommentGroups.flat(),
         ...saveActivityItems,
       ]
         .filter((item) => item.id)

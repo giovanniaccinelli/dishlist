@@ -66,7 +66,7 @@ const isUserOnline = (user) => {
 
 const formatActiveStatus = (user, t) => {
   const lastActiveMs = getLastActiveMs(user);
-  if (!lastActiveMs) return "";
+  if (!lastActiveMs) return t("Active recently");
   if (Date.now() - lastActiveMs < 2 * 60 * 1000) return t("Online");
   const diffMinutes = Math.max(1, Math.round((Date.now() - lastActiveMs) / 60000));
   if (diffMinutes < 60) return `${t("Active")} ${diffMinutes}m`;
@@ -98,6 +98,7 @@ export default function DirectChat() {
   const isRestaurantDish = (dish) => String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
   const otherOnline = isUserOnline(otherUser);
   const otherActiveLabel = formatActiveStatus(otherUser, t);
+  const latestOwnMessageId = [...messages].reverse().find((message) => message?.senderId === user?.uid)?.id || "";
   const messageReadByOther = (message) =>
     message?.senderId === user?.uid &&
     otherUser?.id &&
@@ -106,6 +107,7 @@ export default function DirectChat() {
 
   const DeliveryTicks = ({ message }) => {
     if (message?.senderId !== user?.uid) return null;
+    if (message?.id !== latestOwnMessageId) return null;
     const read = messageReadByOther(message);
     const Icon = read ? CheckCheck : Check;
     return (
@@ -268,7 +270,7 @@ export default function DirectChat() {
           <div className="min-w-0">
             <div className="truncate text-xl font-bold leading-none">{otherUser?.displayName || t("Chat")}</div>
             {otherActiveLabel ? (
-              <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold leading-none ${otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/42" : "text-black/42"}`}>
+              <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold leading-none ${otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/58" : "text-black/52"}`}>
                 {otherOnline ? <span className="h-1.5 w-1.5 rounded-full bg-[#2BD36B]" /> : null}
                 <span>{otherActiveLabel}</span>
               </div>

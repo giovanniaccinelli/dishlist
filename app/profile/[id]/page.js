@@ -1593,18 +1593,23 @@ export default function PublicProfile() {
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
-                            cell.isToday
-                              ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
-                              : selected
-                                ? darkMode ? "border-white bg-white text-black" : "border-black bg-black text-white"
-                                : cell.inMonth
-                                  ? darkMode ? "border-white/8 bg-[#171717] text-white/78" : "border-black/8 bg-white text-black/72"
-                                  : darkMode ? "border-white/[0.04] bg-white/[0.03] text-white/20" : "border-black/[0.04] bg-black/[0.02] text-black/20"
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-2 text-sm font-black ${
+                            items.length
+                              ? selected
+                                ? "border-[#F0A623] bg-[#F0A623] text-black shadow-[0_0_14px_rgba(240,166,35,0.32)]"
+                                : darkMode
+                                  ? "border-[#F0A623] bg-[#F0A623]/12 text-white shadow-[0_0_0_1px_rgba(240,166,35,0.18)]"
+                                  : "border-[#F0A623] bg-[#F0A623]/10 text-black shadow-[0_0_0_1px_rgba(240,166,35,0.16)]"
+                              : cell.isToday
+                                ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
+                                : selected
+                                  ? darkMode ? "border-white bg-white text-black" : "border-black bg-black text-white"
+                                  : cell.inMonth
+                                    ? darkMode ? "border-white/8 bg-[#171717] text-white/78" : "border-black/8 bg-white text-black/72"
+                                    : darkMode ? "border-white/[0.04] bg-white/[0.03] text-white/20" : "border-black/[0.04] bg-black/[0.02] text-black/20"
                           }`}
                         >
                           {cell.date.getDate()}
-                          {items.length ? <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-[#E64646]" /> : null}
                         </button>
                       );
                     })}

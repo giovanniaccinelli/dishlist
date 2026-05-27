@@ -30,7 +30,7 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
-import { getAllDishesFromFirestore, getLeaderboardQuestions, getLeaderboardRestaurantAnswers, getTrendingStoryDishes } from "../lib/firebaseHelpers";
+import { getDishesPage, getLeaderboardQuestions, getLeaderboardRestaurantAnswers, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getRestaurantDishGroups } from "../lib/restaurants";
@@ -767,7 +767,7 @@ export default function Explore() {
     (async () => {
       setLoading(true);
       const [all, trending, questions, restaurantAnswers] = await Promise.all([
-        getAllDishesFromFirestore(),
+        getDishesPage({ pageSize: 420, enrichOwners: false }).then((result) => result.items || []),
         getTrendingStoryDishes(20),
         getLeaderboardQuestions(8),
         getLeaderboardRestaurantAnswers(),

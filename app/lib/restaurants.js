@@ -33,6 +33,16 @@ function getDishOwnerId(dish) {
   return String(dish?.owner || dish?.ownerId || dish?.userId || dish?.uploadedBy || dish?.createdBy || "").trim();
 }
 
+function getDishOwnerAliases(dish) {
+  return Array.from(
+    new Set(
+      [dish?.owner, dish?.ownerId, dish?.userId, dish?.uploadedBy, dish?.createdBy]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 function getDishOwnerName(dish) {
   return String(dish?.ownerName || dish?.userName || dish?.uploadedByName || dish?.createdByName || "User").trim();
 }
@@ -62,18 +72,24 @@ export function getRestaurantDishGroups(dishes = [], leaderboardAnswers = []) {
 
     const userId = getDishOwnerId(dish);
     if (userId) {
+      const aliases = getDishOwnerAliases(dish);
       let userEntry = existing.users.find((item) => item.id === userId);
+      if (!userEntry && aliases.length) {
+        userEntry = existing.users.find((item) => (item.aliases || []).some((alias) => aliases.includes(alias)));
+      }
       if (!userEntry) {
         userEntry = {
           id: userId,
           name: getDishOwnerName(dish),
           photoURL: getDishOwnerPhotoURL(dish),
+          aliases,
           dishes: [],
         };
         existing.users.push(userEntry);
       } else {
         userEntry.name = userEntry.name || getDishOwnerName(dish);
         userEntry.photoURL = userEntry.photoURL || getDishOwnerPhotoURL(dish);
+        userEntry.aliases = Array.from(new Set([...(userEntry.aliases || []), ...aliases, userEntry.id].filter(Boolean)));
       }
       if (dish?.id && !userEntry.dishes.some((item) => item.id === dish.id)) {
         userEntry.dishes.push(dish);
@@ -107,10 +123,13 @@ export function getRestaurantDishGroups(dishes = [], leaderboardAnswers = []) {
           id: userId,
           name: answer?.anonymous ? "Anonimo" : answer?.userName || "User",
           photoURL: answer?.anonymous ? "" : answer?.userPhotoURL || "",
+          aliases: [userId],
           dishes: [],
           leaderboardAnswers: [],
         };
         existing.users.push(userEntry);
+      } else {
+        userEntry.aliases = Array.from(new Set([...(userEntry.aliases || []), userId].filter(Boolean)));
       }
       userEntry.leaderboardAnswers = userEntry.leaderboardAnswers || [];
       if (answer?.id && !userEntry.leaderboardAnswers.some((item) => item.id === answer.id && item.questionId === answer.questionId)) {

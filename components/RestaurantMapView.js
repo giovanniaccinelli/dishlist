@@ -38,6 +38,28 @@ function getRestaurantMarkerIcon(markerTone = "default") {
   };
 }
 
+function normalizeUserIds(values = []) {
+  return new Set(
+    (Array.isArray(values) ? values : [values])
+      .flatMap((value) => {
+        if (!value || typeof value !== "object") return [value];
+        return [value.id, value.uid, value.userId, value.owner, value.ownerId, value.profileId];
+      })
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  );
+}
+
+function getMapUserIds(mapUser) {
+  return [mapUser?.id, ...(Array.isArray(mapUser?.aliases) ? mapUser.aliases : [])]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
+function mapUserMatchesIdSet(mapUser, idSet) {
+  return getMapUserIds(mapUser).some((id) => idSet.has(id));
+}
+
 function createFollowedAvatarOverlay({ map, position, users, onClick }) {
   if (typeof window === "undefined" || !window.google?.maps || !users?.length) return null;
   const overlay = new window.google.maps.OverlayView();
@@ -158,7 +180,8 @@ export default function RestaurantMapView({
   const [followingIds, setFollowingIds] = useState([]);
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
-  const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
+  const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
+  const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
 
   const focusMapOnGroup = (group, { keepAboveSheet = false } = {}) => {
     if (!mapRef.current || !group || !Number.isFinite(group.lat) || !Number.isFinite(group.lng)) return;
@@ -187,15 +210,15 @@ export default function RestaurantMapView({
   const selectedGroupUsers = useMemo(() => {
     const users = Array.isArray(selectedGroup?.users) ? [...selectedGroup.users] : [];
     return users.sort((a, b) => {
-      const aFollowed = followingIdSet.has(String(a?.id || "").trim()) ? 1 : 0;
-      const bFollowed = followingIdSet.has(String(b?.id || "").trim()) ? 1 : 0;
+      const aFollowed = mapUserMatchesIdSet(a, followingIdSet) ? 1 : 0;
+      const bFollowed = mapUserMatchesIdSet(b, followingIdSet) ? 1 : 0;
       if (aFollowed !== bFollowed) return bFollowed - aFollowed;
-      const aOwn = user?.uid && String(a?.id || "") === String(user.uid) ? 1 : 0;
-      const bOwn = user?.uid && String(b?.id || "") === String(user.uid) ? 1 : 0;
+      const aOwn = mapUserMatchesIdSet(a, ownIdSet) ? 1 : 0;
+      const bOwn = mapUserMatchesIdSet(b, ownIdSet) ? 1 : 0;
       if (aOwn !== bOwn) return bOwn - aOwn;
       return String(a?.name || "").localeCompare(String(b?.name || ""));
     });
-  }, [followingIdSet, selectedGroup?.users, user?.uid]);
+  }, [followingIdSet, ownIdSet, selectedGroup?.users]);
   const selectedGroupDishes = useMemo(() => {
     if (!selectedGroupUsers.length) return [];
     return selectedGroupUsers
@@ -363,11 +386,11 @@ export default function RestaurantMapView({
     const bounds = new window.google.maps.LatLngBounds();
     groups.forEach((group) => {
       const position = { lat: group.lat, lng: group.lng };
-      const followedUsers = (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim()));
-      const ownUsers = (group.users || []).filter((groupUser) => String(groupUser.id || "").trim() === String(user?.uid || "").trim());
+      const followedUsers = (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet));
+      const ownUsers = (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, ownIdSet));
       const hasFollowedUser = followedUsers.length > 0;
       const hasOwnUser = ownUsers.length > 0;
-      const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => String(groupUser.id || "").trim() !== String(user?.uid || "").trim())];
+      const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
@@ -417,7 +440,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [followingIdSet, groups, mapState, user?.uid]);
+  }, [followingIdSet, groups, mapState, ownIdSet]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;

@@ -59,6 +59,28 @@ function getRestaurantMarkerIcon(markerTone = "default") {
   };
 }
 
+function normalizeUserIds(values = []) {
+  return new Set(
+    (Array.isArray(values) ? values : [values])
+      .flatMap((value) => {
+        if (!value || typeof value !== "object") return [value];
+        return [value.id, value.uid, value.userId, value.owner, value.ownerId, value.profileId];
+      })
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  );
+}
+
+function getMapUserIds(mapUser) {
+  return [mapUser?.id, ...(Array.isArray(mapUser?.aliases) ? mapUser.aliases : [])]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
+function mapUserMatchesIdSet(mapUser, idSet) {
+  return getMapUserIds(mapUser).some((id) => idSet.has(id));
+}
+
 function createPreviewAvatarOverlay({ map, position, users }) {
   if (typeof window === "undefined" || !window.google?.maps || !users?.length) return null;
   const overlay = new window.google.maps.OverlayView();
@@ -135,7 +157,8 @@ export default function MapPreview({
   const markersRef = useRef([]);
   const [state, setState] = useState("loading");
   const [followingIds, setFollowingIds] = useState([]);
-  const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
+  const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
+  const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
 
   useEffect(() => {
     if (!showAvatars) {
@@ -196,10 +219,10 @@ export default function MapPreview({
     markersRef.current = [];
     groups.forEach((group) => {
       if (!Number.isFinite(group?.lat) || !Number.isFinite(group?.lng)) return;
-      const ownUsers = showAvatars ? (group.users || []).filter((groupUser) => String(groupUser.id || "").trim() === String(user?.uid || "").trim()) : [];
-      const followedUsers = showAvatars ? (group.users || []).filter((groupUser) => followingIdSet.has(String(groupUser.id || "").trim())) : [];
+      const ownUsers = showAvatars ? (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, ownIdSet)) : [];
+      const followedUsers = showAvatars ? (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet)) : [];
       const hasOwnUser = ownUsers.length > 0;
-      const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => String(groupUser.id || "").trim() !== String(user?.uid || "").trim())];
+      const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position: { lat: group.lat, lng: group.lng },
@@ -228,7 +251,7 @@ export default function MapPreview({
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
-  }, [focusSingleGroup, followingIdSet, groups, showAvatars, singleGroupZoom, state, user?.uid, verticalOffsetPx]);
+  }, [focusSingleGroup, followingIdSet, groups, ownIdSet, showAvatars, singleGroupZoom, state, verticalOffsetPx]);
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${className}`}>

@@ -540,7 +540,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap 
           </button>
         </div>
         <div
-          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-13.25rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-15.5rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
         >

@@ -109,8 +109,8 @@ export default function DirectChat() {
     const read = messageReadByOther(message);
     const Icon = read ? CheckCheck : Check;
     return (
-      <span className={`inline-flex items-center ${read ? "text-[#5FA8F2]" : "text-white/58"}`} aria-label={read ? t("Read") : t("Sent")}>
-        <Icon size={13} strokeWidth={2.4} />
+      <span className={`inline-flex items-center align-[-2px] ${read ? "text-[#5FA8F2]" : "text-current opacity-55"}`} aria-label={read ? t("Read") : t("Sent")}>
+        <Icon size={12} strokeWidth={2.35} />
       </span>
     );
   };
@@ -430,12 +430,10 @@ export default function DirectChat() {
                           : "border border-[#E7DCC7] bg-[linear-gradient(180deg,#FFFDF7_0%,#F7F0E3_100%)] text-black"
                     }`}
                   >
-                    <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
-                    {isMine ? (
-                      <div className="mt-1 flex justify-end">
-                        <DeliveryTicks message={m} />
-                      </div>
-                    ) : null}
+                    <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">
+                      {m.text}
+                      {isMine ? <span className="ml-1.5"><DeliveryTicks message={m} /></span> : null}
+                    </div>
                   </motion.div>
                 </div>
               </div>

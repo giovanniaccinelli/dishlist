@@ -807,13 +807,13 @@ export default function Profile() {
 
     const savedRef = collection(db, "users", user.uid, "saved");
     const unsubscribeSaved = onSnapshot(savedRef, async () => {
-      const saved = await getSavedDishesFromFirestore(user.uid);
+      const saved = await getSavedDishesFromFirestore(user.uid, { force: true });
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
     const unsubscribeToTry = onSnapshot(toTryRef, async () => {
-      const items = await getToTryDishesFromFirestore(user.uid);
+      const items = await getToTryDishesFromFirestore(user.uid, { force: true });
       setToTryDishes(items);
     });
 
@@ -2357,14 +2357,18 @@ export default function Profile() {
                         return (
                           <div
                             key={cell.dayKey}
-                            className={`relative rounded-[0.32rem] ${
+                            className={`relative rounded-[0.32rem] border ${
+                              hasItems
+                                ? "border-[#F0A623]"
+                                : cell.isToday
+                                  ? "border-[#2BD36B]"
+                                  : "border-transparent"
+                            } ${
                               cell.isToday
-                                ? "border border-[#F0A623] bg-transparent"
+                                ? "bg-transparent"
                                 : darkMode ? "bg-white/12" : "bg-black/8"
                             }`}
-                          >
-                            {hasItems ? <span className="absolute bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#F0A623]" /> : null}
-                          </div>
+                          />
                         );
                       })}
                     </div>
@@ -4402,7 +4406,13 @@ export default function Profile() {
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
                           className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
-                            cell.isToday
+                            items.length
+                              ? selected
+                                ? "border-[#F0A623] bg-[#F0A623] text-black shadow-[0_0_10px_rgba(240,166,35,0.24)]"
+                                : darkMode
+                                  ? "border-[#F0A623] bg-[#171717] text-white"
+                                  : "border-[#F0A623] bg-white text-black"
+                              : cell.isToday
                               ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
                               : selected
                                 ? darkMode ? "border-white bg-white text-black" : "border-black bg-black text-white"
@@ -4412,7 +4422,6 @@ export default function Profile() {
                           }`}
                         >
                           {cell.date.getDate()}
-                          {items.length ? <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-[#E64646]" /> : null}
                         </button>
                       );
                     })}

@@ -792,7 +792,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     try {
       await animate(dragX, targetX, {
         type: "tween",
-        duration: 0.27,
+        duration: 0.42,
         ease: [0.22, 1, 0.36, 1],
       }).finished;
     } catch {}
@@ -938,7 +938,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       try {
         await animate(dragX, targetX, {
           type: "tween",
-          duration: 0.27,
+          duration: 0.42,
           ease: [0.22, 1, 0.36, 1],
         }).finished;
       } catch {}

@@ -195,10 +195,14 @@ export default function Directs() {
                         <div className={`ml-auto shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/40" : "text-black/38"}`}>{c.updatedLabel}</div>
                       ) : null}
                     </div>
+                    {c.activeLabel ? (
+                      <div className={`mt-0.5 text-[11px] font-semibold leading-none ${c.otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/38" : "text-black/38"}`}>
+                        {c.activeLabel}
+                      </div>
+                    ) : null}
                     <div className={`mt-1 flex min-w-0 items-center gap-1.5 text-sm ${unread ? "font-semibold" : "font-medium"} ${darkMode ? "text-white/58" : "text-black/55"}`}>
                       {c.lastMessage?.type === "dish" ? <SendHorizonal size={13} className="shrink-0" /> : null}
                       <span className="truncate">{c.preview}</span>
-                      {c.activeLabel ? <span className={`ml-auto shrink-0 text-[11px] font-semibold ${c.otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/34" : "text-black/34"}`}>{c.activeLabel}</span> : null}
                     </div>
                   </div>
                 </Link>

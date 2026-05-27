@@ -886,7 +886,8 @@ export async function upgradeToMyDishlist(userId, dish) {
   return true;
 }
 
-export async function getToTryDishesFromFirestore(userId) {
+export async function getToTryDishesFromFirestore(userId, { force = false } = {}) {
+  if (force) clearReadCache(userId);
   return cachedRead(`user:${userId}:toTry`, async () => {
     const toTrySub = await getDocs(collection(db, "users", userId, "toTry"));
     const results = toTrySub.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -1976,7 +1977,8 @@ export async function markConversationAsRead(conversationId, userId) {
 }
 
 // Get dishes saved by user
-export async function getSavedDishesFromFirestore(userId) {
+export async function getSavedDishesFromFirestore(userId, { force = false } = {}) {
+  if (force) clearReadCache(userId);
   return cachedRead(`user:${userId}:saved`, async () => {
   const savedSub = await getDocs(collection(db, "users", userId, "saved"));
   const results = savedSub.docs.map((d) => ({ id: d.id, ...d.data() }));

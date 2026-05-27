@@ -40,7 +40,7 @@ import {
   hasChosenOpeningDishMode,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
+import { arrayUnion, collection, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { getDishImageUrl, isDishVideo } from "./lib/dishImage";
@@ -153,6 +153,7 @@ export default function Feed() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [activitySeenAt, setActivitySeenAt] = useState(0);
   const [activityPingAt, setActivityPingAt] = useState(0);
+  const [activitySeenHydrated, setActivitySeenHydrated] = useState(false);
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
@@ -168,7 +169,9 @@ export default function Feed() {
     () => activityItems.filter((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0)),
     [activityItems, activitySeenAt]
   );
-  const hasActivityUpdate = unseenActivityItems.length > 0 || Number(activityPingAt || 0) > Number(activitySeenAt || 0);
+  const hasActivityUpdate =
+    activitySeenHydrated &&
+    (unseenActivityItems.length > 0 || Number(activityPingAt || 0) > Number(activitySeenAt || 0));
 
   const isOwnDish = (dish) => {
     if (!userId || !dish) return false;
@@ -208,6 +211,7 @@ export default function Feed() {
   useEffect(() => {
     if (!userId || typeof window === "undefined") {
       setActivitySeenAt(0);
+      setActivitySeenHydrated(false);
       return;
     }
     let cancelled = false;
@@ -218,7 +222,10 @@ export default function Feed() {
         const snap = await getDoc(doc(db, "users", userId));
         remoteSeen = timestampToMs(snap.data()?.feedActivitySeenAt);
       } catch {}
-      if (!cancelled) setActivitySeenAt(Math.max(localSeen, remoteSeen));
+      if (!cancelled) {
+        setActivitySeenAt(Math.max(localSeen, remoteSeen));
+        setActivitySeenHydrated(true);
+      }
     })();
     return () => {
       cancelled = true;
@@ -968,7 +975,7 @@ export default function Feed() {
         }));
 
       const dishCommentGroups = await Promise.all(
-        uploadedDishes.slice(0, 24).map(async (dish) => {
+        uploadedDishes.slice(0, 8).map(async (dish) => {
           const comments = await getCommentsForDish(dish.id, 8, "dish").catch((error) => {
             console.error("Failed to load dish activity comments:", error);
             return [];
@@ -988,7 +995,7 @@ export default function Feed() {
         })
       );
 
-      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(12))).catch((error) => {
+      const storySnap = await getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(6))).catch((error) => {
         console.error("Failed to load story activity:", error);
         return { docs: [] };
       });
@@ -1014,70 +1021,12 @@ export default function Feed() {
         })
       );
 
-      const saveGroups = await Promise.all(
-        uploadedDishes.slice(0, 12).map(async (dish) => {
-          try {
-            const savedSnap = await getDocs(query(collectionGroup(db, "saved"), where("id", "==", dish.id), limitResults(8)));
-            const events = savedSnap.docs
-              .map((savedDoc) => {
-                const saverId = savedDoc.ref.parent.parent?.id || "";
-                return {
-                  saverId,
-                  savedAt: savedDoc.data()?.savedAt || savedDoc.data()?.addedAt || null,
-                };
-              })
-              .filter((event) => event.saverId && event.saverId !== userId);
-            const saverUsers = await getUsersByIds(events.map((event) => event.saverId));
-            const usersById = new Map(saverUsers.map((saver) => [saver.id, saver]));
-            return events.slice(0, 4).map((event) => {
-              const saver = usersById.get(event.saverId);
-              return {
-                id: `save-${dish.id}-${event.saverId}`,
-                kind: "save",
-                icon: Heart,
-                actor: saver?.displayName || saver?.name || "Someone",
-                text: t("saved your dish"),
-                detail: dish.name || "",
-                href: `/dish/${dish.id}?source=uploaded&mode=single`,
-                timeMs: timestampToMs(event.savedAt),
-              };
-            });
-          } catch (error) {
-            console.error("Failed to load timestamped save activity:", error);
-            const savers = await getUsersWhoSavedDish(dish.id).catch(() => []);
-            const directEvents = await Promise.all(
-              savers
-                .filter((saver) => saver.id !== userId)
-                .slice(0, 3)
-                .map(async (saver) => {
-                  const savedDoc = await getDoc(doc(db, "users", saver.id, "saved", dish.id)).catch(() => null);
-                  const savedData = savedDoc?.exists?.() ? savedDoc.data() || {} : {};
-                  return { saver, savedAt: savedData.savedAt || savedData.addedAt || null };
-                })
-            );
-            return directEvents
-              .filter(({ saver }) => saver?.id && saver.id !== userId)
-              .map(({ saver, savedAt }) => ({
-                id: `save-${dish.id}-${saver.id}`,
-                kind: "save",
-                icon: Heart,
-                actor: saver.displayName || saver.name || "Someone",
-                text: t("saved your dish"),
-                detail: dish.name || "",
-                href: `/dish/${dish.id}?source=uploaded&mode=single`,
-                timeMs: timestampToMs(savedAt),
-              }));
-          }
-        })
-      );
-
       const items = [
         ...followerItems,
         ...followedPostItems,
         ...dishCommentGroups.flat(),
         ...storyCommentGroups.flat(),
         ...saveActivityItems,
-        ...saveGroups.flat(),
       ]
         .filter((item) => item.id)
         .reduce((unique, item) => {
@@ -1104,16 +1053,8 @@ export default function Feed() {
     if (!userId) {
       setActivityItems([]);
       setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
-      return undefined;
     }
-    let cancelled = false;
-    buildActivityItems().then((items) => {
-      if (!cancelled) setActivityItems(items);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, followingDeck, followingSinceById]);
+  }, [userId]);
 
   const openActivity = async () => {
     if (!userId) {
@@ -1122,14 +1063,14 @@ export default function Feed() {
     }
     setActivityOpen(true);
     setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
-    await buildActivityItems();
     const now = Date.now();
     setActivitySeenAt(now);
-    setActivityPingAt((value) => Math.min(Number(value || 0), now));
+    setActivityPingAt(0);
     if (typeof window !== "undefined") {
       localStorage.setItem(activitySeenStorageKey(userId), String(now));
     }
     setDoc(doc(db, "users", userId), { feedActivitySeenAt: new Date(now) }, { merge: true }).catch(() => {});
+    await buildActivityItems();
   };
 
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
@@ -1189,10 +1130,6 @@ export default function Feed() {
   }
 
   if (loading || (loadingDishes && !hasLoadedFeedCards)) {
-    return <FeedLogoLoading />;
-  }
-
-  if (!feedHasRendered && !firstFeedCardReady) {
     return <FeedLogoLoading />;
   }
 

@@ -142,6 +142,7 @@ export default function RestaurantMapView({
   const { t } = useLanguage();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
+  const sheetRef = useRef(null);
   const markersRef = useRef([]);
   const mapGestureUntilRef = useRef(0);
   const autocompleteServiceRef = useRef(null);
@@ -158,6 +159,25 @@ export default function RestaurantMapView({
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
+
+  const focusMapOnGroup = (group, { keepAboveSheet = false } = {}) => {
+    if (!mapRef.current || !group || !Number.isFinite(group.lat) || !Number.isFinite(group.lng)) return;
+    mapRef.current.panTo({ lat: group.lat, lng: group.lng });
+    const currentZoom = mapRef.current.getZoom?.() || 0;
+    if (currentZoom < 14) {
+      mapRef.current.setZoom(14);
+    }
+    if (!keepAboveSheet) return;
+    window.requestAnimationFrame(() => {
+      const mapHeight = mapNodeRef.current?.getBoundingClientRect?.().height || 0;
+      const sheetHeight = sheetRef.current?.getBoundingClientRect?.().height || 0;
+      if (!mapHeight || !sheetHeight || !mapRef.current?.panBy) return;
+      const currentPinY = mapHeight / 2;
+      const desiredPinY = Math.max(72, mapHeight - sheetHeight - 48);
+      const shiftY = Math.max(0, currentPinY - desiredPinY);
+      if (shiftY > 6) mapRef.current.panBy(0, shiftY);
+    });
+  };
 
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
@@ -223,13 +243,7 @@ export default function RestaurantMapView({
   }, [user?.uid]);
 
   useEffect(() => {
-    if (!selectedGroup || !mapRef.current) return;
-    if (!Number.isFinite(selectedGroup.lat) || !Number.isFinite(selectedGroup.lng)) return;
-    mapRef.current.panTo({ lat: selectedGroup.lat, lng: selectedGroup.lng });
-    const currentZoom = mapRef.current.getZoom?.() || 0;
-    if (currentZoom < 14) {
-      mapRef.current.setZoom(14);
-    }
+    focusMapOnGroup(selectedGroup, { keepAboveSheet: true });
   }, [selectedGroup?.placeId]);
 
   useEffect(() => {
@@ -430,10 +444,7 @@ export default function RestaurantMapView({
     if (!group) return;
     setSheetDirection(direction);
     setSelectedPlaceId(group.placeId || "");
-    if (mapRef.current && typeof group.lat === "number" && typeof group.lng === "number") {
-      mapRef.current.panTo({ lat: group.lat, lng: group.lng });
-      mapRef.current.setZoom(14);
-    }
+    focusMapOnGroup(group, { keepAboveSheet: true });
     setQuery(group.name || "");
     setPredictions([]);
     setSearchFocused(false);
@@ -574,6 +585,7 @@ export default function RestaurantMapView({
 
         {selectedGroup && mapState === "ready" ? (
           <div
+            ref={sheetRef}
             className="absolute inset-x-3 bottom-3 z-10 overflow-visible"
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };

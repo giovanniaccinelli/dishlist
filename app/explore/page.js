@@ -52,7 +52,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
 const ROW_PREVIEW_LIMIT = 10;
-const TAP_MOVE_THRESHOLD = 10;
+const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
 
 function toTitleCase(value = "") {
@@ -67,19 +67,25 @@ function SafeDishOpenButton({ href, label }) {
   const router = useRouter();
   const pointerStartRef = useRef(null);
   const movedRef = useRef(false);
+  const activePointersRef = useRef(new Set());
 
   const resetPointer = () => {
     pointerStartRef.current = null;
     movedRef.current = false;
+    activePointersRef.current.clear();
   };
 
   const handlePointerDown = (event) => {
-    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    activePointersRef.current.add(event.pointerId);
+    pointerStartRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
     movedRef.current = false;
+    if (activePointersRef.current.size > 1 || event.isPrimary === false) {
+      movedRef.current = true;
+    }
   };
 
   const handlePointerMove = (event) => {
-    if (!pointerStartRef.current || movedRef.current) return;
+    if (!pointerStartRef.current || pointerStartRef.current.id !== event.pointerId || movedRef.current) return;
     const dx = event.clientX - pointerStartRef.current.x;
     const dy = event.clientY - pointerStartRef.current.y;
     if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD) {
@@ -87,8 +93,14 @@ function SafeDishOpenButton({ href, label }) {
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (event) => {
+    const multiTouch = activePointersRef.current.size > 1;
+    activePointersRef.current.delete(event.pointerId);
     if (!movedRef.current) {
+      if (multiTouch) {
+        resetPointer();
+        return;
+      }
       router.push(href);
     }
     resetPointer();
@@ -406,7 +418,7 @@ function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
       aria-label={label}
     >
       <Icon size={18} className="text-black" />
-      {highlighted ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+      {highlighted ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
     </Link>
   );
 }
@@ -527,17 +539,15 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
             </div>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onExpand}
+        <div
           className={`no-accent-border relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
-          aria-label="Open map"
         >
+          <SafeDishOpenButton href="/map" label="Open map" />
           <MapPreview groups={row.groups || []} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        </button>
+        </div>
       </section>
     );
   }

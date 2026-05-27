@@ -20,7 +20,7 @@ import {
   updateProfile as firebaseUpdateProfile,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
-import { setDoc, doc, getDoc } from "firebase/firestore";
+import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
@@ -154,6 +154,27 @@ export function AuthProvider({ children }) {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return undefined;
+    const userRef = doc(db, "users", user.uid);
+    const touchPresence = () => {
+      setDoc(userRef, { lastActiveAt: serverTimestamp() }, { merge: true }).catch(() => {});
+    };
+    touchPresence();
+    const intervalId = window.setInterval(touchPresence, 60000);
+    const handleVisibility = () => {
+      if (!document.hidden) touchPresence();
+    };
+    const handlePageHide = () => touchPresence();
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [user?.uid]);
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();

@@ -2174,7 +2174,7 @@ export default function Profile() {
             aria-label={t("Directs")}
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </button>
           <button
             type="button"

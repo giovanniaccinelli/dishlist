@@ -140,6 +140,7 @@ export default function RestaurantMapView({
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const mapGestureUntilRef = useRef(0);
   const autocompleteServiceRef = useRef(null);
   const placesServiceRef = useRef(null);
   const requestRef = useRef(0);
@@ -152,6 +153,7 @@ export default function RestaurantMapView({
   const [sheetDirection, setSheetDirection] = useState(0);
   const [followingIds, setFollowingIds] = useState([]);
   const swipeStartRef = useRef(null);
+  const carouselTapRef = useRef(null);
   const followingIdSet = useMemo(() => new Set((followingIds || []).map((id) => String(id || "").trim()).filter(Boolean)), [followingIds]);
 
   const selectedGroup = useMemo(() => {
@@ -290,6 +292,12 @@ export default function RestaurantMapView({
         },
       ],
     });
+    mapRef.current.addListener("dragstart", () => {
+      mapGestureUntilRef.current = Date.now() + 450;
+    });
+    mapRef.current.addListener("zoom_changed", () => {
+      mapGestureUntilRef.current = Date.now() + 650;
+    });
   }, [mapState]);
 
   useEffect(() => {
@@ -316,14 +324,20 @@ export default function RestaurantMapView({
         title: group.name,
         icon: getRestaurantMarkerIcon(hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default"),
       });
-      marker.addListener("click", () => setSelectedPlaceId(group.placeId));
+      marker.addListener("click", () => {
+        if (Date.now() < mapGestureUntilRef.current) return;
+        setSelectedPlaceId(group.placeId);
+      });
       markersRef.current.push(marker);
       if (markerUsers.length) {
         const overlay = createFollowedAvatarOverlay({
           map: mapRef.current,
           position,
           users: markerUsers,
-          onClick: () => setSelectedPlaceId(group.placeId),
+          onClick: () => {
+            if (Date.now() < mapGestureUntilRef.current) return;
+            setSelectedPlaceId(group.placeId);
+          },
         });
         if (overlay) markersRef.current.push(overlay);
       }
@@ -579,8 +593,29 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedGroup.users?.length ? (
-                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
+                    <div
+                      className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
                       style={{ WebkitOverflowScrolling: "touch" }}
+                      onPointerDown={(event) => {
+                        carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
+                      }}
+                      onPointerMove={(event) => {
+                        const start = carouselTapRef.current;
+                        if (!start || start.moved) return;
+                        if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
+                          start.moved = true;
+                        }
+                      }}
+                      onClickCapture={(event) => {
+                        if (!carouselTapRef.current?.moved) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onPointerUp={() => {
+                        window.setTimeout(() => {
+                          carouselTapRef.current = null;
+                        }, 0);
+                      }}
                     >
                       {selectedGroup.users.map((user) => (
                         <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-40 shrink-0 snap-start flex-col">

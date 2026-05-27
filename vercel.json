@@ -1,0 +1,3 @@
+{
+  "ignoreCommand": "[ \"$VERCEL_PROJECT_ID\" = \"prj_W34hyl7MGT09yPKlsy32TWCevuL9\" ] && exit 1 || exit 0"
+}

@@ -10,6 +10,7 @@ import { RestaurantMapIcon } from "../../components/DishModeControls";
 import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore, getLeaderboardRestaurantAnswers } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 
 function MapPageContent() {
@@ -17,6 +18,7 @@ function MapPageContent() {
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const { t } = useLanguage();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [dishes, setDishes] = useState([]);
   const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState([]);
   const [loadingMapData, setLoadingMapData] = useState(true);
@@ -74,10 +76,11 @@ function MapPageContent() {
         <button
           type="button"
           onClick={() => router.push(user ? "/directs" : "/")}
-          className="top-action-btn"
+          className="top-action-btn relative"
           aria-label="Directs"
         >
           <Send size={18} />
+          {hasUnreadDirects ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
         </button>
       </div>
 

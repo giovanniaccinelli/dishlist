@@ -12,7 +12,7 @@ import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
-import { ArrowLeft, Plus, Search, SendHorizonal, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCheck, Plus, Search, SendHorizonal, Trash2, Users, X } from "lucide-react";
 import { useLanguage } from "../../../components/LanguageProvider";
 
 const readMarksKey = (userId) => `directs:readMarks:${userId}`;
@@ -54,14 +54,37 @@ const isSameDay = (left, right) => {
   );
 };
 
+const getLastActiveMs = (user) => {
+  const date = toDate(user?.lastActiveAt);
+  return date?.getTime?.() || 0;
+};
+
+const isUserOnline = (user) => {
+  const lastActiveMs = getLastActiveMs(user);
+  return lastActiveMs > 0 && Date.now() - lastActiveMs < 2 * 60 * 1000;
+};
+
+const formatActiveStatus = (user, t) => {
+  const lastActiveMs = getLastActiveMs(user);
+  if (!lastActiveMs) return "";
+  if (Date.now() - lastActiveMs < 2 * 60 * 1000) return t("Online");
+  const diffMinutes = Math.max(1, Math.round((Date.now() - lastActiveMs) / 60000));
+  if (diffMinutes < 60) return `${t("Active")} ${diffMinutes}m`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${t("Active")} ${diffHours}h`;
+  return t("Active recently");
+};
+
 export default function DirectChat() {
   const { id } = useParams();
   const { user } = useAuth();
   const { darkMode, t } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [conversation, setConversation] = useState(null);
   const [input, setInput] = useState("");
   const [otherUser, setOtherUser] = useState(null);
+  const [otherUserId, setOtherUserId] = useState("");
   const [dishMap, setDishMap] = useState({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDish, setConfirmDish] = useState(null);
@@ -73,18 +96,34 @@ export default function DirectChat() {
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const isRestaurantDish = (dish) => String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
+  const otherOnline = isUserOnline(otherUser);
+  const otherActiveLabel = formatActiveStatus(otherUser, t);
+  const messageReadByOther = (message) =>
+    message?.senderId === user?.uid &&
+    otherUser?.id &&
+    Array.isArray(conversation?.readBy) &&
+    conversation.readBy.includes(otherUser.id);
+
+  const DeliveryTicks = ({ message }) => {
+    if (message?.senderId !== user?.uid) return null;
+    const read = messageReadByOther(message);
+    const Icon = read ? CheckCheck : Check;
+    return (
+      <span className={`inline-flex items-center ${read ? "text-[#5FA8F2]" : "text-white/58"}`} aria-label={read ? t("Read") : t("Sent")}>
+        <Icon size={13} strokeWidth={2.4} />
+      </span>
+    );
+  };
 
   useEffect(() => {
     if (!user?.uid || !id) return;
     const convoRef = doc(db, "conversations", id);
-    const unsubConvo = onSnapshot(convoRef, async (snap) => {
+    const unsubConvo = onSnapshot(convoRef, (snap) => {
       if (!snap.exists()) return;
-      const data = snap.data();
+      const data = { id: snap.id, ...snap.data() };
+      setConversation(data);
       const otherId = (data.participants || []).find((p) => p !== user.uid);
-      if (otherId) {
-        const userSnap = await getDoc(doc(db, "users", otherId));
-        setOtherUser(userSnap.exists() ? { id: userSnap.id, ...userSnap.data() } : null);
-      }
+      setOtherUserId(otherId || "");
     });
     const msgsRef = collection(db, "conversations", id, "messages");
     const q = query(msgsRef, orderBy("createdAt", "asc"));
@@ -104,6 +143,16 @@ export default function DirectChat() {
       unsubMsgs();
     };
   }, [id, user?.uid]);
+
+  useEffect(() => {
+    if (!otherUserId) {
+      setOtherUser(null);
+      return undefined;
+    }
+    return onSnapshot(doc(db, "users", otherUserId), (snap) => {
+      setOtherUser(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+    });
+  }, [otherUserId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -216,7 +265,15 @@ export default function DirectChat() {
               otherUser?.displayName?.[0] || "U"
             )}
           </div>
-          <div className="min-w-0 truncate text-xl font-bold leading-none">{otherUser?.displayName || t("Chat")}</div>
+          <div className="min-w-0">
+            <div className="truncate text-xl font-bold leading-none">{otherUser?.displayName || t("Chat")}</div>
+            {otherActiveLabel ? (
+              <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold leading-none ${otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/42" : "text-black/42"}`}>
+                {otherOnline ? <span className="h-1.5 w-1.5 rounded-full bg-[#2BD36B]" /> : null}
+                <span>{otherActiveLabel}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="w-[44px]" />
       </div>
@@ -301,8 +358,11 @@ export default function DirectChat() {
                           }}
                         />
                         <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent px-3 py-2 text-white pointer-events-none flex h-[56%] flex-col justify-end gap-0.5">
-                          <div className="text-[12px] font-semibold leading-tight truncate">
-                            {dish?.name || "Dish"}
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <div className="min-w-0 flex-1 truncate text-[12px] font-semibold leading-tight">
+                              {dish?.name || "Dish"}
+                            </div>
+                            <DeliveryTicks message={m} />
                           </div>
                           <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
                             <Users size={10} strokeWidth={2.2} />
@@ -371,6 +431,11 @@ export default function DirectChat() {
                     }`}
                   >
                     <div className="text-[15px] leading-[1.35] whitespace-pre-wrap break-words">{m.text}</div>
+                    {isMine ? (
+                      <div className="mt-1 flex justify-end">
+                        <DeliveryTicks message={m} />
+                      </div>
+                    ) : null}
                   </motion.div>
                 </div>
               </div>

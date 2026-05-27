@@ -792,8 +792,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     try {
       await animate(dragX, targetX, {
         type: "tween",
-        duration: 0.18,
-        ease: "easeOut",
+        duration: 0.27,
+        ease: [0.22, 1, 0.36, 1],
       }).finished;
     } catch {}
     if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
@@ -938,8 +938,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       try {
         await animate(dragX, targetX, {
           type: "tween",
-          duration: 0.18,
-          ease: "easeOut",
+          duration: 0.27,
+          ease: [0.22, 1, 0.36, 1],
         }).finished;
       } catch {}
       advanceCard();

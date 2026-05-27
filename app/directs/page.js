@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { collection, doc, getDoc, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query } from "firebase/firestore";
 import { MessageCircle, SendHorizonal } from "lucide-react";
 import { db } from "../lib/firebase";
 import { useAuth } from "../lib/auth";
@@ -32,6 +32,27 @@ const formatConversationTime = (value) => {
     return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
   }
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+};
+
+const getLastActiveMs = (user) => {
+  const date = toDate(user?.lastActiveAt);
+  return date?.getTime?.() || 0;
+};
+
+const isUserOnline = (user) => {
+  const lastActiveMs = getLastActiveMs(user);
+  return lastActiveMs > 0 && Date.now() - lastActiveMs < 2 * 60 * 1000;
+};
+
+const formatActiveStatus = (user, t) => {
+  const lastActiveMs = getLastActiveMs(user);
+  if (!lastActiveMs) return "";
+  if (Date.now() - lastActiveMs < 2 * 60 * 1000) return t("Online");
+  const diffMinutes = Math.max(1, Math.round((Date.now() - lastActiveMs) / 60000));
+  if (diffMinutes < 60) return `${t("Active")} ${diffMinutes}m`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${t("Active")} ${diffHours}h`;
+  return t("Active recently");
 };
 
 export default function Directs() {
@@ -65,15 +86,14 @@ export default function Directs() {
       )
     );
     if (otherIds.length === 0) return;
-    (async () => {
-      const entries = await Promise.all(
-        otherIds.map(async (id) => {
-          const snap = await getDoc(doc(db, "users", id));
-          return [id, snap.exists() ? snap.data() : null];
-        })
-      );
-      setUsersMap((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
-    })();
+    const unsubs = otherIds.map((id) =>
+      onSnapshot(doc(db, "users", id), (snap) => {
+        setUsersMap((prev) => ({ ...prev, [id]: snap.exists() ? snap.data() : null }));
+      })
+    );
+    return () => {
+      unsubs.forEach((unsub) => unsub());
+    };
   }, [conversations, user?.uid]);
 
   const displayConvos = useMemo(() => {
@@ -84,6 +104,8 @@ export default function Directs() {
         ...c,
         otherId,
         otherUser,
+        otherOnline: isUserOnline(otherUser),
+        activeLabel: formatActiveStatus(otherUser, t),
         preview:
           c.lastMessage?.type === "dish"
             ? t("Shared a dish")
@@ -168,6 +190,7 @@ export default function Directs() {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-baseline gap-2">
                       <div className={`truncate text-[1.02rem] font-bold leading-tight ${darkMode ? "text-white" : "text-black"}`}>{c.otherUser?.displayName || "User"}</div>
+                      {c.otherOnline ? <span className="h-2 w-2 shrink-0 rounded-full bg-[#2BD36B] shadow-[0_0_0_2px_rgba(43,211,107,0.16)]" /> : null}
                       {c.updatedLabel ? (
                         <div className={`ml-auto shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/40" : "text-black/38"}`}>{c.updatedLabel}</div>
                       ) : null}
@@ -175,6 +198,7 @@ export default function Directs() {
                     <div className={`mt-1 flex min-w-0 items-center gap-1.5 text-sm ${unread ? "font-semibold" : "font-medium"} ${darkMode ? "text-white/58" : "text-black/55"}`}>
                       {c.lastMessage?.type === "dish" ? <SendHorizonal size={13} className="shrink-0" /> : null}
                       <span className="truncate">{c.preview}</span>
+                      {c.activeLabel ? <span className={`ml-auto shrink-0 text-[11px] font-semibold ${c.otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/34" : "text-black/34"}`}>{c.activeLabel}</span> : null}
                     </div>
                   </div>
                 </Link>

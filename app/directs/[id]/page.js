@@ -66,7 +66,7 @@ const isUserOnline = (user) => {
 
 const formatActiveStatus = (user, t) => {
   const lastActiveMs = getLastActiveMs(user);
-  if (!lastActiveMs) return t("Active recently");
+  if (!lastActiveMs) return "";
   if (Date.now() - lastActiveMs < 2 * 60 * 1000) return t("Online");
   const diffMinutes = Math.max(1, Math.round((Date.now() - lastActiveMs) / 60000));
   if (diffMinutes < 60) return `${t("Active")} ${diffMinutes}m`;

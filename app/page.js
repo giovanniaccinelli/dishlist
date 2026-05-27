@@ -13,6 +13,8 @@ import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
   getAllDishlistsForUser,
+  getCommentsForDish,
+  getCommentsForStory,
   getDishesFromFirestore,
   getDishesPage,
   getFollowingForUser,
@@ -25,7 +27,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Heart, Send, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import {
@@ -153,6 +155,7 @@ export default function Feed() {
   const [activityPingAt, setActivityPingAt] = useState(0);
   const [activitySeenHydrated, setActivitySeenHydrated] = useState(false);
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
+  const [activityExpandedLoaded, setActivityExpandedLoaded] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [feedClientReady, setFeedClientReady] = useState(false);
@@ -906,21 +909,32 @@ export default function Feed() {
     setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
   };
 
-  const buildActivityItems = async () => {
+  const buildActivityItems = async ({ includeExpanded = false } = {}) => {
     if (!userId) return [];
     setActivityLoading(true);
     try {
-      const activitySnap = await getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
+      const [userSnap, activitySnap] = await Promise.all([
+        getDoc(doc(db, "users", userId)).catch(() => null),
+        getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
         console.error("Failed to load timestamped activity:", error);
         return { docs: [] };
-      });
+        }),
+      ]);
+      const userData = userSnap?.exists?.() ? userSnap.data() || {} : {};
+      const followers = Array.isArray(userData.followers) ? userData.followers : [];
       const savedActivityEvents = activitySnap.docs
         .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
         .filter((event) => event.kind === "save" && event.actorId && event.actorId !== userId && event.dishId);
-      const saveActivityUsers = await getUsersByIds(savedActivityEvents.map((event) => event.actorId)).catch((error) => {
-        console.error("Failed to load timestamped save actors:", error);
-        return [];
-      });
+      const [saveActivityUsers, followerUsers] = await Promise.all([
+        getUsersByIds(savedActivityEvents.map((event) => event.actorId)).catch((error) => {
+          console.error("Failed to load timestamped save actors:", error);
+          return [];
+        }),
+        getUsersByIds(followers).catch((error) => {
+          console.error("Failed to load follower activity:", error);
+          return [];
+        }),
+      ]);
       const saveActivityUsersById = new Map(saveActivityUsers.map((actor) => [actor.id, actor]));
       const saveActivityItems = savedActivityEvents.map((event) => {
         const actor = saveActivityUsersById.get(event.actorId);
@@ -935,6 +949,15 @@ export default function Feed() {
           timeMs: timestampToMs(event.createdAt || event.updatedAt),
         };
       });
+      const followerItems = followerUsers.map((follower) => ({
+        id: `follow-${follower.id}`,
+        kind: "follow",
+        icon: UserPlus,
+        actor: follower.displayName || follower.name || "Someone",
+        text: t("started following you"),
+        href: `/profile/${follower.id}`,
+        timeMs: timestampToMs(userData.followersSince?.[follower.id] || follower.followingSince?.[userId]),
+      }));
 
       const followedPostItems = followingDeck
         .filter((dish) => {
@@ -953,9 +976,69 @@ export default function Feed() {
           timeMs: timestampToMs(dish.createdAt),
         }));
 
+      let expandedItems = [];
+      if (includeExpanded) {
+        const [uploadedDishes, storySnap] = await Promise.all([
+          getDishesFromFirestore(userId).catch((error) => {
+            console.error("Failed to load uploaded dishes for activity:", error);
+            return [];
+          }),
+          getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(6))).catch((error) => {
+            console.error("Failed to load story activity:", error);
+            return { docs: [] };
+          }),
+        ]);
+
+        const dishCommentGroups = await Promise.all(
+          uploadedDishes.slice(0, 8).map(async (dish) => {
+            const comments = await getCommentsForDish(dish.id, 8, "dish").catch((error) => {
+              console.error("Failed to load dish activity comments:", error);
+              return [];
+            });
+            return comments
+              .filter((comment) => comment.userId !== userId)
+              .map((comment) => ({
+                id: `dish-comment-${dish.id}-${comment.id}`,
+                kind: "comment",
+                icon: MessageCircle,
+                actor: comment.userName || "Someone",
+                text: t("commented on your dish"),
+                detail: dish.name || "",
+                href: `/dish/${dish.id}?source=uploaded&mode=single`,
+                timeMs: timestampToMs(comment.createdAt),
+              }));
+          })
+        );
+
+        const storyCommentGroups = await Promise.all(
+          storySnap.docs.map(async (storyDoc) => {
+            const story = { id: storyDoc.id, ...storyDoc.data() };
+            const comments = await getCommentsForStory(userId, storyDoc.id, 8).catch((error) => {
+              console.error("Failed to load story activity comments:", error);
+              return [];
+            });
+            return comments
+              .filter((comment) => comment.userId !== userId)
+              .map((comment) => ({
+                id: `story-comment-${storyDoc.id}-${comment.id}`,
+                kind: "comment",
+                icon: MessageCircle,
+                actor: comment.userName || "Someone",
+                text: t("commented on your story"),
+                detail: story.name || story.dishName || "",
+                href: "/profile",
+                timeMs: timestampToMs(comment.createdAt),
+              }));
+          })
+        );
+        expandedItems = [...dishCommentGroups.flat(), ...storyCommentGroups.flat()];
+      }
+
       const items = [
+        ...followerItems,
         ...followedPostItems,
         ...saveActivityItems,
+        ...expandedItems,
       ]
         .filter((item) => item.id)
         .reduce((unique, item) => {
@@ -969,6 +1052,7 @@ export default function Feed() {
         .sort((a, b) => Number(b.timeMs || 0) - Number(a.timeMs || 0))
         .slice(0, 80);
       setActivityItems(sortedItems);
+      if (includeExpanded) setActivityExpandedLoaded(true);
       return sortedItems;
     } catch (error) {
       console.error("Failed to load activity:", error);
@@ -982,6 +1066,7 @@ export default function Feed() {
     if (!userId) {
       setActivityItems([]);
       setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
+      setActivityExpandedLoaded(false);
     }
   }, [userId]);
 
@@ -992,6 +1077,7 @@ export default function Feed() {
     }
     setActivityOpen(true);
     setActivityVisibleCount(ACTIVITY_INITIAL_LIMIT);
+    setActivityExpandedLoaded(false);
     const now = Date.now();
     setActivitySeenAt(now);
     setActivityPingAt(0);
@@ -999,7 +1085,16 @@ export default function Feed() {
       localStorage.setItem(activitySeenStorageKey(userId), String(now));
     }
     setDoc(doc(db, "users", userId), { feedActivitySeenAt: new Date(now) }, { merge: true }).catch(() => {});
-    await buildActivityItems();
+    await buildActivityItems({ includeExpanded: false });
+  };
+
+  const loadMoreActivity = async () => {
+    if (!activityExpandedLoaded) {
+      const items = await buildActivityItems({ includeExpanded: true });
+      setActivityVisibleCount((count) => Math.min(Math.max(items.length, count + ACTIVITY_PAGE_SIZE), count + ACTIVITY_PAGE_SIZE));
+      return;
+    }
+    setActivityVisibleCount((count) => Math.min(activityItems.length, count + ACTIVITY_PAGE_SIZE));
   };
 
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
@@ -1466,13 +1561,14 @@ export default function Feed() {
                         </Link>
                       );
                     })}
-                    {activityItems.length > activityVisibleCount ? (
+                    {activityItems.length > activityVisibleCount || !activityExpandedLoaded ? (
                       <button
                         type="button"
-                        onClick={() => setActivityVisibleCount((count) => Math.min(activityItems.length, count + ACTIVITY_PAGE_SIZE))}
+                        onClick={loadMoreActivity}
+                        disabled={activityLoading}
                         className="mt-3 w-full rounded-full border border-white/12 bg-white/7 px-4 py-3 text-sm font-black text-white transition active:scale-[0.99]"
                       >
-                        {t("Load more")}
+                        {activityLoading ? t("Loading updates...") : t("Load more")}
                       </button>
                     ) : null}
                   </div>

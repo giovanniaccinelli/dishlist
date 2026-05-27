@@ -1593,13 +1593,13 @@ export default function PublicProfile() {
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-2 text-sm font-black ${
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-[1.5px] text-sm font-black ${
                             items.length
                               ? selected
-                                ? "border-[#F0A623] bg-[#F0A623] text-black shadow-[0_0_14px_rgba(240,166,35,0.32)]"
+                                ? "border-[#F0A623] bg-[#F0A623] text-black"
                                 : darkMode
-                                  ? "border-[#F0A623] bg-[#F0A623]/12 text-white shadow-[0_0_0_1px_rgba(240,166,35,0.18)]"
-                                  : "border-[#F0A623] bg-[#F0A623]/10 text-black shadow-[0_0_0_1px_rgba(240,166,35,0.16)]"
+                                  ? "border-[#F0A623] bg-[#171717] text-white"
+                                  : "border-[#F0A623] bg-white text-black"
                               : cell.isToday
                                 ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
                                 : selected

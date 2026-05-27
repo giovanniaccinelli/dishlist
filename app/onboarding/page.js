@@ -126,18 +126,11 @@ export default function Onboarding() {
   };
 
   const handleSkip = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(DONE_KEY, "1");
-      sessionStorage.removeItem(MODE_KEY);
-      sessionStorage.removeItem(NAMES_KEY);
-      sessionStorage.removeItem(SELECTED_DISHES_KEY);
-      sessionStorage.removeItem(SAVED_KEY);
-    }
-    router.replace("/");
+    handleBrowseFeed();
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1.1rem)] text-white">
+    <div className="h-[100dvh] overflow-y-auto bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+2.65rem)] text-white">
       <div className="mx-auto flex min-h-full max-w-xl flex-col justify-start">
         <div className="mb-4 flex items-center gap-3">
           <img src="/logo-real.png" alt="DishList logo" className="w-9 h-9 rounded-full object-cover" />

@@ -9,6 +9,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
 import { useAuth } from "../app/lib/auth";
 import DishRatingBadge from "./DishRatingBadge";
+import { RatingStars } from "./RatingStars";
 
 const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -161,6 +162,23 @@ export default function RestaurantMapView({
     if (!selectedPlaceId) return null;
     return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
   }, [groups, selectedPlaceId]);
+  const selectedGroupDishes = useMemo(() => {
+    if (!selectedGroup?.users?.length) return [];
+    return selectedGroup.users
+      .flatMap((groupUser) =>
+        (groupUser.dishes || []).map((dish) => ({
+          dish,
+          user: groupUser,
+        }))
+      )
+      .filter((item) => item.dish?.id);
+  }, [selectedGroup]);
+  const selectedGroupRating = useMemo(() => {
+    const ratings = selectedGroupDishes
+      .map((item) => Math.max(0, Math.min(5, Number(item.dish?.rating) || 0)))
+      .filter((rating) => rating > 0);
+    return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
+  }, [selectedGroupDishes]);
 
   useEffect(() => {
     if (!initialSelectedPlaceId) return;
@@ -580,6 +598,12 @@ export default function RestaurantMapView({
                           <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
                         )}
                       </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
+                        <span className="text-[11px] font-bold text-black/45">
+                          {selectedGroupDishes.length} {selectedGroupDishes.length === 1 ? "dish" : "dishes"}
+                        </span>
+                      </div>
                       <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
                     </div>
                     <button
@@ -592,7 +616,7 @@ export default function RestaurantMapView({
                     </button>
                   </div>
 
-                  {selectedGroup.users?.length ? (
+                  {selectedGroupDishes.length ? (
                     <div
                       className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
                       style={{ WebkitOverflowScrolling: "touch" }}
@@ -617,31 +641,28 @@ export default function RestaurantMapView({
                         }, 0);
                       }}
                     >
-                      {selectedGroup.users.map((user) => (
-                        <div key={`${selectedGroup.placeId}-${user.id}`} className="flex w-40 shrink-0 snap-start flex-col">
+                      {selectedGroupDishes.map(({ dish, user: dishUser }) => (
+                        <div key={`${selectedGroup.placeId}-${dish.id}-${dishUser.id}`} className="flex w-40 shrink-0 snap-start flex-col">
                           <button
                             type="button"
-                            onClick={() => user.id && router.push(`/profile/${encodeURIComponent(user.id)}`)}
-                            className="restaurant-accent-border mb-2 flex h-10 w-full items-center gap-2 rounded-[1rem] border-2 bg-white px-2 text-left shadow-[0_8px_18px_rgba(0,0,0,0.08)] transition active:scale-[0.98]"
+                            onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
+                            className="mb-2 flex min-w-0 items-center gap-2 text-left"
                           >
-                            <Avatar user={user} />
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-[12px] font-bold leading-none text-black">
-                                {user.name || "User"}
-                              </span>
+                            <Avatar user={dishUser} />
+                            <span className="min-w-0 flex-1 truncate text-[12px] font-black leading-none text-black">
+                              {dishUser.name || "User"}
                             </span>
                           </button>
-                          {user.dishes?.[0] ? (
                             <button
                               type="button"
-                              onClick={() => openDish(user.dishes[0])}
+                              onClick={() => openDish(dish)}
                               className="restaurant-accent-border flex h-40 w-full overflow-hidden rounded-[1.25rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
                             >
                               <div className="relative h-full w-full overflow-hidden">
-                                <DishRatingBadge dish={user.dishes[0]} className="text-[10px]" />
+                                <DishRatingBadge dish={dish} className="text-[10px]" />
                                 <img
-                                  src={getDishImageUrl(user.dishes[0], "thumb")}
-                                  alt={user.dishes[0].name || "Dish"}
+                                  src={getDishImageUrl(dish, "thumb")}
+                                  alt={dish.name || "Dish"}
                                   className="h-full w-full object-cover"
                                   onError={(event) => {
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -649,34 +670,35 @@ export default function RestaurantMapView({
                                 />
                                 <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end gap-0.5 bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
                                   <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                                    {user.dishes[0].name || "Untitled dish"}
+                                    {dish.name || "Untitled dish"}
                                   </div>
-                                  {(user.dishes?.length || 0) > 1 ? (
-                                    <div className="mt-0.5 text-[10px] text-white/80">
-                                      +{user.dishes.length - 1} more here
-                                    </div>
-                                  ) : null}
                                 </div>
                               </div>
                             </button>
-                          ) : null}
-                          {user.leaderboardAnswers?.[0] ? (
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {selectedGroup.users?.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
+                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
+                      {selectedGroup.users.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
+                        <div key={`${selectedGroup.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
                             <button
                               type="button"
-                              onClick={() => router.push(`/leaderboard/${user.leaderboardAnswers[0].questionId}`)}
-                              className={`restaurant-accent-border ${user.dishes?.[0] ? "mt-2 min-h-[4.2rem]" : "h-40"} w-full rounded-[1.25rem] border-2 bg-[linear-gradient(145deg,#261010_0%,#3A1515_52%,#120909_100%)] px-3 py-3 text-left shadow-[0_12px_26px_rgba(0,0,0,0.22)] transition active:scale-[0.98]`}
+                              onClick={() => router.push(`/leaderboard/${mapUser.leaderboardAnswers[0].questionId}`)}
+                              className="restaurant-accent-border min-h-[4.2rem] w-full rounded-[1.25rem] border-2 bg-[linear-gradient(145deg,#261010_0%,#3A1515_52%,#120909_100%)] px-3 py-3 text-left shadow-[0_12px_26px_rgba(0,0,0,0.22)] transition active:scale-[0.98]"
                             >
                               <div className="line-clamp-2 text-[12px] font-bold leading-tight text-white/86">
-                                {user.leaderboardAnswers[0].questionTitle || "Leaderboard"}
+                                {mapUser.leaderboardAnswers[0].questionTitle || "Leaderboard"}
                               </div>
                               <div className="mt-2 truncate text-[13px] font-bold text-[#FFB4B4]">
-                                {user.leaderboardAnswers[0].text || selectedGroup.name}
+                                {mapUser.leaderboardAnswers[0].text || selectedGroup.name}
                               </div>
                               <div className="mt-2 inline-flex items-center rounded-full border border-[#E64646]/35 bg-[#E64646]/18 px-2 py-1 text-[10px] font-black text-[#FFD7D7]">
-                                {Math.max(0, Number(user.leaderboardAnswers[0].voteCount || 0))} voti
+                                {Math.max(0, Number(mapUser.leaderboardAnswers[0].voteCount || 0))} voti
                               </div>
                             </button>
-                          ) : null}
                         </div>
                       ))}
                     </div>

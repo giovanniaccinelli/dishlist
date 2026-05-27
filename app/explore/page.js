@@ -524,7 +524,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
   );
 }
 
-function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
+function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap = false }) {
   const { title, dishes } = row;
   if (row.type === "map") {
     return (
@@ -540,7 +540,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
           </button>
         </div>
         <div
-          className={`no-accent-border relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-bottom-nav-height)-15.5rem)] min-h-[25rem]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
         >
@@ -799,7 +799,6 @@ export default function Explore() {
       return mode === selectedDishMode;
     });
   }, [leaderboardQuestions, search, selectedDishMode]);
-
   const toggleTagFilter = (tag) => {
     setSelectedTagsDraft((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -925,6 +924,10 @@ export default function Explore() {
 
     return rows.filter((row) => row.dishes.length > 0);
   }, [allDishes, leaderboardRestaurantAnswers, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
+  const restaurantMapRow = useMemo(
+    () => categoryRows.find((row) => row.type === "map") || null,
+    [categoryRows]
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1061,6 +1064,11 @@ export default function Explore() {
       </div>
       {loading ? (
         <CategoryRowsLoading />
+      ) : selectedDishMode === DISH_MODE_RESTAURANT && restaurantMapRow ? (
+        <div>
+          <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
+          <ExploreRow row={restaurantMapRow} onExpand={() => openExpandedRow(restaurantMapRow)} t={t} darkMode={darkMode} fullMap />
+        </div>
       ) : (
         <div>
           {!categoryRows.some((item) => item.type === "map") ? (

@@ -540,7 +540,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap 
           </button>
         </div>
         <div
-          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-bottom-nav-height)-15.5rem)] min-h-[25rem]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-bottom-nav-height)-13.25rem)] min-h-[20rem] max-h-[calc(100dvh-var(--app-bottom-nav-height)-13.25rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
         >
@@ -792,7 +792,7 @@ export default function Explore() {
   }, []);
 
   const visibleLeaderboardQuestions = useMemo(() => {
-    if (search.trim()) return [];
+    if (selectedDishMode !== DISH_MODE_RESTAURANT && search.trim()) return [];
     return leaderboardQuestions.filter((question) => {
       if (selectedDishMode === DISH_MODE_ALL) return true;
       const mode = question?.dishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
@@ -818,7 +818,7 @@ export default function Explore() {
   };
 
   const categoryRows = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = selectedDishMode === DISH_MODE_RESTAURANT ? "" : search.trim().toLowerCase();
     const normalizedSelectedTags = selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
     const textFiltered = term
       ? allDishes.filter((dish) => {
@@ -972,16 +972,18 @@ export default function Explore() {
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
         </div>
       </div>
-      <SearchBar
-        value={search}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          setSearch(nextValue);
-          router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
-        }}
-        placeholder={t("Search dishes or tags")}
-      />
-      <div className="relative mb-6">
+      {selectedDishMode !== DISH_MODE_RESTAURANT ? (
+        <SearchBar
+          value={search}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            setSearch(nextValue);
+            router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
+          }}
+          placeholder={t("Search dishes or tags")}
+        />
+      ) : null}
+      <div className={`relative ${selectedDishMode === DISH_MODE_RESTAURANT ? "mb-3" : "mb-6"}`}>
         <div className="flex flex-wrap gap-2 items-center">
           {selectedTagsApplied.map((tag) => (
             <span

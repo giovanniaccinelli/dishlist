@@ -2553,7 +2553,7 @@ export default function Profile() {
                         value={dishlistSearch}
                         onChange={(event) => setDishlistSearch(event.target.value)}
                         placeholder={t("Search dishes...")}
-                        className={`min-w-0 flex-1 bg-transparent text-base outline-none ${
+                        className={`min-w-0 flex-1 appearance-none bg-transparent text-base outline-none [-webkit-appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden ${
                           darkMode ? "placeholder:text-white/35" : "placeholder:text-black/35"
                         }`}
                       />

@@ -162,9 +162,21 @@ export default function RestaurantMapView({
     if (!selectedPlaceId) return null;
     return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
   }, [groups, selectedPlaceId]);
+  const selectedGroupUsers = useMemo(() => {
+    const users = Array.isArray(selectedGroup?.users) ? [...selectedGroup.users] : [];
+    return users.sort((a, b) => {
+      const aFollowed = followingIdSet.has(String(a?.id || "").trim()) ? 1 : 0;
+      const bFollowed = followingIdSet.has(String(b?.id || "").trim()) ? 1 : 0;
+      if (aFollowed !== bFollowed) return bFollowed - aFollowed;
+      const aOwn = user?.uid && String(a?.id || "") === String(user.uid) ? 1 : 0;
+      const bOwn = user?.uid && String(b?.id || "") === String(user.uid) ? 1 : 0;
+      if (aOwn !== bOwn) return bOwn - aOwn;
+      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    });
+  }, [followingIdSet, selectedGroup?.users, user?.uid]);
   const selectedGroupDishes = useMemo(() => {
-    if (!selectedGroup?.users?.length) return [];
-    return selectedGroup.users
+    if (!selectedGroupUsers.length) return [];
+    return selectedGroupUsers
       .flatMap((groupUser) =>
         (groupUser.dishes || []).map((dish) => ({
           dish,
@@ -172,7 +184,7 @@ export default function RestaurantMapView({
         }))
       )
       .filter((item) => item.dish?.id);
-  }, [selectedGroup]);
+  }, [selectedGroupUsers]);
   const selectedGroupRating = useMemo(() => {
     const ratings = selectedGroupDishes
       .map((item) => Math.max(0, Math.min(5, Number(item.dish?.rating) || 0)))
@@ -601,7 +613,7 @@ export default function RestaurantMapView({
                       <div className="mt-1 flex items-center gap-2">
                         <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
                         <span className="text-[11px] font-bold text-black/45">
-                          {selectedGroupDishes.length} {selectedGroupDishes.length === 1 ? "dish" : "dishes"}
+                          {selectedGroupUsers.length} {selectedGroupUsers.length === 1 ? "person" : "people"}
                         </span>
                       </div>
                       <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
@@ -616,73 +628,82 @@ export default function RestaurantMapView({
                     </button>
                   </div>
 
-                  {selectedGroupDishes.length ? (
-                    <div
-                      className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1"
-                      style={{ WebkitOverflowScrolling: "touch" }}
-                      onPointerDown={(event) => {
-                        carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
-                      }}
-                      onPointerMove={(event) => {
-                        const start = carouselTapRef.current;
-                        if (!start || start.moved) return;
-                        if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
-                          start.moved = true;
-                        }
-                      }}
-                      onClickCapture={(event) => {
-                        if (!carouselTapRef.current?.moved) return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
-                      onPointerUp={() => {
-                        window.setTimeout(() => {
-                          carouselTapRef.current = null;
-                        }, 0);
-                      }}
-                    >
-                      {selectedGroupDishes.map(({ dish, user: dishUser }) => (
-                        <div key={`${selectedGroup.placeId}-${dish.id}-${dishUser.id}`} className="flex w-40 shrink-0 snap-start flex-col">
-                          <button
-                            type="button"
-                            onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
-                            className="mb-2 flex min-w-0 items-center gap-2 text-left"
-                          >
-                            <Avatar user={dishUser} />
-                            <span className="min-w-0 flex-1 truncate text-[12px] font-black leading-none text-black">
-                              {dishUser.name || "User"}
-                            </span>
-                          </button>
+                  {selectedGroupUsers.length ? (
+                    <div className="mt-3 flex max-h-[13.4rem] flex-col gap-4 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {selectedGroupUsers.map((dishUser) => {
+                        const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
+                        if (!userDishes.length) return null;
+                        return (
+                          <div key={`${selectedGroup.placeId}-${dishUser.id}`} className="min-w-0">
                             <button
                               type="button"
-                              onClick={() => openDish(dish)}
-                              className="restaurant-accent-border flex h-40 w-full overflow-hidden rounded-[1.25rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                              onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
+                              className="mb-2 flex min-w-0 items-center gap-2 text-left"
                             >
-                              <div className="relative h-full w-full overflow-hidden">
-                                <DishRatingBadge dish={dish} className="text-[10px]" />
-                                <img
-                                  src={getDishImageUrl(dish, "thumb")}
-                                  alt={dish.name || "Dish"}
-                                  className="h-full w-full object-cover"
-                                  onError={(event) => {
-                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                  }}
-                                />
-                                <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end gap-0.5 bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
-                                  <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                                    {dish.name || "Untitled dish"}
-                                  </div>
-                                </div>
-                              </div>
+                              <Avatar user={dishUser} />
+                              <span className="min-w-0 flex-1 truncate text-[12px] font-black leading-none text-black">
+                                {dishUser.name || "User"}
+                              </span>
                             </button>
-                        </div>
-                      ))}
+                            <div
+                              className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                              style={{ WebkitOverflowScrolling: "touch" }}
+                              onPointerDown={(event) => {
+                                carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
+                              }}
+                              onPointerMove={(event) => {
+                                const start = carouselTapRef.current;
+                                if (!start || start.moved) return;
+                                if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
+                                  start.moved = true;
+                                }
+                              }}
+                              onClickCapture={(event) => {
+                                if (!carouselTapRef.current?.moved) return;
+                                event.preventDefault();
+                                event.stopPropagation();
+                              }}
+                              onPointerUp={() => {
+                                window.setTimeout(() => {
+                                  carouselTapRef.current = null;
+                                }, 0);
+                              }}
+                            >
+                              {userDishes.map((dish) => (
+                                <button
+                                  key={`${selectedGroup.placeId}-${dishUser.id}-${dish.id}`}
+                                  type="button"
+                                  onClick={() => openDish(dish)}
+                                  className="restaurant-accent-border flex h-40 w-40 shrink-0 snap-start overflow-hidden rounded-[1.25rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                                >
+                                  <div className="relative h-full w-full overflow-hidden">
+                                    <DishRatingBadge dish={dish} className="text-[10px]" />
+                                    <img
+                                      src={getDishImageUrl(dish, "thumb")}
+                                      alt={dish.name || "Dish"}
+                                      className="h-full w-full object-cover"
+                                      onError={(event) => {
+                                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                      }}
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
+                                      <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                                        {dish.name || "Untitled dish"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : null}
 
-                  {selectedGroup.users?.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
+                  {selectedGroupUsers.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
                     <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
-                      {selectedGroup.users.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
+                      {selectedGroupUsers.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
                         <div key={`${selectedGroup.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
                             <button
                               type="button"

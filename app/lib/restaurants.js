@@ -29,6 +29,18 @@ export function normalizeRestaurant(restaurant) {
   };
 }
 
+function getDishOwnerId(dish) {
+  return String(dish?.owner || dish?.ownerId || dish?.userId || dish?.uploadedBy || dish?.createdBy || "").trim();
+}
+
+function getDishOwnerName(dish) {
+  return String(dish?.ownerName || dish?.userName || dish?.uploadedByName || dish?.createdByName || "User").trim();
+}
+
+function getDishOwnerPhotoURL(dish) {
+  return String(dish?.ownerPhotoURL || dish?.userPhotoURL || dish?.uploadedByPhotoURL || dish?.createdByPhotoURL || "").trim();
+}
+
 export function getRestaurantDishGroups(dishes = [], leaderboardAnswers = []) {
   const groups = new Map();
 
@@ -48,17 +60,20 @@ export function getRestaurantDishGroups(dishes = [], leaderboardAnswers = []) {
       existing.dishes.push(dish);
     }
 
-    const userId = String(dish?.owner || "").trim();
+    const userId = getDishOwnerId(dish);
     if (userId) {
       let userEntry = existing.users.find((item) => item.id === userId);
       if (!userEntry) {
         userEntry = {
           id: userId,
-          name: dish?.ownerName || "User",
-          photoURL: dish?.ownerPhotoURL || "",
+          name: getDishOwnerName(dish),
+          photoURL: getDishOwnerPhotoURL(dish),
           dishes: [],
         };
         existing.users.push(userEntry);
+      } else {
+        userEntry.name = userEntry.name || getDishOwnerName(dish);
+        userEntry.photoURL = userEntry.photoURL || getDishOwnerPhotoURL(dish);
       }
       if (dish?.id && !userEntry.dishes.some((item) => item.id === dish.id)) {
         userEntry.dishes.push(dish);

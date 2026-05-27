@@ -596,7 +596,7 @@ export default function RestaurantMapView({
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
                 transition={{ duration: 0.22, ease: "easeOut" }}
-                className="restaurant-accent-border flex max-h-[22rem] flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
+                className="restaurant-accent-border flex max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] min-h-0 flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
               >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -635,7 +635,13 @@ export default function RestaurantMapView({
                   </div>
 
                   {selectedDishUsers.length ? (
-                    <div className="mt-3 flex max-h-[13.4rem] flex-col gap-4 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div
+                      className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onPointerMove={(event) => event.stopPropagation()}
+                      onPointerUp={(event) => event.stopPropagation()}
+                    >
                       {selectedDishUsers.map((dishUser) => {
                         const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
                         if (!userDishes.length) return null;

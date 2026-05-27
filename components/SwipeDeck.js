@@ -951,6 +951,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         onTouchStartCapture={handleDeckMediaUnlock}
         onClickCapture={handleDeckMediaUnlock}
       >
+        {!currentMediaReady ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <img
+              src="/logo-real.png"
+              alt=""
+              className="h-24 w-24 object-contain dishlist-loading-logo"
+            />
+          </div>
+        ) : null}
         {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
@@ -976,7 +985,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             borderColor: currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F",
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] transition-opacity duration-200 ${currentMediaReady ? "opacity-100" : "pointer-events-none opacity-0"} ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div

@@ -673,7 +673,11 @@ export async function getDishesPage({ pageSize = 20, cursor = null, enrichOwners
   return result;
 }
 
-export async function getFollowingForUser(userId) {
+export async function getFollowingForUser(userId, { force = false } = {}) {
+  if (force) {
+    dataCache.delete(`user:${userId}:following`);
+    pendingCache.delete(`user:${userId}:following`);
+  }
   return cachedRead(`user:${userId}:following`, async () => {
     const userRef = doc(db, "users", userId);
     const userSnap = await getDoc(userRef);

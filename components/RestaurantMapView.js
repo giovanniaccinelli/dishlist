@@ -252,7 +252,7 @@ export default function RestaurantMapView({
       return undefined;
     }
     let cancelled = false;
-    getFollowingForUser(user.uid)
+    getFollowingForUser(user.uid, { force: true })
       .then((ids) => {
         if (!cancelled) setFollowingIds(Array.isArray(ids) ? ids : []);
       })

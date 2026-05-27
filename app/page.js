@@ -185,6 +185,16 @@ export default function Feed() {
       .map((value) => String(value || "").trim())
       .filter(Boolean);
   const isFromFollowedUser = (dish, followedSet) => getDishOwnerIds(dish).some((ownerId) => followedSet.has(ownerId));
+  const getUserAliasIds = (profile) =>
+    [profile?.id, profile?.uid, profile?.userId, profile?.authUid, profile?.appleUserId, profile?.appleSub ? `apple:${profile.appleSub}` : "", profile?.appleSub]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+  const expandFollowingIds = async (ids = []) => {
+    const rawIds = Array.from(new Set((ids || []).map((id) => String(id || "").trim()).filter(Boolean)));
+    if (!rawIds.length) return [];
+    const followedProfiles = await getUsersByIds(rawIds).catch(() => []);
+    return Array.from(new Set([...rawIds, ...followedProfiles.flatMap(getUserAliasIds)]));
+  };
 
   useEffect(() => {
     setNeedsOpeningDishMode(!hasChosenOpeningDishMode());
@@ -426,14 +436,15 @@ export default function Feed() {
 
         if (userId) {
           const [followed, saved, toTry, uploaded, currentUserSnap] = await Promise.all([
-            getFollowingForUser(userId),
+            getFollowingForUser(userId, { force: true }),
             getSavedDishesFromFirestore(userId),
             getToTryDishesFromFirestore(userId),
             getDishesFromFirestore(userId),
             getDoc(doc(db, "users", userId)),
           ]);
           nextFollowingIds = Array.from(new Set(followed || []));
-          const followedSet = new Set(nextFollowingIds);
+          const expandedFollowingIds = await expandFollowingIds(nextFollowingIds);
+          const followedSet = new Set(expandedFollowingIds);
           const userData = currentUserSnap.exists() ? currentUserSnap.data() : {};
           const storedFollowingSince =
             userData?.followingSince && typeof userData.followingSince === "object"
@@ -470,7 +481,7 @@ export default function Feed() {
             ...sortNewest(unseenPublicItems.filter((dish) => isFromFollowedUser(dish, followedSet))),
             ...sortNewest(seenPublicItems.filter((dish) => isFromFollowedUser(dish, followedSet))),
           ];
-          setFollowingIds(nextFollowingIds);
+          setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
           setFollowingDeck(following);
         }
@@ -804,7 +815,9 @@ export default function Feed() {
         .slice()
         .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
       if (feedType === "following") {
-        const followedSet = new Set(followingIds);
+        const expandedFollowingIds = await expandFollowingIds(followingIds);
+        const followedSet = new Set(expandedFollowingIds);
+        setFollowingIds(expandedFollowingIds);
         setFollowingDeck(ordered.filter((dish) => isFromFollowedUser(dish, followedSet)));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));

@@ -528,7 +528,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap 
   const { title, dishes } = row;
   if (row.type === "map") {
     return (
-      <section className="explore-row no-accent-border mb-6 shadow-none">
+      <section className={`explore-row no-accent-border shadow-none ${fullMap ? "mb-0 flex min-h-0 flex-1 flex-col" : "mb-6"}`}>
         <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
           <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
             <div className="flex items-center gap-2 leading-none">
@@ -540,7 +540,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap 
           </button>
         </div>
         <div
-          className={`no-accent-border relative block ${fullMap ? "h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-15.5rem)]" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
+          className={`no-accent-border relative block ${fullMap ? "min-h-0 flex-1" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
             darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
           }`}
         >
@@ -962,7 +962,11 @@ export default function Explore() {
   };
 
   return (
-    <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
+    <div
+      className={`bottom-nav-spacer box-border flex h-[100dvh] flex-col overscroll-none bg-transparent px-4 pt-1 text-black relative ${
+        selectedDishMode === DISH_MODE_RESTAURANT ? "overflow-hidden" : "overflow-y-auto"
+      }`}
+    >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[1fr_auto_1fr] items-center relative">
         <h1 className="justify-self-start text-2xl font-bold">{t("Explore")}</h1>
         <div className="justify-self-center">
@@ -1069,7 +1073,7 @@ export default function Explore() {
       {loading ? (
         <CategoryRowsLoading />
       ) : selectedDishMode === DISH_MODE_RESTAURANT && restaurantMapRow ? (
-        <div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
           <ExploreRow row={restaurantMapRow} onExpand={() => openExpandedRow(restaurantMapRow)} t={t} darkMode={darkMode} fullMap />
         </div>

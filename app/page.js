@@ -106,9 +106,10 @@ export default function Feed() {
   const userId = user?.uid || null;
   const router = useRouter();
 	  const forYouDeckRef = useRef(null);
-	  const followingDeckRef = useRef(null);
-	  const viewedDishIdsRef = useRef([]);
+  const followingDeckRef = useRef(null);
+  const viewedDishIdsRef = useRef([]);
   const initialFeedCache = getSessionPageCache(getFeedCacheKey(userId, "guest"))?.value;
+  const initialHasCompleteFeedCache = Boolean(initialFeedCache?.forYouDeck?.length && (!userId || initialFeedCache?.followingDeck?.length));
 
 		  const [activeFeed, setActiveFeed] = useState(() => initialFeedCache?.activeFeed || "for_you");
   const [forYouDeck, setForYouDeck] = useState(() => initialFeedCache?.forYouDeck || []);
@@ -120,7 +121,7 @@ export default function Feed() {
   const [currentForYouCard, setCurrentForYouCard] = useState(null);
   const [currentFollowingCard, setCurrentFollowingCard] = useState(null);
   const [addedDishIds, setAddedDishIds] = useState(() => new Set(initialFeedCache?.addedDishIds || []));
-  const [loadingDishes, setLoadingDishes] = useState(() => !initialFeedCache);
+  const [loadingDishes, setLoadingDishes] = useState(() => !initialHasCompleteFeedCache);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [saversOpen, setSaversOpen] = useState(false);
   const [saversLoading, setSaversLoading] = useState(false);
@@ -141,8 +142,8 @@ export default function Feed() {
   const [followingSinceById, setFollowingSinceById] = useState(() => initialFeedCache?.followingSinceById || {});
   const [followingSeenAt, setFollowingSeenAt] = useState(() => initialFeedCache?.followingSeenAt || 0);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
-  const [followingLoading, setFollowingLoading] = useState(() => !initialFeedCache && Boolean(userId));
-  const [followingResolved, setFollowingResolved] = useState(() => Boolean(initialFeedCache?.followingDeck?.length));
+  const [followingLoading, setFollowingLoading] = useState(() => !initialHasCompleteFeedCache && Boolean(userId));
+  const [followingResolved, setFollowingResolved] = useState(() => Boolean(!userId || initialFeedCache?.followingDeck?.length));
   const [followingResetting, setFollowingResetting] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
@@ -346,6 +347,7 @@ export default function Feed() {
   useEffect(() => {
     const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
 	    if (cachedFeed) {
+      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length && (!userId || cachedFeed?.followingDeck?.length));
 	      setActiveFeed(cachedFeed.activeFeed || "for_you");
 	      setForYouDeck(Array.isArray(cachedFeed.forYouDeck) ? cachedFeed.forYouDeck : []);
 	      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
@@ -357,7 +359,9 @@ export default function Feed() {
 	      setFollowingSinceById(cachedFeed.followingSinceById || {});
 	      setFollowingSeenAt(Number(cachedFeed.followingSeenAt || 0));
 	      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
-      setLoadingDishes(false);
+      setFollowingResolved(Boolean(!userId || cachedFeed?.followingDeck?.length));
+      setFollowingLoading(Boolean(userId && !cachedHasBothDecks));
+      setLoadingDishes(!cachedHasBothDecks);
     }
     const sortNewest = (items) =>
       items
@@ -1418,19 +1422,12 @@ export default function Feed() {
               />
             </div>
           ) : orderedFollowing.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-center px-6">
-              <div>
-                <p className="text-lg font-semibold mb-2">No dishes from followed accounts yet.</p>
-                <p className="text-sm text-black/60 mb-4">
-                  Follow people from the People tab to build this feed.
-                </p>
-                <Link
-                  href="/dishlists"
-                  className="inline-flex bg-black text-white px-5 py-3 rounded-full font-semibold"
-                >
-                  Find people
-                </Link>
-              </div>
+            <div className="h-full flex items-center justify-center">
+              <img
+                src="/logo-real.png"
+                alt="DishList"
+                className="h-24 w-24 object-contain dishlist-loading-logo"
+              />
             </div>
           ) : (
             <SwipeDeck

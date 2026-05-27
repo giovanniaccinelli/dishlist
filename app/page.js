@@ -141,6 +141,7 @@ export default function Feed() {
   const [followingSinceById, setFollowingSinceById] = useState(() => initialFeedCache?.followingSinceById || {});
   const [followingSeenAt, setFollowingSeenAt] = useState(() => initialFeedCache?.followingSeenAt || 0);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
+  const [followingLoading, setFollowingLoading] = useState(() => !initialFeedCache && Boolean(userId));
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
   const [excludedTags, setExcludedTags] = useState([]);
@@ -406,6 +407,7 @@ export default function Feed() {
     setAddedDishIds(new Set());
     (async () => {
       setLoadingDishes(true);
+      setFollowingLoading(Boolean(userId));
       try {
         const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
         const seenIds = new Set(getStoredViewedDishIds());
@@ -427,6 +429,7 @@ export default function Feed() {
           setFollowingIndex(0);
           setFollowingIndexByMode({});
           setFollowingSinceById({});
+          setFollowingLoading(false);
         }
         setLoadingDishes(false);
 
@@ -485,6 +488,7 @@ export default function Feed() {
           setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
           setFollowingDeck(following);
+          setFollowingLoading(false);
         }
 	      } catch (err) {
         console.error("Failed to load feed dishes:", err);
@@ -492,6 +496,7 @@ export default function Feed() {
         setFollowingSinceById({});
         setForYouDeck([]);
         setFollowingDeck([]);
+        setFollowingLoading(false);
       } finally {
         setLoadingDishes(false);
       }
@@ -1385,6 +1390,14 @@ export default function Feed() {
                   Sign in
                 </button>
               </div>
+            </div>
+          ) : followingLoading && orderedFollowing.length === 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <img
+                src="/logo-real.png"
+                alt="DishList"
+                className="h-24 w-24 object-contain dishlist-loading-logo"
+              />
             </div>
           ) : orderedFollowing.length === 0 ? (
             <div className="h-full flex items-center justify-center text-center px-6">

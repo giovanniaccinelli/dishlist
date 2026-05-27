@@ -1738,8 +1738,11 @@ export default function Profile() {
     const entries = [];
     Object.entries(storyPushStats || {}).forEach(([dishId, stats]) => {
       const dish = dishById.get(dishId) || { id: dishId };
-      (stats?.history || []).forEach((entry, index) => {
-        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO);
+      const history = Array.isArray(stats?.history) ? stats.history : [];
+      const fallbackMs = getStoryCalendarMillis(stats?.lastPushedAtMs || stats?.lastPushedAtISO || stats?.updatedAt || stats?.createdAt);
+      const entriesToRead = history.length ? history : fallbackMs ? [{ pushedAtMs: fallbackMs }] : [];
+      entriesToRead.forEach((entry, index) => {
+        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO || entry?.createdAt || entry?.updatedAt || entry?.publishedAtMs || entry?.publishedAtISO);
         if (!ms) return;
         entries.push({
           id: `${dishId}-${ms}-${index}`,
@@ -1753,7 +1756,7 @@ export default function Profile() {
     });
 
     activeStories.forEach((story) => {
-      const ms = getStoryCalendarMillis(story.createdAt) || getStoryCalendarMillis(story.pushedAtMs);
+      const ms = getStoryCalendarMillis(story.ateAtMs || story.pushedAtMs || story.pushedAtISO || story.createdAt || story.updatedAt);
       if (!ms) return;
       entries.push({
         id: `active-${story.id || story.dishId || ms}`,
@@ -1766,7 +1769,7 @@ export default function Profile() {
     });
 
     mealCalendarEntries.forEach((entry) => {
-      const ms = Number(entry.ms || entry.ateAtMs || 0) || getStoryCalendarMillis(entry.createdAt) || Date.now();
+      const ms = Number(entry.ms || entry.ateAtMs || entry.dateMs || 0) || getStoryCalendarMillis(entry.createdAt || entry.updatedAt || entry.date) || Date.now();
       const dayKey = entry.dayKey || getStoryCalendarKey(ms);
       if (!dayKey) return;
       entries.push({
@@ -1801,6 +1804,7 @@ export default function Profile() {
     () => new Map(storyCalendarDays.map((day) => [day.key, day.items])),
     [storyCalendarDays]
   );
+  const loggedCalendarDayKeys = useMemo(() => new Set(storyCalendarDays.map((day) => day.key).filter(Boolean)), [storyCalendarDays]);
   const profileCalendarCells = useMemo(
     () => getCalendarTimelineCells(storyCalendarDays, profileCalendarSelectedDay),
     [profileCalendarSelectedDay, storyCalendarDays]
@@ -2368,14 +2372,15 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="grid flex-1 grid-cols-7 gap-1.5 p-3">
-                      {calendarPreviewCells.slice(0, 28).map((cell) => {
-                        const hasItems = Boolean(storyCalendarByDay.get(cell.dayKey)?.length);
+                      {calendarPreviewCells.map((cell) => {
+                        const hasItems = loggedCalendarDayKeys.has(cell.dayKey);
                         return (
                           <div
                             key={cell.dayKey}
-                            className={`relative rounded-[0.32rem] border-[1.5px] ${
+                            style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid" } : undefined}
+                            className={`relative rounded-[0.32rem] border ${
                               hasItems
-                                ? "border-[#F0A623] bg-transparent"
+                                ? "bg-transparent"
                                 : cell.isToday
                                   ? "border-[#2BD36B] bg-transparent"
                                   : "border-transparent"
@@ -4417,19 +4422,21 @@ export default function Profile() {
                   <div className="grid grid-cols-7 gap-1">
                     {profileCalendarMonthCells.map((cell) => {
                       const items = storyCalendarByDay.get(cell.dayKey) || [];
+                      const hasItems = loggedCalendarDayKeys.has(cell.dayKey);
                       const selected = cell.dayKey === profileCalendarSelectedDay;
                       return (
                         <button
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-[1.5px] text-sm font-black ${
-                            items.length
+                          style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid" } : undefined}
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
+                            hasItems
                               ? selected
-                                ? "border-[#F0A623] bg-[#F0A623] text-black"
+                                ? "bg-[#F0A623] text-black"
                                 : darkMode
-                                  ? "border-[#F0A623] bg-[#171717] text-white"
-                                  : "border-[#F0A623] bg-white text-black"
+                                  ? "bg-[#171717] text-white"
+                                  : "bg-white text-black"
                               : cell.isToday
                               ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
                               : selected

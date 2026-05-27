@@ -40,7 +40,7 @@ import {
   hasChosenOpeningDishMode,
   usePersistentDishMode,
 } from "../components/DishModeControls";
-import { arrayUnion, collection, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
+import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
 import { getDishImageUrl, isDishVideo } from "./lib/dishImage";
@@ -983,14 +983,14 @@ export default function Feed() {
             console.error("Failed to load uploaded dishes for activity:", error);
             return [];
           }),
-          getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(6))).catch((error) => {
+          getDocs(query(collection(db, "users", userId, "stories"), orderBy("createdAt", "desc"), limitResults(12))).catch((error) => {
             console.error("Failed to load story activity:", error);
             return { docs: [] };
           }),
         ]);
 
         const dishCommentGroups = await Promise.all(
-          uploadedDishes.slice(0, 8).map(async (dish) => {
+          uploadedDishes.slice(0, 24).map(async (dish) => {
             const comments = await getCommentsForDish(dish.id, 8, "dish").catch((error) => {
               console.error("Failed to load dish activity comments:", error);
               return [];
@@ -1031,7 +1031,63 @@ export default function Feed() {
               }));
           })
         );
-        expandedItems = [...dishCommentGroups.flat(), ...storyCommentGroups.flat()];
+        const saveGroups = await Promise.all(
+          uploadedDishes.slice(0, 12).map(async (dish) => {
+            try {
+              const savedSnap = await getDocs(query(collectionGroup(db, "saved"), where("id", "==", dish.id), limitResults(8)));
+              const events = savedSnap.docs
+                .map((savedDoc) => {
+                  const saverId = savedDoc.ref.parent.parent?.id || "";
+                  return {
+                    saverId,
+                    savedAt: savedDoc.data()?.savedAt || savedDoc.data()?.addedAt || null,
+                  };
+                })
+                .filter((event) => event.saverId && event.saverId !== userId);
+              const saverUsers = await getUsersByIds(events.map((event) => event.saverId));
+              const usersById = new Map(saverUsers.map((saver) => [saver.id, saver]));
+              return events.slice(0, 4).map((event) => {
+                const saver = usersById.get(event.saverId);
+                return {
+                  id: `save-${dish.id}-${event.saverId}`,
+                  kind: "save",
+                  icon: Heart,
+                  actor: saver?.displayName || saver?.name || "Someone",
+                  text: t("saved your dish"),
+                  detail: dish.name || "",
+                  href: `/dish/${dish.id}?source=uploaded&mode=single`,
+                  timeMs: timestampToMs(event.savedAt),
+                };
+              });
+            } catch (error) {
+              console.error("Failed to load timestamped save activity:", error);
+              const savers = await getUsersWhoSavedDish(dish.id).catch(() => []);
+              const directEvents = await Promise.all(
+                savers
+                  .filter((saver) => saver.id !== userId)
+                  .slice(0, 3)
+                  .map(async (saver) => {
+                    const savedDoc = await getDoc(doc(db, "users", saver.id, "saved", dish.id)).catch(() => null);
+                    const savedData = savedDoc?.exists?.() ? savedDoc.data() || {} : {};
+                    return { saver, savedAt: savedData.savedAt || savedData.addedAt || null };
+                  })
+              );
+              return directEvents
+                .filter(({ saver }) => saver?.id && saver.id !== userId)
+                .map(({ saver, savedAt }) => ({
+                  id: `save-${dish.id}-${saver.id}`,
+                  kind: "save",
+                  icon: Heart,
+                  actor: saver.displayName || saver.name || "Someone",
+                  text: t("saved your dish"),
+                  detail: dish.name || "",
+                  href: `/dish/${dish.id}?source=uploaded&mode=single`,
+                  timeMs: timestampToMs(savedAt),
+                }));
+            }
+          })
+        );
+        expandedItems = [...dishCommentGroups.flat(), ...storyCommentGroups.flat(), ...saveGroups.flat()];
       }
 
       const items = [
@@ -1091,7 +1147,7 @@ export default function Feed() {
   const loadMoreActivity = async () => {
     if (!activityExpandedLoaded) {
       const items = await buildActivityItems({ includeExpanded: true });
-      setActivityVisibleCount((count) => Math.min(Math.max(items.length, count + ACTIVITY_PAGE_SIZE), count + ACTIVITY_PAGE_SIZE));
+      setActivityVisibleCount(Math.max(ACTIVITY_INITIAL_LIMIT + ACTIVITY_PAGE_SIZE, items.length));
       return;
     }
     setActivityVisibleCount((count) => Math.min(activityItems.length, count + ACTIVITY_PAGE_SIZE));

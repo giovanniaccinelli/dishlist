@@ -906,8 +906,11 @@ export default function PublicProfile() {
     const entries = [];
     Object.entries(storyPushStats || {}).forEach(([dishId, stats]) => {
       const dish = dishById.get(dishId) || { id: dishId };
-      (stats?.history || []).forEach((entry, index) => {
-        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO);
+      const history = Array.isArray(stats?.history) ? stats.history : [];
+      const fallbackMs = getStoryCalendarMillis(stats?.lastPushedAtMs || stats?.lastPushedAtISO || stats?.updatedAt || stats?.createdAt);
+      const entriesToRead = history.length ? history : fallbackMs ? [{ pushedAtMs: fallbackMs }] : [];
+      entriesToRead.forEach((entry, index) => {
+        const ms = getStoryCalendarMillis(entry?.pushedAtMs || entry?.pushedAtISO || entry?.createdAt || entry?.updatedAt || entry?.publishedAtMs || entry?.publishedAtISO);
         if (!ms) return;
         entries.push({
           id: `${dishId}-${ms}-${index}`,
@@ -921,7 +924,7 @@ export default function PublicProfile() {
     });
 
     activeStories.forEach((story) => {
-      const ms = getStoryCalendarMillis(story.createdAt) || getStoryCalendarMillis(story.pushedAtMs);
+      const ms = getStoryCalendarMillis(story.ateAtMs || story.pushedAtMs || story.pushedAtISO || story.createdAt || story.updatedAt);
       if (!ms) return;
       entries.push({
         id: `active-${story.id || story.dishId || ms}`,
@@ -953,6 +956,7 @@ export default function PublicProfile() {
     () => new Map(storyCalendarDays.map((day) => [day.key, day.items])),
     [storyCalendarDays]
   );
+  const loggedCalendarDayKeys = useMemo(() => new Set(storyCalendarDays.map((day) => day.key).filter(Boolean)), [storyCalendarDays]);
   const calendarPreviewCells = useMemo(() => getCalendarMonthPreviewCells(new Date()), []);
   const profileCalendarMonthCells = useMemo(
     () => getCalendarMonthPreviewCells(profileCalendarMonthDate),
@@ -1587,19 +1591,21 @@ export default function PublicProfile() {
                   <div className="grid grid-cols-7 gap-1">
                     {profileCalendarMonthCells.map((cell) => {
                       const items = storyCalendarByDay.get(cell.dayKey) || [];
+                      const hasItems = loggedCalendarDayKeys.has(cell.dayKey);
                       const selected = cell.dayKey === profileCalendarSelectedDay;
                       return (
                         <button
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border-[1.5px] text-sm font-black ${
-                            items.length
+                          style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid" } : undefined}
+                          className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
+                            hasItems
                               ? selected
-                                ? "border-[#F0A623] bg-[#F0A623] text-black"
+                                ? "bg-[#F0A623] text-black"
                                 : darkMode
-                                  ? "border-[#F0A623] bg-[#171717] text-white"
-                                  : "border-[#F0A623] bg-white text-black"
+                                  ? "bg-[#171717] text-white"
+                                  : "bg-white text-black"
                               : cell.isToday
                                 ? "border-[#2BD36B] text-[#168944] shadow-[0_0_10px_rgba(43,211,107,0.22)]"
                                 : selected

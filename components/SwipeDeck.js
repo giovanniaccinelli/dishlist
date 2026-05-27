@@ -221,6 +221,38 @@ function getRelativeUploadTime(value) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+const preloadedMedia = new Set();
+const preloadingMedia = new Map();
+
+function preloadDeckImage(src) {
+  if (!src || src === DEFAULT_DISH_IMAGE || preloadedMedia.has(src)) return Promise.resolve();
+  if (preloadingMedia.has(src)) return preloadingMedia.get(src);
+  if (typeof window === "undefined" || typeof Image === "undefined") return Promise.resolve();
+
+  const promise = new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {}
+      preloadedMedia.add(src);
+      resolve();
+    };
+    image.onerror = () => resolve();
+    image.src = src;
+    if (image.complete && image.naturalWidth > 0) {
+      preloadedMedia.add(src);
+      resolve();
+    }
+  }).finally(() => {
+    preloadingMedia.delete(src);
+  });
+
+  preloadingMedia.set(src, promise);
+  return promise;
+}
+
 const SwipeDeck = forwardRef(function SwipeDeck({
   dishes,
   onSwiped,
@@ -361,6 +393,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [dishes, deck, currentIndex, deckInitialized, preserveContinuity, initialIndex]);
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
+  const nextCard = deck[currentIndex + 1] || null;
+
+  useEffect(() => {
+    const upcoming = deck
+      .slice(currentIndex, currentIndex + 6)
+      .filter((dish) => dish && !isDishVideo(dish))
+      .map((dish) => getDishImageUrl(dish))
+      .filter(Boolean);
+
+    upcoming.forEach((src) => {
+      void preloadDeckImage(src);
+    });
+  }, [deck, currentIndex]);
 
   useEffect(() => {
     if (typeof onIndexChange === "function") {
@@ -426,6 +471,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     if (!currentCard?.id) return;
+    let cancelled = false;
+    let idleId = null;
+    let timeoutId = null;
     onCardViewed?.(currentCard);
     setComments([]);
     setDishCommentCount(0);
@@ -434,15 +482,38 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
-    (async () => {
+    const loadPreviewComments = async () => {
       const [dishItems, recipeItems] = await Promise.all([
         getCommentsForDish(currentCard.id, 50, "dish"),
         getCommentsForDish(currentCard.id, 50, "recipe"),
       ]);
+      if (cancelled) return;
       setDishCommentCount(Array.isArray(dishItems) ? dishItems.length : 0);
       setRecipeCommentCount(Array.isArray(recipeItems) ? recipeItems.length : 0);
       setRecipePreviewComment(Array.isArray(recipeItems) ? recipeItems[0] || null : null);
-    })();
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(() => {
+        void loadPreviewComments();
+      }, { timeout: 900 });
+    } else if (typeof window !== "undefined") {
+      timeoutId = window.setTimeout(() => {
+        void loadPreviewComments();
+      }, 250);
+    } else {
+      void loadPreviewComments();
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null && typeof window !== "undefined") {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [currentCard?.id, onCardViewed]);
 
   const actionBottom = 24;
@@ -450,7 +521,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const commentBottom = tagsBottom + 8;
   const textBottom = Math.max(88, commentBottom + 4);
   const recipeContentBottom = Math.max(tagsBottom + 28, 132);
-  const nextCard = deck[currentIndex + 1] || null;
   const currentCardBorderClass = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const nextCardBorderClass = isRestaurantDish(nextCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
@@ -721,10 +791,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const targetX = -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
     try {
       await animate(dragX, targetX, {
-        type: "spring",
-        stiffness: 280,
-        damping: 28,
-        mass: 0.6,
+        type: "tween",
+        duration: 0.18,
+        ease: "easeOut",
       }).finished;
     } catch {}
     if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
@@ -868,10 +937,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
       try {
         await animate(dragX, targetX, {
-          type: "spring",
-          stiffness: 280,
-          damping: 28,
-          mass: 0.6,
+          type: "tween",
+          duration: 0.18,
+          ease: "easeOut",
         }).finished;
       } catch {}
       advanceCard();
@@ -905,6 +973,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <img
         src={imageSrc}
         alt={dish.name}
+        decoding="async"
+        fetchPriority={active || preview ? "high" : "auto"}
         className="block w-full h-full object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;

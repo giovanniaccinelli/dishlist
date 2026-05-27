@@ -385,7 +385,7 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       try {
-        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
+        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
         const seenIds = new Set(getStoredViewedDishIds());
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
@@ -615,7 +615,7 @@ export default function Feed() {
     recountDishSavesFromUsers()
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
-        return getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE }).then(({ items }) => {
+        return getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false }).then(({ items }) => {
           const publicItems = items.filter(
             (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
           );
@@ -785,7 +785,7 @@ export default function Feed() {
         setViewedDishIds([]);
         await setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: [] }, { merge: true });
       }
-      const { items } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE });
+      const { items } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
       const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
       const ordered = publicItems
         .slice()

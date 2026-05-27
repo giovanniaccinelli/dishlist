@@ -680,9 +680,22 @@ export async function getFollowingForUser(userId, { force = false } = {}) {
   }
   return cachedRead(`user:${userId}:following`, async () => {
     const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) return [];
-    return userSnap.data().following || [];
+    const [userSnap, followerBacklinksSnap] = await Promise.all([
+      getDoc(userRef),
+      getDocs(query(collection(db, "users"), where("followers", "array-contains", userId))),
+    ]);
+    const explicitFollowing = userSnap.exists() && Array.isArray(userSnap.data()?.following) ? userSnap.data().following : [];
+    const backlinkFollowing = followerBacklinksSnap.docs.flatMap((snap) => {
+      const data = snap.data() || {};
+      return [snap.id, data.uid, data.userId, data.authUid, data.appleUserId, data.appleSub ? `apple:${data.appleSub}` : "", data.appleSub];
+    });
+    return Array.from(
+      new Set(
+        [...explicitFollowing, ...backlinkFollowing]
+          .map((id) => String(id || "").trim())
+          .filter(Boolean)
+      )
+    );
   });
 }
 

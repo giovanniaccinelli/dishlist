@@ -417,7 +417,17 @@ export default function Feed() {
       setFollowingLoading(Boolean(userId));
       setFollowingResolved(false);
       try {
-        const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
+        const feedPagePromise = getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
+        const userFeedPromise = userId
+          ? Promise.all([
+              getFollowingForUser(userId, { force: true }),
+              getSavedDishesFromFirestore(userId),
+              getToTryDishesFromFirestore(userId),
+              getDishesFromFirestore(userId),
+              getDoc(doc(db, "users", userId)),
+            ])
+          : null;
+        const { items: allItems } = await feedPagePromise;
         const seenIds = new Set(getStoredViewedDishIds());
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
@@ -445,13 +455,7 @@ export default function Feed() {
         let following = [];
 
         if (userId) {
-          const [followed, saved, toTry, uploaded, currentUserSnap] = await Promise.all([
-            getFollowingForUser(userId, { force: true }),
-            getSavedDishesFromFirestore(userId),
-            getToTryDishesFromFirestore(userId),
-            getDishesFromFirestore(userId),
-            getDoc(doc(db, "users", userId)),
-          ]);
+          const [followed, saved, toTry, uploaded, currentUserSnap] = await userFeedPromise;
           nextFollowingIds = Array.from(new Set(followed || []));
           const expandedFollowingIds = await expandFollowingIds(nextFollowingIds);
           const followedSet = new Set(expandedFollowingIds);

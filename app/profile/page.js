@@ -681,6 +681,13 @@ export default function Profile() {
         }
         setProfileContentReady(true);
         const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
+        Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId)))
+          .then((lists) => {
+            if (!cancelled) setCustomDishlists(mergeUniqueById(lists));
+          })
+          .catch((error) => {
+            console.error("Fast own custom dishlists fetch failed:", error);
+          });
         const results = await Promise.allSettled([
           getUploadedDishesForUserAliases(candidateIds),
           Promise.all(candidateIds.map((candidateId) => getSavedDishesFromFirestore(candidateId))),

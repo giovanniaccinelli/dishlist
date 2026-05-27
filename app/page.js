@@ -143,6 +143,7 @@ export default function Feed() {
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(() => !initialFeedCache && Boolean(userId));
   const [followingResolved, setFollowingResolved] = useState(() => Boolean(initialFeedCache?.followingDeck?.length));
+  const [followingResetting, setFollowingResetting] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
   const [excludedTags, setExcludedTags] = useState([]);
@@ -815,6 +816,7 @@ export default function Feed() {
   const handleResetFeed = async (feedType) => {
     setLoadingDishes(true);
     if (feedType === "following") {
+      setFollowingResetting(true);
       setFollowingLoading(true);
       setFollowingResolved(false);
     }
@@ -840,6 +842,7 @@ export default function Feed() {
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
         setFollowingLoading(false);
         setFollowingResolved(true);
+        setFollowingResetting(false);
       } else {
         setForYouDeck(shuffleArray(ordered));
         setForYouIndex(0);
@@ -851,11 +854,13 @@ export default function Feed() {
         setFollowingDeck([]);
         setFollowingLoading(false);
         setFollowingResolved(true);
+        setFollowingResetting(false);
       } else {
         setForYouDeck([]);
       }
     } finally {
       setLoadingDishes(false);
+      if (feedType === "following") setFollowingResetting(false);
     }
   };
 
@@ -1404,7 +1409,7 @@ export default function Feed() {
                 </button>
               </div>
             </div>
-          ) : (!followingResolved || followingLoading) && orderedFollowing.length === 0 ? (
+          ) : (!followingResolved || followingLoading || followingResetting) && orderedFollowing.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <img
                 src="/logo-real.png"

@@ -378,6 +378,46 @@ function mergeStoryStats(groups = []) {
   return merged;
 }
 
+function collectCalendarDayKeysFromValues(values = []) {
+  const keys = new Set();
+  const addValue = (value) => {
+    if (!value) return;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+        keys.add(trimmed.slice(0, 10));
+        return;
+      }
+    }
+    const ms = getStoryCalendarMillis(value);
+    if (ms) keys.add(getStoryCalendarKey(ms));
+  };
+  values.forEach((item) => {
+    if (!item) return;
+    if (typeof item !== "object") {
+      addValue(item);
+      return;
+    }
+    [
+      item.dayKey,
+      item.dateKey,
+      item.storyDayKey,
+      item.calendarDayKey,
+      item.date,
+      item.ateAt,
+      item.ateAtMs,
+      item.dateMs,
+      item.pushedAtMs,
+      item.pushedAtISO,
+      item.publishedAtMs,
+      item.publishedAtISO,
+      item.createdAt,
+      item.updatedAt,
+    ].forEach(addValue);
+  });
+  return keys;
+}
+
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
   const { language, setLanguage, darkMode, setDarkMode, t } = useLanguage();
@@ -1804,7 +1844,18 @@ export default function Profile() {
     () => new Map(storyCalendarDays.map((day) => [day.key, day.items])),
     [storyCalendarDays]
   );
-  const loggedCalendarDayKeys = useMemo(() => new Set(storyCalendarDays.map((day) => day.key).filter(Boolean)), [storyCalendarDays]);
+  const loggedCalendarDayKeys = useMemo(() => {
+    const keys = new Set(storyCalendarDays.map((day) => day.key).filter(Boolean));
+    collectCalendarDayKeysFromValues(activeStories).forEach((key) => keys.add(key));
+    collectCalendarDayKeysFromValues(mealCalendarEntries).forEach((key) => keys.add(key));
+    Object.values(storyPushStats || {}).forEach((stats) => {
+      collectCalendarDayKeysFromValues([
+        stats,
+        ...(Array.isArray(stats?.history) ? stats.history : []),
+      ]).forEach((key) => keys.add(key));
+    });
+    return keys;
+  }, [activeStories, mealCalendarEntries, storyCalendarDays, storyPushStats]);
   const profileCalendarCells = useMemo(
     () => getCalendarTimelineCells(storyCalendarDays, profileCalendarSelectedDay),
     [profileCalendarSelectedDay, storyCalendarDays]
@@ -2377,7 +2428,8 @@ export default function Profile() {
                         return (
                           <div
                             key={cell.dayKey}
-                            style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid" } : undefined}
+                            style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid", boxShadow: "inset 0 0 0 1px #F0A623" } : undefined}
+                            data-logged-day={hasItems ? "true" : undefined}
                             className={`relative rounded-[0.32rem] border ${
                               hasItems
                                 ? "bg-transparent"
@@ -4429,7 +4481,8 @@ export default function Profile() {
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid" } : undefined}
+                          style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid", boxShadow: "inset 0 0 0 1px #F0A623" } : undefined}
+                          data-logged-day={hasItems ? "true" : undefined}
                           className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
                             hasItems
                               ? selected

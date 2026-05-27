@@ -349,7 +349,7 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
               <div
                 ref={frameRef}
-                className="relative mx-auto aspect-[3/4.35] max-h-[54vh] w-full max-w-[20rem] touch-none overflow-hidden rounded-[1.65rem] border-2 border-white/12 bg-black"
+                className="relative mx-auto aspect-[9/16] max-h-[58vh] w-full max-w-[18.25rem] touch-none overflow-hidden rounded-[28px] border-2 border-white/12 bg-black"
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}

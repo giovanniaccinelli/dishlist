@@ -159,6 +159,7 @@ export default function Feed() {
   const [feedClientReady, setFeedClientReady] = useState(false);
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
   const [firstFeedCardReady, setFirstFeedCardReady] = useState(false);
+  const [feedHasRendered, setFeedHasRendered] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
@@ -1135,16 +1136,19 @@ export default function Feed() {
   const firstVisibleFeedCardKey = firstVisibleFeedCard?.id || firstVisibleFeedCard?._key || "";
 
   useEffect(() => {
+    if (feedHasRendered) return undefined;
     if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) {
       setFirstFeedCardReady(false);
       return undefined;
     }
     if (!firstVisibleFeedCard) {
       setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
       return undefined;
     }
     if (isDishVideo(firstVisibleFeedCard)) {
       setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
       return undefined;
     }
 
@@ -1152,19 +1156,26 @@ export default function Feed() {
     setFirstFeedCardReady(false);
     const image = new Image();
     image.onload = () => {
-      if (!cancelled) setFirstFeedCardReady(true);
+      if (!cancelled) {
+        setFirstFeedCardReady(true);
+        setFeedHasRendered(true);
+      }
     };
     image.onerror = () => {
-      if (!cancelled) setFirstFeedCardReady(true);
+      if (!cancelled) {
+        setFirstFeedCardReady(true);
+        setFeedHasRendered(true);
+      }
     };
     image.src = getDishImageUrl(firstVisibleFeedCard);
     if (image.complete && image.naturalWidth > 0) {
       setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
     }
     return () => {
       cancelled = true;
     };
-  }, [feedClientReady, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
+  }, [feedClientReady, feedHasRendered, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
 
   if (!feedClientReady || needsOpeningDishMode) {
     return (
@@ -1181,7 +1192,7 @@ export default function Feed() {
     return <FeedLogoLoading />;
   }
 
-  if (!firstFeedCardReady) {
+  if (!feedHasRendered && !firstFeedCardReady) {
     return <FeedLogoLoading />;
   }
 
@@ -1214,7 +1225,7 @@ export default function Feed() {
             aria-label="Open directs"
           >
             <Send size={18} />
-            {hasUnreadDirects ? <span className="no-accent-border absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            {hasUnreadDirects ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
           </Link>
           <button
             type="button"

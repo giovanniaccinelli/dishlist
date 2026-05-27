@@ -142,13 +142,15 @@ export default function DirectChat() {
     : activePickerDishlist?.dishes || [];
 
   const sendText = async () => {
-    if (!input.trim() || !user?.uid) return;
-    await sendMessage(id, {
+    const text = input.trim();
+    if (!text || !user?.uid) return;
+    setInput("");
+    const ok = await sendMessage(id, {
       senderId: user.uid,
       type: "text",
-      text: input.trim(),
+      text,
     });
-    setInput("");
+    if (ok === false) setInput(text);
   };
 
   const sendDish = async () => {

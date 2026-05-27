@@ -149,19 +149,21 @@ export default function Directs() {
                         : "border-black/8 bg-white shadow-[0_12px_26px_rgba(0,0,0,0.07)]"
                   }`}
                 >
-                  <div className={`relative flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-black ${
+                  <div className={`relative flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full text-lg font-black ${
                     darkMode ? "bg-white/10 text-white/72" : "bg-black/7 text-black/62"
                   }`}>
-                    {c.otherUser?.photoURL ? (
-                      <img
-                        src={c.otherUser.photoURL}
-                        alt={c.otherUser?.displayName || "Profile"}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      c.otherUser?.displayName?.[0] || "U"
-                    )}
-                    {unread ? <span className="no-accent-border absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#E64646]" /> : null}
+                    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
+                      {c.otherUser?.photoURL ? (
+                        <img
+                          src={c.otherUser.photoURL}
+                          alt={c.otherUser?.displayName || "Profile"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        c.otherUser?.displayName?.[0] || "U"
+                      )}
+                    </div>
+                    {unread ? <span className={`no-accent-border absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 ${darkMode ? "border-[#151515]" : "border-white"} bg-[#E64646]`} /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-baseline gap-2">

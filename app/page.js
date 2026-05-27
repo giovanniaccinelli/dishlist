@@ -142,6 +142,7 @@ export default function Feed() {
   const [followingSeenAt, setFollowingSeenAt] = useState(() => initialFeedCache?.followingSeenAt || 0);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(() => !initialFeedCache && Boolean(userId));
+  const [followingResolved, setFollowingResolved] = useState(() => Boolean(initialFeedCache?.followingDeck?.length));
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedHydrated, setViewedHydrated] = useState(false);
   const [excludedTags, setExcludedTags] = useState([]);
@@ -408,6 +409,7 @@ export default function Feed() {
     (async () => {
       setLoadingDishes(true);
       setFollowingLoading(Boolean(userId));
+      setFollowingResolved(false);
       try {
         const { items: allItems } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
         const seenIds = new Set(getStoredViewedDishIds());
@@ -430,6 +432,7 @@ export default function Feed() {
           setFollowingIndexByMode({});
           setFollowingSinceById({});
           setFollowingLoading(false);
+          setFollowingResolved(true);
         }
         setLoadingDishes(false);
 
@@ -489,6 +492,7 @@ export default function Feed() {
           setForYouDeck(forYou);
           setFollowingDeck(following);
           setFollowingLoading(false);
+          setFollowingResolved(true);
         }
 	      } catch (err) {
         console.error("Failed to load feed dishes:", err);
@@ -497,6 +501,7 @@ export default function Feed() {
         setForYouDeck([]);
         setFollowingDeck([]);
         setFollowingLoading(false);
+        setFollowingResolved(true);
       } finally {
         setLoadingDishes(false);
       }
@@ -809,6 +814,10 @@ export default function Feed() {
 
   const handleResetFeed = async (feedType) => {
     setLoadingDishes(true);
+    if (feedType === "following") {
+      setFollowingLoading(true);
+      setFollowingResolved(false);
+    }
     try {
       if (typeof window !== "undefined" && userId) {
         localStorage.removeItem(viewedStorageKey(userId));
@@ -829,6 +838,8 @@ export default function Feed() {
         setFollowingDeck(sortNewest(matchedFollowingItems.length || !expandedFollowingIds.length ? matchedFollowingItems : ordered));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
+        setFollowingLoading(false);
+        setFollowingResolved(true);
       } else {
         setForYouDeck(shuffleArray(ordered));
         setForYouIndex(0);
@@ -838,6 +849,8 @@ export default function Feed() {
       console.error("Failed to reset feed:", err);
       if (feedType === "following") {
         setFollowingDeck([]);
+        setFollowingLoading(false);
+        setFollowingResolved(true);
       } else {
         setForYouDeck([]);
       }
@@ -1391,7 +1404,7 @@ export default function Feed() {
                 </button>
               </div>
             </div>
-          ) : followingLoading && orderedFollowing.length === 0 ? (
+          ) : (!followingResolved || followingLoading) && orderedFollowing.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <img
                 src="/logo-real.png"

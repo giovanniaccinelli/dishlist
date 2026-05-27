@@ -272,7 +272,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
-  const [currentMediaReady, setCurrentMediaReady] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -370,7 +369,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentIndex, currentCard?._key, onIndexChange]);
 
   useEffect(() => {
-    setCurrentMediaReady(isDishVideo(currentCard));
     setShowRecipe(isRecipeOnlyDish(currentCard));
     setRecipePanelModal(null);
     setDescriptionModalOpen(false);
@@ -907,13 +905,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <img
         src={imageSrc}
         alt={dish.name}
-        className={`block w-full h-full object-cover transition-opacity duration-200 ${active && !currentMediaReady ? "opacity-0" : "opacity-100"}`}
-        onLoad={() => {
-          if (active) setCurrentMediaReady(true);
-        }}
+        className="block w-full h-full object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
-          if (active) setCurrentMediaReady(true);
         }}
       />
     );
@@ -951,7 +945,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         onTouchStartCapture={handleDeckMediaUnlock}
         onClickCapture={handleDeckMediaUnlock}
       >
-        {nextCard && currentMediaReady ? (
+        {nextCard ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
@@ -976,7 +970,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             borderColor: currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F",
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] transition-opacity duration-200 ${currentMediaReady ? "opacity-100" : "pointer-events-none opacity-0"} ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div
@@ -1051,7 +1045,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
             </div>
           ) : null}
-          {darkMode && !visibleRecipe && currentMediaReady ? (
+          {darkMode && !visibleRecipe ? (
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
@@ -1252,7 +1246,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-hidden="true"
                 />
               ) : null}
-              {!visibleRecipe && currentMediaReady ? (
+              {!visibleRecipe ? (
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{
@@ -1262,7 +1256,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   }}
                 />
               ) : null}
-              {!visibleRecipe && currentMediaReady ? (
+              {!visibleRecipe ? (
                 <div className="absolute left-5 right-5 text-white z-20" style={{ bottom: textBottom }}>
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">

@@ -440,6 +440,7 @@ export default function Profile() {
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
   const [dishlistSearch, setDishlistSearch] = useState("");
+  const profileSearchPendingRef = useRef(false);
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
@@ -922,6 +923,11 @@ export default function Profile() {
   }, [activeDishlistId, customDishlists]);
 
   useEffect(() => {
+    if (profileSearchPendingRef.current) {
+      profileSearchPendingRef.current = false;
+      setDishlistSearchOpen(true);
+      return;
+    }
     setDishlistSearchOpen(false);
     setDishlistSearch("");
   }, [activeDishlistId]);
@@ -945,6 +951,18 @@ export default function Profile() {
     }
     const query = params.toString();
     window.history.pushState({ dishlistId }, "", query ? `${pathname}?${query}` : pathname);
+  };
+
+  const openProfileDishSearch = () => {
+    profileSearchPendingRef.current = true;
+    setDishlistSearch("");
+    setActiveDishlistId("all_dishes");
+    setDishlistSearchOpen(true);
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("list", "all_dishes");
+    const query = params.toString();
+    window.history.pushState({ dishlistId: "all_dishes" }, "", query ? `${pathname}?${query}` : pathname);
   };
 
   const handleDishlistDetailPointerDown = (event) => {
@@ -1935,10 +1953,6 @@ export default function Profile() {
     if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
     changeProfileCalendarMonth(dx < 0 ? 1 : -1);
   };
-  const calendarPreviewCells = useMemo(() => {
-    return getCalendarMonthPreviewCells(new Date());
-  }, []);
-
   const selectedCreateDishes = Array.from(
     new Map(
       allDishlists
@@ -2231,10 +2245,18 @@ export default function Profile() {
 
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
-      <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[104px_1fr_104px] items-center px-4 pb-1.5 relative">
-        <div className="flex min-w-[104px] items-center justify-start" />
+      <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[152px_1fr_152px] items-center px-4 pb-1.5 relative">
+        <div className="flex min-w-[152px] items-center justify-start" />
         <div className="flex items-center justify-center" />
         <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setProfileCalendarOpen(true)}
+            className="top-action-btn"
+            aria-label={t("Open calendar")}
+          >
+            <CalendarDays size={18} strokeWidth={2.05} />
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -2378,78 +2400,22 @@ export default function Profile() {
       ) : (
         <>
           {showingDishlistOverview ? (
-            <div className="mx-auto mb-4 grid w-full max-w-3xl grid-cols-2 gap-3 px-2">
-              <div>
-                <div className="mb-2 flex items-center gap-2 leading-none">
-                  <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
-                  <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setProfileMapOpen(true)}
-                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-                  }`}
-                  aria-label="Open map"
-                >
-                  <MapPreview groups={uploadedRestaurantGroups} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                </button>
+            <div className="mx-auto mb-4 w-full max-w-3xl px-2">
+              <div className="mb-2 flex items-center gap-2 leading-none">
+                <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
+                <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
               </div>
-              <div>
-                <div className="mb-2 flex items-center gap-2 leading-none">
-                  <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Calendar")}</span>
-                  <CalendarDays className={`h-[1.05rem] w-[1.05rem] shrink-0 ${darkMode ? "text-white/72" : "text-black/72"}`} strokeWidth={2.05} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setProfileCalendarOpen(true)}
-                  className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                    darkMode ? "border-white/10 bg-[#181818]" : "border-black/10 bg-[#FBFAF6]"
-                  }`}
-                  aria-label="Open calendar"
-                >
-                  <div className="relative flex h-full flex-col">
-                    <div className="relative h-6 border-b border-[#C78400]/35 bg-[#F0A623]">
-                      <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 justify-center gap-8">
-                        {[0, 1].map((item) => (
-                          <span
-                            key={item}
-                            className={`h-3 w-3 rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.24)] ${
-                              darkMode ? "bg-[#181818]" : "bg-[#FBFAF6]"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid flex-1 grid-cols-7 gap-1.5 p-3">
-                      {calendarPreviewCells.map((cell) => {
-                        const hasItems = loggedCalendarDayKeys.has(cell.dayKey);
-                        return (
-                          <div
-                            key={cell.dayKey}
-                            style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid", boxShadow: "inset 0 0 0 1px #F0A623" } : undefined}
-                            data-logged-day={hasItems ? "true" : undefined}
-                            className={`relative rounded-[0.32rem] border ${
-                              hasItems
-                                ? "bg-transparent"
-                                : cell.isToday
-                                  ? "border-[#2BD36B] bg-transparent"
-                                  : "border-transparent"
-                            } ${
-                              cell.isToday
-                                ? "bg-transparent"
-                                : hasItems
-                                  ? ""
-                                : darkMode ? "bg-white/12" : "bg-black/8"
-                            }`}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setProfileMapOpen(true)}
+                className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                  darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+                }`}
+                aria-label="Open map"
+              >
+                <MapPreview groups={uploadedRestaurantGroups} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+              </button>
             </div>
           ) : null}
 
@@ -2612,14 +2578,13 @@ export default function Profile() {
         </>
       )}
 
-      {/* Add Dish button */}
+      {/* Profile search button */}
       <motion.button
-        onClick={() => router.push(`/upload?targetList=${encodeURIComponent(getProfileAddTargetListId())}`)}
+        onClick={openProfileDishSearch}
         className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
-        disabled={loadingUpload}
-        aria-label="Add dish"
+        aria-label={t("Search dishes")}
       >
-        <Plus size={26} strokeWidth={2.1} />
+        <Search size={27} strokeWidth={2.35} />
       </motion.button>
 
       {/* Upload Modal */}

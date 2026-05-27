@@ -1215,7 +1215,7 @@ export default function Feed() {
 
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
-      <div className="app-top-nav mt-1 px-4 pb-2 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
+      <div className="app-top-nav mt-1 px-4 pb-0 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
         <button
           type="button"
           onClick={() => setAboutOpen(true)}
@@ -1263,7 +1263,7 @@ export default function Feed() {
         </div>
       )}
       {showFeedMapStrip ? (
-        <div className="px-4 pt-1">
+        <div className="px-4 pt-0">
           <button
             type="button"
             onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
@@ -1274,7 +1274,7 @@ export default function Feed() {
           </button>
         </div>
       ) : null}
-      <div className="px-4 pt-1 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+      <div className="-mt-1 px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
@@ -1321,7 +1321,7 @@ export default function Feed() {
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
-      <div className="bottom-nav-spacer px-4 pt-1 flex-1 min-h-0 overflow-hidden relative">
+      <div className="bottom-nav-spacer px-4 pt-0 flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

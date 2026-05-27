@@ -1326,7 +1326,7 @@ export default function Feed() {
           </button>
         </div>
       ) : null}
-      <div className="-mt-1 px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3">
+      <div className={`px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3 ${showFeedMapStrip ? "mt-0 translate-y-2" : "-mt-1"}`}>
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}

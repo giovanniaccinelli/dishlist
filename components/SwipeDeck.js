@@ -951,15 +951,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         onTouchStartCapture={handleDeckMediaUnlock}
         onClickCapture={handleDeckMediaUnlock}
       >
-        {!currentMediaReady ? (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-            <img
-              src="/logo-real.png"
-              alt=""
-              className="h-24 w-24 object-contain dishlist-loading-logo"
-            />
-          </div>
-        ) : null}
         {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}

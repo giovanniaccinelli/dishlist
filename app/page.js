@@ -43,6 +43,7 @@ import {
 import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { isTextOnlyDish } from "./lib/dishContent";
+import { getDishImageUrl, isDishVideo } from "./lib/dishImage";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
 import { resolveRepresentativeTags } from "./lib/profileTags";
@@ -157,6 +158,7 @@ export default function Feed() {
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [feedClientReady, setFeedClientReady] = useState(false);
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
+  const [firstFeedCardReady, setFirstFeedCardReady] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
@@ -658,6 +660,10 @@ export default function Feed() {
 
   const currentForYouIndex = getModeIndex(forYouIndexByMode, forYouIndex);
   const currentFollowingIndex = getModeIndex(followingIndexByMode, followingIndex);
+  const firstVisibleFeedCard =
+    activeFeed === "following"
+      ? orderedFollowing[currentFollowingIndex] || null
+      : orderedForYou[currentForYouIndex] || null;
   const activeFeedCard = activeFeed === "following" ? currentFollowingCard : currentForYouCard;
   const activeFeedRestaurant = normalizeRestaurant(activeFeedCard?.restaurant);
   const showFeedMapStrip = selectedDishMode === DISH_MODE_RESTAURANT && Boolean(activeFeedRestaurant);
@@ -1111,6 +1117,39 @@ export default function Feed() {
   };
 
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
+  const firstVisibleFeedCardKey = firstVisibleFeedCard?.id || firstVisibleFeedCard?._key || "";
+
+  useEffect(() => {
+    if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) {
+      setFirstFeedCardReady(false);
+      return undefined;
+    }
+    if (!firstVisibleFeedCard) {
+      setFirstFeedCardReady(true);
+      return undefined;
+    }
+    if (isDishVideo(firstVisibleFeedCard)) {
+      setFirstFeedCardReady(true);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setFirstFeedCardReady(false);
+    const image = new Image();
+    image.onload = () => {
+      if (!cancelled) setFirstFeedCardReady(true);
+    };
+    image.onerror = () => {
+      if (!cancelled) setFirstFeedCardReady(true);
+    };
+    image.src = getDishImageUrl(firstVisibleFeedCard);
+    if (image.complete && image.naturalWidth > 0) {
+      setFirstFeedCardReady(true);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [feedClientReady, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
 
   if (!feedClientReady || needsOpeningDishMode) {
     return (
@@ -1124,6 +1163,10 @@ export default function Feed() {
   }
 
   if (loading || (loadingDishes && !hasLoadedFeedCards)) {
+    return <FeedLogoLoading />;
+  }
+
+  if (!firstFeedCardReady) {
     return <FeedLogoLoading />;
   }
 

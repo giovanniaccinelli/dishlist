@@ -356,7 +356,6 @@ export default function Feed() {
 	      setFollowingSeenAt(Number(cachedFeed.followingSeenAt || 0));
 	      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
       setLoadingDishes(false);
-      return;
     }
     const sortNewest = (items) =>
       items

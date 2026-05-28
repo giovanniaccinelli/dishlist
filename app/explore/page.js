@@ -964,7 +964,7 @@ export default function Explore() {
   return (
     <div
       className={`bottom-nav-spacer box-border flex h-[100dvh] flex-col overscroll-none bg-transparent px-4 pt-1 text-black relative ${
-        selectedDishMode === DISH_MODE_RESTAURANT ? "overflow-hidden" : "overflow-y-auto"
+        selectedDishMode === DISH_MODE_RESTAURANT ? "overflow-hidden" : "overflow-x-hidden overflow-y-auto"
       }`}
     >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[1fr_auto_1fr] items-center relative">

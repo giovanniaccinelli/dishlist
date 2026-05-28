@@ -1554,13 +1554,14 @@ export default function Profile() {
     setDishlistPickerLoading(true);
     try {
       const lists = (await getAllDishlistsForUser(user.uid)).filter(
-        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+        (dishlist) => dishlist.id !== "uploaded"
       );
       const memberships = lists
+        .filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "saved")
         .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
         .map((dishlist) => dishlist.id);
       setDishlistPickerLists(lists);
-      setDishlistPickerSelectedIds(memberships);
+      setDishlistPickerSelectedIds(["all_dishes", ...memberships]);
     } finally {
       setDishlistPickerLoading(false);
     }

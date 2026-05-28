@@ -479,6 +479,8 @@ export default function RestaurantMapView({
       return;
     }
 
+    if (selectedPlaceId === "__none__") return;
+
     if (groups.length === 1) {
       focusMapOnGroup(groups[0], { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
       return;

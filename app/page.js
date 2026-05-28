@@ -1272,7 +1272,7 @@ export default function Feed() {
           <button
             type="button"
             onClick={() => setAboutOpen(true)}
-            className="top-action-btn text-[1.35rem] font-black leading-none"
+            className="bg-transparent p-0 text-[1.65rem] font-bold leading-none text-black"
             aria-label="Open DishList guide"
           >
             D

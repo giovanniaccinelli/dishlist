@@ -1347,7 +1347,7 @@ export default function Feed() {
             <button
               type="button"
               onClick={() => setFeedStoriesOpen(true)}
-              className="no-accent-border relative flex h-11 min-w-[2.7rem] items-center rounded-[1rem] bg-transparent pl-1 pr-2"
+              className="no-accent-border relative flex h-11 min-w-[2.4rem] items-center rounded-[1rem] bg-transparent pl-0 pr-1.5"
               aria-label={t("Open user stories")}
             >
               <span className="flex items-center">
@@ -1359,24 +1359,28 @@ export default function Feed() {
                   return (
                     <span
                       key={group.ownerId}
-                      className={`no-accent-border relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 ${
-                        viewedAll ? "border-[#B8B8B2]" : "border-[#2BD36B]"
-                      } ${index > 0 ? "-ml-3" : ""}`}
+                      className={`no-accent-border relative flex h-8 w-8 items-center justify-center rounded-full p-[2px] ${
+                        viewedAll ? "bg-[#C6C6BF]" : "bg-[#2BD36B]"
+                      } ${index > 0 ? "-ml-4" : ""}`}
                       style={{ zIndex: feedStoryPreviewGroups.length - index }}
                     >
-                      {group.ownerPhotoURL ? (
-                        <img src={group.ownerPhotoURL} alt={group.ownerName || "Story"} className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="flex h-full w-full items-center justify-center bg-black text-[11px] font-black text-white">
-                          {initial}
+                      <span className="no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#F6F6F2] p-[1.5px]">
+                        <span className="no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
+                          {group.ownerPhotoURL ? (
+                            <img src={group.ownerPhotoURL} alt={group.ownerName || "Story"} className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-[11px] font-black text-white">
+                              {initial}
+                            </span>
+                          )}
                         </span>
-                      )}
+                      </span>
                     </span>
                   );
                 })}
               </span>
               {extraFeedStoryCount ? (
-                <span className="no-accent-border -ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1.5 text-[10px] font-black text-white">
+                <span className="no-accent-border -ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1.5 text-[10px] font-black text-white">
                   +{extraFeedStoryCount}
                 </span>
               ) : null}

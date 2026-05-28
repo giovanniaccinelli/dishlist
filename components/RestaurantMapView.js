@@ -409,12 +409,6 @@ export default function RestaurantMapView({
     mapRef.current.addListener("zoom_changed", () => {
       mapGestureUntilRef.current = Date.now() + 650;
     });
-    if (typeof onMapClick === "function") {
-      mapRef.current.addListener("click", () => {
-        if (Date.now() < mapGestureUntilRef.current) return;
-        onMapClick();
-      });
-    }
   }, [mapState]);
 
   useEffect(() => {
@@ -657,6 +651,7 @@ export default function RestaurantMapView({
         {selectedGroup && mapState === "ready" ? (
           <div
             ref={sheetRef}
+            data-card-toggle-surface={embedded ? "true" : undefined}
             className={`absolute inset-x-3 z-10 overflow-visible ${embedded ? "bottom-[5.6rem]" : "bottom-3"}`}
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };

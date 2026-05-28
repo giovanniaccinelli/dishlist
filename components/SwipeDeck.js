@@ -334,7 +334,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextVideoRef = useRef(null);
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
-  const restaurantMapOpenedAtRef = useRef(0);
+  const cardTapStartRef = useRef(null);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -697,6 +697,36 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleDeckMediaUnlock = useCallback(() => {
     void unlockDeckMedia();
   }, [unlockDeckMedia]);
+
+  const isCardToggleBlockedTarget = useCallback((target) => {
+    if (!target?.closest) return false;
+    return Boolean(
+      target.closest(
+        'button, a, input, textarea, select, [role="button"], [data-no-drag="true"], [data-card-toggle-ignore="true"]'
+      )
+    );
+  }, []);
+
+  const handleCardTapStart = useCallback((event) => {
+    if (!hasCardBackView || currentCardRecipeOnly || isEjecting || disabled) return;
+    if (isCardToggleBlockedTarget(event.target)) {
+      cardTapStartRef.current = null;
+      return;
+    }
+    cardTapStartRef.current = { x: event.clientX, y: event.clientY };
+  }, [currentCardRecipeOnly, disabled, hasCardBackView, isCardToggleBlockedTarget, isEjecting]);
+
+  const handleCardTapEnd = useCallback((event) => {
+    const start = cardTapStartRef.current;
+    cardTapStartRef.current = null;
+    if (!start || !hasCardBackView || currentCardRecipeOnly || isEjecting || disabled) return;
+    if (isCardToggleBlockedTarget(event.target)) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.hypot(dx, dy) > 14) return;
+    event.stopPropagation();
+    setShowRecipe((value) => !value);
+  }, [currentCardRecipeOnly, disabled, hasCardBackView, isCardToggleBlockedTarget, isEjecting]);
 
   useEffect(() => {
     const video = currentVideoRef.current;
@@ -1093,6 +1123,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
+          onPointerDownCapture={handleCardTapStart}
+          onPointerUpCapture={handleCardTapEnd}
           style={{
             x: dragX,
             rotate: cardRotate,
@@ -1544,16 +1576,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {hasRestaurantMapView ? (
-                <div data-no-drag="true" className="absolute inset-0 bg-black shadow-none">
+                <div className="absolute inset-0 bg-black shadow-none">
                   <RestaurantMapView
                     groups={currentRestaurantMapGroups}
                     initialSelectedPlaceId={currentRestaurantPlaceId}
                     showSearch={false}
                     embedded
-                    onMapClick={() => {
-                      if (Date.now() - restaurantMapOpenedAtRef.current < 700) return;
-                      if (!currentCardRecipeOnly) setShowRecipe(false);
-                    }}
                   />
                 </div>
               ) : (

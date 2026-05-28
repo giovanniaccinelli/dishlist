@@ -1542,16 +1542,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {hasRestaurantMapView ? (
                 <div className="absolute inset-0 bg-black shadow-none">
-                  <button
-                    type="button"
-                    className="absolute inset-0 z-[6]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      if (!currentCardRecipeOnly) setShowRecipe(false);
-                    }}
-                    aria-label="Close restaurant map view"
-                  />
                   <RestaurantMapView
                     groups={currentRestaurantMapGroups}
                     initialSelectedPlaceId={currentRestaurantPlaceId}

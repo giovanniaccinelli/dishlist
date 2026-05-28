@@ -409,6 +409,12 @@ export default function RestaurantMapView({
     mapRef.current.addListener("zoom_changed", () => {
       mapGestureUntilRef.current = Date.now() + 650;
     });
+    if (typeof onMapClick === "function") {
+      mapRef.current.addListener("click", () => {
+        if (Date.now() < mapGestureUntilRef.current) return;
+        onMapClick();
+      });
+    }
   }, [mapState]);
 
   useEffect(() => {

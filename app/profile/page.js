@@ -2560,7 +2560,7 @@ export default function Profile() {
                         value={dishlistSearch}
                         onChange={(event) => setDishlistSearch(event.target.value)}
                         placeholder={t("Search dishes...")}
-                        className={`min-w-0 flex-1 appearance-none bg-transparent text-base outline-none [-webkit-appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden ${
+                        className={`profile-search-input min-w-0 flex-1 appearance-none bg-transparent text-base outline-none [-webkit-appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden ${
                           darkMode ? "placeholder:text-white/35" : "placeholder:text-black/35"
                         }`}
                       />
@@ -3731,7 +3731,7 @@ export default function Profile() {
                         value={createDishSearch}
                         onChange={(e) => setCreateDishSearch(e.target.value)}
                         placeholder="Search your dishes"
-                        className={`min-w-0 flex-1 bg-transparent text-base focus:outline-none ${darkMode ? "text-white placeholder:text-white/35" : "text-black placeholder:text-black/35"}`}
+                        className={`profile-search-input min-w-0 flex-1 bg-transparent text-base focus:outline-none ${darkMode ? "text-white placeholder:text-white/35" : "text-black placeholder:text-black/35"}`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

@@ -689,6 +689,12 @@ html.dark :where(input, textarea, select)::placeholder {
   color: rgba(255, 255, 255, 0.38) !important;
 }
 
+html.dark .profile-search-input,
+.profile-search-input {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 html.dark .dish-card-shell {
   box-shadow: 0 28px 74px rgba(0, 0, 0, 0.56), 0 8px 24px rgba(0, 0, 0, 0.42);
 }

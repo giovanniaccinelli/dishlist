@@ -1533,13 +1533,14 @@ export default function Profile() {
     setDishlistPickerLoading(true);
     try {
       const lists = (await getAllDishlistsForUser(user.uid)).filter(
-        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+        (dishlist) => dishlist.id !== "uploaded"
       );
       const memberships = lists
+        .filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "saved")
         .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
         .map((dishlist) => dishlist.id);
       setDishlistPickerLists(lists);
-      setDishlistPickerSelectedIds(memberships);
+      setDishlistPickerSelectedIds(["all_dishes", ...memberships]);
     } finally {
       setDishlistPickerLoading(false);
     }
@@ -1582,7 +1583,7 @@ export default function Profile() {
     if (!user?.uid || !dishlistPickerDish?.id) return;
     const selectedSet = new Set(dishlistPickerSelectedIds);
     const persistDishlistIds = dishlistPickerSelectedIds.filter(
-      (dishlistId) => !(dishlistId === "to_try" && selectedSet.has("saved"))
+      (dishlistId) => dishlistId !== "all_dishes" && !(dishlistId === "to_try" && selectedSet.has("saved"))
     );
     const currentIds = new Set(
       dishlistPickerLists
@@ -1610,7 +1611,7 @@ export default function Profile() {
         );
         const removeResults = await Promise.all(
           Array.from(currentIds)
-            .filter((dishlistId) => !nextIds.has(dishlistId))
+            .filter((dishlistId) => dishlistId !== "all_dishes" && dishlistId !== "saved" && !nextIds.has(dishlistId))
             .map((dishlistId) => {
               if (dishlistId === "saved") return removeSavedDishFromUser(userId, dish.id);
               if (dishlistId === "to_try") return removeDishFromToTry(userId, dish.id);
@@ -4466,7 +4467,7 @@ export default function Profile() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={dishlistPickerSelectedIds}
-        lockedIds={[]}
+        lockedIds={dishlistPickerSource === "pending" ? ["all_dishes"] : []}
         onToggle={(dishlist) =>
           setDishlistPickerSelectedIds((prev) =>
             prev.includes(dishlist.id)

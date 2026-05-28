@@ -22,9 +22,13 @@ function StoryStatIcon({ size = 18 }) {
   );
 }
 
-function orderPickerLists(lists = []) {
+function orderPickerLists(lists = [], pinAllDishesFirst = false) {
   const systemRank = new Map(PICKER_ORDER.map((id, index) => [id, index]));
   return [...lists].sort((a, b) => {
+    if (pinAllDishesFirst) {
+      if (a.id === "all_dishes") return -1;
+      if (b.id === "all_dishes") return 1;
+    }
     if (a.id === "all_dishes") return 1;
     if (b.id === "all_dishes") return -1;
     const aRank = systemRank.has(a.id) ? systemRank.get(a.id) : 50;
@@ -57,8 +61,8 @@ export default function DishlistPickerModal({
   const { darkMode, t } = useLanguage();
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
-  const orderedLists = orderPickerLists(lists);
   const isSwipeCard = variant === "swipe";
+  const orderedLists = orderPickerLists(lists, isSwipeCard);
   const accentPalette = [
     { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" },
     { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" },

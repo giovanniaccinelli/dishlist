@@ -566,7 +566,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Number.isFinite(currentRestaurantLat) &&
     Number.isFinite(currentRestaurantLng);
   const hasCardBackView = hasAnyRecipeText || hasRestaurantMapView;
-  const cardBackAccent = hasRestaurantMapView ? "#E64646" : "#FFC247";
+  const cardBackAccent = hasRestaurantMapView ? "#D94A38" : "#FFC247";
+  const cardBackSelectedTextColor = hasRestaurantMapView ? "#FFFFFF" : "#050505";
   const cardFrontLabel = hasRestaurantMapView ? "piatto" : "dish";
   const cardBackLabel = hasRestaurantMapView ? "ristorante" : "recipe";
   const currentRestaurantMapGroups = hasRestaurantMapView
@@ -1158,9 +1159,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(false);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      !visibleRecipe ? "!text-black" : "text-white/80"
+                      !visibleRecipe ? "" : "text-white/80"
                     }`}
-                    style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                    style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: cardBackSelectedTextColor, WebkitTextFillColor: cardBackSelectedTextColor } : undefined}
                   >
                     {cardFrontLabel}
                   </button>
@@ -1172,9 +1173,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(true);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      visibleRecipe ? "!text-black" : "text-white/80"
+                      visibleRecipe ? "" : "text-white/80"
                     }`}
-                    style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                    style={visibleRecipe ? { backgroundColor: cardBackAccent, color: cardBackSelectedTextColor, WebkitTextFillColor: cardBackSelectedTextColor } : undefined}
                   >
                     {cardBackLabel}
                   </button>
@@ -1322,9 +1323,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !visibleRecipe ? "!text-black" : "text-white/95"
+                    !visibleRecipe ? "" : "text-white/95"
                   }`}
-                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: cardBackSelectedTextColor, WebkitTextFillColor: cardBackSelectedTextColor } : undefined}
                 >
                   {cardFrontLabel}
                 </button>
@@ -1336,9 +1337,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    visibleRecipe ? "!text-black" : "text-white/95"
+                    visibleRecipe ? "" : "text-white/95"
                   }`}
-                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: cardBackSelectedTextColor, WebkitTextFillColor: cardBackSelectedTextColor } : undefined}
                 >
                   {cardBackLabel}
                 </button>

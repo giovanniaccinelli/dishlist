@@ -20,6 +20,7 @@ import { dispatchPushEvent } from "../lib/pushClient";
 import {
   getAllDishlistsForUser,
   publishCustomStory,
+  publishDishAsStory,
   saveDishToFirestore,
   saveDishToSelectedDishlist,
   uploadDishImageVariants,
@@ -78,6 +79,7 @@ export default function UploadPage() {
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes", "uploaded"]);
+  const [uploadToStory, setUploadToStory] = useState(false);
   const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
@@ -284,6 +286,15 @@ export default function UploadPage() {
           await Promise.all(
             savedTargets.map((dishlistId) => saveDishToSelectedDishlist(user.uid, dishlistId, savedDish))
           );
+          if (uploadToStory) {
+            const storyOk = await publishDishAsStory(user.uid, savedDish);
+            if (storyOk) {
+              await dispatchPushEvent("story_posted", {
+                ownerId: user.uid,
+                storyName: dishPayload.name || "",
+              });
+            }
+          }
         }
         setToastVariant("success");
         setToast("Dish uploaded");
@@ -291,6 +302,7 @@ export default function UploadPage() {
         setDishRating(0);
         setDishPrice("");
         setDishPriceCurrency("EUR");
+        setUploadToStory(false);
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);
@@ -1184,6 +1196,9 @@ export default function UploadPage() {
         mode="multiple"
         selectedIds={selectedDishlistIds}
         lockedIds={["all_dishes", "uploaded"]}
+        storyOption
+        storySelected={uploadToStory}
+        onToggleStory={() => setUploadToStory((value) => !value)}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

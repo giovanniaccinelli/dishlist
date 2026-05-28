@@ -7,6 +7,21 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 
 const PICKER_ORDER = ["saved", "to_try", "uploaded"];
 
+function StoryStatIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="12" cy="12" r="4.05" stroke="#2BD36B" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" stroke="#2BD36B" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M0.2 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M2.5 3.55V6.2" stroke="#2BD36B" strokeWidth="1.25" strokeLinecap="round" />
+      <path d="M1.35 8.7V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function orderPickerLists(lists = []) {
   const systemRank = new Map(PICKER_ORDER.map((id, index) => [id, index]));
   return [...lists].sort((a, b) => {
@@ -35,8 +50,11 @@ export default function DishlistPickerModal({
   confirmLabel = "Save",
   variant = "sheet",
   dishPreview = null,
+  storyOption = false,
+  storySelected = false,
+  onToggleStory,
 }) {
-  const { darkMode } = useLanguage();
+  const { darkMode, t } = useLanguage();
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
   const orderedLists = orderPickerLists(lists);
@@ -82,7 +100,7 @@ export default function DishlistPickerModal({
                 onClick={onClose}
                 className={`rounded-full px-3 py-1 text-sm ${darkMode ? "text-white/70" : "text-black/55"}`}
               >
-                Close
+                {t("Close")}
               </button>
             </div>
             {dishPreview ? (
@@ -99,7 +117,7 @@ export default function DishlistPickerModal({
                 />
                 <div className="min-w-0">
                   <div className={`text-xs font-semibold uppercase tracking-[0.14em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
-                    Just swiped
+                    {t("Just swiped")}
                   </div>
                   <div className={`truncate text-base font-bold ${darkMode ? "text-white" : "text-black"}`}>
                     {dishPreview?.name || dishName}
@@ -109,15 +127,57 @@ export default function DishlistPickerModal({
             ) : null}
             {loading ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
-                Loading dishlists...
+                {t("Loading dishlists...")}
               </div>
             ) : orderedLists.length === 0 ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
-                No dishlists yet.
+                {t("No dishlists yet.")}
               </div>
             ) : (
               <>
                 <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+                  {storyOption ? (
+                    <button
+                      type="button"
+                      onClick={onToggleStory}
+                      className={`no-accent-border mb-1 flex items-center justify-between rounded-[1.35rem] border-2 px-4 py-3.5 text-left shadow-[0_10px_28px_rgba(43,211,107,0.12)] ${
+                        darkMode
+                          ? storySelected
+                            ? "border-[#2BD36B] bg-[#102A18] text-white"
+                            : "border-[#2BD36B]/45 bg-[#151B15] text-white"
+                          : storySelected
+                            ? "border-[#2BD36B] bg-[#F1FFF5]"
+                            : "border-[#2BD36B]/55 bg-white"
+                      }`}
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-black/35" : "bg-[#EFFFF3]"}`}>
+                          <StoryStatIcon size={20} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className={`truncate text-sm font-bold ${darkMode ? "text-white" : "text-black"}`}>
+                            {t("Lo sto mangiando")}
+                          </div>
+                          <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>
+                            {t("Publish to stories too")}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`no-accent-border ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${
+                          darkMode
+                            ? storySelected
+                              ? "border-[#2BD36B] bg-[#1FA463] text-white"
+                              : "border-[#2BD36B]/45 bg-[#242424] text-white/70"
+                            : storySelected
+                              ? "border-[#1FA463] bg-[#1FA463] text-white"
+                              : "border-[#2BD36B]/45 bg-[#F7FFF9] text-black/65"
+                        }`}
+                      >
+                        {storySelected ? <Check size={16} /> : <Plus size={16} />}
+                      </div>
+                    </button>
+                  ) : null}
                   {orderedLists.map((dishlist) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
@@ -151,7 +211,7 @@ export default function DishlistPickerModal({
                             </span>
                           </div>
                           <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>
-                            {Number(dishlist.count || 0)} dishes
+                            {Number(dishlist.count || 0)} {t("dishes")}
                           </div>
                         </div>
                         <div
@@ -176,7 +236,7 @@ export default function DishlistPickerModal({
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
                     <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
-                      {selectedIds.length} selected
+                      {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
                     </div>
                     <button
                       type="button"
@@ -185,7 +245,7 @@ export default function DishlistPickerModal({
                         darkMode ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
                       }`}
                     >
-                      {confirmLabel}
+                      {t(confirmLabel)}
                     </button>
                   </div>
                 ) : null}

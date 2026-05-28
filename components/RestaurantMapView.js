@@ -12,9 +12,9 @@ import DishRatingBadge from "./DishRatingBadge";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 
-const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
+const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="#E64646"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.1"/>
   <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
   <g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -30,11 +30,13 @@ const getRestaurantPinSvg = (strokeColor = "white") => encodeURIComponent(`
 
 function getRestaurantMarkerIcon(markerTone = "default") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
-  const strokeColor = markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
+  const selected = markerTone === "selected";
+  const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
+  const fillColor = selected ? "#F2C94C" : "#E64646";
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor)}`,
-    scaledSize: new window.google.maps.Size(36, 42),
-    anchor: new window.google.maps.Point(18, 42),
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor)}`,
+    scaledSize: new window.google.maps.Size(selected ? 40 : 36, selected ? 47 : 42),
+    anchor: new window.google.maps.Point(selected ? 20 : 18, selected ? 47 : 42),
   };
 }
 
@@ -191,15 +193,18 @@ export default function RestaurantMapView({
       mapRef.current.setZoom(14);
     }
     if (!keepAboveSheet) return;
-    window.requestAnimationFrame(() => {
+    const adjust = () => {
       const mapHeight = mapNodeRef.current?.getBoundingClientRect?.().height || 0;
       const sheetHeight = sheetRef.current?.getBoundingClientRect?.().height || 0;
       if (!mapHeight || !sheetHeight || !mapRef.current?.panBy) return;
       const currentPinY = mapHeight / 2;
-      const desiredPinY = Math.max(72, mapHeight - sheetHeight - 48);
+      const sheetTop = Math.max(0, mapHeight - sheetHeight - 12);
+      const desiredPinY = Math.max(56, sheetTop - 22);
       const shiftY = Math.max(0, currentPinY - desiredPinY);
       if (shiftY > 6) mapRef.current.panBy(0, shiftY);
-    });
+    };
+    window.requestAnimationFrame(adjust);
+    window.setTimeout(adjust, 260);
   };
 
   const selectedGroup = useMemo(() => {
@@ -267,7 +272,7 @@ export default function RestaurantMapView({
 
   useEffect(() => {
     focusMapOnGroup(selectedGroup, { keepAboveSheet: true });
-  }, [selectedGroup?.placeId]);
+  }, [selectedDishUsers.length, selectedGroup?.placeId]);
 
   useEffect(() => {
     let mounted = true;
@@ -391,11 +396,13 @@ export default function RestaurantMapView({
       const hasFollowedUser = followedUsers.length > 0;
       const hasOwnUser = ownUsers.length > 0;
       const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
+      const selected = selectedPlaceId === group.placeId;
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default"),
+        icon: getRestaurantMarkerIcon(selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default"),
+        zIndex: selected ? 20 : undefined,
       });
       marker.addListener("click", () => {
         if (Date.now() < mapGestureUntilRef.current) return;
@@ -440,7 +447,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [followingIdSet, groups, mapState, ownIdSet]);
+  }, [followingIdSet, groups, mapState, ownIdSet, selectedPlaceId]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;
@@ -673,9 +680,6 @@ export default function RestaurantMapView({
                     <div
                       className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                       style={{ WebkitOverflowScrolling: "touch" }}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onPointerMove={(event) => event.stopPropagation()}
-                      onPointerUp={(event) => event.stopPropagation()}
                     >
                       {selectedDishUsers.map((dishUser) => {
                         const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
@@ -696,9 +700,11 @@ export default function RestaurantMapView({
                               className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                               style={{ WebkitOverflowScrolling: "touch" }}
                               onPointerDown={(event) => {
+                                event.stopPropagation();
                                 carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
                               }}
                               onPointerMove={(event) => {
+                                event.stopPropagation();
                                 const start = carouselTapRef.current;
                                 if (!start || start.moved) return;
                                 if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
@@ -710,7 +716,8 @@ export default function RestaurantMapView({
                                 event.preventDefault();
                                 event.stopPropagation();
                               }}
-                              onPointerUp={() => {
+                              onPointerUp={(event) => {
+                                event.stopPropagation();
                                 window.setTimeout(() => {
                                   carouselTapRef.current = null;
                                 }, 0);

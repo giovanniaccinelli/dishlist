@@ -4420,6 +4420,8 @@ export default function Profile() {
         eyebrow={dishlistPickerSource === "pending" ? t("Da sistemare") : undefined}
         confirmLabel={dishlistPickerSource === "pending" ? t("Fatto") : t("Save dish")}
         loading={dishlistPickerLoading}
+        variant={dishlistPickerSource === "pending" ? "swipe" : "sheet"}
+        dishPreview={dishlistPickerSource === "pending" ? dishlistPickerDish : null}
       />
       <AnimatePresence>
         {profileCalendarOpen ? (

@@ -103,7 +103,30 @@ export default function DishlistPickerModal({
                 {t("Close")}
               </button>
             </div>
-            {dishPreview ? (
+            {dishPreview && isSwipeCard ? (
+              <div className={`mb-4 shrink-0 overflow-hidden rounded-[1.55rem] border ${
+                darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
+              }`}>
+                <div className="relative h-52 w-full overflow-hidden">
+                  <img
+                    src={getDishImageUrl(dishPreview)}
+                    alt={dishPreview?.name || dishName}
+                    className="h-full w-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
+                  <div className="absolute inset-x-0 bottom-0 flex min-h-[62%] flex-col justify-end bg-gradient-to-t from-black via-black/78 via-55% to-transparent px-4 pb-4 pt-16 text-white">
+                    <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/64">
+                      {t("Just swiped")}
+                    </div>
+                    <div className="mt-1 truncate text-[1.55rem] font-black leading-none">
+                      {dishPreview?.name || dishName}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : dishPreview ? (
               <div className={`mb-4 flex shrink-0 items-center gap-3 rounded-[1.35rem] border p-2.5 ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>

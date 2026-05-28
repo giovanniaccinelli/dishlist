@@ -539,6 +539,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const recipeContentBottom = Math.max(tagsBottom + 28, 132);
   const currentCardBorderClass = isRestaurantDish(currentCard) ? "border-[#E64646]" : "border-[#E4B43F]";
   const nextCardBorderClass = isRestaurantDish(nextCard) ? "border-[#E64646]" : "border-[#E4B43F]";
+  const currentCardBaseBorderColor = currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F";
+  const activeCardBorderColor = useTransform(
+    dragX,
+    [-160, -40, 0, 36, 140],
+    [currentCardBaseBorderColor, currentCardBaseBorderColor, currentCardBaseBorderColor, "#2BD36B", "#2BD36B"]
+  );
   const currentStoryStats = currentCard?.id ? storyPushStatsByDish?.[currentCard.id] || null : null;
   const currentStoryPushCount = Number(currentStoryStats?.count || 0);
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
@@ -1096,7 +1102,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             x: dragX,
             rotate: cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
-            borderColor: currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F",
+            borderColor: activeCardBorderColor,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

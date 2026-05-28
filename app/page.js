@@ -12,6 +12,7 @@ import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
+  getActiveStoriesForUser,
   getAllDishlistsForUser,
   getCommentsForDish,
   getCommentsForStory,
@@ -22,6 +23,8 @@ import {
   getToTryDishesFromFirestore,
   getUsersByIds,
   getUsersWhoSavedDish,
+  markStoryViewed,
+  normalizeProfilePhotoURL,
   recountDishSavesFromUsers,
   saveDishToSelectedDishlist,
   saveDishToUserList,
@@ -30,6 +33,7 @@ import SaversModal from "../components/SaversModal";
 import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
+import StoryViewerModal from "../components/StoryViewerModal";
 import {
   dishModeMatches,
   DISH_MODE_ALL,
@@ -160,6 +164,8 @@ export default function Feed() {
   const [activitySeenHydrated, setActivitySeenHydrated] = useState(false);
   const [activityVisibleCount, setActivityVisibleCount] = useState(ACTIVITY_INITIAL_LIMIT);
   const [activityExpandedLoaded, setActivityExpandedLoaded] = useState(false);
+  const [feedStoryGroups, setFeedStoryGroups] = useState([]);
+  const [feedStoriesOpen, setFeedStoriesOpen] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [feedClientReady, setFeedClientReady] = useState(false);
@@ -170,6 +176,8 @@ export default function Feed() {
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
+  const feedStoryPreviewGroups = feedStoryGroups.slice(0, 3);
+  const extraFeedStoryCount = Math.max(0, feedStoryGroups.length - feedStoryPreviewGroups.length);
   const unseenActivityItems = useMemo(
     () => activityItems.filter((item) => Number(item.timeMs || 0) > Number(activitySeenAt || 0)),
     [activityItems, activitySeenAt]
@@ -268,6 +276,44 @@ export default function Feed() {
         console.error("Failed to listen for activity updates:", error);
       }
     );
+  }, [userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const usersSnap = await getDocs(query(collection(db, "users"), where("hasActiveStory", "==", true), limitResults(16)));
+        const groups = await Promise.all(
+          usersSnap.docs.map(async (userDoc) => {
+            const data = userDoc.data() || {};
+            const stories = await getActiveStoriesForUser(userDoc.id);
+            if (!stories.length) return null;
+            return {
+              ownerId: userDoc.id,
+              ownerName: data.displayName || data.name || "User",
+              ownerPhotoURL: normalizeProfilePhotoURL(data.photoURL || data.photoUrl || ""),
+              stories,
+            };
+          })
+        );
+        if (cancelled) return;
+        const ordered = groups
+          .filter(Boolean)
+          .sort((a, b) => {
+            const aViewed = userId ? (a.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
+            const bViewed = userId ? (b.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
+            if (aViewed !== bViewed) return aViewed ? 1 : -1;
+            return (a.ownerName || "").localeCompare(b.ownerName || "");
+          });
+        setFeedStoryGroups(ordered);
+      } catch (error) {
+        console.error("Failed to load feed stories:", error);
+        if (!cancelled) setFeedStoryGroups([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -1205,6 +1251,27 @@ export default function Feed() {
     setActivityVisibleCount((count) => Math.min(activityItems.length, count + ACTIVITY_PAGE_SIZE));
   };
 
+  const handleFeedStoryViewed = async (story, group) => {
+    if (!userId || !group?.ownerId || !story?.id) return;
+    await markStoryViewed(group.ownerId, story.id, userId);
+    setFeedStoryGroups((prev) =>
+      prev.map((item) => {
+        if (item.ownerId !== group.ownerId) return item;
+        return {
+          ...item,
+          stories: (item.stories || []).map((activeStory) =>
+            activeStory.id === story.id
+              ? {
+                  ...activeStory,
+                  viewedBy: Array.from(new Set([...(activeStory.viewedBy || []), userId])),
+                }
+              : activeStory
+          ),
+        };
+      })
+    );
+  };
+
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
   const firstVisibleFeedCardKey = firstVisibleFeedCard?.id || firstVisibleFeedCard?._key || "";
 
@@ -1268,15 +1335,7 @@ export default function Feed() {
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
       <div className="app-top-nav mt-1 px-4 pb-0 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
-        <div className="justify-self-start flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setAboutOpen(true)}
-            className="text-left"
-            aria-label="Open DishList guide"
-          >
-            <h1 className="text-[2.05rem] font-bold leading-none">D</h1>
-          </button>
+        <div className="justify-self-start flex items-center gap-1.5">
           <Link
             href="/dishlists"
             className="top-action-btn"
@@ -1284,6 +1343,45 @@ export default function Feed() {
           >
             <Users size={19} strokeWidth={2.35} />
           </Link>
+          {feedStoryGroups.length ? (
+            <button
+              type="button"
+              onClick={() => setFeedStoriesOpen(true)}
+              className="no-accent-border relative flex h-11 min-w-[2.7rem] items-center rounded-[1rem] bg-transparent pl-1 pr-2"
+              aria-label={t("Open user stories")}
+            >
+              <span className="flex items-center">
+                {feedStoryPreviewGroups.map((group, index) => {
+                  const viewedAll = userId
+                    ? (group.stories || []).every((story) => (story.viewedBy || []).includes(userId))
+                    : false;
+                  const initial = (group.ownerName || "U").trim().charAt(0).toUpperCase();
+                  return (
+                    <span
+                      key={group.ownerId}
+                      className={`no-accent-border relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 ${
+                        viewedAll ? "border-[#B8B8B2]" : "border-[#2BD36B]"
+                      } ${index > 0 ? "-ml-3" : ""}`}
+                      style={{ zIndex: feedStoryPreviewGroups.length - index }}
+                    >
+                      {group.ownerPhotoURL ? (
+                        <img src={group.ownerPhotoURL} alt={group.ownerName || "Story"} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center bg-black text-[11px] font-black text-white">
+                          {initial}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </span>
+              {extraFeedStoryCount ? (
+                <span className="no-accent-border -ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1.5 text-[10px] font-black text-white">
+                  +{extraFeedStoryCount}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
         </div>
         {showDishModeFilterButton ? (
           <div className="justify-self-center">
@@ -1587,6 +1685,14 @@ export default function Feed() {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         dish={shareDish}
+        currentUser={user}
+      />
+      <StoryViewerModal
+        open={feedStoriesOpen}
+        onClose={() => setFeedStoriesOpen(false)}
+        storyGroups={feedStoryGroups}
+        initialGroupIndex={0}
+        onViewed={handleFeedStoryViewed}
         currentUser={user}
       />
       <DishlistPickerModal

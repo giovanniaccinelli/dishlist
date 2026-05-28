@@ -279,7 +279,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   tertiaryActionClassName,
   actionToast,
   secondaryActionToast,
-  rightSwipeToast = "Salvato in DishList",
+  rightSwipeToast = "Aggiunto al profilo",
   rightSwipeErrorToast = "Action failed",
   trackSwipes = true,
   onAuthRequired,

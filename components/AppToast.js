@@ -35,7 +35,7 @@ export default function AppToast({ message, variant = "success" }) {
     <AnimatePresence>
       {message ? (
         <motion.div
-          className={`pointer-events-none fixed inset-x-4 z-[110] flex justify-center ${variant === "swipe" ? "top-[5.35rem]" : "top-24"}`}
+          className={`pointer-events-none fixed inset-x-4 z-[110] flex justify-center ${variant === "swipe" ? "top-[6.6rem]" : "top-24"}`}
           initial={{ opacity: 0, y: -22, scale: variant === "swipe" ? 0.92 : 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -16, scale: 0.98 }}

@@ -1275,7 +1275,7 @@ export default function Feed() {
             className="text-left"
             aria-label="Open DishList guide"
           >
-            <h1 className="text-[1.65rem] font-bold leading-none">D</h1>
+            <h1 className="text-[2.05rem] font-bold leading-none">D</h1>
           </button>
           <Link
             href="/dishlists"

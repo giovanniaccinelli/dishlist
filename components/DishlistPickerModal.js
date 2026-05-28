@@ -140,41 +140,38 @@ export default function DishlistPickerModal({
                     <button
                       type="button"
                       onClick={onToggleStory}
-                      className={`no-accent-border mb-1 flex items-center justify-between rounded-[1.35rem] border-2 px-4 py-3.5 text-left shadow-[0_10px_28px_rgba(43,211,107,0.12)] ${
+                      className={`no-accent-border mb-1 flex items-center justify-between rounded-[1.15rem] border px-3.5 py-3 text-left ${
                         darkMode
                           ? storySelected
-                            ? "border-[#2BD36B] bg-[#102A18] text-white"
-                            : "border-[#2BD36B]/45 bg-[#151B15] text-white"
+                            ? "border-[#2BD36B]/70 bg-[#172119] text-white"
+                            : "border-white/12 bg-[#181818] text-white"
                           : storySelected
-                            ? "border-[#2BD36B] bg-[#F1FFF5]"
-                            : "border-[#2BD36B]/55 bg-white"
+                            ? "border-[#2BD36B]/70 bg-[#F8FFF9]"
+                            : "border-black/8 bg-white/90"
                       }`}
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-black/35" : "bg-[#EFFFF3]"}`}>
-                          <StoryStatIcon size={20} />
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-white/6" : "bg-black/[0.035]"}`}>
+                          <StoryStatIcon size={17} />
                         </span>
                         <div className="min-w-0">
-                          <div className={`truncate text-sm font-bold ${darkMode ? "text-white" : "text-black"}`}>
+                          <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                             {t("Lo sto mangiando")}
-                          </div>
-                          <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>
-                            {t("Publish to stories too")}
                           </div>
                         </div>
                       </div>
                       <div
-                        className={`no-accent-border ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${
+                        className={`no-accent-border ml-4 flex h-7 w-7 items-center justify-center rounded-full border ${
                           darkMode
                             ? storySelected
-                              ? "border-[#2BD36B] bg-[#1FA463] text-white"
-                              : "border-[#2BD36B]/45 bg-[#242424] text-white/70"
+                              ? "border-[#2BD36B] bg-[#2BD36B] text-black"
+                              : "border-white/16 bg-[#242424] text-white/65"
                             : storySelected
-                              ? "border-[#1FA463] bg-[#1FA463] text-white"
-                              : "border-[#2BD36B]/45 bg-[#F7FFF9] text-black/65"
+                              ? "border-[#2BD36B] bg-[#2BD36B] text-black"
+                              : "border-black/10 bg-[#F7F5EF] text-black/65"
                         }`}
                       >
-                        {storySelected ? <Check size={16} /> : <Plus size={16} />}
+                        {storySelected ? <Check size={14} /> : <Plus size={14} />}
                       </div>
                     </button>
                   ) : null}

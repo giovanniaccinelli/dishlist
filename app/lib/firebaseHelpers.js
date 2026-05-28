@@ -1206,6 +1206,49 @@ export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   return addDishToCustomDishlist(userId, dishlistId, dishData.id, dishData);
 }
 
+export async function queueDishForDishlistSorting(userId, dishData) {
+  if (!userId || !dishData?.id) return false;
+  try {
+    const payload = await hydrateDishPayload(dishData.id, buildDishPayload(dishData.id, dishData));
+    await setDoc(
+      doc(db, "users", userId, "pendingDishlistSorting", dishData.id),
+      {
+        ...payload,
+        queuedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to queue dish for dishlist sorting:", err);
+    return false;
+  }
+}
+
+export async function getPendingDishlistSorting(userId) {
+  if (!userId) return [];
+  try {
+    const snapshot = await getDocs(query(collection(db, "users", userId, "pendingDishlistSorting"), orderBy("queuedAt", "asc")));
+    return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (err) {
+    console.error("Failed to load pending dishlist sorting:", err);
+    return [];
+  }
+}
+
+export async function removePendingDishlistSorting(userId, dishId) {
+  if (!userId || !dishId) return false;
+  try {
+    await deleteDoc(doc(db, "users", userId, "pendingDishlistSorting", dishId));
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to remove pending dishlist sorting:", err);
+    return false;
+  }
+}
+
 export async function getUsersWhoSavedDish(dishId) {
   if (!dishId) return [];
   try {

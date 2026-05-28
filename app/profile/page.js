@@ -31,6 +31,7 @@ import {
   saveDishToSelectedDishlist,
   getStoryPushStatsForUser,
   getPopularCustomDishlistNames,
+  getPendingDishlistSorting,
   getLeaderboardAnswersForUser,
   getLeaderboardQuestions,
   createLeaderboardQuestion,
@@ -38,6 +39,7 @@ import {
   deleteLeaderboardQuestion,
   updateCustomDishlistName,
   publishDishAsStory,
+  removePendingDishlistSorting,
   getAvatarTone,
   isDisplayNameTaken,
   normalizeProfilePhotoURL,
@@ -516,6 +518,8 @@ export default function Profile() {
   const [dishlistPickerLists, setDishlistPickerLists] = useState([]);
   const [dishlistPickerLoading, setDishlistPickerLoading] = useState(false);
   const [dishlistPickerSelectedIds, setDishlistPickerSelectedIds] = useState([]);
+  const [dishlistPickerSource, setDishlistPickerSource] = useState("manual");
+  const [pendingDishlistSorting, setPendingDishlistSorting] = useState([]);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -720,6 +724,24 @@ export default function Profile() {
       cancelled = true;
     };
 	  }, [user]);
+
+  useEffect(() => {
+    if (!user?.uid || !profileContentReady) return undefined;
+    let cancelled = false;
+    getPendingDishlistSorting(user.uid).then((items) => {
+      if (!cancelled) setPendingDishlistSorting(Array.isArray(items) ? items : []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [profileContentReady, user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid || dishlistPickerOpen || dishlistPickerLoading) return;
+    const nextPending = pendingDishlistSorting.find((dish) => dish?.id);
+    if (!nextPending) return;
+    openPendingDishlistPicker(nextPending);
+  }, [dishlistPickerLoading, dishlistPickerOpen, pendingDishlistSorting, user?.uid]);
 
   useEffect(() => {
     if (!user?.uid || !profileContentReady) return;
@@ -1503,6 +1525,27 @@ export default function Profile() {
 
   const handleOpenDishlistPicker = async (dish) => {
     if (!user?.uid || !dish?.id) return;
+    setDishlistPickerSource("manual");
+    setDishlistPickerDish(dish);
+    setDishlistPickerOpen(true);
+    setDishlistPickerLoading(true);
+    try {
+      const lists = (await getAllDishlistsForUser(user.uid)).filter(
+        (dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded"
+      );
+      const memberships = lists
+        .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
+        .map((dishlist) => dishlist.id);
+      setDishlistPickerLists(lists);
+      setDishlistPickerSelectedIds(memberships);
+    } finally {
+      setDishlistPickerLoading(false);
+    }
+  };
+
+  const openPendingDishlistPicker = async (dish) => {
+    if (!user?.uid || !dish?.id) return;
+    setDishlistPickerSource("pending");
     setDishlistPickerDish(dish);
     setDishlistPickerOpen(true);
     setDishlistPickerLoading(true);
@@ -1550,10 +1593,15 @@ export default function Profile() {
     setToast(ok ? "Added to DishList" : "Save failed");
     setTimeout(() => setToast(""), 1200);
     if (ok) {
+      if (dishlistPickerSource === "pending") {
+        await removePendingDishlistSorting(user.uid, dishlistPickerDish.id);
+        setPendingDishlistSorting((prev) => prev.filter((dish) => dish.id !== dishlistPickerDish.id));
+      }
       setDishlistPickerOpen(false);
       setDishlistPickerDish(null);
       setDishlistPickerLists([]);
       setDishlistPickerSelectedIds([]);
+      setDishlistPickerSource("manual");
       const [saved, toTry, custom] = await Promise.all([
         getSavedDishesFromFirestore(user.uid),
         getToTryDishesFromFirestore(user.uid),
@@ -4353,6 +4401,7 @@ export default function Profile() {
           setDishlistPickerDish(null);
           setDishlistPickerLists([]);
           setDishlistPickerSelectedIds([]);
+          setDishlistPickerSource("manual");
         }}
         lists={dishlistPickerLists}
         dishName={dishlistPickerDish?.name || "dish"}
@@ -4367,7 +4416,9 @@ export default function Profile() {
           )
         }
         onConfirm={handleConfirmDishlistPicker}
-        confirmLabel={t("Save dish")}
+        title={dishlistPickerSource === "pending" ? t("Smista il piatto") : undefined}
+        eyebrow={dishlistPickerSource === "pending" ? t("Da sistemare") : undefined}
+        confirmLabel={dishlistPickerSource === "pending" ? t("Fatto") : t("Save dish")}
         loading={dishlistPickerLoading}
       />
       <AnimatePresence>

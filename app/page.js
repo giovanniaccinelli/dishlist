@@ -24,6 +24,7 @@ import {
   getUsersWhoSavedDish,
   markStoryViewed,
   normalizeProfilePhotoURL,
+  queueDishForDishlistSorting,
   recountDishSavesFromUsers,
   saveDishToSelectedDishlist,
   saveDishToUserList,
@@ -838,8 +839,18 @@ export default function Feed() {
       setShowAuthPrompt(true);
       return false;
     }
-    if (!dishToAdd?.id) return;
-    return handleAdd(dishToAdd, "swipe");
+    if (!dishToAdd?.id) return false;
+    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
+    if (!saved) return false;
+    await queueDishForDishlistSorting(userId, dishToAdd);
+    setAddedDishIds((prev) => {
+      const next = new Set(prev);
+      next.add(dishToAdd.id);
+      return next;
+    });
+    setForYouDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+    setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+    return true;
   };
 
   const handleResetFeed = async (feedType) => {

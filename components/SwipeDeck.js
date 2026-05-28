@@ -566,7 +566,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Number.isFinite(currentRestaurantLat) &&
     Number.isFinite(currentRestaurantLng);
   const hasCardBackView = hasAnyRecipeText || hasRestaurantMapView;
-  const cardBackAccent = hasRestaurantMapView ? "#FF765F" : "#FFC247";
+  const cardBackAccent = hasRestaurantMapView ? "#E64646" : "#FFC247";
   const cardBackSelectedTextColor = "#050505";
   const cardFrontLabel = hasRestaurantMapView ? "piatto" : "dish";
   const cardBackLabel = hasRestaurantMapView ? "ristorante" : "recipe";

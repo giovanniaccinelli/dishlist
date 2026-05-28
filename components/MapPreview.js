@@ -150,6 +150,8 @@ export default function MapPreview({
   singleGroupZoom = 15,
   showAvatars = true,
   verticalOffsetPx = 0,
+  interactive = false,
+  onMapClick = null,
 }) {
   const { user } = useAuth();
   const mapNodeRef = useRef(null);
@@ -194,10 +196,10 @@ export default function MapPreview({
           zoom: initialZoom,
           disableDefaultUI: true,
           clickableIcons: false,
-          draggable: false,
-          gestureHandling: "none",
+          draggable: interactive,
+          gestureHandling: interactive ? "greedy" : "none",
           keyboardShortcuts: false,
-          scrollwheel: false,
+          scrollwheel: interactive,
           styles: [
             { featureType: "poi.business", stylers: [{ visibility: "off" }] },
             { featureType: "transit", stylers: [{ visibility: "off" }] },
@@ -211,7 +213,13 @@ export default function MapPreview({
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [interactive]);
+
+  useEffect(() => {
+    if (state !== "ready" || !mapRef.current || typeof onMapClick !== "function") return undefined;
+    const listener = mapRef.current.addListener("click", onMapClick);
+    return () => listener?.remove?.();
+  }, [onMapClick, state]);
 
   useEffect(() => {
     if (state !== "ready" || !mapRef.current || typeof window === "undefined") return;

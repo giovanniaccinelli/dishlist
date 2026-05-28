@@ -1082,17 +1082,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive ? false : "x"}
+          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.9}
           style={{
             x: dragX,
             rotate: cardRotate,
-            touchAction: "none",
+            touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: currentCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F",
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && (
             <motion.div
@@ -1307,9 +1307,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !visibleRecipe ? (hasRestaurantMapView ? "!text-white" : "!text-black") : "text-white/76"
+                    !visibleRecipe ? "!text-black" : "text-white/76"
                   }`}
-                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: hasRestaurantMapView ? "#FFFFFF" : "#050505", WebkitTextFillColor: hasRestaurantMapView ? "#FFFFFF" : "#050505" } : undefined}
+                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   {cardFrontLabel}
                 </button>
@@ -1321,9 +1321,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    visibleRecipe ? (hasRestaurantMapView ? "!text-white" : "!text-black") : "text-white/76"
+                    visibleRecipe ? "!text-black" : "text-white/76"
                   }`}
-                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: hasRestaurantMapView ? "#FFFFFF" : "#050505", WebkitTextFillColor: hasRestaurantMapView ? "#FFFFFF" : "#050505" } : undefined}
+                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
                   {cardBackLabel}
                 </button>
@@ -1519,24 +1519,30 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               } ${hasRestaurantMapView ? "p-0" : "p-6 pt-16"} ${visibleRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
-              <button
-                type="button"
-                className="absolute inset-0 z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  if (!currentCardRecipeOnly) setShowRecipe(false);
-                }}
-                aria-label={hasRestaurantMapView ? "Close restaurant map view" : "Close recipe view"}
-              />
+              {!hasRestaurantMapView ? (
+                <button
+                  type="button"
+                  className="absolute inset-0 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (!currentCardRecipeOnly) setShowRecipe(false);
+                  }}
+                  aria-label="Close recipe view"
+                />
+              ) : null}
               {hasRestaurantMapView ? (
-                <div className="absolute inset-0 bg-black">
+                <div data-no-drag="true" className="absolute inset-0 bg-black shadow-none">
                   <MapPreview
                     groups={currentRestaurantMapGroups}
                     focusSingleGroup
                     singleGroupZoom={15}
                     showAvatars={false}
                     verticalOffsetPx={-12}
+                    interactive
+                    onMapClick={() => {
+                      if (!currentCardRecipeOnly) setShowRecipe(false);
+                    }}
                   />
                 </div>
               ) : (

@@ -12,6 +12,32 @@ import DishRatingBadge from "./DishRatingBadge";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 
+const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
+
+function projectLatLng({ lat, lng }, zoom) {
+  const worldSize = 256 * Math.pow(2, zoom);
+  const siny = clampSiny(Math.sin((lat * Math.PI) / 180));
+  return {
+    x: ((lng + 180) / 360) * worldSize,
+    y: (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)) * worldSize,
+  };
+}
+
+function unprojectLatLng({ x, y }, zoom) {
+  const worldSize = 256 * Math.pow(2, zoom);
+  const lng = (x / worldSize) * 360 - 180;
+  const n = Math.PI - (2 * Math.PI * y) / worldSize;
+  const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+  return { lat, lng };
+}
+
+function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
+  if (!Number.isFinite(group?.lat) || !Number.isFinite(group?.lng)) return null;
+  if (!verticalOffsetPx) return { lat: group.lat, lng: group.lng };
+  const point = projectLatLng({ lat: group.lat, lng: group.lng }, zoom);
+  return unprojectLatLng({ x: point.x, y: point.y + verticalOffsetPx }, zoom);
+}
+
 const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
@@ -190,21 +216,25 @@ export default function RestaurantMapView({
 
   const focusMapOnGroup = (group, { keepAboveSheet = false } = {}) => {
     if (!mapRef.current || !group || !Number.isFinite(group.lat) || !Number.isFinite(group.lng)) return;
-    mapRef.current.panTo({ lat: group.lat, lng: group.lng });
     const currentZoom = mapRef.current.getZoom?.() || 0;
-    if (currentZoom < 14) {
-      mapRef.current.setZoom(14);
+    const nextZoom = currentZoom < 14 ? 14 : currentZoom;
+    if (currentZoom < 14) mapRef.current.setZoom(nextZoom);
+    if (!keepAboveSheet) {
+      mapRef.current.setCenter({ lat: group.lat, lng: group.lng });
+      return;
     }
-    if (!keepAboveSheet) return;
     const adjust = () => {
-      const mapHeight = mapNodeRef.current?.getBoundingClientRect?.().height || 0;
-      const sheetHeight = sheetRef.current?.getBoundingClientRect?.().height || 0;
-      if (!mapHeight || !sheetHeight || !mapRef.current?.panBy) return;
-      const currentPinY = mapHeight / 2;
-      const sheetTop = Math.max(0, mapHeight - sheetHeight - 12);
-      const desiredPinY = Math.max(56, sheetTop - 22);
-      const shiftY = Math.max(0, currentPinY - desiredPinY);
-      if (shiftY > 6) mapRef.current.panBy(0, shiftY);
+      const mapRect = mapNodeRef.current?.getBoundingClientRect?.();
+      const sheetRect = sheetRef.current?.getBoundingClientRect?.();
+      if (!mapRect?.height || !sheetRect?.height) {
+        mapRef.current?.setCenter({ lat: group.lat, lng: group.lng });
+        return;
+      }
+      const sheetTop = Math.max(0, sheetRect.top - mapRect.top);
+      const desiredPinY = Math.max(embedded ? 42 : 56, sheetTop - (embedded ? 64 : 28));
+      const verticalOffsetPx = Math.max(0, mapRect.height / 2 - desiredPinY);
+      const center = getOffsetCenter(group, nextZoom, verticalOffsetPx) || { lat: group.lat, lng: group.lng };
+      mapRef.current?.setCenter(center);
     };
     window.requestAnimationFrame(adjust);
     window.setTimeout(adjust, 260);
@@ -445,14 +475,12 @@ export default function RestaurantMapView({
       (selectedPlaceId && selectedPlaceId !== "__none__" && groups.find((group) => group.placeId === selectedPlaceId));
 
     if (highlightedGroup) {
-      mapRef.current.setCenter({ lat: highlightedGroup.lat, lng: highlightedGroup.lng });
-      mapRef.current.setZoom(14);
+      focusMapOnGroup(highlightedGroup, { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
       return;
     }
 
     if (groups.length === 1) {
-      mapRef.current.setCenter({ lat: groups[0].lat, lng: groups[0].lng });
-      mapRef.current.setZoom(14);
+      focusMapOnGroup(groups[0], { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
       return;
     }
 
@@ -629,7 +657,7 @@ export default function RestaurantMapView({
         {selectedGroup && mapState === "ready" ? (
           <div
             ref={sheetRef}
-            className="absolute inset-x-3 bottom-3 z-10 overflow-visible"
+            className={`absolute inset-x-3 z-10 overflow-visible ${embedded ? "bottom-[4.8rem]" : "bottom-3"}`}
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
@@ -653,7 +681,7 @@ export default function RestaurantMapView({
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 className={`restaurant-accent-border flex min-h-0 flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
                   embedded
-                    ? "max-h-[58%] rounded-[1.35rem] p-3"
+                    ? "h-[13.25rem] max-h-[13.25rem] rounded-[1.35rem] p-3"
                     : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
                 }`}
               >

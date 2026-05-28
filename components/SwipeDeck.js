@@ -1545,9 +1545,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     initialSelectedPlaceId={currentRestaurantPlaceId}
                     showSearch={false}
                     embedded
-                    onMapClick={() => {
-                      if (!currentCardRecipeOnly) setShowRecipe(false);
-                    }}
                   />
                 </div>
               ) : (

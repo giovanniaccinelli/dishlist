@@ -160,6 +160,9 @@ export default function RestaurantMapView({
   onDishSelect,
   initialSelectedPlaceId = "",
   className = "",
+  showSearch = true,
+  embedded = false,
+  onMapClick = null,
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -376,6 +379,12 @@ export default function RestaurantMapView({
     mapRef.current.addListener("zoom_changed", () => {
       mapGestureUntilRef.current = Date.now() + 650;
     });
+    if (typeof onMapClick === "function") {
+      mapRef.current.addListener("click", () => {
+        if (Date.now() < mapGestureUntilRef.current) return;
+        onMapClick();
+      });
+    }
   }, [mapState]);
 
   useEffect(() => {
@@ -406,6 +415,7 @@ export default function RestaurantMapView({
       });
       marker.addListener("click", () => {
         if (Date.now() < mapGestureUntilRef.current) return;
+        mapGestureUntilRef.current = Date.now() + 120;
         setSelectedPlaceId(group.placeId);
       });
       markersRef.current.push(marker);
@@ -416,6 +426,7 @@ export default function RestaurantMapView({
           users: markerUsers,
           onClick: () => {
             if (Date.now() < mapGestureUntilRef.current) return;
+            mapGestureUntilRef.current = Date.now() + 120;
             setSelectedPlaceId(group.placeId);
           },
         });
@@ -515,8 +526,9 @@ export default function RestaurantMapView({
 
   const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
   return (
-    <div className={`restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
+    <div className={embedded ? `h-full w-full overflow-hidden ${className}` : `restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
+        {showSearch ? (
         <div className="absolute inset-x-3 top-3 z-10">
           <div className="restaurant-accent-border overflow-hidden rounded-[1.2rem] border-2 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">
             <div className="flex items-center gap-2 px-3 py-2.5">
@@ -597,6 +609,7 @@ export default function RestaurantMapView({
             ) : null}
           </div>
         </div>
+        ) : null}
 
         {mapState === "ready" && groups.length > 0 ? (
           <div ref={mapNodeRef} className="h-full w-full" />
@@ -638,7 +651,11 @@ export default function RestaurantMapView({
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
                 transition={{ duration: 0.22, ease: "easeOut" }}
-                className="restaurant-accent-border flex max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] min-h-0 flex-col overflow-hidden rounded-[1.7rem] border-2 bg-white/96 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md"
+                className={`restaurant-accent-border flex min-h-0 flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
+                  embedded
+                    ? "max-h-[58%] rounded-[1.35rem] p-3"
+                    : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
+                }`}
               >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -728,7 +745,9 @@ export default function RestaurantMapView({
                                   key={`${selectedGroup.placeId}-${dishUser.id}-${dish.id}`}
                                   type="button"
                                   onClick={() => openDish(dish)}
-                                  className="restaurant-accent-border flex h-40 w-40 shrink-0 snap-start overflow-hidden rounded-[1.25rem] border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+                              className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+                                embedded ? "h-32 w-32 rounded-[1rem]" : "h-40 w-40 rounded-[1.25rem]"
+                              }`}
                                 >
                                   <div className="relative h-full w-full overflow-hidden">
                                     <DishRatingBadge dish={dish} className="text-[10px]" />

@@ -2253,7 +2253,15 @@ export default function Profile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[152px_1fr_152px] items-center px-4 pb-1.5 relative">
-        <div className="flex min-w-[152px] items-center justify-start" />
+        <div className="flex min-w-[152px] items-center justify-start">
+          <Link
+            href="/dishlists"
+            className="top-action-btn"
+            aria-label={t("People")}
+          >
+            <Users size={19} strokeWidth={2.35} />
+          </Link>
+        </div>
         <div className="flex items-center justify-center" />
         <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-2">
           <button

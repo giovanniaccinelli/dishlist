@@ -14,7 +14,7 @@ import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users, MessageCirc
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
-import MapPreview from "./MapPreview";
+import RestaurantMapView from "./RestaurantMapView";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { isRecipeOnlyDish } from "../app/lib/dishContent";
@@ -532,6 +532,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentCard?.id, onCardViewed]);
 
   const actionBottom = 24;
+  const viewToggleBottom = actionBottom + 12;
   const tagsBottom = actionBottom + 64;
   const commentBottom = tagsBottom + 8;
   const textBottom = Math.max(88, commentBottom + 4);
@@ -575,6 +576,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             ? [
                 {
                   id: String(currentCard.owner || currentCard.ownerId || currentCard.userId || "").trim(),
+                  aliases: [
+                    currentCard.owner,
+                    currentCard.ownerId,
+                    currentCard.userId,
+                    currentCard.profileId,
+                  ].filter(Boolean),
                   name: currentCard.ownerName || "User",
                   photoURL: currentCard.ownerPhotoURL || "",
                   dishes: [currentCard],
@@ -1293,12 +1300,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <div
               data-no-drag="true"
               className="absolute left-5 z-40"
-              style={{ bottom: actionBottom }}
+              style={{ bottom: viewToggleBottom }}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
             >
-              <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/64 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+              <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/82 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
                 <button
                   data-no-drag="true"
                   onClick={(e) => {
@@ -1307,7 +1314,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !visibleRecipe ? "!text-black" : "text-white/76"
+                    !visibleRecipe ? "!text-black" : "text-white/95"
                   }`}
                   style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
@@ -1321,7 +1328,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    visibleRecipe ? "!text-black" : "text-white/76"
+                    visibleRecipe ? "!text-black" : "text-white/95"
                   }`}
                   style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
@@ -1533,13 +1540,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {hasRestaurantMapView ? (
                 <div data-no-drag="true" className="absolute inset-0 bg-black shadow-none">
-                  <MapPreview
+                  <RestaurantMapView
                     groups={currentRestaurantMapGroups}
-                    focusSingleGroup
-                    singleGroupZoom={15}
-                    showAvatars={false}
-                    verticalOffsetPx={-12}
-                    interactive
+                    initialSelectedPlaceId={currentRestaurantPlaceId}
+                    showSearch={false}
+                    embedded
                     onMapClick={() => {
                       if (!currentCardRecipeOnly) setShowRecipe(false);
                     }}

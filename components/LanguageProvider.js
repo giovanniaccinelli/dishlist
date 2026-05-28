@@ -22,6 +22,7 @@ const translations = {
   en: {},
   it: {
     feed: "Feed",
+    mappa: "Mappa",
     explore: "Esplora",
     upload: "Carica",
     people: "Persone",

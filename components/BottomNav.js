@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Plus, Search, User, Users } from "lucide-react";
+import { Home, Map, Plus, Search, User } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
 import { useState } from "react";
 import AuthPromptModal from "./AuthPromptModal";
@@ -16,21 +16,22 @@ export default function BottomNav() {
 
   const navItems = [
     { href: "/", icon: Home, label: "feed" },
-    { href: "/explore", icon: Search, label: "explore" },
+    { href: "/map", icon: Map, label: "mappa" },
     { href: "/upload?direct=1", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
-    { href: "/dishlists", icon: Users, label: "people" },
+    { href: "/explore", icon: Search, label: "explore" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];
 
   const isActive = (href) => {
     if (href === "/") return pathname === "/" || pathname === "/feed";
     if (href === "/profile") return pathname.startsWith("/profile");
+    if (href === "/map") return pathname === "/map";
     return pathname === href;
   };
 
   const getAccent = (label) => {
     if (label === "feed") return "bg-[#E64646]";
-    if (label === "people") return "bg-[#E64646]";
+    if (label === "mappa") return "bg-[#E64646]";
     if (label === "explore") return "bg-[#E64646]";
     if (label === "profile") return "bg-[#E64646]";
     return "bg-[#E64646]";

@@ -27,7 +27,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import {
@@ -1268,14 +1268,18 @@ export default function Feed() {
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
       <div className="app-top-nav mt-1 px-4 pb-0 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
-        <button
-          type="button"
-          onClick={() => setAboutOpen(true)}
-          className="justify-self-start text-left"
-          aria-label="Open DishList guide"
+        {/* Previous DishList title/guide entry kept here in case we bring it back:
+            <button type="button" onClick={() => setAboutOpen(true)} className="justify-self-start text-left" aria-label="Open DishList guide">
+              <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
+            </button>
+        */}
+        <Link
+          href="/dishlists"
+          className="top-action-btn justify-self-start"
+          aria-label={t("People")}
         >
-          <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
-        </button>
+          <Users size={19} strokeWidth={2.35} />
+        </Link>
         {showDishModeFilterButton ? (
           <div className="justify-self-center">
             <DishModeFilterButton

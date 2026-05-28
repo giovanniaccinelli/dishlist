@@ -30,12 +30,10 @@ import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
-import { getDishesPage, getLeaderboardQuestions, getLeaderboardRestaurantAnswers, getTrendingStoryDishes } from "../lib/firebaseHelpers";
+import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
-import { getRestaurantDishGroups } from "../lib/restaurants";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
-import MapPreview from "../../components/MapPreview";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import { RatingStars } from "../../components/RatingStars";
 import {
@@ -45,7 +43,6 @@ import {
   DISH_MODE_RESTAURANT,
   DishModeFilterButton,
   DishModeFilterModal,
-  RestaurantMapIcon,
   usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -524,33 +521,8 @@ function CategoryTitle({ row, t, darkMode = false }) {
   );
 }
 
-function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, fullMap = false }) {
+function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
   const { title, dishes } = row;
-  if (row.type === "map") {
-    return (
-      <section className={`explore-row no-accent-border shadow-none ${fullMap ? "mb-0 flex min-h-0 flex-1 flex-col" : "mb-6"}`}>
-        <div className="no-accent-border mb-2.5 flex items-center justify-between shadow-none">
-          <button type="button" onClick={onExpand} className="no-accent-border min-w-0 bg-transparent text-left" aria-label="Open map">
-            <div className="flex items-center gap-2 leading-none">
-              <span className="explore-category-pill no-accent-border inline-flex items-center rounded-full border border-transparent bg-transparent px-0 py-1.5 text-[1.35rem] font-bold leading-none text-white">
-                {t(title)}
-              </span>
-              <RestaurantMapIcon className="h-[1.3rem] w-[1.3rem] shrink-0 self-center text-[#E64646]" strokeWidth={2.05} />
-            </div>
-          </button>
-        </div>
-        <div
-          className={`no-accent-border relative block ${fullMap ? "min-h-0 flex-1" : "h-[7.25rem]"} w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] ${
-            darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-          }`}
-        >
-          <SafeDishOpenButton href="/map" label="Open map" />
-          <MapPreview groups={row.groups || []} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        </div>
-      </section>
-    );
-  }
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
   const isRestaurantRow = row.key.startsWith("restaurant-");
@@ -726,7 +698,6 @@ export default function Explore() {
   const [allDishes, setAllDishes] = useState(() => cachedExplore?.allDishes || []);
   const [trendingDishes, setTrendingDishes] = useState(() => cachedExplore?.trendingDishes || []);
   const [leaderboardQuestions, setLeaderboardQuestions] = useState(() => cachedExplore?.leaderboardQuestions || []);
-  const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState(() => cachedExplore?.leaderboardRestaurantAnswers || []);
   const [loading, setLoading] = useState(() => !cachedExplore);
   const [search, setSearch] = useState("");
   const [showTagsPicker, setShowTagsPicker] = useState(false);
@@ -758,7 +729,6 @@ export default function Explore() {
       setAllDishes(cached.allDishes || []);
       setTrendingDishes(cached.trendingDishes || []);
       setLeaderboardQuestions(cached.leaderboardQuestions || []);
-      setLeaderboardRestaurantAnswers(cached.leaderboardRestaurantAnswers || []);
       setLoading(false);
       return;
     }
@@ -766,23 +736,20 @@ export default function Explore() {
     let active = true;
     (async () => {
       setLoading(true);
-      const [all, trending, questions, restaurantAnswers] = await Promise.all([
+      const [all, trending, questions] = await Promise.all([
         getDishesPage({ pageSize: 420, enrichOwners: false }).then((result) => result.items || []),
         getTrendingStoryDishes(20),
         getLeaderboardQuestions(8),
-        getLeaderboardRestaurantAnswers(),
       ]);
       if (!active) return;
       const publicDishes = all.filter((dish) => dish.isPublic !== false);
       setAllDishes(publicDishes);
       setTrendingDishes(trending);
       setLeaderboardQuestions(questions);
-      setLeaderboardRestaurantAnswers(restaurantAnswers);
       setSessionPageCache(EXPLORE_CACHE_KEY, {
         allDishes: publicDishes,
         trendingDishes: trending,
         leaderboardQuestions: questions,
-        leaderboardRestaurantAnswers: restaurantAnswers,
       });
       setLoading(false);
     })();
@@ -792,13 +759,12 @@ export default function Explore() {
   }, []);
 
   const visibleLeaderboardQuestions = useMemo(() => {
-    if (selectedDishMode !== DISH_MODE_RESTAURANT && search.trim()) return [];
     return leaderboardQuestions.filter((question) => {
       if (selectedDishMode === DISH_MODE_ALL) return true;
       const mode = question?.dishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
       return mode === selectedDishMode;
     });
-  }, [leaderboardQuestions, search, selectedDishMode]);
+  }, [leaderboardQuestions, selectedDishMode]);
   const toggleTagFilter = (tag) => {
     setSelectedTagsDraft((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -818,7 +784,7 @@ export default function Explore() {
   };
 
   const categoryRows = useMemo(() => {
-    const term = selectedDishMode === DISH_MODE_RESTAURANT ? "" : search.trim().toLowerCase();
+    const term = search.trim().toLowerCase();
     const normalizedSelectedTags = selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
     const textFiltered = term
       ? allDishes.filter((dish) => {
@@ -838,51 +804,7 @@ export default function Explore() {
           });
     const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
-    if (selectedDishMode === DISH_MODE_RESTAURANT) {
-      const restaurantGroups = getRestaurantDishGroups(modePool, leaderboardRestaurantAnswers);
-      const restaurantRows = restaurantGroups
-        .map((group) => {
-          const ratedDishes = (group.dishes || [])
-            .map((dish) => Math.max(0, Math.min(5, Number(dish?.rating) || 0)))
-            .filter((rating) => rating > 0);
-          const averageRating = ratedDishes.length
-            ? Math.round((ratedDishes.reduce((sum, rating) => sum + rating, 0) / ratedDishes.length) * 2) / 2
-            : 0;
-          return {
-            key: `restaurant-${group.placeId}`,
-            title: group.name,
-            rawTag: group.name,
-            placeId: group.placeId,
-            dishes: [...(group.dishes || [])].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)),
-            totalCount: group.dishes?.length || 0,
-            totalSaves: (group.dishes || []).reduce((sum, dish) => sum + Math.max(0, Number(dish?.saves || 0)), 0),
-            averageRating,
-          };
-        })
-        .sort((a, b) => b.totalCount - a.totalCount || b.totalSaves - a.totalSaves || a.title.localeCompare(b.title));
-      return [
-        {
-          key: "map",
-          type: "map",
-          title: "Mappa",
-          dishes: [{}],
-          groups: restaurantGroups,
-        },
-        ...restaurantRows,
-      ];
-    }
-
     const rows = [];
-    if (selectedDishMode !== DISH_MODE_COOKING) {
-      const mapGroups = getRestaurantDishGroups(modePool, leaderboardRestaurantAnswers);
-      rows.push({
-        key: "map",
-        type: "map",
-        title: "Mappa",
-        dishes: [{}],
-        groups: mapGroups,
-      });
-    }
     rows.push({
       key: "most-saved",
       title: "Most Saved",
@@ -923,11 +845,7 @@ export default function Explore() {
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, leaderboardRestaurantAnswers, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
-  const restaurantMapRow = useMemo(
-    () => categoryRows.find((row) => row.type === "map") || null,
-    [categoryRows]
-  );
+  }, [allDishes, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -948,10 +866,6 @@ export default function Explore() {
   }, [categoryRows]);
 
   const openExpandedRow = (row) => {
-    if (row?.type === "map") {
-      router.push("/map");
-      return;
-    }
     setExpandedRow(row);
     router.replace(buildExploreUrl({ category: row.key }), { scroll: false });
   };
@@ -963,9 +877,7 @@ export default function Explore() {
 
   return (
     <div
-      className={`bottom-nav-spacer box-border flex h-[100dvh] flex-col overscroll-none bg-transparent px-4 pt-1 text-black relative ${
-        selectedDishMode === DISH_MODE_RESTAURANT ? "overflow-hidden" : "overflow-x-hidden overflow-y-auto"
-      }`}
+      className="bottom-nav-spacer box-border flex h-[100dvh] flex-col overflow-x-hidden overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative"
     >
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 grid grid-cols-[1fr_auto_1fr] items-center relative">
         <h1 className="justify-self-start text-2xl font-bold">{t("Explore")}</h1>
@@ -976,18 +888,15 @@ export default function Explore() {
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
         </div>
       </div>
-      {selectedDishMode !== DISH_MODE_RESTAURANT ? (
-        <SearchBar
-          value={search}
-          onChange={(e) => {
-            const nextValue = e.target.value;
-            setSearch(nextValue);
-            router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
-          }}
-          placeholder={t("Search dishes or tags")}
-        />
-      ) : null}
-      {selectedDishMode !== DISH_MODE_RESTAURANT ? (
+      <SearchBar
+        value={search}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          setSearch(nextValue);
+          router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
+        }}
+        placeholder={t("Search dishes or tags")}
+      />
       <div className="relative mb-6">
         <div className="flex flex-wrap gap-2 items-center">
           {selectedTagsApplied.map((tag) => (
@@ -1069,23 +978,14 @@ export default function Explore() {
           </div>
         )}
       </div>
-      ) : null}
       {loading ? (
         <CategoryRowsLoading />
-      ) : selectedDishMode === DISH_MODE_RESTAURANT && restaurantMapRow ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
-          <ExploreRow row={restaurantMapRow} onExpand={() => openExpandedRow(restaurantMapRow)} t={t} darkMode={darkMode} fullMap />
-        </div>
       ) : (
         <div>
-          {!categoryRows.some((item) => item.type === "map") ? (
-            <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
-          ) : null}
+          <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
           {categoryRows.map((row, index) => (
             <div key={row.key}>
               <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />
-              {row.type === "map" ? <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} /> : null}
             </div>
           ))}
         </div>

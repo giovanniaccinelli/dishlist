@@ -653,6 +653,11 @@ export default function RestaurantMapView({
             ref={sheetRef}
             data-card-toggle-surface={embedded ? "true" : undefined}
             className={`absolute inset-x-3 z-10 overflow-visible ${embedded ? "bottom-[5.6rem]" : "bottom-3"}`}
+            onClick={(event) => {
+              if (!embedded || typeof onMapClick !== "function") return;
+              if (event.target?.closest?.("button, a, input, textarea, select, [role='button']")) return;
+              onMapClick();
+            }}
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}

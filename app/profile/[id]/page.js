@@ -881,12 +881,12 @@ export default function PublicProfile() {
   );
 
   const localDishlists = [
-    { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
+    { id: "saved", name: "Classici", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "to_try", name: "Voglie", type: "system", dishes: toTryCollection, count: toTryCollection.length },
+    { id: "uploaded", name: "Miei", type: "system", dishes, count: dishes.length },
     {
       id: "all_dishes",
-      name: "All dishes",
+      name: "Tutto",
       type: "system",
       dishes: allDishesCollection,
       count: allDishesCollection.length,
@@ -1354,7 +1354,7 @@ export default function PublicProfile() {
 	          ) : null}
 	          <div className="mb-3 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
-              {activeDishlist?.name || "All dishes"}
+              {activeDishlist?.name || "Tutto"}
               <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
             </h2>
             <button

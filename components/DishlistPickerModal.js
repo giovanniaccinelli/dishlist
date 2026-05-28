@@ -59,6 +59,17 @@ export default function DishlistPickerModal({
   const lockedSet = new Set(lockedIds);
   const orderedLists = orderPickerLists(lists);
   const isSwipeCard = variant === "swipe";
+  const accentPalette = [
+    { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" },
+    { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" },
+    { border: "#E94B35", bg: "#FFF0EC", darkBg: "#371813", soft: "rgba(233,75,53,0.16)" },
+  ];
+  const getAccent = (dishlist, index) => {
+    if (dishlist.id === "saved") return { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" };
+    if (dishlist.id === "to_try") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
+    if (dishlist.id === "uploaded") return { border: "#E94B35", bg: "#FFF0EC", darkBg: "#371813", soft: "rgba(233,75,53,0.16)" };
+    return accentPalette[index % accentPalette.length];
+  };
 
   return (
     <AnimatePresence>
@@ -75,8 +86,10 @@ export default function DishlistPickerModal({
               isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
-                ? "border-white/12 bg-[#101010] text-white"
-                : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
+                ? `text-white ${isSwipeCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
+                : isSwipeCard
+                  ? "border-[#2BD36B]/30 bg-[linear-gradient(180deg,#F7FFF8_0%,#F5F4EC_100%)]"
+                  : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
             }`}
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -87,13 +100,19 @@ export default function DishlistPickerModal({
             <div className={`no-accent-border mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full ${darkMode ? "bg-white/14" : "bg-black/12"}`} />
             <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
               <div>
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                  isSwipeCard
+                    ? darkMode ? "text-[#76E59E]" : "text-[#179B55]"
+                    : darkMode ? "text-white/42" : "text-black/40"
+                }`}>
                   {eyebrow}
                 </p>
                 <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                   {title}
                 </h3>
-                <p className={`mt-1 text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}>{dishName}</p>
+                {!isSwipeCard ? (
+                  <p className={`mt-1 text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}>{dishName}</p>
+                ) : null}
               </div>
               <button
                 type="button"
@@ -118,7 +137,7 @@ export default function DishlistPickerModal({
                   />
                   <div className="absolute inset-x-0 bottom-0 flex min-h-[62%] flex-col justify-end bg-gradient-to-t from-black via-black/78 via-55% to-transparent px-4 pb-4 pt-16 text-white">
                     <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/64">
-                      {t("Just swiped")}
+                      {t("Salvato")}
                     </div>
                     <div className="mt-1 truncate text-[1.55rem] font-black leading-none">
                       {dishPreview?.name || dishName}
@@ -198,9 +217,10 @@ export default function DishlistPickerModal({
                       </div>
                     </button>
                   ) : null}
-                  {orderedLists.map((dishlist) => {
+                  {orderedLists.map((dishlist, index) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
+                    const accent = getAccent(dishlist, index);
                     return (
                       <button
                         key={dishlist.id}
@@ -216,34 +236,42 @@ export default function DishlistPickerModal({
                         className={`no-accent-border flex items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.05)] ${
                           darkMode
                             ? selected
-                              ? "border-[#45C47A] bg-[#12351F] text-white"
+                              ? "text-white"
                               : "border-white/12 bg-[#181818] text-white"
                             : selected
-                              ? "border-[#1FA463] bg-[#F4FFF7]"
+                              ? ""
                               : "border-black/8 bg-white/90"
                         }`}
+                        style={
+                          selected
+                            ? { borderColor: accent.border, background: darkMode ? accent.darkBg : accent.bg }
+                            : isSwipeCard
+                              ? { borderColor: accent.soft }
+                              : undefined
+                        }
                       >
                         <div className="min-w-0">
                           <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                             <span className="inline-flex items-center gap-1.5">
                               {dishlist.id === "saved" ? <Star size={14} className="text-[#D9B550] fill-[#F3D88C]" /> : null}
-                              <span>{dishlist.name}</span>
+                              <span>{t(dishlist.name)}</span>
                             </span>
                           </div>
-                          <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>
+                          {!isSwipeCard ? <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>
                             {Number(dishlist.count || 0)} {t("dishes")}
-                          </div>
+                          </div> : null}
                         </div>
                         <div
                           className={`no-accent-border ml-4 flex h-9 w-9 items-center justify-center rounded-full border ${
                             darkMode
                               ? selected
-                                ? "border-[#45C47A] bg-[#1FA463] text-white"
+                                ? "text-white"
                                 : "border-white/14 bg-[#242424] text-white/70"
                               : selected
-                                ? "border-[#1FA463] bg-[#1FA463] text-white"
+                                ? "text-white"
                                 : "border-black/10 bg-[#F7F5EF] text-black/65"
                           }`}
+                          style={selected ? { borderColor: accent.border, background: accent.border } : undefined}
                         >
                           {locked ? <Lock size={15} /> : selected ? <Check size={16} /> : <Plus size={16} />}
                         </div>
@@ -255,14 +283,18 @@ export default function DishlistPickerModal({
                   <div className={`sticky bottom-0 mt-4 flex shrink-0 items-center justify-between gap-3 border-t pt-4 ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
-                    <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
-                      {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
-                    </div>
+                    {isSwipeCard ? (
+                      <div className="h-2 w-2 rounded-full bg-[#2BD36B]" />
+                    ) : (
+                      <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
+                        {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={onConfirm}
                       className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
-                        darkMode ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
+                        darkMode || isSwipeCard ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
                       }`}
                     >
                       {t(confirmLabel)}

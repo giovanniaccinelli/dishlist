@@ -520,6 +520,7 @@ export default function Profile() {
   const [dishlistPickerSelectedIds, setDishlistPickerSelectedIds] = useState([]);
   const [dishlistPickerSource, setDishlistPickerSource] = useState("manual");
   const [pendingDishlistSorting, setPendingDishlistSorting] = useState([]);
+  const [dismissedPendingDishIds, setDismissedPendingDishIds] = useState([]);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -738,10 +739,11 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user?.uid || dishlistPickerOpen || dishlistPickerLoading) return;
-    const nextPending = pendingDishlistSorting.find((dish) => dish?.id);
+    const dismissedSet = new Set(dismissedPendingDishIds);
+    const nextPending = pendingDishlistSorting.find((dish) => dish?.id && !dismissedSet.has(dish.id));
     if (!nextPending) return;
     openPendingDishlistPicker(nextPending);
-  }, [dishlistPickerLoading, dishlistPickerOpen, pendingDishlistSorting, user?.uid]);
+  }, [dismissedPendingDishIds, dishlistPickerLoading, dishlistPickerOpen, pendingDishlistSorting, user?.uid]);
 
   useEffect(() => {
     if (!user?.uid || !profileContentReady) return;
@@ -1563,6 +1565,19 @@ export default function Profile() {
     }
   };
 
+  const closeDishlistPicker = () => {
+    if (dishlistPickerSource === "pending" && dishlistPickerDish?.id) {
+      setDismissedPendingDishIds((prev) =>
+        prev.includes(dishlistPickerDish.id) ? prev : [...prev, dishlistPickerDish.id]
+      );
+    }
+    setDishlistPickerOpen(false);
+    setDishlistPickerDish(null);
+    setDishlistPickerLists([]);
+    setDishlistPickerSelectedIds([]);
+    setDishlistPickerSource("manual");
+  };
+
   const handleConfirmDishlistPicker = async () => {
     if (!user?.uid || !dishlistPickerDish?.id) return;
     const selectedSet = new Set(dishlistPickerSelectedIds);
@@ -1596,6 +1611,7 @@ export default function Profile() {
       if (dishlistPickerSource === "pending") {
         await removePendingDishlistSorting(user.uid, dishlistPickerDish.id);
         setPendingDishlistSorting((prev) => prev.filter((dish) => dish.id !== dishlistPickerDish.id));
+        setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dishlistPickerDish.id));
       }
       setDishlistPickerOpen(false);
       setDishlistPickerDish(null);
@@ -1764,12 +1780,12 @@ export default function Profile() {
   );
 
   const localDishlists = [
-    { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
+    { id: "saved", name: "Classici", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "to_try", name: "Voglie", type: "system", dishes: toTryCollection, count: toTryCollection.length },
+    { id: "uploaded", name: "Miei", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
     {
       id: "all_dishes",
-      name: "All dishes",
+      name: "Tutto",
       type: "system",
       dishes: allDishesCollection,
       count: allDishesCollection.length,
@@ -2046,8 +2062,8 @@ export default function Profile() {
   const getRemovalTargetMeta = (source) => {
     if (source === "saved") {
       return {
-        label: "Your Classics",
-        description: "Remove it from Your Classics only",
+        label: "Classici",
+        description: "Rimuovi da Classici",
         buttonClass: "border-[#D8C66A] bg-[#FFFBE7]",
         iconClass: "border-[#D0B74A] bg-[#D0B74A] text-white",
       };
@@ -2626,7 +2642,7 @@ export default function Profile() {
 	              <DishGrid
                 title={
                   <span className="inline-flex items-center gap-2">
-                    {activeDishlist?.name || "All dishes"}
+                    {activeDishlist?.name || "Tutto"}
                     <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
                   </span>
                 }
@@ -4396,13 +4412,7 @@ export default function Profile() {
       />
       <DishlistPickerModal
         open={dishlistPickerOpen}
-        onClose={() => {
-          setDishlistPickerOpen(false);
-          setDishlistPickerDish(null);
-          setDishlistPickerLists([]);
-          setDishlistPickerSelectedIds([]);
-          setDishlistPickerSource("manual");
-        }}
+        onClose={closeDishlistPicker}
         lists={dishlistPickerLists}
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
@@ -4416,8 +4426,8 @@ export default function Profile() {
           )
         }
         onConfirm={handleConfirmDishlistPicker}
-        title={dishlistPickerSource === "pending" ? t("Smista il piatto") : undefined}
-        eyebrow={dishlistPickerSource === "pending" ? t("Da sistemare") : undefined}
+        title={dishlistPickerSource === "pending" ? t("Smazza") : undefined}
+        eyebrow={dishlistPickerSource === "pending" ? t("Salvato") : undefined}
         confirmLabel={dishlistPickerSource === "pending" ? t("Fatto") : t("Save dish")}
         loading={dishlistPickerLoading}
         variant={dishlistPickerSource === "pending" ? "swipe" : "sheet"}

@@ -279,7 +279,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   tertiaryActionClassName,
   actionToast,
   secondaryActionToast,
-  rightSwipeToast = "Added to All dishes",
+  rightSwipeToast = "Salvato in DishList",
   rightSwipeErrorToast = "Action failed",
   trackSwipes = true,
   onAuthRequired,
@@ -975,6 +975,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         runAction(dish);
       }
       if (!advanceOnAnySwipe && info.offset.x > 0 && typeof onRightSwipe === "function") {
+        setToastVariant("swipe");
+        setToast(rightSwipeToast);
+        setTimeout(() => setToast(""), 1450);
         Promise.resolve(onRightSwipe(dish))
           .then((result) => {
             if (result === false) {
@@ -983,9 +986,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               setTimeout(() => setToast(""), 1200);
               return;
             }
-            setToastVariant("success");
-            setToast(rightSwipeToast);
-            setTimeout(() => setToast(""), 1200);
           })
           .catch((err) => {
             console.error("Right swipe action failed:", err);

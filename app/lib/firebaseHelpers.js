@@ -973,10 +973,10 @@ export async function getAllDishlistsForUser(userId) {
     ...toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)),
   ]);
   return [
-    makeSystemDishlist("saved", "Classici", saved),
-    makeSystemDishlist("to_try", "Voglie", toTryCollection),
-    makeSystemDishlist("uploaded", "Miei", uploaded),
-    makeSystemDishlist("all_dishes", "Tutto", allDishes),
+    makeSystemDishlist("saved", "Your Classics", saved),
+    makeSystemDishlist("to_try", "To Try", toTryCollection),
+    makeSystemDishlist("uploaded", "Uploaded", uploaded),
+    makeSystemDishlist("all_dishes", "All dishes", allDishes),
     ...custom,
   ];
 }
@@ -1039,10 +1039,10 @@ export async function getAllDishlistsForUserAliases(userIds = []) {
   const toTryCollection = dedupeDishArray(toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)));
 
   return [
-    makeSystemDishlist("saved", "Classici", saved),
-    makeSystemDishlist("to_try", "Voglie", toTryCollection),
-    makeSystemDishlist("uploaded", "Miei", uploaded),
-    makeSystemDishlist("all_dishes", "Tutto", allDishes),
+    makeSystemDishlist("saved", "Your Classics", saved),
+    makeSystemDishlist("to_try", "To Try", toTryCollection),
+    makeSystemDishlist("uploaded", "Uploaded", uploaded),
+    makeSystemDishlist("all_dishes", "All dishes", allDishes),
     ...custom,
   ];
 }

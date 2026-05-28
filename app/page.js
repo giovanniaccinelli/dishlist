@@ -840,9 +840,11 @@ export default function Feed() {
       return false;
     }
     if (!dishToAdd?.id) return false;
-    const saved = await saveDishToUserList(userId, dishToAdd.id, dishToAdd);
-    if (!saved) return false;
-    await queueDishForDishlistSorting(userId, dishToAdd);
+    const [saved, queued] = await Promise.all([
+      saveDishToUserList(userId, dishToAdd.id, dishToAdd),
+      queueDishForDishlistSorting(userId, dishToAdd),
+    ]);
+    if (!saved || !queued) return false;
     setAddedDishIds((prev) => {
       const next = new Set(prev);
       next.add(dishToAdd.id);

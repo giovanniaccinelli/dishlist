@@ -1590,6 +1590,55 @@ export default function Profile() {
         .map((dishlist) => dishlist.id)
     );
     const nextIds = new Set(persistDishlistIds);
+    if (dishlistPickerSource === "pending") {
+      const dish = dishlistPickerDish;
+      const userId = user.uid;
+      setDishlistPickerOpen(false);
+      setDishlistPickerDish(null);
+      setDishlistPickerLists([]);
+      setDishlistPickerSelectedIds([]);
+      setDishlistPickerSource("manual");
+      setPendingDishlistSorting((prev) => prev.filter((item) => item.id !== dish.id));
+      setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dish.id));
+      setToastVariant("success");
+      setToast("Fatto");
+      setTimeout(() => setToast(""), 1000);
+
+      (async () => {
+        const addResults = await Promise.all(
+          persistDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dish))
+        );
+        const removeResults = await Promise.all(
+          Array.from(currentIds)
+            .filter((dishlistId) => !nextIds.has(dishlistId))
+            .map((dishlistId) => {
+              if (dishlistId === "saved") return removeSavedDishFromUser(userId, dish.id);
+              if (dishlistId === "to_try") return removeDishFromToTry(userId, dish.id);
+              return removeDishFromCustomDishlist(userId, dishlistId, dish.id);
+            })
+        );
+        const removedPending = await removePendingDishlistSorting(userId, dish.id);
+        const ok = addResults.every(Boolean) && removeResults.every(Boolean) && removedPending;
+        if (!ok) {
+          setToastVariant("error");
+          setToast("Save failed");
+          setTimeout(() => setToast(""), 1200);
+          setPendingDishlistSorting((prev) =>
+            prev.some((item) => item.id === dish.id) ? prev : [dish, ...prev]
+          );
+          return;
+        }
+        const [saved, toTry, custom] = await Promise.all([
+          getSavedDishesFromFirestore(userId),
+          getToTryDishesFromFirestore(userId),
+          getCustomDishlistsForUser(userId),
+        ]);
+        setSavedDishes(saved);
+        setToTryDishes(toTry);
+        setCustomDishlists(custom);
+      })();
+      return;
+    }
     const addResults = await Promise.all(
       persistDishlistIds.map((dishlistId) =>
         saveDishToSelectedDishlist(user.uid, dishlistId, dishlistPickerDish)
@@ -1780,12 +1829,12 @@ export default function Profile() {
   );
 
   const localDishlists = [
-    { id: "saved", name: "Classici", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "Voglie", type: "system", dishes: toTryCollection, count: toTryCollection.length },
-    { id: "uploaded", name: "Miei", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
+    { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
     {
       id: "all_dishes",
-      name: "Tutto",
+      name: "All dishes",
       type: "system",
       dishes: allDishesCollection,
       count: allDishesCollection.length,
@@ -2062,8 +2111,8 @@ export default function Profile() {
   const getRemovalTargetMeta = (source) => {
     if (source === "saved") {
       return {
-        label: "Classici",
-        description: "Rimuovi da Classici",
+        label: "Your Classics",
+        description: "Remove it from Your Classics only",
         buttonClass: "border-[#D8C66A] bg-[#FFFBE7]",
         iconClass: "border-[#D0B74A] bg-[#D0B74A] text-white",
       };
@@ -2642,7 +2691,7 @@ export default function Profile() {
 	              <DishGrid
                 title={
                   <span className="inline-flex items-center gap-2">
-                    {activeDishlist?.name || "Tutto"}
+                    {activeDishlist?.name || "All dishes"}
                     <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
                   </span>
                 }
@@ -4426,7 +4475,7 @@ export default function Profile() {
           )
         }
         onConfirm={handleConfirmDishlistPicker}
-        title={dishlistPickerSource === "pending" ? t("Smazza") : undefined}
+        title={dishlistPickerSource === "pending" ? t("Scegli dishlist") : undefined}
         eyebrow={dishlistPickerSource === "pending" ? t("Salvato") : undefined}
         confirmLabel={dishlistPickerSource === "pending" ? t("Fatto") : t("Save dish")}
         loading={dishlistPickerLoading}

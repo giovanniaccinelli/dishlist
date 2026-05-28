@@ -1268,18 +1268,23 @@ export default function Feed() {
   return (
     <div className="h-[100dvh] bg-transparent text-black relative overflow-hidden flex flex-col">
       <div className="app-top-nav mt-1 px-4 pb-0 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
-        {/* Previous DishList title/guide entry kept here in case we bring it back:
-            <button type="button" onClick={() => setAboutOpen(true)} className="justify-self-start text-left" aria-label="Open DishList guide">
-              <h1 className="text-[1.65rem] font-bold leading-none">DishList</h1>
-            </button>
-        */}
-        <Link
-          href="/dishlists"
-          className="top-action-btn justify-self-start"
-          aria-label={t("People")}
-        >
-          <Users size={19} strokeWidth={2.35} />
-        </Link>
+        <div className="justify-self-start flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            className="top-action-btn text-[1.35rem] font-black leading-none"
+            aria-label="Open DishList guide"
+          >
+            D
+          </button>
+          <Link
+            href="/dishlists"
+            className="top-action-btn"
+            aria-label={t("People")}
+          >
+            <Users size={19} strokeWidth={2.35} />
+          </Link>
+        </div>
         {showDishModeFilterButton ? (
           <div className="justify-self-center">
             <DishModeFilterButton

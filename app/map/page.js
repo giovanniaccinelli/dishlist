@@ -60,8 +60,7 @@ function MapPageContent() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
-        <div className="h-11 w-11" aria-hidden="true" />
-        <div aria-hidden="true" />
+        <h1 className="text-2xl font-bold">{t("Mappa")}</h1>
         <button
           type="button"
           onClick={() => router.push(user ? "/directs" : "/")}
@@ -78,7 +77,7 @@ function MapPageContent() {
         initialSelectedPlaceId={selectedPlaceId}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
-        className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.25rem)] min-h-[31rem] max-h-none w-full max-w-[42rem]"
+        className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.25rem)] min-h-[25rem] max-h-none w-full max-w-[42rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
       />
 

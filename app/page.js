@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import SwipeDeck from "../components/SwipeDeck";
 import BottomNav from "../components/BottomNav";
 import AppToast from "../components/AppToast";
-import MapPreview from "../components/MapPreview";
 import { FeedLoading, FeedLogoLoading } from "../components/AppLoadingState";
 import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
@@ -54,7 +53,6 @@ import { resolveRepresentativeTags } from "./lib/profileTags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { useLanguage } from "../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache";
-import { normalizeRestaurant } from "./lib/restaurants";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -763,29 +761,6 @@ export default function Feed() {
     activeFeed === "following"
       ? orderedFollowing[currentFollowingIndex] || null
       : orderedForYou[currentForYouIndex] || null;
-  const activeFeedCard = activeFeed === "following" ? currentFollowingCard : currentForYouCard;
-  const activeFeedRestaurant = normalizeRestaurant(activeFeedCard?.restaurant);
-  const showFeedMapStrip = selectedDishMode === DISH_MODE_RESTAURANT && Boolean(activeFeedRestaurant);
-  const feedMapGroups = useMemo(() => {
-    if (!showFeedMapStrip || !activeFeedRestaurant) return [];
-    const ownerId = String(activeFeedCard?.owner || activeFeedCard?.ownerId || activeFeedCard?.userId || "").trim();
-    return [
-      {
-        ...activeFeedRestaurant,
-        dishes: activeFeedCard ? [activeFeedCard] : [],
-        users: ownerId
-          ? [
-              {
-                id: ownerId,
-                name: activeFeedCard?.ownerName || "User",
-                photoURL: activeFeedCard?.ownerPhotoURL || "",
-                dishes: activeFeedCard ? [activeFeedCard] : [],
-              },
-            ]
-          : [],
-      },
-    ];
-  }, [activeFeedCard, activeFeedRestaurant, showFeedMapStrip]);
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
@@ -1425,19 +1400,7 @@ export default function Feed() {
           </div>
         </div>
       )}
-      {showFeedMapStrip ? (
-        <div className="px-4 pt-0">
-          <button
-            type="button"
-            onClick={() => router.push(`/map?placeId=${encodeURIComponent(activeFeedRestaurant.placeId)}`)}
-            className="restaurant-accent-border h-24 w-full overflow-hidden rounded-[1.35rem] border-2 bg-black text-left shadow-[0_12px_26px_rgba(0,0,0,0.16)] active:scale-[0.99]"
-            aria-label={`Open ${activeFeedRestaurant.name} on map`}
-          >
-            <MapPreview groups={feedMapGroups} focusSingleGroup singleGroupZoom={13} verticalOffsetPx={-18} />
-          </button>
-        </div>
-      ) : null}
-      <div className={`px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3 ${showFeedMapStrip ? "mt-0 translate-y-2" : "-mt-1"}`}>
+      <div className="px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3 -mt-1">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}

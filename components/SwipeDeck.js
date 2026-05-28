@@ -14,6 +14,7 @@ import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users, MessageCirc
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
+import MapPreview from "./MapPreview";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { isRecipeOnlyDish } from "../app/lib/dishContent";
@@ -542,6 +543,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
+  const currentRestaurant = currentCard?.restaurant || null;
+  const currentRestaurantLat = Number(currentRestaurant?.lat);
+  const currentRestaurantLng = Number(currentRestaurant?.lng);
   const currentDishPriceLabel = formatDishPrice(currentCard);
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
@@ -549,6 +553,37 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const hasIngredientsText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeIngredients || "").trim());
   const hasMethodText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
+  const hasRestaurantMapView =
+    currentCardIsRestaurant &&
+    Boolean(currentRestaurantPlaceId && currentRestaurantLabel) &&
+    Number.isFinite(currentRestaurantLat) &&
+    Number.isFinite(currentRestaurantLng);
+  const hasCardBackView = hasAnyRecipeText || hasRestaurantMapView;
+  const cardBackAccent = hasRestaurantMapView ? "#E64646" : "#FFC247";
+  const cardFrontLabel = hasRestaurantMapView ? "piatto" : "dish";
+  const cardBackLabel = hasRestaurantMapView ? "ristorante" : "recipe";
+  const currentRestaurantMapGroups = hasRestaurantMapView
+    ? [
+        {
+          placeId: currentRestaurantPlaceId,
+          name: currentRestaurantLabel,
+          address: currentRestaurant?.address || "",
+          lat: currentRestaurantLat,
+          lng: currentRestaurantLng,
+          dishes: currentCard ? [currentCard] : [],
+          users: currentCard
+            ? [
+                {
+                  id: String(currentCard.owner || currentCard.ownerId || currentCard.userId || "").trim(),
+                  name: currentCard.ownerName || "User",
+                  photoURL: currentCard.ownerPhotoURL || "",
+                  dishes: [currentCard],
+                },
+              ].filter((item) => item.id)
+            : [],
+        },
+      ]
+    : [];
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const resolvedSecondaryActionLabel =
@@ -1109,10 +1144,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(false);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      !visibleRecipe ? "bg-white text-black" : "text-white/80"
+                      !visibleRecipe ? "!text-black" : "text-white/80"
                     }`}
+                    style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                   >
-                    dish
+                    {cardFrontLabel}
                   </button>
                   <button
                     data-no-drag="true"
@@ -1122,10 +1158,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setShowRecipe(true);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                      visibleRecipe ? "bg-white text-black" : "text-white/80"
+                      visibleRecipe ? "!text-black" : "text-white/80"
                     }`}
+                    style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                   >
-                    recipe
+                    {cardBackLabel}
                   </button>
                 </div>
               ) : null}
@@ -1249,7 +1286,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <Users size={13} strokeWidth={2.25} />
             <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
           </button>
-          {darkMode && hasAnyRecipeText && !currentCardRecipeOnly ? (
+          {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly ? (
             <div
               data-no-drag="true"
               className="absolute left-5 z-40"
@@ -1267,11 +1304,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !visibleRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
+                    !visibleRecipe ? "!text-black" : "text-white/76"
                   }`}
-                  style={!visibleRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
-                  dish
+                  {cardFrontLabel}
                 </button>
                 <button
                   data-no-drag="true"
@@ -1281,11 +1318,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    visibleRecipe ? "bg-[#FFC247] !text-black" : "text-white/76"
+                    visibleRecipe ? "!text-black" : "text-white/76"
                   }`}
-                  style={visibleRecipe ? { color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
                 >
-                  recipe
+                  {cardBackLabel}
                 </button>
               </div>
             </div>
@@ -1300,7 +1337,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className={`absolute inset-0 ${visibleRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!visibleRecipe && hasAnyRecipeText && !currentCardRecipeOnly ? (
+              {!visibleRecipe && hasCardBackView && !currentCardRecipeOnly ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -1308,7 +1345,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     e.stopPropagation();
                     setShowRecipe(true);
                   }}
-                  aria-label="Open recipe view"
+                  aria-label={hasRestaurantMapView ? "Open restaurant map view" : "Open recipe view"}
                 />
               ) : null}
               {renderImage(currentCard, {
@@ -1474,9 +1511,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
 
             <div
-              className={`absolute inset-0 p-6 pt-16 overflow-hidden ${
+              className={`absolute inset-0 overflow-hidden ${
                 darkMode ? "bg-[#101010] text-white" : "bg-white text-black"
-              } ${visibleRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
+              } ${hasRestaurantMapView ? "p-0" : "p-6 pt-16"} ${visibleRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
               <button
@@ -1487,8 +1524,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   if (!currentCardRecipeOnly) setShowRecipe(false);
                 }}
-                aria-label="Close recipe view"
+                aria-label={hasRestaurantMapView ? "Close restaurant map view" : "Close recipe view"}
               />
+              {hasRestaurantMapView ? (
+                <div className="absolute inset-0 bg-black">
+                  <MapPreview
+                    groups={currentRestaurantMapGroups}
+                    focusSingleGroup
+                    singleGroupZoom={15}
+                    showAvatars={false}
+                    verticalOffsetPx={-12}
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/86 via-black/48 to-transparent px-5 pb-7 pt-20 text-white">
+                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#FFB3B3]">Ristorante</div>
+                    <div className="mt-1 truncate text-[1.55rem] font-black leading-none">{currentRestaurantLabel}</div>
+                    {currentRestaurant?.address ? (
+                      <div className="mt-1 truncate text-sm font-semibold text-white/72">{currentRestaurant.address}</div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
               <div
                 className="pointer-events-none absolute left-6 right-6 top-16 z-20 min-h-0 flex flex-col"
                 style={{ bottom: `${recipeContentBottom}px` }}
@@ -1654,6 +1709,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   </button>
                 </div>
               </div>
+              )}
             </div>
           </motion.div>
 

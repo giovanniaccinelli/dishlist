@@ -334,6 +334,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextVideoRef = useRef(null);
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
+  const restaurantMapOpenedAtRef = useRef(0);
   const dragX = useMotionValue(0);
   const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -1305,7 +1306,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
             >
-              <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/82 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+              <div className={`no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] ${
+                visibleRestaurantMap ? "bg-black/95" : "bg-black/82 backdrop-blur-md"
+              }`}>
                 <button
                   data-no-drag="true"
                   onClick={(e) => {
@@ -1325,6 +1328,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    if (hasRestaurantMapView) restaurantMapOpenedAtRef.current = Date.now();
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
@@ -1353,6 +1357,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   className="absolute inset-0 z-10"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (hasRestaurantMapView) restaurantMapOpenedAtRef.current = Date.now();
                     setShowRecipe(true);
                   }}
                   aria-label={hasRestaurantMapView ? "Open restaurant map view" : "Open recipe view"}
@@ -1545,6 +1550,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     initialSelectedPlaceId={currentRestaurantPlaceId}
                     showSearch={false}
                     embedded
+                    onMapClick={() => {
+                      if (Date.now() - restaurantMapOpenedAtRef.current < 700) return;
+                      if (!currentCardRecipeOnly) setShowRecipe(false);
+                    }}
                   />
                 </div>
               ) : (

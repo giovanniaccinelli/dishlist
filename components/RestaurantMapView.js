@@ -231,7 +231,7 @@ export default function RestaurantMapView({
         return;
       }
       const sheetTop = Math.max(0, sheetRect.top - mapRect.top);
-      const desiredPinY = Math.max(embedded ? 42 : 56, sheetTop - (embedded ? 64 : 28));
+      const desiredPinY = Math.max(embedded ? 34 : 56, sheetTop - (embedded ? 96 : 28));
       const verticalOffsetPx = Math.max(0, mapRect.height / 2 - desiredPinY);
       const center = getOffsetCenter(group, nextZoom, verticalOffsetPx) || { lat: group.lat, lng: group.lng };
       mapRef.current?.setCenter(center);
@@ -657,7 +657,7 @@ export default function RestaurantMapView({
         {selectedGroup && mapState === "ready" ? (
           <div
             ref={sheetRef}
-            className={`absolute inset-x-3 z-10 overflow-visible ${embedded ? "bottom-[4.8rem]" : "bottom-3"}`}
+            className={`absolute inset-x-3 z-10 overflow-visible ${embedded ? "bottom-[5.6rem]" : "bottom-3"}`}
             onPointerDown={(event) => {
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
@@ -681,7 +681,7 @@ export default function RestaurantMapView({
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 className={`restaurant-accent-border flex min-h-0 flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
                   embedded
-                    ? "h-[13.25rem] max-h-[13.25rem] rounded-[1.35rem] p-3"
+                    ? "h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
                     : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
                 }`}
               >

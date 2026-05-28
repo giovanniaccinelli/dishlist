@@ -586,6 +586,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     : [];
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
+  const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -1174,7 +1175,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
             />
           ) : null}
-          <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"}`}>
+          <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}`}>
             {darkMode ? (
               <div className="flex min-w-0 items-center gap-2 text-white">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
@@ -1258,7 +1259,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </button>
             ) : null}
           </div>
-          {tertiaryActionLabel && !hasBottomActionRow ? (
+          {!visibleRestaurantMap && tertiaryActionLabel && !hasBottomActionRow ? (
             <button
               type="button"
               data-no-drag="true"
@@ -1270,22 +1271,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
             </button>
           ) : null}
-          <button
-            type="button"
-            data-no-drag="true"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              if (typeof onSavesPress === "function") onSavesPress(currentCard);
-            }}
-            className={darkMode
-              ? "no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
-              : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
-            }
-          >
-            <Users size={13} strokeWidth={2.25} />
-            <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
-          </button>
+          {!visibleRestaurantMap ? (
+            <button
+              type="button"
+              data-no-drag="true"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (typeof onSavesPress === "function") onSavesPress(currentCard);
+              }}
+              className={darkMode
+                ? "no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
+              }
+            >
+              <Users size={13} strokeWidth={2.25} />
+              <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
+            </button>
+          ) : null}
           {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly ? (
             <div
               data-no-drag="true"
@@ -1304,9 +1307,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    !visibleRecipe ? "!text-black" : "text-white/76"
+                    !visibleRecipe ? (hasRestaurantMapView ? "!text-white" : "!text-black") : "text-white/76"
                   }`}
-                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={!visibleRecipe ? { backgroundColor: cardBackAccent, color: hasRestaurantMapView ? "#FFFFFF" : "#050505", WebkitTextFillColor: hasRestaurantMapView ? "#FFFFFF" : "#050505" } : undefined}
                 >
                   {cardFrontLabel}
                 </button>
@@ -1318,9 +1321,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     setShowRecipe(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
-                    visibleRecipe ? "!text-black" : "text-white/76"
+                    visibleRecipe ? (hasRestaurantMapView ? "!text-white" : "!text-black") : "text-white/76"
                   }`}
-                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                  style={visibleRecipe ? { backgroundColor: cardBackAccent, color: hasRestaurantMapView ? "#FFFFFF" : "#050505", WebkitTextFillColor: hasRestaurantMapView ? "#FFFFFF" : "#050505" } : undefined}
                 >
                   {cardBackLabel}
                 </button>
@@ -1535,13 +1538,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     showAvatars={false}
                     verticalOffsetPx={-12}
                   />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/86 via-black/48 to-transparent px-5 pb-7 pt-20 text-white">
-                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#FFB3B3]">Ristorante</div>
-                    <div className="mt-1 truncate text-[1.55rem] font-black leading-none">{currentRestaurantLabel}</div>
-                    {currentRestaurant?.address ? (
-                      <div className="mt-1 truncate text-sm font-semibold text-white/72">{currentRestaurant.address}</div>
-                    ) : null}
-                  </div>
                 </div>
               ) : (
               <div
@@ -1713,7 +1709,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           </motion.div>
 
-          {actionLabel && !hasBottomActionRow ? (
+          {!visibleRestaurantMap && actionLabel && !hasBottomActionRow ? (
             <div className="absolute right-6 z-30 flex items-center gap-3" style={{ bottom: actionBottom }}>
               <button
                 type="button"
@@ -1770,7 +1766,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
 
-          {resolvedSecondaryActionLabel && !hasBottomActionRow && (
+          {!visibleRestaurantMap && resolvedSecondaryActionLabel && !hasBottomActionRow && (
             <div className="absolute left-6 z-30" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
@@ -1819,7 +1815,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           )}
 
-          {hasBottomActionRow ? (
+          {!visibleRestaurantMap && hasBottomActionRow ? (
             <div className="absolute left-4 right-4 z-30 flex items-center justify-end gap-3" style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"

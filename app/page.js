@@ -333,6 +333,35 @@ export default function Feed() {
 
   useEffect(() => {
     let cancelled = false;
+    const orderStoryGroups = (groups) =>
+      groups
+        .filter(Boolean)
+        .sort((a, b) => {
+          const aViewed = userId ? (a.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
+          const bViewed = userId ? (b.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
+          if (aViewed !== bViewed) return aViewed ? 1 : -1;
+          return (a.ownerName || "").localeCompare(b.ownerName || "");
+        });
+    const loadFromFlaggedUsers = async () => {
+      const usersSnap = await getDocs(query(collection(db, "users"), where("hasActiveStory", "==", true), limitResults(16)));
+      return Promise.all(
+        usersSnap.docs.map(async (userDoc) => {
+          const data = userDoc.data() || {};
+          const stories = await getDocs(query(collection(db, "users", userDoc.id, "stories"), orderBy("createdAt", "desc")));
+          const now = Date.now();
+          const activeStories = stories.docs
+            .map((storyDoc) => ({ id: storyDoc.id, ...storyDoc.data() }))
+            .filter((story) => (story.expiresAtMs || 0) > now);
+          if (!activeStories.length) return null;
+          return {
+            ownerId: userDoc.id,
+            ownerName: data.displayName || data.name || "User",
+            ownerPhotoURL: normalizeProfilePhotoURL(data.photoURL || data.photoUrl || ""),
+            stories: activeStories,
+          };
+        })
+      );
+    };
     (async () => {
       try {
         const now = Date.now();
@@ -348,7 +377,7 @@ export default function Feed() {
         const ownerIds = Array.from(storiesByOwner.keys()).slice(0, 16);
         const owners = await getUsersByIds(ownerIds);
         const ownerMap = new Map(owners.map((owner) => [owner.id, owner]));
-        const groups = ownerIds.map((ownerId) => {
+        let groups = ownerIds.map((ownerId) => {
           const owner = ownerMap.get(ownerId) || {};
           const stories = storiesByOwner.get(ownerId) || [];
           if (!stories.length) return null;
@@ -359,19 +388,20 @@ export default function Feed() {
             stories,
           };
         });
+        if (!groups.filter(Boolean).length) {
+          groups = await loadFromFlaggedUsers();
+        }
         if (cancelled) return;
-        const ordered = groups
-          .filter(Boolean)
-          .sort((a, b) => {
-            const aViewed = userId ? (a.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
-            const bViewed = userId ? (b.stories || []).every((story) => (story.viewedBy || []).includes(userId)) : false;
-            if (aViewed !== bViewed) return aViewed ? 1 : -1;
-            return (a.ownerName || "").localeCompare(b.ownerName || "");
-          });
-        setFeedStoryGroups(ordered);
+        setFeedStoryGroups(orderStoryGroups(groups));
       } catch (error) {
         console.error("Failed to load feed stories:", error);
-        if (!cancelled) setFeedStoryGroups([]);
+        try {
+          const fallbackGroups = await loadFromFlaggedUsers();
+          if (!cancelled) setFeedStoryGroups(orderStoryGroups(fallbackGroups));
+        } catch (fallbackError) {
+          console.error("Failed to load fallback feed stories:", fallbackError);
+          if (!cancelled) setFeedStoryGroups([]);
+        }
       }
     })();
     return () => {
@@ -1354,15 +1384,23 @@ export default function Feed() {
 
     let cancelled = false;
     setFirstFeedCardReady(false);
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) {
+        setFirstFeedCardReady(true);
+        setFeedHasRendered(true);
+      }
+    }, 1200);
     const image = new Image();
     image.onload = () => {
       if (!cancelled) {
+        window.clearTimeout(timeout);
         setFirstFeedCardReady(true);
         setFeedHasRendered(true);
       }
     };
     image.onerror = () => {
       if (!cancelled) {
+        window.clearTimeout(timeout);
         setFirstFeedCardReady(true);
         setFeedHasRendered(true);
       }
@@ -1374,6 +1412,7 @@ export default function Feed() {
     }
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
     };
   }, [feedClientReady, feedHasRendered, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
 

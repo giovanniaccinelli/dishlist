@@ -430,6 +430,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       return;
     }
     setCurrentMediaReadyKey("");
+    const timeout = window.setTimeout(() => {
+      setCurrentMediaReadyKey(currentCard._key);
+    }, 900);
+    return () => window.clearTimeout(timeout);
   }, [currentCard?._key, currentCard]);
 
   useEffect(() => {

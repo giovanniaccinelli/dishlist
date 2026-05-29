@@ -1162,6 +1162,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         }}
         onClickCapture={handleDeckMediaUnlock}
       >
+        {!currentMediaReady ? (
+          <div className={`absolute inset-0 z-[8] flex items-center justify-center rounded-[28px] bg-black ${fitHeight ? "h-full" : "h-[74vh]"}`}>
+            <img
+              src="/logo-real.png"
+              alt=""
+              className="h-24 w-24 object-contain dishlist-loading-logo"
+            />
+          </div>
+        ) : null}
         {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
@@ -1218,6 +1227,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             rotate: freezeCurrentMotion ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
+            opacity: currentMediaReady ? 1 : 0,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative z-10 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

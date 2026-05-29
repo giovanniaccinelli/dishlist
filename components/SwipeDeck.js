@@ -296,9 +296,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const SWIPE_EJECT_THRESHOLD = 112;
-  const SWIPE_EJECT_VELOCITY = 540;
-  const SWIPE_PROJECTED_THRESHOLD = 132;
+  const SWIPE_EJECT_THRESHOLD = 86;
+  const SWIPE_EJECT_VELOCITY = 460;
+  const SWIPE_PROJECTED_THRESHOLD = 104;
 
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -983,7 +983,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
-    const projectedX = info.offset.x + info.velocity.x * 0.18;
+    const projectedX = info.offset.x + info.velocity.x * 0.22;
     const shouldEject =
       Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD ||
       Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY ||
@@ -1020,8 +1020,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-220, Math.min(220, info.offset.y + info.velocity.y * 0.12));
       const remainingDistance = Math.max(120, Math.abs(targetX - info.offset.x));
-      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 2.55 : 0.46;
-      const duration = Math.max(0.34, Math.min(0.56, velocityDuration));
+      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 1.82 : 0.66;
+      const duration = Math.max(0.52, Math.min(0.78, velocityDuration));
       try {
         await Promise.all([
           animate(dragX, targetX, {

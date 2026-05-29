@@ -21,10 +21,10 @@ const storyFaceVariants = {
   enter: (direction) => {
     if (!direction) return { opacity: 0.96 };
     return {
-      opacity: 0.9,
+      opacity: 0.98,
       x: "0%",
-      rotateY: direction * -88,
-      scale: 0.995,
+      rotateY: direction * -72,
+      scale: 1,
       transformOrigin: direction > 0 ? "100% 50%" : "0% 50%",
     };
   },
@@ -38,10 +38,10 @@ const storyFaceVariants = {
   exit: (direction) => {
     if (!direction) return { opacity: 0 };
     return {
-      opacity: 0.86,
+      opacity: 0.98,
       x: "0%",
-      rotateY: direction * 88,
-      scale: 0.995,
+      rotateY: direction * 72,
+      scale: 1,
       transformOrigin: direction > 0 ? "0% 50%" : "100% 50%",
     };
   },
@@ -565,8 +565,6 @@ export default function StoryViewerModal({
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
-            </motion.div>
-          </AnimatePresence>
 
           <div
             className="absolute left-4 right-4 z-40 flex gap-1"
@@ -803,6 +801,8 @@ export default function StoryViewerModal({
               </button>
             </div>
           </div>
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       </motion.div>
       <CommentsModal

@@ -1138,8 +1138,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setOutgoingSwipe(null);
     setPromotedCardMotionLocked(false);
   };
-  const currentUiExitClass = outgoingSwipe ? " opacity-0 pointer-events-none" : "";
-
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div
@@ -1171,7 +1169,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           {outgoingSwipe ? (
             <motion.div
               key={outgoingSwipe.key}
-              className={`dish-card-shell pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+              className={`dish-card-shell pointer-events-none absolute inset-0 z-[60] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
               initial={{
                 x: outgoingSwipe.startX,
                 y: outgoingSwipe.startY,
@@ -1212,7 +1210,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative z-10 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && !outgoingSwipe && (
             <motion.div
@@ -1252,7 +1250,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           {!darkMode ? (
             <div
               data-no-drag="true"
-              className={`absolute top-4 left-1/2 z-30 -translate-x-1/2${currentUiExitClass}`}
+              className={`absolute top-4 left-1/2 z-30 -translate-x-1/2`}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
@@ -1297,7 +1295,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
             />
           ) : null}
-          <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}${currentUiExitClass}`}>
+          <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}`}>
             {darkMode ? (
               <div className="flex min-w-0 items-center gap-2 text-white">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
@@ -1386,7 +1384,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               type="button"
               data-no-drag="true"
               onClick={handleTertiaryActionPress}
-              className={`absolute z-30 ${tertiaryActionClassName || "add-action-btn w-14 h-14"}${currentUiExitClass}`}
+              className={`absolute z-30 ${tertiaryActionClassName || "add-action-btn w-14 h-14"}`}
               style={{ bottom: actionBottom, right: actionLabel ? 168 : 96 }}
               aria-label="Additional action"
             >
@@ -1403,8 +1401,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 if (typeof onSavesPress === "function") onSavesPress(currentCard);
               }}
               className={darkMode
-                ? `no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md${currentUiExitClass}`
-                : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white${currentUiExitClass}`
+                ? `no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md`
+                : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
               }
             >
               <Users size={13} strokeWidth={2.25} />
@@ -1414,7 +1412,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly ? (
             <div
               data-no-drag="true"
-              className={`absolute left-5 z-40${currentUiExitClass}`}
+              className={`absolute left-5 z-40`}
               style={{ bottom: viewToggleBottom }}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onPointerMoveCapture={(e) => e.stopPropagation()}
@@ -1508,7 +1506,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {!visibleRecipe ? (
-                <div className={`absolute left-5 right-5 text-white z-20${currentUiExitClass}`} style={{ bottom: textBottom }}>
+                <div className={`absolute left-5 right-5 text-white z-20`} style={{ bottom: textBottom }}>
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>
@@ -1838,7 +1836,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
 
           {!visibleRestaurantMap && actionLabel && !hasBottomActionRow ? (
-            <div className={`absolute right-6 z-30 flex items-center gap-3${currentUiExitClass}`} style={{ bottom: actionBottom }}>
+            <div className={`absolute right-6 z-30 flex items-center gap-3`} style={{ bottom: actionBottom }}>
               <button
                 type="button"
                 data-no-drag="true"
@@ -1895,7 +1893,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
 
           {!visibleRestaurantMap && resolvedSecondaryActionLabel && !hasBottomActionRow && (
-            <div className={`absolute left-6 z-30${currentUiExitClass}`} style={{ bottom: actionBottom }}>
+            <div className={`absolute left-6 z-30`} style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -1944,7 +1942,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           )}
 
           {!visibleRestaurantMap && hasBottomActionRow ? (
-            <div className={`absolute left-4 right-4 z-30 flex items-center justify-end gap-3${currentUiExitClass}`} style={{ bottom: actionBottom }}>
+            <div className={`absolute left-4 right-4 z-30 flex items-center justify-end gap-3`} style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {

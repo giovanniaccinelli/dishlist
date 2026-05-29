@@ -234,7 +234,7 @@ export default function RestaurantMapView({
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
-  const carouselSettleRef = useRef(false);
+  const carouselPendingGroupRef = useRef(null);
   const cardSwipeHandledUntilRef = useRef(0);
   const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
@@ -562,11 +562,57 @@ export default function RestaurantMapView({
     () => Math.max(0, carouselGroups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
     [carouselGroups, selectedGroup?.placeId]
   );
+  const carouselWindowItems = useMemo(() => {
+    if (!useRestaurantCarousel || !carouselGroups.length || !selectedGroup) return [];
+    const count = carouselGroups.length;
+    const offsets = count > 2 ? [-2, -1, 0, 1, 2] : count === 2 ? [-1, 0, 1] : [0];
+    return offsets.map((offset, slotIndex) => {
+      const index = (selectedIndex + offset + count) % count;
+      const group = carouselGroups[index];
+      return {
+        group,
+        offset,
+        slotIndex,
+        key: `${group.placeId}-${offset}-${slotIndex}`,
+      };
+    });
+  }, [carouselGroups, selectedGroup, selectedIndex, useRestaurantCarousel]);
+  const carouselCenterSlot = useMemo(
+    () => Math.max(0, carouselWindowItems.findIndex((item) => item.offset === 0)),
+    [carouselWindowItems]
+  );
 
   const cycleRestaurant = (direction) => {
     if (!carouselGroups.length) return;
     const nextIndex = (selectedIndex + direction + carouselGroups.length) % carouselGroups.length;
     focusGroup(carouselGroups[nextIndex], direction, { preserveAnchor: true });
+  };
+
+  const settleCarouselToDirection = (direction) => {
+    if (!carouselGroups.length) return;
+    const nextIndex = (selectedIndex + direction + carouselGroups.length) % carouselGroups.length;
+    const targetGroup = carouselGroups[nextIndex];
+    if (!targetGroup) return;
+    const step = carouselStepPx || carouselTrackRef.current?.firstElementChild?.getBoundingClientRect?.().width || 0;
+    if (!step) {
+      focusGroup(targetGroup, direction, { preserveAnchor: true });
+      return;
+    }
+    carouselPendingGroupRef.current = { group: targetGroup, direction };
+    setCarouselDragging(false);
+    setCarouselDragX(direction > 0 ? -step : step);
+  };
+
+  const finishCarouselSettle = () => {
+    const pending = carouselPendingGroupRef.current;
+    if (!pending?.group) return;
+    carouselPendingGroupRef.current = null;
+    setCarouselDragging(true);
+    focusGroup(pending.group, pending.direction, { preserveAnchor: true });
+    setCarouselDragX(0);
+    window.requestAnimationFrame(() => {
+      setCarouselDragging(false);
+    });
   };
 
   const focusGroup = (group, direction = 0, { preserveAnchor = false } = {}) => {
@@ -630,9 +676,9 @@ export default function RestaurantMapView({
   const getCarouselTrackX = (index) => `calc(-50% - ${index * 100}% - ${index * carouselGapRem}rem)`;
   const getCarouselTrackTransform = () => {
     if (carouselStepPx > 0) {
-      return `translateX(calc(-50% - ${selectedIndex * carouselStepPx}px + ${carouselDragX}px))`;
+      return `translateX(calc(-50% - ${carouselCenterSlot * carouselStepPx}px + ${carouselDragX}px))`;
     }
-    return `translateX(calc(${getCarouselTrackX(selectedIndex)} + ${carouselDragX}px))`;
+    return `translateX(calc(${getCarouselTrackX(carouselCenterSlot)} + ${carouselDragX}px))`;
   };
 
   useLayoutEffect(() => {
@@ -654,34 +700,27 @@ export default function RestaurantMapView({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", measureStep);
     };
-  }, [carouselGroups.length, useRestaurantCarousel]);
+  }, [carouselWindowItems.length, useRestaurantCarousel]);
 
   useEffect(() => {
-    if (carouselSettleRef.current) {
-      carouselSettleRef.current = false;
-      window.requestAnimationFrame(() => {
-        setCarouselDragX(0);
-        setCarouselDragging(false);
-      });
-      return;
-    }
     setCarouselDragX(0);
     setCarouselDragging(false);
     carouselDragRef.current = null;
+    carouselPendingGroupRef.current = null;
   }, [selectedGroup?.placeId]);
 
-  const renderRestaurantPreviewCard = (group, direction) => {
+  const renderRestaurantPreviewCard = (group, direction, keyValue = group?.placeId) => {
     if (!group) return null;
     const dishUsers = getGroupDishUsers(group);
     return (
       <button
-        key={group.placeId}
+        key={keyValue}
         type="button"
         onClick={(event) => {
           event.stopPropagation();
           swipeStartRef.current = null;
           cardSwipeHandledUntilRef.current = Date.now() + 160;
-          cycleRestaurant(direction);
+          settleCarouselToDirection(direction);
         }}
         className="map-restaurant-card-solid flex w-full shrink-0 flex-col overflow-hidden rounded-[1.7rem] border-2 border-[#E64646]/65 px-4 py-4 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] transition active:scale-[0.99]"
         style={{
@@ -1059,15 +1098,8 @@ export default function RestaurantMapView({
                       const dy = event.clientY - start.y;
                       if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy) * 0.55) {
                         const direction = dx < 0 ? 1 : -1;
-                        const step = carouselStepPx || 0;
-                        if (step > 0) {
-                          setCarouselDragX(dx + direction * step);
-                          carouselSettleRef.current = true;
-                        } else {
-                          setCarouselDragX(0);
-                        }
                         cardSwipeHandledUntilRef.current = Date.now() + 160;
-                        cycleRestaurant(direction);
+                        settleCarouselToDirection(direction);
                         return;
                       }
                     }
@@ -1083,11 +1115,15 @@ export default function RestaurantMapView({
                     transition: carouselDragging ? "none" : "transform 380ms cubic-bezier(0.18, 0.82, 0.24, 1)",
                     touchAction: "pan-y",
                   }}
+                  onTransitionEnd={(event) => {
+                    if (event.propertyName !== "transform") return;
+                    finishCarouselSettle();
+                  }}
                 >
-                  {carouselGroups.map((group, index) => (
-                    group.placeId === selectedGroup.placeId
+                  {carouselWindowItems.map(({ group, offset, key }) => (
+                    group.placeId === selectedGroup.placeId && offset === 0
                       ? renderActiveRestaurantCard()
-                      : renderRestaurantPreviewCard(group, index < selectedIndex ? -1 : 1)
+                      : renderRestaurantPreviewCard(group, offset < 0 ? -1 : 1, key)
                   ))}
                 </div>
               ) : (

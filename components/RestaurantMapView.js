@@ -234,6 +234,7 @@ export default function RestaurantMapView({
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
+  const carouselSettleRef = useRef(false);
   const cardSwipeHandledUntilRef = useRef(0);
   const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
@@ -656,6 +657,14 @@ export default function RestaurantMapView({
   }, [carouselGroups.length, useRestaurantCarousel]);
 
   useEffect(() => {
+    if (carouselSettleRef.current) {
+      carouselSettleRef.current = false;
+      window.requestAnimationFrame(() => {
+        setCarouselDragX(0);
+        setCarouselDragging(false);
+      });
+      return;
+    }
     setCarouselDragX(0);
     setCarouselDragging(false);
     carouselDragRef.current = null;
@@ -1049,9 +1058,16 @@ export default function RestaurantMapView({
                       const dx = event.clientX - start.x;
                       const dy = event.clientY - start.y;
                       if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy) * 0.55) {
-                        setCarouselDragX(0);
+                        const direction = dx < 0 ? 1 : -1;
+                        const step = carouselStepPx || 0;
+                        if (step > 0) {
+                          setCarouselDragX(dx + direction * step);
+                          carouselSettleRef.current = true;
+                        } else {
+                          setCarouselDragX(0);
+                        }
                         cardSwipeHandledUntilRef.current = Date.now() + 160;
-                        cycleRestaurant(dx < 0 ? 1 : -1);
+                        cycleRestaurant(direction);
                         return;
                       }
                     }

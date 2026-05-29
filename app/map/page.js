@@ -9,8 +9,11 @@ import RestaurantMapView from "../../components/RestaurantMapView";
 import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore, getLeaderboardRestaurantAnswers } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
+import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
+
+const MAP_CACHE_KEY = "map:restaurants";
 
 function MapPageContent() {
   const router = useRouter();
@@ -18,11 +21,20 @@ function MapPageContent() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
-  const [dishes, setDishes] = useState([]);
-  const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState([]);
-  const [loadingMapData, setLoadingMapData] = useState(true);
+  const cachedMap = getSessionPageCache(MAP_CACHE_KEY)?.value;
+  const [dishes, setDishes] = useState(() => cachedMap?.dishes || []);
+  const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState(() => cachedMap?.leaderboardRestaurantAnswers || []);
+  const [loadingMapData, setLoadingMapData] = useState(() => !cachedMap);
 
   useEffect(() => {
+    const cached = getSessionPageCache(MAP_CACHE_KEY)?.value;
+    if (cached) {
+      setDishes(cached.dishes || []);
+      setLeaderboardRestaurantAnswers(cached.leaderboardRestaurantAnswers || []);
+      setLoadingMapData(false);
+      return undefined;
+    }
+
     let cancelled = false;
     (async () => {
       setLoadingMapData(true);
@@ -32,8 +44,13 @@ function MapPageContent() {
           getLeaderboardRestaurantAnswers(),
         ]);
         if (cancelled) return;
-        setDishes(allDishes.filter((dish) => dish?.isPublic !== false));
+        const publicDishes = allDishes.filter((dish) => dish?.isPublic !== false);
+        setDishes(publicDishes);
         setLeaderboardRestaurantAnswers(restaurantAnswers);
+        setSessionPageCache(MAP_CACHE_KEY, {
+          dishes: publicDishes,
+          leaderboardRestaurantAnswers: restaurantAnswers,
+        });
       } catch (error) {
         console.error("Failed to load restaurant map dishes:", error);
         if (!cancelled) {

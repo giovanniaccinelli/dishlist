@@ -504,6 +504,8 @@ export default function RestaurantMapView({
     () => Math.max(0, groups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
     [groups, selectedGroup?.placeId]
   );
+  const previousGroup = groups.length > 1 ? groups[(selectedIndex - 1 + groups.length) % groups.length] : null;
+  const nextGroup = groups.length > 1 ? groups[(selectedIndex + 1) % groups.length] : null;
 
   const cycleRestaurant = (direction) => {
     if (!groups.length) return;
@@ -555,6 +557,61 @@ export default function RestaurantMapView({
   };
 
   const showPredictions = searchFocused && query.trim().length > 0 && predictions.length > 0;
+
+  const getGroupDishUsers = (group) =>
+    (Array.isArray(group?.users) ? group.users : []).filter((groupUser) => (groupUser.dishes || []).some((dish) => dish?.id));
+
+  const getGroupRating = (group) => {
+    const ratings = (Array.isArray(group?.users) ? group.users : [])
+      .flatMap((groupUser) => groupUser.dishes || [])
+      .map((dish) => Math.max(0, Math.min(5, Number(dish?.rating) || 0)))
+      .filter((rating) => rating > 0);
+    return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
+  };
+
+  const renderRestaurantGhostCard = (group, side) => {
+    if (!group) return null;
+    const dishUsers = getGroupDishUsers(group);
+    return (
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute top-1/2 z-0 flex h-[78%] w-[32%] -translate-y-1/2 flex-col overflow-hidden rounded-[1.15rem] border-2 border-[#E64646]/70 bg-white/82 px-3 py-3 text-left shadow-[0_14px_30px_rgba(0,0,0,0.12)] backdrop-blur-md ${
+          side === "left" ? "-left-[4%]" : "-right-[4%]"
+        }`}
+        style={{ transform: `translateY(-50%) scale(0.92)` }}
+      >
+        <div className="min-w-0">
+          <div className="truncate text-[12px] font-black leading-tight text-black/70">{group.name}</div>
+          <div className="mt-1 flex items-center gap-1">
+            <RatingStars value={getGroupRating(group)} size="text-[0.72rem]" readOnly />
+          </div>
+          <div className="mt-1 truncate text-[10px] font-bold text-black/42">
+            {dishUsers.length} {t(dishUsers.length === 1 ? "person count" : "people count")}
+          </div>
+        </div>
+        <div className="mt-auto flex -space-x-2 pt-2">
+          {dishUsers.slice(0, 3).map((dishUser) => (
+            dishUser.photoURL ? (
+              <img
+                key={`${group.placeId}-${dishUser.id}-ghost`}
+                src={dishUser.photoURL}
+                alt=""
+                className="h-7 w-7 rounded-full object-cover shadow-sm"
+              />
+            ) : (
+              <span
+                key={`${group.placeId}-${dishUser.id}-ghost`}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-[10px] font-black text-white shadow-sm"
+              >
+                {(dishUser.name || "U").slice(0, 1).toUpperCase()}
+              </span>
+            )
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={embedded ? `h-full w-full overflow-hidden ${className}` : `restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
@@ -679,20 +736,23 @@ export default function RestaurantMapView({
               }
             }}
           >
-            <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
-              <motion.div
-                key={selectedGroup.placeId}
-                custom={sheetDirection}
-                initial={{ x: sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0, opacity: 0 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className={`restaurant-accent-border flex min-h-0 flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
-                  embedded
-                    ? "h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
-                    : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
-                }`}
-              >
+            <div className="relative mx-auto flex w-full items-center justify-center overflow-visible">
+              {renderRestaurantGhostCard(previousGroup, "left")}
+              {renderRestaurantGhostCard(nextGroup, "right")}
+              <AnimatePresence initial={false} custom={sheetDirection}>
+                <motion.div
+                  key={selectedGroup.placeId}
+                  custom={sheetDirection}
+                  initial={{ x: sheetDirection > 0 ? "118%" : sheetDirection < 0 ? "-118%" : 0, opacity: 0.96, scale: 0.94 }}
+                  animate={{ x: 0, opacity: 1, scale: 1 }}
+                  exit={{ x: sheetDirection > 0 ? "-118%" : sheetDirection < 0 ? "118%" : 0, opacity: 0.92, scale: 0.94 }}
+                  transition={{ duration: 0.3, ease: [0.22, 0.72, 0.28, 1] }}
+                  className={`restaurant-accent-border relative z-10 mx-auto flex min-h-0 w-[82%] max-w-[24rem] flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
+                    embedded
+                      ? "h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
+                      : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -833,8 +893,9 @@ export default function RestaurantMapView({
                       ))}
                     </div>
                   ) : null}
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         ) : null}
       </div>

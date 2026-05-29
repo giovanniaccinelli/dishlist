@@ -36,6 +36,7 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import { resolveRepresentativeTags } from "../../lib/profileTags";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
+import { TAG_DECOR } from "../../lib/tagDecor";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -165,16 +166,6 @@ function getTagDishlistId(tag) {
   return `tag:${String(tag || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 }
 
-function getTagInitials(tag) {
-  return String(tag || "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
-}
-
 function dishHasTag(dish, tag) {
   const normalizedTag = String(tag || "").trim().toLowerCase();
   return Array.isArray(dish?.tags) && dish.tags.some((item) => String(item || "").trim().toLowerCase() === normalizedTag);
@@ -193,14 +184,14 @@ function buildTagDishlists(allDishes = []) {
 
 function TagDishlistPreview({ dishlist, darkMode = false, t = (value) => value }) {
   const active = Number(dishlist?.count || 0) > 0;
+  const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
+  const Icon = decor.icon;
   return (
-    <div className={`grid aspect-square place-items-center rounded-[1.1rem] border-2 ${
+    <div className={`flex aspect-square flex-col items-center justify-center gap-3 rounded-[1.1rem] border-2 p-4 text-center ${
       darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
     }`}>
-      <div className="flex flex-col items-center gap-1 text-center">
-        <div className="text-[2.4rem] font-black leading-none">#{getTagInitials(dishlist.tag)}</div>
-        <div className="max-w-[8rem] truncate px-3 text-[0.82rem] font-black leading-none">{t(dishlist.tag)}</div>
-      </div>
+      {Icon ? <Icon className={`h-[4.6rem] w-[4.6rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
+      <div className="max-w-full truncate text-[0.86rem] font-black leading-none">{t(dishlist.tag)}</div>
     </div>
   );
 }

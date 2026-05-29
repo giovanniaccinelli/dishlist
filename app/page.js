@@ -222,6 +222,7 @@ export default function Feed() {
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [feedClientReady, setFeedClientReady] = useState(false);
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
+  const [firstFeedCardReady, setFirstFeedCardReady] = useState(false);
   const [feedHasRendered, setFeedHasRendered] = useState(false);
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
@@ -1365,8 +1366,62 @@ export default function Feed() {
   };
 
   useEffect(() => {
-    if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) return;
-    setFeedHasRendered(true);
+    if (feedHasRendered) return undefined;
+    if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) {
+      setFirstFeedCardReady(false);
+      return undefined;
+    }
+    if (!firstVisibleFeedCard) {
+      setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
+      return undefined;
+    }
+    if (isDishVideo(firstVisibleFeedCard)) {
+      setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setFirstFeedCardReady(false);
+    const src = getDishImageUrl(firstVisibleFeedCard);
+    if (!src) {
+      setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
+      return undefined;
+    }
+
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {}
+      if (!cancelled) {
+        setFirstFeedCardReady(true);
+        setFeedHasRendered(true);
+      }
+    };
+    image.onerror = () => {
+      if (!cancelled) {
+        setFirstFeedCardReady(true);
+        setFeedHasRendered(true);
+      }
+    };
+    image.src = src;
+    if (image.complete && image.naturalWidth > 0) {
+      Promise.resolve(image.decode?.())
+        .catch(() => {})
+        .finally(() => {
+          if (!cancelled) {
+            setFirstFeedCardReady(true);
+            setFeedHasRendered(true);
+          }
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
   }, [feedClientReady, feedHasRendered, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
 
   useEffect(() => {
@@ -1393,7 +1448,7 @@ export default function Feed() {
     );
   }
 
-  if (loading || loadingDishes) {
+  if (loading || loadingDishes || !firstFeedCardReady) {
     return <FeedLogoLoading />;
   }
 

@@ -556,10 +556,6 @@ export default function RestaurantMapView({
     () => Math.max(0, carouselGroups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
     [carouselGroups, selectedGroup?.placeId]
   );
-  const previousGroup = carouselGroups.length > 1 ? carouselGroups[(selectedIndex - 1 + carouselGroups.length) % carouselGroups.length] : null;
-  const nextGroup = carouselGroups.length > 1 ? carouselGroups[(selectedIndex + 1) % carouselGroups.length] : null;
-  const farPreviousGroup = carouselGroups.length > 2 ? carouselGroups[(selectedIndex - 2 + carouselGroups.length) % carouselGroups.length] : null;
-  const farNextGroup = carouselGroups.length > 2 ? carouselGroups[(selectedIndex + 2) % carouselGroups.length] : null;
 
   const cycleRestaurant = (direction) => {
     if (!carouselGroups.length) return;
@@ -624,40 +620,23 @@ export default function RestaurantMapView({
     return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
   };
 
-  const carouselPositions = {
-    farLeft: "calc(-200% + 28px)",
-    left: "calc(-100% + 14px)",
-    center: "0%",
-    right: "calc(100% - 14px)",
-    farRight: "calc(200% - 28px)",
-  };
+  const carouselGapRem = 1;
+  const getCarouselTrackX = (index) => `calc(-50% - ${index * 100}% - ${index * carouselGapRem}rem)`;
 
-  const getCarouselX = (position) => carouselPositions[position] || carouselPositions.center;
-
-  const renderRestaurantPreviewCard = ({
-    group,
-    slot,
-    initialSlot = slot,
-    direction,
-    interactive = true,
-  }) => {
+  const renderRestaurantPreviewCard = (group, direction) => {
     if (!group) return null;
     const dishUsers = getGroupDishUsers(group);
     return (
-      <motion.button
-        key={`${group.placeId}-${slot}`}
+      <button
+        key={group.placeId}
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          if (!interactive) return;
           swipeStartRef.current = null;
           cardSwipeHandledUntilRef.current = Date.now() + 160;
           cycleRestaurant(direction);
         }}
-        initial={{ x: getCarouselX(initialSlot), opacity: 1, scale: 1 }}
-        animate={{ x: getCarouselX(slot), opacity: 1, scale: 1 }}
-        transition={{ duration: 0.34, ease: [0.2, 0.76, 0.26, 1] }}
-        className={`map-restaurant-card-solid absolute bottom-0 left-0 right-0 z-0 mx-auto flex w-[88%] max-w-[27rem] flex-col overflow-hidden rounded-[1.7rem] border-2 border-[#E64646]/65 px-4 py-4 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] ${interactive ? "transition active:scale-[0.99]" : "pointer-events-none"}`}
+        className="map-restaurant-card-solid flex w-full shrink-0 flex-col overflow-hidden rounded-[1.7rem] border-2 border-[#E64646]/65 px-4 py-4 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] transition active:scale-[0.99]"
         style={{
           height: restaurantCardHeight ? `${restaurantCardHeight}px` : undefined,
           opacity: 1,
@@ -693,30 +672,28 @@ export default function RestaurantMapView({
             )
           ))}
         </div>
-      </motion.button>
+      </button>
     );
   };
 
-  const renderActiveRestaurantCard = ({ initialSlot = "center", slot = "center" } = {}) => (
+  const renderActiveRestaurantCard = () => (
     <motion.div
       key={selectedGroup.placeId}
       data-restaurant-active-card="true"
       custom={sheetDirection}
       initial={{
-        x: useRestaurantCarousel
-          ? getCarouselX(initialSlot)
-          : sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0,
+        x: useRestaurantCarousel ? 0 : sheetDirection > 0 ? 86 : sheetDirection < 0 ? -86 : 0,
         opacity: useRestaurantCarousel ? 1 : 0,
         scale: 1,
       }}
-      animate={{ x: useRestaurantCarousel ? getCarouselX(slot) : 0, opacity: 1, scale: 1 }}
+      animate={{ x: 0, opacity: 1, scale: 1 }}
       exit={{
         x: sheetDirection > 0 ? -86 : sheetDirection < 0 ? 86 : 0,
         opacity: useRestaurantCarousel ? 1 : 0,
         scale: 1,
       }}
       transition={useRestaurantCarousel ? { duration: 0.34, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
-      drag={useRestaurantCarousel ? "x" : false}
+      drag={false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.22}
       dragMomentum={false}
@@ -729,7 +706,7 @@ export default function RestaurantMapView({
         }
       }}
       className={`map-restaurant-card-solid restaurant-accent-border ${
-        useRestaurantCarousel ? "absolute left-0 right-0 w-[88%] max-w-[27rem]" : "relative w-full"
+        useRestaurantCarousel ? "relative w-full shrink-0" : "relative w-full"
       } z-10 mx-auto flex min-h-0 flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
         embedded
           ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
@@ -1014,45 +991,31 @@ export default function RestaurantMapView({
                   : "h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))]"
               }`}
             >
-              {useRestaurantCarousel && sheetDirection > 0 && farPreviousGroup?.placeId !== previousGroup?.placeId
-                ? renderRestaurantPreviewCard({
-                    group: farPreviousGroup,
-                    slot: "farLeft",
-                    initialSlot: "left",
-                    direction: -1,
-                    interactive: false,
-                  })
-                : null}
-              {useRestaurantCarousel && previousGroup
-                ? renderRestaurantPreviewCard({
-                    group: previousGroup,
-                    slot: "left",
-                    initialSlot: sheetDirection > 0 ? "center" : sheetDirection < 0 ? "farLeft" : "left",
-                    direction: -1,
-                  })
-                : null}
-              {useRestaurantCarousel && nextGroup
-                ? renderRestaurantPreviewCard({
-                    group: nextGroup,
-                    slot: "right",
-                    initialSlot: sheetDirection > 0 ? "farRight" : sheetDirection < 0 ? "center" : "right",
-                    direction: 1,
-                  })
-                : null}
-              {useRestaurantCarousel && sheetDirection < 0 && farNextGroup?.placeId !== nextGroup?.placeId
-                ? renderRestaurantPreviewCard({
-                    group: farNextGroup,
-                    slot: "farRight",
-                    initialSlot: "right",
-                    direction: 1,
-                    interactive: false,
-                  })
-                : null}
               {useRestaurantCarousel ? (
-                renderActiveRestaurantCard({
-                  initialSlot: sheetDirection > 0 ? "right" : sheetDirection < 0 ? "left" : "center",
-                  slot: "center",
-                })
+                <motion.div
+                  className="absolute bottom-0 left-1/2 flex w-[86%] max-w-[27rem] items-end gap-4"
+                  animate={{ x: getCarouselTrackX(selectedIndex) }}
+                  transition={{ duration: 0.38, ease: [0.18, 0.82, 0.24, 1] }}
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.18}
+                  dragMomentum={false}
+                  onDragEnd={(_, info) => {
+                    const offsetX = info.offset.x;
+                    const offsetY = info.offset.y;
+                    if (Math.abs(offsetX) > 24 && Math.abs(offsetX) > Math.abs(offsetY) * 0.5) {
+                      cardSwipeHandledUntilRef.current = Date.now() + 160;
+                      cycleRestaurant(offsetX < 0 ? 1 : -1);
+                    }
+                  }}
+                  style={{ touchAction: "pan-y" }}
+                >
+                  {carouselGroups.map((group, index) => (
+                    group.placeId === selectedGroup.placeId
+                      ? renderActiveRestaurantCard()
+                      : renderRestaurantPreviewCard(group, index < selectedIndex ? -1 : 1)
+                  ))}
+                </motion.div>
               ) : (
                 <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
                   {renderActiveRestaurantCard()}

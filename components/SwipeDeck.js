@@ -339,6 +339,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
   const cardBackTapRef = useRef(null);
+  const cardSidePreferenceRef = useRef(new Map());
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const resetDragPosition = useCallback(() => {
@@ -416,6 +417,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const nextCard = deck[currentIndex + 1] || null;
+  const currentCardStableKey = currentCard?.id || currentCard?._key || "";
 
   useEffect(() => {
     if (!currentCard?._key) {
@@ -447,15 +449,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
   }, [currentIndex, currentCard?._key, onIndexChange]);
 
+  const setCardBackVisible = useCallback((nextVisible) => {
+    if (currentCardStableKey) cardSidePreferenceRef.current.set(currentCardStableKey, nextVisible);
+    setShowRecipe(nextVisible);
+  }, [currentCardStableKey]);
+
   useEffect(() => {
-    setShowRecipe(isRecipeOnlyDish(currentCard));
+    const savedSide = currentCardStableKey ? cardSidePreferenceRef.current.get(currentCardStableKey) : undefined;
+    setShowRecipe(typeof savedSide === "boolean" ? savedSide || isRecipeOnlyDish(currentCard) : isRecipeOnlyDish(currentCard));
     setRecipePanelModal(null);
     setDescriptionModalOpen(false);
     setDescriptionTruncated(false);
     setNoRecipeNoticeOpen(false);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-  }, [currentCard?._key]);
+  }, [currentCardStableKey]);
 
   useLayoutEffect(() => {
     if (!currentCard?.description || showRecipe) {
@@ -1263,7 +1271,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      setShowRecipe(false);
+                      setCardBackVisible(false);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                       !visibleRecipe ? "" : "text-white/80"
@@ -1277,7 +1285,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      setShowRecipe(true);
+                      setCardBackVisible(true);
                     }}
                     className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                       visibleRecipe ? "" : "text-white/80"
@@ -1427,7 +1435,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    setShowRecipe(false);
+                    setCardBackVisible(false);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     !visibleRecipe ? "" : "text-white/95"
@@ -1441,7 +1449,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    setShowRecipe(true);
+                    setCardBackVisible(true);
                   }}
                   className={`no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none ${
                     visibleRecipe ? "" : "text-white/95"
@@ -1477,12 +1485,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     if (moved > 10) return;
                     e.stopPropagation();
                     e.preventDefault();
-                    setShowRecipe(true);
+                    setCardBackVisible(true);
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    setShowRecipe(true);
+                    setCardBackVisible(true);
                   }}
                   style={{ touchAction: "manipulation" }}
                   aria-label={hasRestaurantMapView ? "Open restaurant map view" : "Open recipe view"}
@@ -1663,7 +1671,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    if (!currentCardRecipeOnly) setShowRecipe(false);
+                    if (!currentCardRecipeOnly) setCardBackVisible(false);
                   }}
                   aria-label="Close recipe view"
                 />
@@ -1676,7 +1684,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     showSearch={false}
                     embedded
                     onMapClick={() => {
-                      if (!currentCardRecipeOnly) setShowRecipe(false);
+                      if (!currentCardRecipeOnly) setCardBackVisible(false);
                     }}
                   />
                 </div>

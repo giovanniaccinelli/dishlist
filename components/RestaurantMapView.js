@@ -209,9 +209,11 @@ export default function RestaurantMapView({
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [sheetDirection, setSheetDirection] = useState(0);
   const [followingIds, setFollowingIds] = useState([]);
+  const [restaurantCardHeight, setRestaurantCardHeight] = useState(0);
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const cardSwipeHandledUntilRef = useRef(0);
+  const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
   const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
 
@@ -307,6 +309,24 @@ export default function RestaurantMapView({
   useEffect(() => {
     focusMapOnGroup(selectedGroup, { keepAboveSheet: true });
   }, [selectedDishUsers.length, selectedGroup?.placeId]);
+
+  useEffect(() => {
+    if (!useRestaurantCarousel || !sheetRef.current) return undefined;
+    const updateHeight = () => {
+      const activeCard = sheetRef.current?.querySelector?.("[data-restaurant-active-card='true']");
+      const nextHeight = Math.round(activeCard?.getBoundingClientRect?.().height || 0);
+      if (nextHeight > 0) setRestaurantCardHeight(nextHeight);
+    };
+    updateHeight();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateHeight) : null;
+    const activeCard = sheetRef.current.querySelector?.("[data-restaurant-active-card='true']");
+    if (resizeObserver && activeCard) resizeObserver.observe(activeCard);
+    const timeout = window.setTimeout(updateHeight, 120);
+    return () => {
+      window.clearTimeout(timeout);
+      resizeObserver?.disconnect();
+    };
+  }, [selectedDishUsers.length, selectedGroup?.placeId, useRestaurantCarousel]);
 
   useEffect(() => {
     let mounted = true;
@@ -507,7 +527,6 @@ export default function RestaurantMapView({
   );
   const previousGroup = groups.length > 1 ? groups[(selectedIndex - 1 + groups.length) % groups.length] : null;
   const nextGroup = groups.length > 1 ? groups[(selectedIndex + 1) % groups.length] : null;
-  const useRestaurantCarousel = !embedded;
 
   const cycleRestaurant = (direction) => {
     if (!groups.length) return;
@@ -573,14 +592,28 @@ export default function RestaurantMapView({
 
   const renderRestaurantGhostCard = (group, side) => {
     if (!group) return null;
+    const direction = side === "left" ? -1 : 1;
     const dishUsers = getGroupDishUsers(group);
     return (
-      <div
-        aria-hidden="true"
-        className={`map-restaurant-card-solid pointer-events-none absolute bottom-0 z-0 flex h-[58%] w-[22%] flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] ${
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          swipeStartRef.current = null;
+          cardSwipeHandledUntilRef.current = Date.now() + 160;
+          cycleRestaurant(direction);
+        }}
+        className={`map-restaurant-card-solid absolute bottom-0 z-0 flex w-[22%] flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] transition active:scale-[0.88] ${
           side === "left" ? "-left-2" : "-right-2"
         }`}
-        style={{ transform: "scale(0.9)", transformOrigin: "bottom center", opacity: 1, backgroundColor: "#ffffff" }}
+        style={{
+          height: restaurantCardHeight ? `${restaurantCardHeight}px` : undefined,
+          transform: "scale(0.9)",
+          transformOrigin: "bottom center",
+          opacity: 1,
+          backgroundColor: "#ffffff",
+        }}
+        aria-label={side === "left" ? "Previous restaurant" : "Next restaurant"}
       >
         <div className="min-w-0">
           <div className="truncate text-[11px] font-black leading-tight text-black/64">{group.name}</div>
@@ -610,7 +643,7 @@ export default function RestaurantMapView({
             )
           ))}
         </div>
-      </div>
+      </button>
     );
   };
 
@@ -753,15 +786,18 @@ export default function RestaurantMapView({
               <AnimatePresence initial={false} mode={useRestaurantCarousel ? undefined : "wait"} custom={sheetDirection}>
                 <motion.div
                   key={selectedGroup.placeId}
+                  data-restaurant-active-card="true"
                   custom={sheetDirection}
                   initial={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "104%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-104%" : -86) : 0,
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "55%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-55%" : -86) : 0,
                     opacity: useRestaurantCarousel ? 1 : 0,
+                    scale: useRestaurantCarousel && sheetDirection ? 0.9 : 1,
                   }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
                   exit={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-104%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "104%" : 86) : 0,
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-55%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "55%" : 86) : 0,
                     opacity: useRestaurantCarousel ? 1 : 0,
+                    scale: useRestaurantCarousel && sheetDirection ? 0.9 : 1,
                   }}
                   transition={useRestaurantCarousel ? { duration: 0.34, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
                   drag={useRestaurantCarousel ? "x" : false}

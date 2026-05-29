@@ -27,6 +27,7 @@ import {
   uploadDishImageVariants,
 } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
+import { getTagDishlistId } from "../lib/tagDishlists";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
@@ -382,7 +383,11 @@ export default function UploadPage() {
     try {
       const nextLists = await getAllDishlistsForUser(user.uid);
       setDishlists(nextLists);
-      const nextSelectedIds = ["all_dishes", "uploaded"];
+      const availableListIds = new Set(nextLists.map((dishlist) => dishlist.id));
+      const matchingTagDishlistIds = dishTags
+        .map((tag) => getTagDishlistId(tag))
+        .filter((id) => availableListIds.has(id));
+      const nextSelectedIds = ["all_dishes", "uploaded", ...matchingTagDishlistIds];
       setSelectedDishlistIds(Array.from(new Set(nextSelectedIds)));
     } finally {
       setDishlistsLoading(false);

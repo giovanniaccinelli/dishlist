@@ -1162,16 +1162,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         </AnimatePresence>
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
+          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : true}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.74}
           dragMomentum={false}
           style={{
-            x: dragX,
-            y: dragY,
-            rotate: cardRotate,
+            x: outgoingSwipe ? 0 : dragX,
+            y: outgoingSwipe ? 0 : dragY,
+            rotate: outgoingSwipe ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
-            borderColor: activeCardBorderColor,
+            borderColor: outgoingSwipe ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

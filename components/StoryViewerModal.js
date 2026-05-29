@@ -95,6 +95,7 @@ export default function StoryViewerModal({
   const [isPaused, setIsPaused] = useState(false);
   const didAdvanceRef = useRef(false);
   const pressStartedAtRef = useRef(0);
+  const tapZonePressRef = useRef(null);
   const holdPauseTimerRef = useRef(null);
   const holdPauseActivatedRef = useRef(false);
   const suppressTapUntilRef = useRef(0);
@@ -410,6 +411,52 @@ export default function StoryViewerModal({
     setIsPaused(false);
   };
 
+  const handleTapZonePointerDown = (event) => {
+    tapZonePressRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {}
+    handlePressStart(event);
+    event.stopPropagation();
+  };
+
+  const handleTapZonePointerUp = (event, storyDirection) => {
+    const start = tapZonePressRef.current;
+    tapZonePressRef.current = null;
+    const dx = start ? event.clientX - start.x : 0;
+    const dy = start ? event.clientY - start.y : 0;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const wasHold = holdPauseActivatedRef.current;
+
+    event.stopPropagation();
+    event.preventDefault();
+    handlePressEnd();
+
+    if (wasHold) return;
+    if (absX > absY && absX > 70) {
+      if (dx < 0) goNextGroup();
+      else goPrevGroup();
+      return;
+    }
+    if (dy > 120) {
+      onClose?.();
+      return;
+    }
+    if (Math.max(absX, absY) <= 24) {
+      if (storyDirection > 0) goNext();
+      else goPrev();
+    }
+  };
+
+  const handleTapZonePointerCancel = () => {
+    tapZonePressRef.current = null;
+    handlePressEnd();
+  };
+
   const openDish = () => {
     const storyDishId = currentStory.dishId || currentStory.id;
     if (!storyDishId) return;
@@ -710,13 +757,27 @@ export default function StoryViewerModal({
             className="absolute left-0 bottom-24 z-10 w-1/3"
             style={{ top: "calc(var(--app-top-nav-offset) + 5.5rem)" }}
           >
-            <button type="button" className="w-full h-full" onClick={goPrev} aria-label="Previous story" />
+            <button
+              type="button"
+              className="w-full h-full"
+              onPointerDown={(event) => handleTapZonePointerDown(event)}
+              onPointerUp={(event) => handleTapZonePointerUp(event, -1)}
+              onPointerCancel={handleTapZonePointerCancel}
+              aria-label="Previous story"
+            />
           </div>
           <div
             className="absolute right-0 bottom-24 z-10 w-1/3"
             style={{ top: "calc(var(--app-top-nav-offset) + 5.5rem)" }}
           >
-            <button type="button" className="w-full h-full" onClick={goNext} aria-label="Next story" />
+            <button
+              type="button"
+              className="w-full h-full"
+              onPointerDown={(event) => handleTapZonePointerDown(event)}
+              onPointerUp={(event) => handleTapZonePointerUp(event, 1)}
+              onPointerCancel={handleTapZonePointerCancel}
+              aria-label="Next story"
+            />
           </div>
 
           <div className="absolute bottom-24 left-0 right-0 z-40 p-5 text-white">

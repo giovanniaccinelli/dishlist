@@ -64,7 +64,10 @@ export default function DishlistPickerModal({
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
   const isSwipeCard = variant === "swipe";
-  const orderedLists = orderPickerLists(lists, isSwipeCard);
+  const isSortingCard = variant === "sorting";
+  const orderedLists = isSortingCard ? lists : orderPickerLists(lists, isSwipeCard);
+  const hasUnlockedSelection = selectedIds.some((id) => !lockedSet.has(id));
+  const resolvedConfirmLabel = isSortingCard ? (hasUnlockedSelection ? "Aggiungi" : "Salta") : confirmLabel;
   const accentPalette = [
     { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" },
     { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" },
@@ -81,7 +84,7 @@ export default function DishlistPickerModal({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className={`fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex justify-center p-4 ${isSwipeCard ? "items-center" : "items-end"}`}
+          className={`fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex justify-center p-4 ${isSwipeCard || isSortingCard ? "items-center" : "items-end"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -89,11 +92,11 @@ export default function DishlistPickerModal({
         >
           <motion.div
           className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
-              isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
+              isSwipeCard || isSortingCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
-                ? `text-white ${isSwipeCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
-                : isSwipeCard
+                ? `text-white ${isSwipeCard || isSortingCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
+                : isSwipeCard || isSortingCard
                   ? "border-[#2BD36B]/30 bg-[linear-gradient(180deg,#F7FFF8_0%,#F5F4EC_100%)]"
                   : "border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,245,238,0.98)_100%)]"
             }`}
@@ -107,7 +110,7 @@ export default function DishlistPickerModal({
             <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
               <div>
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                  isSwipeCard
+                  isSwipeCard || isSortingCard
                     ? darkMode ? "text-[#76E59E]" : "text-[#179B55]"
                     : darkMode ? "text-white/42" : "text-black/40"
                 }`}>
@@ -116,7 +119,7 @@ export default function DishlistPickerModal({
                 <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                   {title}
                 </h3>
-                {!isSwipeCard ? (
+                {!isSwipeCard && !isSortingCard ? (
                   <p className={`mt-1 text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}>{dishName}</p>
                 ) : null}
               </div>
@@ -128,7 +131,7 @@ export default function DishlistPickerModal({
                 {t("Close")}
               </button>
             </div>
-            {dishPreview && isSwipeCard ? (
+            {dishPreview && (isSwipeCard || isSortingCard) ? (
               <div className={`mb-4 shrink-0 overflow-hidden rounded-[1.55rem] border ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>
@@ -223,7 +226,74 @@ export default function DishlistPickerModal({
                       </div>
                     </button>
                   ) : null}
-                  {orderedLists.map((dishlist, index) => {
+                  {isSortingCard ? (
+                    <div className="grid grid-cols-2 gap-3 pb-1">
+                      {orderedLists.map((dishlist, index) => {
+                        const selected = selectedSet.has(dishlist.id);
+                        const locked = lockedSet.has(dishlist.id);
+                        const accent = getAccent(dishlist, index);
+                        const preview = Array.isArray(dishlist.dishes) ? dishlist.dishes.slice(0, 4) : [];
+                        const tag = isTagDishlistId(dishlist.id) ? getTagForDishlistId(dishlist.id) : "";
+                        const TagIcon = tag ? TAG_DECOR[tag]?.icon : null;
+                        return (
+                          <button
+                            key={dishlist.id}
+                            type="button"
+                            onClick={() => {
+                              if (locked) return;
+                              onToggle?.(dishlist);
+                            }}
+                            className={`relative rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
+                              selected
+                                ? "ring-4 ring-[#2BD36B]/35"
+                                : darkMode
+                                  ? "border-white/12 bg-[#181818]"
+                                  : "border-black/10 bg-white"
+                            }`}
+                            style={selected ? { borderColor: accent.border, boxShadow: `0 0 0 3px ${accent.soft}, 0 16px 34px rgba(0,0,0,0.14)` } : undefined}
+                          >
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                              <div className={`min-w-0 truncate text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                              {TagIcon ? <TagIcon className={`h-4 w-4 shrink-0 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.1} /> : null}
+                            </div>
+                            {TagIcon ? (
+                              <div className={`grid aspect-square place-items-center rounded-[1rem] border ${
+                                selected
+                                  ? darkMode ? "border-[#2BD36B]/70 bg-[#102817]" : "border-[#2BD36B]/70 bg-[#F2FFF6]"
+                                  : darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-black/[0.03]"
+                              }`}>
+                                <TagIcon className={`h-12 w-12 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.05} />
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {Array.from({ length: 4 }).map((_, slot) => {
+                                  const dish = preview[slot];
+                                  return dish ? (
+                                    <img
+                                      key={`${dishlist.id}-${dish.id || slot}`}
+                                      src={getDishImageUrl(dish, "thumb")}
+                                      alt={dish.name || ""}
+                                      className="aspect-square rounded-[0.75rem] object-cover"
+                                      onError={(event) => {
+                                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                      }}
+                                    />
+                                  ) : (
+                                    <div key={`${dishlist.id}-empty-${slot}`} className={`aspect-square rounded-[0.75rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`} />
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {selected ? (
+                              <div className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-[#2BD36B] text-black shadow-[0_8px_18px_rgba(43,211,107,0.32)]">
+                                <Check size={15} strokeWidth={2.5} />
+                              </div>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : orderedLists.map((dishlist, index) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
                     const accent = getAccent(dishlist, index);
@@ -292,7 +362,7 @@ export default function DishlistPickerModal({
                   <div className={`sticky bottom-0 mt-4 flex shrink-0 items-center justify-between gap-3 border-t pt-4 ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
-                    {isSwipeCard ? (
+                    {isSwipeCard || isSortingCard ? (
                       <div className="h-2 w-2 rounded-full bg-[#2BD36B]" />
                     ) : (
                       <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
@@ -303,10 +373,10 @@ export default function DishlistPickerModal({
                       type="button"
                       onClick={onConfirm}
                       className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
-                        darkMode || isSwipeCard ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
+                        darkMode || isSwipeCard || isSortingCard ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
                       }`}
                     >
-                      {t(confirmLabel)}
+                      {t(resolvedConfirmLabel)}
                     </button>
                   </div>
                 ) : null}

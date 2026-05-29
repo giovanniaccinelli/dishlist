@@ -500,6 +500,11 @@ export default function Profile() {
   const [createSourceDishlistId, setCreateSourceDishlistId] = useState("saved");
   const [createDishSearch, setCreateDishSearch] = useState("");
   const [creatingDishlist, setCreatingDishlist] = useState(false);
+  const [addDishesTarget, setAddDishesTarget] = useState(null);
+  const [addDishesSourceId, setAddDishesSourceId] = useState("all_dishes");
+  const [addDishesSearch, setAddDishesSearch] = useState("");
+  const [addDishesSelectedIds, setAddDishesSelectedIds] = useState([]);
+  const [addingExistingDishes, setAddingExistingDishes] = useState(false);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
@@ -1615,15 +1620,12 @@ export default function Profile() {
     setDishlistPickerOpen(true);
     setDishlistPickerLoading(true);
     try {
-      const lists = (await getAllDishlistsForUser(user.uid)).filter(
-        (dishlist) => dishlist.id !== "uploaded"
-      );
+      const lists = allDishlists.filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded");
       const memberships = lists
-        .filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "saved")
         .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
         .map((dishlist) => dishlist.id);
       setDishlistPickerLists(lists);
-      setDishlistPickerSelectedIds(["all_dishes", ...memberships]);
+      setDishlistPickerSelectedIds(memberships);
     } finally {
       setDishlistPickerLoading(false);
     }
@@ -2214,12 +2216,83 @@ export default function Profile() {
   const visibleCreateDishes = createDishSearchTerm
     ? createDishSearchPool.filter((dish) => (dish?.name || "").toLowerCase().includes(createDishSearchTerm))
     : createSourceDishlist?.dishes || [];
+  const addDishesSourceDishlist =
+    allDishlists.find((dishlist) => dishlist.id === addDishesSourceId) || allDishlists.find((dishlist) => dishlist.id === "all_dishes") || allDishlists[0] || null;
+  const addDishesSearchTerm = addDishesSearch.trim().toLowerCase();
+  const addDishesSearchPool = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
+  const visibleAddDishes = addDishesSearchTerm
+    ? addDishesSearchPool.filter((dish) => (dish?.name || "").toLowerCase().includes(addDishesSearchTerm))
+    : addDishesSourceDishlist?.dishes || [];
+  const selectedAddDishes = Array.from(
+    new Map(
+      allDishlists
+        .flatMap((dishlist) => dishlist.dishes || [])
+        .filter((dish) => addDishesSelectedIds.includes(dish.id))
+        .map((dish) => [dish.id, dish])
+    ).values()
+  );
 
   const toggleDishSelection = (dish) => {
     if (!dish?.id) return;
     setSelectedDishIds((prev) =>
       prev.includes(dish.id) ? prev.filter((id) => id !== dish.id) : [...prev, dish.id]
     );
+  };
+
+  const toggleAddDishSelection = (dish) => {
+    if (!dish?.id) return;
+    setAddDishesSelectedIds((prev) =>
+      prev.includes(dish.id) ? prev.filter((id) => id !== dish.id) : [...prev, dish.id]
+    );
+  };
+
+  const openAddExistingDishes = (dishlistId) => {
+    const target = allDishlists.find((dishlist) => dishlist.id === dishlistId);
+    if (!target) return;
+    setAddDishesTarget(target);
+    setAddDishesSelectedIds([]);
+    setAddDishesSearch("");
+    setAddDishesSourceId("all_dishes");
+  };
+
+  const closeAddExistingDishes = () => {
+    if (addingExistingDishes) return;
+    setAddDishesTarget(null);
+    setAddDishesSelectedIds([]);
+    setAddDishesSearch("");
+  };
+
+  const confirmAddExistingDishes = async () => {
+    if (!user?.uid || !addDishesTarget?.id || addingExistingDishes) return;
+    if (selectedAddDishes.length === 0) {
+      closeAddExistingDishes();
+      return;
+    }
+    setAddingExistingDishes(true);
+    try {
+      const results = await Promise.all(
+        selectedAddDishes.map((dish) => saveDishToSelectedDishlist(user.uid, addDishesTarget.id, dish))
+      );
+      const ok = results.every(Boolean);
+      const [saved, toTry, custom] = await Promise.all([
+        getSavedDishesFromFirestore(user.uid),
+        getToTryDishesFromFirestore(user.uid),
+        getCustomDishlistsForUser(user.uid),
+      ]);
+      setSavedDishes(saved);
+      setToTryDishes(toTry);
+      setCustomDishlists(custom);
+      setToastVariant(ok ? "success" : "error");
+      setToast(ok ? "Dishes added" : "Save failed");
+      setTimeout(() => setToast(""), 1200);
+      if (ok) {
+        setAddDishesTarget(null);
+        setAddDishesSelectedIds([]);
+        setAddDishesSearch("");
+      }
+    } finally {
+      setAddingExistingDishes(false);
+    }
   };
 
   const handleOpenCreateDishlist = () => {
@@ -2349,7 +2422,7 @@ export default function Profile() {
     );
   }
 
-  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true, onRemovePreview, emptyText }) => (
+  const DishGrid = ({ title, dishes, allowDelete, source, showHeader = true, onRemovePreview }) => (
     <>
       {showHeader && title ? (
         <div className="mt-4 mb-3 flex items-center justify-between">
@@ -2365,11 +2438,6 @@ export default function Profile() {
         </div>
       ) : null}
 	      <div className="grid grid-cols-2 gap-3">
-	        {dishes.length === 0 ? (
-	          <div className={`col-span-2 h-32 flex items-center justify-center ${darkMode ? "text-white/72" : "rounded-xl bg-[#f0f0ea] text-gray-500"}`}>
-	            {emptyText || t("No dishes here.")}
-	          </div>
-	        ) : (
           <AnimatePresence initial={false}>
             {dishes.map((dish, index) => {
               const textOnly = isTextOnlyDish(dish);
@@ -2475,7 +2543,21 @@ export default function Profile() {
               );
             })}
           </AnimatePresence>
-        )}
+          <button
+            type="button"
+            onClick={() => openAddExistingDishes(source)}
+            className={`flex h-40 items-center justify-center rounded-2xl border-2 border-dashed transition active:scale-[0.98] ${
+              darkMode ? "border-[#2BD36B]/55 bg-[#0D2717] text-[#A7F3BE]" : "border-[#1FA463]/55 bg-[#F3FFF7] text-[#176A37]"
+            }`}
+            aria-label={t("Add dishes")}
+          >
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="grid h-12 w-12 place-items-center rounded-full bg-[#1FA463] text-white shadow-[0_10px_24px_rgba(31,164,99,0.24)]">
+                <Plus size={25} strokeWidth={2.35} />
+              </div>
+              <div className="text-sm font-black">{t("Add dishes")}</div>
+            </div>
+          </button>
       </div>
     </>
   );
@@ -4149,6 +4231,154 @@ export default function Profile() {
         )}
       </AnimatePresence>
       <AnimatePresence>
+        {addDishesTarget ? (
+          <motion.div
+            className="fixed inset-0 z-[90] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeAddExistingDishes}
+          >
+            <motion.div
+              className={`flex max-h-[86vh] w-full max-w-md flex-col rounded-[2rem] border p-4 shadow-[0_30px_80px_rgba(0,0,0,0.22)] ${
+                darkMode ? "border-white/12 bg-[#111111] text-white" : "border-black/10 bg-white text-black"
+              }`}
+              initial={{ y: 18, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 12, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                    {t("Add dishes")}
+                  </div>
+                  <h3 className={`mt-2 text-[1.5rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {t(addDishesTarget.name)}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeAddExistingDishes}
+                  className={`text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}
+                >
+                  {t("Close")}
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className={`mb-4 flex items-center gap-2 rounded-[1.15rem] border px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)] ${
+                  darkMode ? "border-white/12 bg-[#1B1B1B]" : "border-black/10 bg-white"
+                }`}>
+                  <Search size={16} className={`shrink-0 ${darkMode ? "text-white/42" : "text-black/40"}`} />
+                  <input
+                    type="text"
+                    value={addDishesSearch}
+                    onChange={(event) => setAddDishesSearch(event.target.value)}
+                    placeholder={t("Search your dishes")}
+                    className={`profile-search-input min-w-0 flex-1 bg-transparent text-base focus:outline-none ${darkMode ? "text-white placeholder:text-white/35" : "text-black placeholder:text-black/35"}`}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {allDishlists.map((dishlist) => {
+                    const preview = getDishlistPreviewDishes(dishlist);
+                    const selected = dishlist.id === addDishesSourceDishlist?.id;
+                    return (
+                      <button
+                        key={`add-source-${dishlist.id}`}
+                        type="button"
+                        onClick={() => setAddDishesSourceId(dishlist.id)}
+                        className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${dishlist.type === "tag_system" ? "aspect-square" : ""} ${
+                          selected
+                            ? darkMode
+                              ? "border-[#45C47A] bg-[#12351F] text-white"
+                              : "border-[#1FA463] bg-[#F4FFF7] text-black"
+                            : darkMode
+                              ? "border-white/12 bg-[#1A1A1A] text-white"
+                              : "border-black/10 bg-white text-black"
+                        }`}
+                      >
+                        <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                        {dishlist.type === "tag_system" ? (
+                          <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} />
+                        ) : (
+                          <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {addDishesSourceDishlist ? (
+                  <div className="mt-5">
+                    <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                      {addDishesSearchTerm ? t("Search results") : t(addDishesSourceDishlist.name)}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {visibleAddDishes.map((dish) => {
+                        const selected = addDishesSelectedIds.includes(dish.id);
+                        return (
+                          <button
+                            key={`add-${addDishesSourceDishlist.id}-${dish.id}`}
+                            type="button"
+                            onClick={() => toggleAddDishSelection(dish)}
+                            className={`overflow-hidden rounded-[1rem] border-2 text-left ${
+                              selected
+                                ? "border-[#45C47A] ring-2 ring-[#1FA463]/45"
+                                : String(dish?.dishMode || "").toLowerCase() === "restaurant"
+                                  ? "restaurant-accent-border"
+                                  : "default-accent-border"
+                            }`}
+                            style={selected ? { borderColor: "#45C47A", boxShadow: "0 0 0 3px rgba(31,164,99,0.26)" } : undefined}
+                          >
+                            <img
+                              src={getDishImageUrl(dish, "thumb")}
+                              alt={dish.name}
+                              className="h-28 w-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              onError={(event) => {
+                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                              }}
+                            />
+                            <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode ? "bg-[#151515] text-white" : "text-black"}`}>
+                              {dish.name || "Untitled dish"}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {visibleAddDishes.length === 0 ? (
+                      <div className={`mt-2 rounded-[1rem] border border-dashed px-4 py-5 text-center text-sm ${
+                        darkMode ? "border-white/12 bg-white/6 text-white/55" : "border-black/10 bg-white/70 text-black/50"
+                      }`}>
+                        {t("No matching dishes.")}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeAddExistingDishes}
+                  className={`rounded-full border px-4 py-3 text-sm font-medium ${darkMode ? "border-white/12 text-white/72" : "border-black/12 text-black/72"}`}
+                  disabled={addingExistingDishes}
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmAddExistingDishes}
+                  disabled={addingExistingDishes}
+                  className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)] disabled:opacity-60"
+                >
+                  {addingExistingDishes ? t("Saving...") : `${t("Add dishes")} (${selectedAddDishes.length})`}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <AnimatePresence>
         {dishlistDeleteTarget ? (
           <motion.div
             className="fixed inset-0 z-[91] bg-black/45 backdrop-blur-sm flex items-end justify-center p-4"
@@ -4663,7 +4893,7 @@ export default function Profile() {
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"
         selectedIds={dishlistPickerSelectedIds}
-        lockedIds={dishlistPickerSource === "pending" ? ["all_dishes"] : []}
+        lockedIds={[]}
         onToggle={(dishlist) =>
           setDishlistPickerSelectedIds((prev) =>
             prev.includes(dishlist.id)
@@ -4674,9 +4904,9 @@ export default function Profile() {
         onConfirm={handleConfirmDishlistPicker}
         title={dishlistPickerSource === "pending" ? t("Scegli dishlist") : undefined}
         eyebrow={dishlistPickerSource === "pending" ? t("Salvato") : undefined}
-        confirmLabel={dishlistPickerSource === "pending" ? t("Fatto") : t("Save dish")}
+        confirmLabel={dishlistPickerSource === "pending" ? "Salta" : t("Save dish")}
         loading={dishlistPickerLoading}
-        variant={dishlistPickerSource === "pending" ? "swipe" : "sheet"}
+        variant={dishlistPickerSource === "pending" ? "sorting" : "sheet"}
         dishPreview={dishlistPickerSource === "pending" ? dishlistPickerDish : null}
       />
       <AnimatePresence>

@@ -167,16 +167,12 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
-function TagDishlistPreview({ dishlist, darkMode = false, t = (value) => value }) {
-  const active = Number(dishlist?.count || 0) > 0;
+function TagDishlistPreview({ dishlist }) {
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
   return (
-    <div className={`flex aspect-square flex-col items-center justify-center gap-3 rounded-[1.1rem] border-2 p-4 text-center ${
-      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
-    }`}>
-      {Icon ? <Icon className={`h-[4.6rem] w-[4.6rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
-      <div className="max-w-full truncate text-[0.86rem] font-black leading-none">{t(dishlist.tag)}</div>
+    <div className="flex aspect-square items-center justify-center p-4 text-center">
+      {Icon ? <Icon className={`h-[5.35rem] w-[5.35rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
     </div>
   );
 }
@@ -1303,7 +1299,7 @@ export default function PublicProfile() {
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
-                    <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
+                    {!isTagDishlist ? <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" /> : null}
                   </div>
                   {isTagDishlist ? (
                     <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} t={t} />
@@ -1387,7 +1383,7 @@ export default function PublicProfile() {
 	          <div className="mb-3 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
               {activeDishlist?.name || "All dishes"}
-              <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" />
+              {activeDishlist?.type !== "tag_system" ? <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" /> : null}
             </h2>
             <button
               onClick={() => openShuffleDeck(activeDishlist?.id || "all_dishes")}

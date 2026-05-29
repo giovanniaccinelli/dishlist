@@ -1110,6 +1110,83 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   };
 
+  const renderPreviewChrome = (dish) => {
+    if (!dish) return null;
+    const previewAccentBorder = isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border";
+    const previewRestaurantLabel = getSafeRestaurantLabel(dish);
+    const previewPriceLabel = formatDishPrice(dish);
+    const previewUploadDate = getRelativeUploadTime(dish.createdAt);
+
+    return (
+      <>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
+        />
+        <div className={`pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] flex-col items-start gap-1.5 text-white`}>
+          <div className="flex min-w-0 items-center gap-2">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${previewAccentBorder} bg-black/35 text-sm font-bold`}>
+              {dish.ownerPhotoURL ? (
+                <img src={dish.ownerPhotoURL} alt={dish.ownerName || "User"} className="h-full w-full object-cover" />
+              ) : (
+                (dish.ownerName?.[0] || "U").toUpperCase()
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
+              {previewUploadDate ? (
+                <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">
+                  {previewUploadDate}
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {isRestaurantDish(dish) && previewRestaurantLabel ? (
+            <div
+              className="restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+              style={{ border: "2px solid #E64646", boxShadow: "inset 0 0 0 2px #E64646, 0 8px 22px rgba(0,0,0,0.28)" }}
+            >
+              {previewRestaurantLabel}
+            </div>
+          ) : null}
+        </div>
+        <div className="pointer-events-none absolute right-4 top-4 z-[13] inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
+          <Users size={13} strokeWidth={2.25} />
+          <span>{Math.max(0, Number(dish.saves || 0))}</span>
+        </div>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
+          style={{
+            height: "36%",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.54) 0%, rgba(0,0,0,0.48) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
+          }}
+        />
+        <div className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
+          <div className="text-left text-2xl font-bold">{dish.name}</div>
+          {dish.description ? (
+            <p className="mt-0.5 line-clamp-2 text-sm text-white/80">{dish.description}</p>
+          ) : null}
+          {dish.taggedUserName ? (
+            <div className="mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+              @{String(dish.taggedUserName).replace(/^@+/, "")}
+            </div>
+          ) : null}
+          {dish?.dishMode === "restaurant" ? (
+            <div className="mt-1 flex flex-col items-start gap-1">
+              <RatingStars value={dish.rating} size="text-[1.05rem]" readOnly />
+              {previewPriceLabel ? (
+                <span className="inline-flex rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-black text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                  {previewPriceLabel}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </>
+    );
+  };
+
   if (deckEmpty || !currentCard) {
     return (
       <div className={`flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
@@ -1173,6 +1250,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 nextVideoRef.current = node;
               },
             })}
+            {renderPreviewChrome(nextCard)}
           </motion.div>
         ) : null}
         <AnimatePresence>

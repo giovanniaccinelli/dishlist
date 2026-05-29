@@ -2414,6 +2414,11 @@ export default function Profile() {
     });
   };
 
+  const handleProfileMapDishAction = async (dish) => {
+    await handleOpenDishlistPicker(dish);
+    return { skipToast: true };
+  };
+
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[152px_1fr_152px] items-center px-4 pb-1.5 relative">
@@ -4868,32 +4873,37 @@ export default function Profile() {
             </motion.div>
             {profileMapDish ? (
               <div
-                className="fixed inset-0 z-[120] flex items-center justify-center bg-black/72 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
+                className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/72 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
                 onClick={(event) => {
                   event.stopPropagation();
                   setProfileMapDish(null);
                 }}
               >
                 <div
-                  className="relative h-[min(78dvh,42rem)] w-full max-w-md"
+                  className="flex w-full max-w-md flex-col"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <button
                     type="button"
                     onClick={() => setProfileMapDish(null)}
-                    className="no-accent-border absolute right-3 top-3 z-[130] flex h-10 w-10 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+                    className="no-accent-border mb-3 flex h-11 w-11 items-center justify-center self-end rounded-full bg-white/12 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
                     aria-label="Close dish"
                   >
-                    <X size={18} />
+                    <X size={19} />
                   </button>
-                  <SwipeDeck
-                    dishes={[profileMapDish]}
-                    fitHeight
-                    trackSwipes={false}
-                    actionLabel=""
-                    dismissOnAction={false}
-                    currentUser={user}
-                  />
+                  <div className="relative h-[min(78dvh,42rem)] w-full">
+                    <SwipeDeck
+                      dishes={[profileMapDish]}
+                      fitHeight
+                      trackSwipes={false}
+                      onAction={handleProfileMapDishAction}
+                      actionLabel="+"
+                      actionClassName="add-action-btn w-14 h-14 text-[36px]"
+                      actionToast="Added to DishList"
+                      dismissOnAction={false}
+                      currentUser={user}
+                    />
+                  </div>
                 </div>
               </div>
             ) : null}

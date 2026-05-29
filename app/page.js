@@ -30,7 +30,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Hand, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import StoryViewerModal from "../components/StoryViewerModal";
@@ -108,7 +108,7 @@ function FeedSwipeHint({ onDismiss }) {
   return (
     <motion.button
       type="button"
-      className="absolute inset-0 z-[55] flex items-center justify-center bg-black/10 backdrop-blur-[1px]"
+      className="absolute inset-0 z-[55] flex items-center justify-center bg-transparent"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -117,32 +117,50 @@ function FeedSwipeHint({ onDismiss }) {
       onClick={onDismiss}
       aria-label="Dismiss swipe hint"
     >
-      <div className="pointer-events-none relative flex h-40 w-64 items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <motion.div
-          className="absolute h-28 w-44 rounded-[1.7rem] border border-white/22 bg-black/24 shadow-[0_18px_46px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+          className="absolute inset-x-6 bottom-5 top-5 overflow-hidden rounded-[28px] border-2 border-[#E4B43F] bg-[#F7F1E5] shadow-[0_24px_58px_rgba(0,0,0,0.26)]"
           animate={{
-            x: [-48, 52, -48],
-            y: [10, -4, 10],
-            rotate: [-6, 8, -6],
+            x: [-36, 42, -36],
+            y: [8, -4, 8],
+            rotate: [-5, 6, -5],
           }}
-          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/18 bg-white text-black shadow-[0_14px_34px_rgba(0,0,0,0.32)]"
-          animate={{
-            x: [-58, 58, -58],
-            y: [28, 2, 28],
-            rotate: [-18, 10, -18],
-            scale: [0.98, 1.04, 0.98],
-          }}
-          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
+          transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         >
-          <Hand size={28} strokeWidth={2.25} />
+          <div className="absolute inset-x-0 top-0 h-[64%] bg-[linear-gradient(135deg,#2A2A2A_0%,#111_52%,#3B2F1C_100%)]" />
+          <div className="absolute inset-x-4 bottom-5 space-y-2.5">
+            <div className="h-3.5 w-2/3 rounded-full bg-black/70" />
+            <div className="h-2.5 w-4/5 rounded-full bg-black/24" />
+            <div className="h-2.5 w-1/2 rounded-full bg-black/18" />
+          </div>
+          <div className="absolute bottom-5 right-4 h-10 w-10 rounded-full bg-black/90" />
         </motion.div>
         <motion.div
-          className="absolute h-20 w-20 rounded-full border border-[#2BD36B]/40"
-          animate={{ scale: [0.55, 1.35, 0.55], opacity: [0.42, 0, 0.42], x: [-58, 58, -58], y: [28, 2, 28] }}
-          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
+          className="absolute left-1/2 top-1/2 h-24 w-16 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_14px_18px_rgba(0,0,0,0.35)]"
+          animate={{
+            x: [-58, 58, -58],
+            y: [74, 22, 74],
+            rotate: [-16, 9, -16],
+            scale: [0.98, 1.04, 0.98],
+          }}
+          transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
+        >
+          <svg viewBox="0 0 56 88" className="h-full w-full" aria-hidden="true">
+            <path
+              d="M27.8 7.4c6.1 0 10.6 4.7 10.6 10.9v27.2l2.9-4.4c3.1-4.7 8.8-5.6 12.5-2.6 3.3 2.7 3.8 7.5 1.2 12.1L43.2 71.1c-4 7-10.4 10.4-18.4 10.4h-3.7C11.7 81.5 4.2 74 4.2 64.6V48.8c0-4.1 3.2-7.4 7.3-7.4 2 0 3.7.7 5 2V18.3c0-6.2 4.9-10.9 11.3-10.9Z"
+              fill="#F7F1E5"
+              stroke="rgba(0,0,0,0.28)"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <path d="M22.3 18.5c0-3.2 2.3-5.6 5.5-5.6 3 0 5.2 2.4 5.2 5.6v25.7" fill="none" stroke="rgba(0,0,0,0.20)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M22.3 23.8h10.5" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </motion.div>
+        <motion.div
+          className="absolute h-14 w-14 rounded-full border-2 border-[#2BD36B]/70"
+          animate={{ scale: [0.45, 1.55, 0.45], opacity: [0.46, 0, 0.46], x: [-58, 58, -58], y: [74, 22, 74] }}
+          transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         />
       </div>
     </motion.button>

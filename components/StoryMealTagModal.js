@@ -4,12 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Clock3, Croissant, Martini, Moon, Sandwich, Utensils, X } from "lucide-react";
 
 export const STORY_MEAL_TAG_OPTIONS = [
-  { id: "pranzo", it: "Pranzo", en: "Lunch", color: "#FFD34D", icon: Utensils },
-  { id: "cena", it: "Cena", en: "Dinner", color: "#E64646", icon: Moon },
-  { id: "snack", it: "Snack", en: "Snack", color: "#23C268", icon: Sandwich },
-  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#FF8A3D", icon: Martini },
-  { id: "colazione", it: "Colazione", en: "Breakfast", color: "#F8B84E", icon: Croissant },
-  { id: "altro", it: "Altro", en: "Other", color: "#A0A7B4", icon: Clock3 },
+  { id: "pranzo", it: "Pranzo", en: "Lunch", color: "#FBBF24", bg: "#30220A", text: "#FDE68A", icon: Utensils },
+  { id: "cena", it: "Cena", en: "Dinner", color: "#EF4444", bg: "#310F0F", text: "#FECACA", icon: Moon },
+  { id: "snack", it: "Snack", en: "Snack", color: "#22C55E", bg: "#102818", text: "#BBF7D0", icon: Sandwich },
+  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#FB923C", bg: "#321A0A", text: "#FED7AA", icon: Martini },
+  { id: "colazione", it: "Colazione", en: "Breakfast", color: "#F59E0B", bg: "#2F2107", text: "#FDE68A", icon: Croissant },
+  { id: "altro", it: "Altro", en: "Other", color: "#94A3B8", bg: "#181D24", text: "#E2E8F0", icon: Clock3 },
 ];
 
 export function normalizeStoryMealTag(value) {
@@ -82,17 +82,21 @@ export default function StoryMealTagModal({
                     key={option.id}
                     type="button"
                     onClick={() => onSelect?.(option.id)}
-                    className={`flex min-h-[3.05rem] items-center gap-2.5 rounded-full border px-3 text-left transition active:scale-[0.98] ${
-                      darkMode ? "bg-[#171717] text-white" : "bg-white text-black"
-                    }`}
+                    className="flex min-h-[3.05rem] items-center gap-2.5 rounded-full border px-3 text-left transition active:scale-[0.98]"
                     style={{
-                      borderColor: option.color,
-                      boxShadow: darkMode ? `inset 0 0 0 1px ${option.color}33` : `0 8px 18px ${option.color}18`,
+                      backgroundColor: darkMode ? option.bg : "#FFFFFF",
+                      borderColor: `${option.color}BF`,
+                      color: darkMode ? option.text : "#111111",
+                      boxShadow: darkMode ? "none" : `0 8px 18px ${option.color}18`,
                     }}
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-black"
-                      style={{ backgroundColor: option.color }}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
+                      style={{
+                        borderColor: `${option.color}66`,
+                        backgroundColor: darkMode ? "rgba(255,255,255,0.06)" : `${option.color}22`,
+                        color: darkMode ? option.text : "#111111",
+                      }}
                     >
                       <Icon size={15} strokeWidth={2.35} />
                     </span>

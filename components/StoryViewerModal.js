@@ -568,8 +568,12 @@ export default function StoryViewerModal({
                 <div className="text-xs text-white/70 truncate">
                   {storyMealTagLabel ? (
                     <span
-                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-black"
-                      style={{ backgroundColor: storyMealTagOption?.color || "#23C268" }}
+                      className="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em]"
+                      style={{
+                        backgroundColor: storyMealTagOption?.bg || "#102818",
+                        borderColor: `${storyMealTagOption?.color || "#22C55E"}BF`,
+                        color: storyMealTagOption?.text || "#BBF7D0",
+                      }}
                     >
                       {storyMealTagLabel}
                     </span>

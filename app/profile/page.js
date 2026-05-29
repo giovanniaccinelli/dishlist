@@ -4668,8 +4668,12 @@ export default function Profile() {
                             <div className={`mt-1 text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>
                               {mealTagLabel ? (
                                 <span
-                                  className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-black"
-                                  style={{ backgroundColor: mealTagOption?.color || "#23C268" }}
+                                  className="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em]"
+                                  style={{
+                                    backgroundColor: mealTagOption?.bg || "#102818",
+                                    borderColor: `${mealTagOption?.color || "#22C55E"}BF`,
+                                    color: mealTagOption?.text || "#BBF7D0",
+                                  }}
                                 >
                                   {mealTagLabel}
                                 </span>

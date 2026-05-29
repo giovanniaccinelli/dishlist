@@ -1221,13 +1221,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </div>
         ) : null}
         {actionLabel ? (
-          <div className="pointer-events-none absolute right-6 z-[14] flex items-center gap-3" style={{ bottom: actionBottom }}>
-            <div className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
-              <span className="min-h-[14px] text-[12px] font-bold leading-none" />
+          <div className="pointer-events-none absolute right-6 z-[14] flex items-center gap-1.5" style={{ bottom: actionBottom }}>
+            <div className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+              <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none" />
               <MessageCircle size={28} strokeWidth={2.15} />
             </div>
-            <div className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
-              <span className="min-h-[14px] text-[12px] font-bold leading-none">{Number(dish.likes || 0) > 0 ? Number(dish.likes || 0) : ""}</span>
+            <div className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+              <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{Number(dish.likes || 0) > 0 ? Number(dish.likes || 0) : ""}</span>
               <Heart size={29} strokeWidth={2.15} />
             </div>
             <div className={actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}>
@@ -2019,7 +2019,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
 
           {!visibleRestaurantMap && actionLabel && !hasBottomActionRow ? (
-            <div className={`absolute right-6 z-30 flex items-center gap-3`} style={{ bottom: actionBottom }}>
+            <div className={`absolute right-6 z-30 flex items-center gap-1.5`} style={{ bottom: actionBottom }}>
               <button
                 type="button"
                 data-no-drag="true"
@@ -2028,29 +2028,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
-                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
+                <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
                 <MessageCircle size={28} strokeWidth={2.15} />
               </button>
               <button
                 type="button"
                 data-no-drag="true"
                 onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
+                  void handleLikePress(e);
                 }}
                 onPointerMove={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                onClick={handleLikePress}
-                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
                 disabled={dishLikeSaving}
               >
-                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
+                <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart
                   size={29}
                   strokeWidth={2.15}
@@ -2150,7 +2148,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           )}
 
           {!visibleRestaurantMap && hasBottomActionRow ? (
-            <div className={`absolute left-4 right-4 z-30 flex items-center justify-end gap-3`} style={{ bottom: actionBottom }}>
+            <div className={`absolute left-4 right-4 z-30 flex items-center justify-end gap-1.5`} style={{ bottom: actionBottom }}>
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -2203,29 +2201,27 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
-                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
+                <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
                 <MessageCircle size={28} strokeWidth={2.15} />
               </button>
               <button
                 type="button"
                 data-no-drag="true"
                 onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
+                  void handleLikePress(e);
                 }}
                 onPointerMove={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                onClick={handleLikePress}
-                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
                 disabled={dishLikeSaving}
               >
-                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
+                <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart
                   size={29}
                   strokeWidth={2.15}

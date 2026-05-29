@@ -89,6 +89,9 @@ const STORY_CHOOSER_STEPS = [
   { label: "Recipe", color: "#23C268" },
   { label: "Story", color: "#38BDF8" },
 ];
+const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
+const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
+const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -500,13 +503,16 @@ export default function Profile() {
   const [popularDishlistNames, setPopularDishlistNames] = useState([]);
   const [selectedDishIds, setSelectedDishIds] = useState([]);
   const [createSourceDishlistId, setCreateSourceDishlistId] = useState("saved");
+  const [createSourceDishlistsExpanded, setCreateSourceDishlistsExpanded] = useState(false);
   const [createDishSearch, setCreateDishSearch] = useState("");
   const [creatingDishlist, setCreatingDishlist] = useState(false);
   const [addDishesTarget, setAddDishesTarget] = useState(null);
   const [addDishesSourceId, setAddDishesSourceId] = useState("all_dishes");
+  const [addDishesSourceExpanded, setAddDishesSourceExpanded] = useState(false);
   const [addDishesSearch, setAddDishesSearch] = useState("");
   const [addDishesSelectedIds, setAddDishesSelectedIds] = useState([]);
   const [addingExistingDishes, setAddingExistingDishes] = useState(false);
+  const [visibleProfileDishlistCount, setVisibleProfileDishlistCount] = useState(PROFILE_DISHLIST_INITIAL_LIMIT);
   const [dishName, setDishName] = useState("");
   const [dishDescription, setDishDescription] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
@@ -1970,6 +1976,24 @@ export default function Profile() {
       return aRank - bRank || a.fallbackRank - b.fallbackRank;
     })
     .map(({ fallbackRank, ...dishlist }) => dishlist);
+  const visibleProfileDishlists = allDishlists.slice(0, visibleProfileDishlistCount);
+  const hasMoreProfileDishlists = visibleProfileDishlistCount < allDishlists.length;
+  const pinnedSourceDishlists = SOURCE_DISHLIST_PINNED_IDS
+    .map((id) => allDishlists.find((dishlist) => dishlist.id === id))
+    .filter(Boolean);
+  const remainingSourceDishlists = allDishlists.filter(
+    (dishlist) => !SOURCE_DISHLIST_PINNED_IDS.includes(dishlist.id)
+  );
+  const visibleCreateSourceDishlists = createSourceDishlistsExpanded
+    ? [...pinnedSourceDishlists, ...remainingSourceDishlists]
+    : pinnedSourceDishlists;
+  const visibleAddSourceDishlists = addDishesSourceExpanded
+    ? [...pinnedSourceDishlists, ...remainingSourceDishlists]
+    : pinnedSourceDishlists;
+  const defaultSourceDishlistId = allDishlists.find((dishlist) => dishlist.id === "saved")?.id
+    || allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.id
+    || allDishlists[0]?.id
+    || "all_dishes";
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags =
     profileMeta.representativeTags === null
@@ -2254,7 +2278,8 @@ export default function Profile() {
     setAddDishesTarget(target);
     setAddDishesSelectedIds([]);
     setAddDishesSearch("");
-    setAddDishesSourceId("all_dishes");
+    setAddDishesSourceExpanded(false);
+    setAddDishesSourceId(defaultSourceDishlistId);
   };
 
   const closeAddExistingDishes = () => {
@@ -2303,7 +2328,8 @@ export default function Profile() {
     setCreateDishlistStep(0);
     setNewDishlistName("");
     setSelectedDishIds([]);
-    setCreateSourceDishlistId(allDishlists[0]?.id || "all_dishes");
+    setCreateSourceDishlistsExpanded(false);
+    setCreateSourceDishlistId(defaultSourceDishlistId);
     setCreateDishSearch("");
     setCreateDishlistOpen(true);
   };
@@ -2776,7 +2802,7 @@ export default function Profile() {
                 </div>
               ) : null}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {allDishlists.map((dishlist) => {
+                {visibleProfileDishlists.map((dishlist) => {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
                   const hasPendingBadge = dishlist.id === "all_dishes" && pendingQueueCount > 0;
@@ -2873,6 +2899,17 @@ export default function Profile() {
                   </div>
                 </button>
               </div>
+              {hasMoreProfileDishlists ? (
+                <button
+                  type="button"
+                  onClick={() => setVisibleProfileDishlistCount((count) => Math.min(count + PROFILE_DISHLIST_LOAD_INCREMENT, allDishlists.length))}
+                  className={`mx-auto mt-4 flex h-11 items-center justify-center rounded-full border px-5 text-sm font-bold shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+                    darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
+                  }`}
+                >
+                  {t("Load more")}
+                </button>
+              ) : null}
             </div>
           ) : (
             <div
@@ -4129,7 +4166,7 @@ export default function Profile() {
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {allDishlists.map((dishlist) => {
+                      {visibleCreateSourceDishlists.map((dishlist) => {
                         const preview = getDishlistPreviewDishes(dishlist);
                         const selected = dishlist.id === createSourceDishlist?.id;
                         return (
@@ -4157,6 +4194,17 @@ export default function Profile() {
                         );
                       })}
                     </div>
+                    {!createSourceDishlistsExpanded && remainingSourceDishlists.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setCreateSourceDishlistsExpanded(true)}
+                        className={`mt-3 flex h-10 w-full items-center justify-center rounded-full border text-sm font-bold ${
+                          darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
+                        }`}
+                      >
+                        {t("Load more")}
+                      </button>
+                    ) : null}
                     {createSourceDishlist ? (
                       <div className="mt-5">
                         <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
@@ -4277,7 +4325,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {allDishlists.map((dishlist) => {
+                  {visibleAddSourceDishlists.map((dishlist) => {
                     const preview = getDishlistPreviewDishes(dishlist);
                     const selected = dishlist.id === addDishesSourceDishlist?.id;
                     return (
@@ -4305,6 +4353,17 @@ export default function Profile() {
                     );
                   })}
                 </div>
+                {!addDishesSourceExpanded && remainingSourceDishlists.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setAddDishesSourceExpanded(true)}
+                    className={`mt-3 flex h-10 w-full items-center justify-center rounded-full border text-sm font-bold ${
+                      darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
+                    }`}
+                  >
+                    {t("Load more")}
+                  </button>
+                ) : null}
                 {addDishesSourceDishlist ? (
                   <div className="mt-5">
                     <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>

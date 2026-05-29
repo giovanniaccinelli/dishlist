@@ -228,10 +228,9 @@ export default function DishlistPickerModal({
                   ) : null}
                   {isSortingCard ? (
                     <div className="grid grid-cols-2 gap-3 pb-1">
-                      {orderedLists.map((dishlist, index) => {
+                      {orderedLists.map((dishlist) => {
                         const selected = selectedSet.has(dishlist.id);
                         const locked = lockedSet.has(dishlist.id);
-                        const accent = getAccent(dishlist, index);
                         const preview = Array.isArray(dishlist.dishes) ? dishlist.dishes.slice(0, 4) : [];
                         const tag = isTagDishlistId(dishlist.id) ? getTagForDishlistId(dishlist.id) : "";
                         const TagIcon = tag ? TAG_DECOR[tag]?.icon : null;
@@ -245,12 +244,14 @@ export default function DishlistPickerModal({
                             }}
                             className={`relative rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${
                               selected
-                                ? "ring-4 ring-[#2BD36B]/35"
+                                ? darkMode
+                                  ? "border-[#2BD36B] bg-[#102817] ring-2 ring-[#2BD36B]/90 ring-offset-2 ring-offset-[#0D120E]"
+                                  : "border-[#1FA463] bg-[#F2FFF6] ring-2 ring-[#1FA463]/85 ring-offset-2 ring-offset-white"
                                 : darkMode
                                   ? "border-white/12 bg-[#181818]"
                                   : "border-black/10 bg-white"
                             }`}
-                            style={selected ? { borderColor: accent.border, boxShadow: `0 0 0 3px ${accent.soft}, 0 16px 34px rgba(0,0,0,0.14)` } : undefined}
+                            style={selected ? { boxShadow: "0 0 0 1px rgba(43,211,107,0.95), 0 14px 28px rgba(0,0,0,0.18)" } : undefined}
                           >
                             <div className="mb-2 flex items-center justify-between gap-2">
                               <div className={`min-w-0 truncate text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>

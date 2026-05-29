@@ -310,6 +310,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
   const [outgoingSwipe, setOutgoingSwipe] = useState(null);
+  const [promotedCardMotionLocked, setPromotedCardMotionLocked] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
@@ -340,8 +341,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const resetDragPosition = useCallback(() => {
+    dragX.stop();
+    dragY.stop();
     dragX.set(0);
     dragY.set(0);
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        dragX.stop();
+        dragY.stop();
+        dragX.set(0);
+        dragY.set(0);
+      });
+    }
   }, [dragX, dragY]);
   const cardRotate = useTransform(dragX, [-260, 0, 260], [-11, 0, 11]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
@@ -1037,6 +1048,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
       });
+      setPromotedCardMotionLocked(true);
       resetDragPosition();
       advanceCard();
       setIsEjecting(false);
@@ -1112,12 +1124,32 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   }
 
+  const freezeCurrentMotion = outgoingSwipe || promotedCardMotionLocked;
+  const releasePromotedMotionLock = (event) => {
+    const target = event.target;
+    if (
+      typeof Element !== "undefined" &&
+      target instanceof Element &&
+      target.closest("[data-no-drag='true']")
+    ) {
+      return;
+    }
+    resetDragPosition();
+    setPromotedCardMotionLocked(false);
+  };
+
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div
         className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
-        onPointerDownCapture={handleDeckMediaUnlock}
-        onTouchStartCapture={handleDeckMediaUnlock}
+        onPointerDownCapture={(event) => {
+          handleDeckMediaUnlock(event);
+          releasePromotedMotionLock(event);
+        }}
+        onTouchStartCapture={(event) => {
+          handleDeckMediaUnlock(event);
+          releasePromotedMotionLock(event);
+        }}
         onClickCapture={handleDeckMediaUnlock}
       >
         {nextCard ? (
@@ -1171,11 +1203,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           dragElastic={0.74}
           dragMomentum={false}
           style={{
-            x: outgoingSwipe ? 0 : dragX,
-            y: outgoingSwipe ? 0 : dragY,
-            rotate: outgoingSwipe ? 0 : cardRotate,
+            x: freezeCurrentMotion ? 0 : dragX,
+            y: freezeCurrentMotion ? 0 : dragY,
+            rotate: freezeCurrentMotion ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
-            borderColor: outgoingSwipe ? currentCardBaseBorderColor : activeCardBorderColor,
+            borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

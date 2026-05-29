@@ -575,17 +575,17 @@ export default function RestaurantMapView({
     return (
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute top-1/2 z-0 flex h-[78%] w-[32%] -translate-y-1/2 flex-col overflow-hidden rounded-[1.15rem] border-2 border-[#E64646]/70 bg-white/82 px-3 py-3 text-left shadow-[0_14px_30px_rgba(0,0,0,0.12)] backdrop-blur-md ${
-          side === "left" ? "-left-[4%]" : "-right-[4%]"
+        className={`pointer-events-none absolute top-1/2 z-0 flex h-[66%] w-[22%] -translate-y-1/2 flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 bg-white/82 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] backdrop-blur-md ${
+          side === "left" ? "left-0" : "right-0"
         }`}
-        style={{ transform: `translateY(-50%) scale(0.92)` }}
+        style={{ transform: `translateY(-50%) scale(0.9)` }}
       >
         <div className="min-w-0">
-          <div className="truncate text-[12px] font-black leading-tight text-black/70">{group.name}</div>
+          <div className="truncate text-[11px] font-black leading-tight text-black/64">{group.name}</div>
           <div className="mt-1 flex items-center gap-1">
-            <RatingStars value={getGroupRating(group)} size="text-[0.72rem]" readOnly />
+            <RatingStars value={getGroupRating(group)} size="text-[0.64rem]" readOnly />
           </div>
-          <div className="mt-1 truncate text-[10px] font-bold text-black/42">
+          <div className="mt-1 truncate text-[9px] font-bold text-black/38">
             {dishUsers.length} {t(dishUsers.length === 1 ? "person count" : "people count")}
           </div>
         </div>
@@ -596,12 +596,12 @@ export default function RestaurantMapView({
                 key={`${group.placeId}-${dishUser.id}-ghost`}
                 src={dishUser.photoURL}
                 alt=""
-                className="h-7 w-7 rounded-full object-cover shadow-sm"
+                className="h-6 w-6 rounded-full object-cover shadow-sm"
               />
             ) : (
               <span
                 key={`${group.placeId}-${dishUser.id}-ghost`}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-[10px] font-black text-white shadow-sm"
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[9px] font-black text-white shadow-sm"
               >
                 {(dishUser.name || "U").slice(0, 1).toUpperCase()}
               </span>
@@ -736,21 +736,27 @@ export default function RestaurantMapView({
               }
             }}
           >
-            <div className="relative mx-auto flex w-full items-center justify-center overflow-visible">
+            <div
+              className={`relative mx-auto w-full overflow-visible ${
+                embedded
+                  ? "h-[min(17rem,calc(100%-6.2rem))]"
+                  : "h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))]"
+              }`}
+            >
               {renderRestaurantGhostCard(previousGroup, "left")}
               {renderRestaurantGhostCard(nextGroup, "right")}
               <AnimatePresence initial={false} custom={sheetDirection}>
                 <motion.div
                   key={selectedGroup.placeId}
                   custom={sheetDirection}
-                  initial={{ x: sheetDirection > 0 ? "118%" : sheetDirection < 0 ? "-118%" : 0, opacity: 0.96, scale: 0.94 }}
+                  initial={{ x: sheetDirection > 0 ? "104%" : sheetDirection < 0 ? "-104%" : 0, opacity: 0.96 }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
-                  exit={{ x: sheetDirection > 0 ? "-118%" : sheetDirection < 0 ? "118%" : 0, opacity: 0.92, scale: 0.94 }}
-                  transition={{ duration: 0.3, ease: [0.22, 0.72, 0.28, 1] }}
-                  className={`restaurant-accent-border relative z-10 mx-auto flex min-h-0 w-[82%] max-w-[24rem] flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
+                  exit={{ x: sheetDirection > 0 ? "-104%" : sheetDirection < 0 ? "104%" : 0, opacity: 0.92 }}
+                  transition={{ duration: 0.34, ease: [0.2, 0.76, 0.26, 1] }}
+                  className={`restaurant-accent-border absolute inset-y-0 left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
                     embedded
-                      ? "h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
-                      : "max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
+                      ? "rounded-[1.35rem] p-3"
+                      : "rounded-[1.7rem] p-4"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">

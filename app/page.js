@@ -30,7 +30,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Hand, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import StoryViewerModal from "../components/StoryViewerModal";
@@ -136,21 +136,20 @@ function FeedSwipeHint({ onDismiss }) {
           <div className="absolute bottom-5 right-4 h-10 w-10 rounded-full bg-black/90" />
         </motion.div>
         <motion.div
-          className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2"
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/18 bg-white text-black shadow-[0_14px_34px_rgba(0,0,0,0.32)]"
           animate={{
             x: [-58, 58, -58],
-            y: [68, 18, 68],
-            scale: [0.96, 1.04, 0.96],
+            y: [28, 2, 28],
+            rotate: [-18, 10, -18],
+            scale: [0.98, 1.04, 0.98],
           }}
           transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         >
-          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/12 bg-[#F7F1E5] shadow-[0_10px_22px_rgba(0,0,0,0.32)]" />
-          <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/75 shadow-[0_0_0_8px_rgba(255,255,255,0.24)]" />
-          <div className="absolute left-[0.85rem] top-1/2 h-1.5 w-9 -translate-y-1/2 rounded-full bg-[#2BD36B]/85 shadow-[0_0_18px_rgba(43,211,107,0.36)]" />
+          <Hand size={28} strokeWidth={2.25} />
         </motion.div>
         <motion.div
           className="absolute h-14 w-14 rounded-full border-2 border-[#2BD36B]/70"
-          animate={{ scale: [0.45, 1.55, 0.45], opacity: [0.46, 0, 0.46], x: [-58, 58, -58], y: [68, 18, 68] }}
+          animate={{ scale: [0.45, 1.55, 0.45], opacity: [0.46, 0, 0.46], x: [-58, 58, -58], y: [28, 2, 28] }}
           transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         />
       </div>

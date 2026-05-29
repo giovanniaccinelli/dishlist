@@ -984,10 +984,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
     const projectedX = info.offset.x + info.velocity.x * 0.28;
-    const shouldEject =
+    const horizontalTravel = Math.abs(projectedX);
+    const horizontalIntent =
       Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD ||
       Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY ||
-      Math.abs(projectedX) >= SWIPE_PROJECTED_THRESHOLD;
+      horizontalTravel >= SWIPE_PROJECTED_THRESHOLD;
+    const verticalDominant = Math.abs(info.offset.y) > Math.max(90, horizontalTravel * 1.45);
+    const shouldEject =
+      horizontalIntent && !verticalDominant;
     if (shouldEject) {
       const direction = projectedX >= 0 ? 1 : -1;
       setIsEjecting(true);
@@ -1018,13 +1022,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
-      const targetY = Math.max(-54, Math.min(54, info.offset.y * 0.22));
-      const duration = 0.88;
+      const targetY = Math.max(-180, Math.min(180, info.offset.y + info.velocity.y * 0.06));
+      const duration = 1.12;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
         startX: info.offset.x,
-        startY: Math.max(-54, Math.min(54, info.offset.y * 0.22)),
+        startY: info.offset.y,
         targetX,
         targetY,
         rotateStart: Math.max(-11, Math.min(11, (info.offset.x / 260) * 11)),
@@ -1162,13 +1166,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         </AnimatePresence>
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : "x"}
+          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : true}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.74}
           dragMomentum={false}
           style={{
             x: outgoingSwipe ? 0 : dragX,
-            y: 0,
+            y: outgoingSwipe ? 0 : dragY,
             rotate: outgoingSwipe ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: outgoingSwipe ? currentCardBaseBorderColor : activeCardBorderColor,
@@ -1176,7 +1180,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
-          {swipeAddEnabled && (
+          {swipeAddEnabled && !outgoingSwipe && (
             <motion.div
               className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22"
               style={{ opacity: rightCueOpacity }}
@@ -1198,17 +1202,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </motion.div>
             </motion.div>
           )}
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30"
-            style={{ opacity: leftCueOpacity }}
-          >
+          {!outgoingSwipe ? (
             <motion.div
-              style={{ scale: leftCueScale }}
-              className="w-48 h-48 rounded-full border-4 border-white/80 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white text-[110px] leading-none font-light"
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30"
+              style={{ opacity: leftCueOpacity }}
             >
-              ×
+              <motion.div
+                style={{ scale: leftCueScale }}
+                className="w-48 h-48 rounded-full border-4 border-white/80 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white text-[110px] leading-none font-light"
+              >
+                ×
+              </motion.div>
             </motion.div>
-          </motion.div>
+          ) : null}
           {!darkMode ? (
             <div
               data-no-drag="true"

@@ -19,6 +19,7 @@ import {
   deleteDoc,
   deleteField,
   increment,
+  runTransaction,
   writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
@@ -1601,12 +1602,12 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
   }
 }
 
-export async function getCommentsForDish(dishId, max = 20, scope = "dish") {
+export async function getCommentsForDish(dishId, max = 20, scope = "dish", direction = "desc") {
   if (!dishId) return [];
   try {
     const q = query(
       getDishCommentsCollection(dishId, scope),
-      orderBy("createdAt", "desc"),
+      orderBy("createdAt", direction === "asc" ? "asc" : "desc"),
       limitResults(max)
     );
     const snapshot = await getDocs(q);
@@ -1614,6 +1615,51 @@ export async function getCommentsForDish(dishId, max = 20, scope = "dish") {
   } catch (err) {
     console.error("Failed to load comments:", err);
     return [];
+  }
+}
+
+export async function getDishLikeState(dishId, userId = null) {
+  if (!dishId) return { count: 0, liked: false };
+  try {
+    const [dishSnap, likeSnap] = await Promise.all([
+      getDoc(doc(db, "dishes", dishId)),
+      userId ? getDoc(doc(db, "dishes", dishId, "likes", userId)) : Promise.resolve(null),
+    ]);
+    const count = Math.max(0, Number(dishSnap.exists() ? dishSnap.data()?.likes || 0 : 0));
+    return { count, liked: Boolean(likeSnap?.exists?.()) };
+  } catch (err) {
+    console.error("Failed to load dish like state:", err);
+    return { count: 0, liked: false };
+  }
+}
+
+export async function toggleDishLike(dishId, userId) {
+  if (!dishId || !userId) return null;
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      const dishRef = doc(db, "dishes", dishId);
+      const likeRef = doc(db, "dishes", dishId, "likes", userId);
+      const [dishSnap, likeSnap] = await Promise.all([
+        transaction.get(dishRef),
+        transaction.get(likeRef),
+      ]);
+      const currentCount = Math.max(0, Number(dishSnap.exists() ? dishSnap.data()?.likes || 0 : 0));
+      if (likeSnap.exists()) {
+        const nextCount = Math.max(0, currentCount - 1);
+        transaction.delete(likeRef);
+        transaction.set(dishRef, { likes: nextCount }, { merge: true });
+        return { liked: false, count: nextCount };
+      }
+      const nextCount = currentCount + 1;
+      transaction.set(likeRef, { userId, createdAt: serverTimestamp() }, { merge: true });
+      transaction.set(dishRef, { likes: nextCount }, { merge: true });
+      return { liked: true, count: nextCount };
+    });
+    clearReadCache();
+    return result;
+  } catch (err) {
+    console.error("Failed to toggle dish like:", err);
+    return null;
   }
 }
 

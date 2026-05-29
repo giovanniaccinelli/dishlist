@@ -10,12 +10,12 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, ListPlus, Pencil, Maximize2, X, Users, MessageCircle } from "lucide-react";
+import { Plus, CornerUpRight, Heart, ListPlus, Pencil, Maximize2, X, Users, MessageCircle } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import RestaurantMapView from "./RestaurantMapView";
-import { addCommentToDish, deleteCommentThread, getCommentsForDish } from "../app/lib/firebaseHelpers";
+import { addCommentToDish, deleteCommentThread, getCommentsForDish, getDishLikeState, toggleDishLike } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { isRecipeOnlyDish } from "../app/lib/dishContent";
 import { dispatchPushEvent } from "../app/lib/pushClient";
@@ -335,6 +335,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [dishCommentCount, setDishCommentCount] = useState(0);
   const [recipeCommentCount, setRecipeCommentCount] = useState(0);
   const [recipePreviewComment, setRecipePreviewComment] = useState(null);
+  const [dishLikeCount, setDishLikeCount] = useState(0);
+  const [dishLiked, setDishLiked] = useState(false);
+  const [dishLikeSaving, setDishLikeSaving] = useState(false);
   const [commentsScope, setCommentsScope] = useState("dish");
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -528,18 +531,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setDishCommentCount(0);
     setRecipeCommentCount(0);
     setRecipePreviewComment(null);
+    setDishLikeCount(Math.max(0, Number(currentCard.likes || 0)));
+    setDishLiked(false);
+    setDishLikeSaving(false);
     setCommentsScope("dish");
     setNewComment("");
     setReplyTo(null);
     const loadPreviewComments = async () => {
-      const [dishItems, recipeItems] = await Promise.all([
+      const [dishItems, recipeItems, firstRecipeItems, likeState] = await Promise.all([
         getCommentsForDish(currentCard.id, 50, "dish"),
         getCommentsForDish(currentCard.id, 50, "recipe"),
+        getCommentsForDish(currentCard.id, 1, "recipe", "asc"),
+        getDishLikeState(currentCard.id, currentUser?.uid || null),
       ]);
       if (cancelled) return;
       setDishCommentCount(Array.isArray(dishItems) ? dishItems.length : 0);
       setRecipeCommentCount(Array.isArray(recipeItems) ? recipeItems.length : 0);
-      setRecipePreviewComment(Array.isArray(recipeItems) ? recipeItems[0] || null : null);
+      setRecipePreviewComment(Array.isArray(firstRecipeItems) ? firstRecipeItems[0] || null : null);
+      setDishLikeCount(Math.max(0, Number(likeState?.count || 0)));
+      setDishLiked(Boolean(likeState?.liked));
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -843,7 +853,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
-      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
+      const firstItems = await getCommentsForDish(currentCard.id, 1, "recipe", "asc");
+      setRecipePreviewComment(Array.isArray(firstItems) ? firstItems[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -858,7 +869,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const items = await getCommentsForDish(currentCard.id, 50, commentsScope);
     if (commentsScope === "recipe") {
       setRecipeCommentCount(Array.isArray(items) ? items.length : 0);
-      setRecipePreviewComment(Array.isArray(items) ? items[0] || null : null);
+      const firstItems = await getCommentsForDish(currentCard.id, 1, "recipe", "asc");
+      setRecipePreviewComment(Array.isArray(firstItems) ? firstItems[0] || null : null);
     } else {
       setDishCommentCount(Array.isArray(items) ? items.length : 0);
     }
@@ -949,6 +961,31 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (dismissOnAction) advanceCard();
     resetDragPosition();
     runAction(card);
+  };
+
+  const handleLikePress = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (disabled || dishLikeSaving || !currentCard?.id) return;
+    if (!currentUser?.uid) {
+      if (typeof onAuthRequired === "function") onAuthRequired();
+      return;
+    }
+    const previousLiked = dishLiked;
+    const previousCount = dishLikeCount;
+    const optimisticLiked = !previousLiked;
+    setDishLiked(optimisticLiked);
+    setDishLikeCount((count) => Math.max(0, Number(count || 0) + (optimisticLiked ? 1 : -1)));
+    setDishLikeSaving(true);
+    const result = await toggleDishLike(currentCard.id, currentUser.uid);
+    setDishLikeSaving(false);
+    if (!result) {
+      setDishLiked(previousLiked);
+      setDishLikeCount(previousCount);
+      return;
+    }
+    setDishLiked(Boolean(result.liked));
+    setDishLikeCount(Math.max(0, Number(result.count || 0)));
   };
 
   const handleSecondaryActionPress = (e) => {
@@ -1185,8 +1222,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         {actionLabel ? (
           <div className="pointer-events-none absolute right-6 z-[14] flex items-center gap-3" style={{ bottom: actionBottom }}>
-            <div className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+            <div className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+              <span className="min-h-[14px] text-[12px] font-bold leading-none" />
               <MessageCircle size={28} strokeWidth={2.15} />
+            </div>
+            <div className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+              <span className="min-h-[14px] text-[12px] font-bold leading-none">{Number(dish.likes || 0) > 0 ? Number(dish.likes || 0) : ""}</span>
+              <Heart size={29} strokeWidth={2.15} />
             </div>
             <div className={actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}>
               {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
@@ -1986,11 +2028,36 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
+                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
                 <MessageCircle size={28} strokeWidth={2.15} />
-                {dishCommentCount > 0 ? <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span> : null}
+              </button>
+              <button
+                type="button"
+                data-no-drag="true"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onClick={handleLikePress}
+                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                aria-label={dishLiked ? "Unlike dish" : "Like dish"}
+                disabled={dishLikeSaving}
+              >
+                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
+                <Heart
+                  size={29}
+                  strokeWidth={2.15}
+                  className={dishLiked ? "" : "text-white"}
+                  fill={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "none"}
+                  color={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "currentColor"}
+                />
               </button>
               <button
                 data-no-drag="true"
@@ -2136,11 +2203,36 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
+                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
                 <MessageCircle size={28} strokeWidth={2.15} />
-                {dishCommentCount > 0 ? <span className="text-[13px] font-bold leading-none">{dishCommentCount}</span> : null}
+              </button>
+              <button
+                type="button"
+                data-no-drag="true"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerMove={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onClick={handleLikePress}
+                className="inline-flex h-14 w-12 flex-col items-center justify-end gap-0.5 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                aria-label={dishLiked ? "Unlike dish" : "Like dish"}
+                disabled={dishLikeSaving}
+              >
+                <span className="min-h-[14px] text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
+                <Heart
+                  size={29}
+                  strokeWidth={2.15}
+                  className={dishLiked ? "" : "text-white"}
+                  fill={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "none"}
+                  color={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "currentColor"}
+                />
               </button>
               <button
                 data-no-drag="true"

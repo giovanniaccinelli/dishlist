@@ -622,7 +622,7 @@ export default function RestaurantMapView({
     return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
   };
 
-  const renderRestaurantGhostCard = (group, side) => {
+  const renderRestaurantPreviewCard = (group, side) => {
     if (!group) return null;
     const direction = side === "left" ? -1 : 1;
     const dishUsers = getGroupDishUsers(group);
@@ -675,6 +675,187 @@ export default function RestaurantMapView({
       </button>
     );
   };
+
+  const renderActiveRestaurantCard = () => (
+    <motion.div
+      key={selectedGroup.placeId}
+      data-restaurant-active-card="true"
+      custom={sheetDirection}
+      initial={{
+        x: sheetDirection > 0 ? (useRestaurantCarousel ? "107%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-107%" : -86) : 0,
+        opacity: useRestaurantCarousel ? 1 : 0,
+        scale: 1,
+      }}
+      animate={{ x: 0, opacity: 1, scale: 1 }}
+      exit={{
+        x: sheetDirection > 0 ? (useRestaurantCarousel ? "-107%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "107%" : 86) : 0,
+        opacity: useRestaurantCarousel ? 1 : 0,
+        scale: 1,
+      }}
+      transition={useRestaurantCarousel ? { duration: 0.32, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
+      drag={useRestaurantCarousel ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.22}
+      dragMomentum={false}
+      onDragEnd={(_, info) => {
+        const offsetX = info.offset.x;
+        const offsetY = info.offset.y;
+        if (Math.abs(offsetX) > 24 && Math.abs(offsetX) > Math.abs(offsetY) * 0.5) {
+          cardSwipeHandledUntilRef.current = Date.now() + 160;
+          cycleRestaurant(offsetX < 0 ? 1 : -1);
+        }
+      }}
+      className={`map-restaurant-card-solid restaurant-accent-border ${
+        useRestaurantCarousel ? "absolute left-0 right-0 w-[88%] max-w-[27rem]" : "relative w-full"
+      } z-10 mx-auto flex min-h-0 flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
+        embedded
+          ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
+          : "bottom-0 max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
+      }`}
+      style={{ opacity: 1, touchAction: "pan-y" }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <MapPin size={15} className="shrink-0 text-[#E64646]" />
+            {selectedGroup.googleMapsUrl ? (
+              <a
+                href={selectedGroup.googleMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-[1rem] font-semibold text-black underline decoration-black/30 underline-offset-2"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {selectedGroup.name}
+              </a>
+            ) : (
+              <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+            )}
+          </div>
+          <div className="mt-1 flex items-center gap-2">
+            <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
+            <span className="text-[11px] font-bold text-black/45">
+              {selectedDishUsers.length} {t(selectedDishUsers.length === 1 ? "person count" : "people count")}
+            </span>
+          </div>
+          <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSelectedPlaceId("__none__")}
+          className="restaurant-accent-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 bg-black/5 text-black/55"
+          aria-label="Close restaurant details"
+        >
+          <X size={15} />
+        </button>
+      </div>
+
+      {selectedDishUsers.length ? (
+        <div
+          className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {selectedDishUsers.map((dishUser) => {
+            const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
+            if (!userDishes.length) return null;
+            return (
+              <div key={`${selectedGroup.placeId}-${dishUser.id}`} className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
+                  className="mb-2 flex min-w-0 items-center gap-2 text-left"
+                >
+                  <Avatar user={dishUser} />
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-black leading-none text-black">
+                    {dishUser.name || "User"}
+                  </span>
+                </button>
+                <div
+                  className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                    carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
+                  }}
+                  onPointerMove={(event) => {
+                    event.stopPropagation();
+                    const start = carouselTapRef.current;
+                    if (!start || start.moved) return;
+                    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
+                      start.moved = true;
+                    }
+                  }}
+                  onClickCapture={(event) => {
+                    if (!carouselTapRef.current?.moved) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onPointerUp={(event) => {
+                    event.stopPropagation();
+                    window.setTimeout(() => {
+                      carouselTapRef.current = null;
+                    }, 0);
+                  }}
+                >
+                  {userDishes.map((dish) => (
+                    <button
+                      key={`${selectedGroup.placeId}-${dishUser.id}-${dish.id}`}
+                      type="button"
+                      onClick={() => openDish(dish)}
+                  className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+                    embedded ? "h-32 w-32 rounded-[1rem]" : "h-40 w-40 rounded-[1.25rem]"
+                  }`}
+                    >
+                      <div className="relative h-full w-full overflow-hidden">
+                        <DishRatingBadge dish={dish} className="text-[10px]" />
+                        <img
+                          src={getDishImageUrl(dish, "thumb")}
+                          alt={dish.name || "Dish"}
+                          className="h-full w-full object-cover"
+                          onError={(event) => {
+                            event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                          }}
+                        />
+                        <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
+                          <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                            {dish.name || "Untitled dish"}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {selectedGroupUsers.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
+        <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
+          {selectedGroupUsers.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
+            <div key={`${selectedGroup.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
+                <button
+                  type="button"
+                  onClick={() => router.push(`/leaderboard/${mapUser.leaderboardAnswers[0].questionId}`)}
+                  className="restaurant-accent-border min-h-[4.2rem] w-full rounded-[1.25rem] border-2 bg-[linear-gradient(145deg,#261010_0%,#3A1515_52%,#120909_100%)] px-3 py-3 text-left shadow-[0_12px_26px_rgba(0,0,0,0.22)] transition active:scale-[0.98]"
+                >
+                  <div className="line-clamp-2 text-[12px] font-bold leading-tight text-white/86">
+                    {mapUser.leaderboardAnswers[0].questionTitle || "Leaderboard"}
+                  </div>
+                  <div className="mt-2 truncate text-[13px] font-bold text-[#FFB4B4]">
+                    {mapUser.leaderboardAnswers[0].text || selectedGroup.name}
+                  </div>
+                  <div className="mt-2 inline-flex items-center rounded-full border border-[#E64646]/35 bg-[#E64646]/18 px-2 py-1 text-[10px] font-black text-[#FFD7D7]">
+                    {Math.max(0, Number(mapUser.leaderboardAnswers[0].voteCount || 0))} voti
+                  </div>
+                </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </motion.div>
+  );
 
   return (
     <div className={embedded ? `h-full w-full overflow-hidden ${className}` : `restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
@@ -810,188 +991,15 @@ export default function RestaurantMapView({
                   : "h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))]"
               }`}
             >
-              {useRestaurantCarousel ? renderRestaurantGhostCard(previousGroup, "left") : null}
-              {useRestaurantCarousel ? renderRestaurantGhostCard(nextGroup, "right") : null}
-              <AnimatePresence initial={false} mode={useRestaurantCarousel ? undefined : "wait"} custom={sheetDirection}>
-                <motion.div
-                  key={selectedGroup.placeId}
-                  data-restaurant-active-card="true"
-                  custom={sheetDirection}
-                  initial={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "107%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-107%" : -86) : 0,
-                    opacity: useRestaurantCarousel ? 1 : 0,
-                    scale: 1,
-                  }}
-                  animate={{ x: 0, opacity: 1, scale: 1 }}
-                  exit={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-107%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "107%" : 86) : 0,
-                    opacity: useRestaurantCarousel ? 1 : 0,
-                    scale: 1,
-                  }}
-                  transition={useRestaurantCarousel ? { duration: 0.32, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
-                  drag={useRestaurantCarousel ? "x" : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.22}
-                  dragMomentum={false}
-                  onDragEnd={(_, info) => {
-                    const offsetX = info.offset.x;
-                    const offsetY = info.offset.y;
-                    if (Math.abs(offsetX) > 24 && Math.abs(offsetX) > Math.abs(offsetY) * 0.5) {
-                      cardSwipeHandledUntilRef.current = Date.now() + 160;
-                      cycleRestaurant(offsetX < 0 ? 1 : -1);
-                    }
-                  }}
-                  className={`map-restaurant-card-solid restaurant-accent-border ${
-                    useRestaurantCarousel ? "absolute left-0 right-0 w-[88%] max-w-[27rem]" : "relative w-full"
-                  } z-10 mx-auto flex min-h-0 flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
-                    embedded
-                      ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
-                      : "bottom-0 max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
-                  }`}
-                  style={{ opacity: 1, touchAction: "pan-y" }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <MapPin size={15} className="shrink-0 text-[#E64646]" />
-                        {selectedGroup.googleMapsUrl ? (
-                          <a
-                            href={selectedGroup.googleMapsUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="truncate text-[1rem] font-semibold text-black underline decoration-black/30 underline-offset-2"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            {selectedGroup.name}
-                          </a>
-                        ) : (
-                          <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
-                        )}
-                      </div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
-                        <span className="text-[11px] font-bold text-black/45">
-                          {selectedDishUsers.length} {t(selectedDishUsers.length === 1 ? "person count" : "people count")}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlaceId("__none__")}
-                      className="restaurant-accent-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 bg-black/5 text-black/55"
-                      aria-label="Close restaurant details"
-                    >
-                      <X size={15} />
-                    </button>
-                  </div>
-
-                  {selectedDishUsers.length ? (
-                    <div
-                      className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                      style={{ WebkitOverflowScrolling: "touch" }}
-                    >
-                      {selectedDishUsers.map((dishUser) => {
-                        const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
-                        if (!userDishes.length) return null;
-                        return (
-                          <div key={`${selectedGroup.placeId}-${dishUser.id}`} className="min-w-0">
-                            <button
-                              type="button"
-                              onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
-                              className="mb-2 flex min-w-0 items-center gap-2 text-left"
-                            >
-                              <Avatar user={dishUser} />
-                              <span className="min-w-0 flex-1 truncate text-[12px] font-black leading-none text-black">
-                                {dishUser.name || "User"}
-                              </span>
-                            </button>
-                            <div
-                              className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                              style={{ WebkitOverflowScrolling: "touch" }}
-                              onPointerDown={(event) => {
-                                event.stopPropagation();
-                                carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
-                              }}
-                              onPointerMove={(event) => {
-                                event.stopPropagation();
-                                const start = carouselTapRef.current;
-                                if (!start || start.moved) return;
-                                if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
-                                  start.moved = true;
-                                }
-                              }}
-                              onClickCapture={(event) => {
-                                if (!carouselTapRef.current?.moved) return;
-                                event.preventDefault();
-                                event.stopPropagation();
-                              }}
-                              onPointerUp={(event) => {
-                                event.stopPropagation();
-                                window.setTimeout(() => {
-                                  carouselTapRef.current = null;
-                                }, 0);
-                              }}
-                            >
-                              {userDishes.map((dish) => (
-                                <button
-                                  key={`${selectedGroup.placeId}-${dishUser.id}-${dish.id}`}
-                                  type="button"
-                                  onClick={() => openDish(dish)}
-                              className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
-                                embedded ? "h-32 w-32 rounded-[1rem]" : "h-40 w-40 rounded-[1.25rem]"
-                              }`}
-                                >
-                                  <div className="relative h-full w-full overflow-hidden">
-                                    <DishRatingBadge dish={dish} className="text-[10px]" />
-                                    <img
-                                      src={getDishImageUrl(dish, "thumb")}
-                                      alt={dish.name || "Dish"}
-                                      className="h-full w-full object-cover"
-                                      onError={(event) => {
-                                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                      }}
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
-                                      <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                                        {dish.name || "Untitled dish"}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  {selectedGroupUsers.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
-                    <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
-                      {selectedGroupUsers.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
-                        <div key={`${selectedGroup.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
-                            <button
-                              type="button"
-                              onClick={() => router.push(`/leaderboard/${mapUser.leaderboardAnswers[0].questionId}`)}
-                              className="restaurant-accent-border min-h-[4.2rem] w-full rounded-[1.25rem] border-2 bg-[linear-gradient(145deg,#261010_0%,#3A1515_52%,#120909_100%)] px-3 py-3 text-left shadow-[0_12px_26px_rgba(0,0,0,0.22)] transition active:scale-[0.98]"
-                            >
-                              <div className="line-clamp-2 text-[12px] font-bold leading-tight text-white/86">
-                                {mapUser.leaderboardAnswers[0].questionTitle || "Leaderboard"}
-                              </div>
-                              <div className="mt-2 truncate text-[13px] font-bold text-[#FFB4B4]">
-                                {mapUser.leaderboardAnswers[0].text || selectedGroup.name}
-                              </div>
-                              <div className="mt-2 inline-flex items-center rounded-full border border-[#E64646]/35 bg-[#E64646]/18 px-2 py-1 text-[10px] font-black text-[#FFD7D7]">
-                                {Math.max(0, Number(mapUser.leaderboardAnswers[0].voteCount || 0))} voti
-                              </div>
-                            </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </motion.div>
-              </AnimatePresence>
+              {useRestaurantCarousel ? renderRestaurantPreviewCard(previousGroup, "left") : null}
+              {useRestaurantCarousel ? renderRestaurantPreviewCard(nextGroup, "right") : null}
+              {useRestaurantCarousel ? (
+                renderActiveRestaurantCard()
+              ) : (
+                <AnimatePresence initial={false} mode="wait" custom={sheetDirection}>
+                  {renderActiveRestaurantCard()}
+                </AnimatePresence>
+              )}
             </div>
           </div>
         ) : null}

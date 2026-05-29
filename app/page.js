@@ -136,30 +136,21 @@ function FeedSwipeHint({ onDismiss }) {
           <div className="absolute bottom-5 right-4 h-10 w-10 rounded-full bg-black/90" />
         </motion.div>
         <motion.div
-          className="absolute left-1/2 top-1/2 h-24 w-16 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_14px_18px_rgba(0,0,0,0.35)]"
+          className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2"
           animate={{
             x: [-58, 58, -58],
-            y: [74, 22, 74],
-            rotate: [-16, 9, -16],
-            scale: [0.98, 1.04, 0.98],
+            y: [68, 18, 68],
+            scale: [0.96, 1.04, 0.96],
           }}
           transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         >
-          <svg viewBox="0 0 56 88" className="h-full w-full" aria-hidden="true">
-            <path
-              d="M27.8 7.4c6.1 0 10.6 4.7 10.6 10.9v27.2l2.9-4.4c3.1-4.7 8.8-5.6 12.5-2.6 3.3 2.7 3.8 7.5 1.2 12.1L43.2 71.1c-4 7-10.4 10.4-18.4 10.4h-3.7C11.7 81.5 4.2 74 4.2 64.6V48.8c0-4.1 3.2-7.4 7.3-7.4 2 0 3.7.7 5 2V18.3c0-6.2 4.9-10.9 11.3-10.9Z"
-              fill="#F7F1E5"
-              stroke="rgba(0,0,0,0.28)"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            <path d="M22.3 18.5c0-3.2 2.3-5.6 5.5-5.6 3 0 5.2 2.4 5.2 5.6v25.7" fill="none" stroke="rgba(0,0,0,0.20)" strokeWidth="2" strokeLinecap="round" />
-            <path d="M22.3 23.8h10.5" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/12 bg-[#F7F1E5] shadow-[0_10px_22px_rgba(0,0,0,0.32)]" />
+          <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/75 shadow-[0_0_0_8px_rgba(255,255,255,0.24)]" />
+          <div className="absolute left-[0.85rem] top-1/2 h-1.5 w-9 -translate-y-1/2 rounded-full bg-[#2BD36B]/85 shadow-[0_0_18px_rgba(43,211,107,0.36)]" />
         </motion.div>
         <motion.div
           className="absolute h-14 w-14 rounded-full border-2 border-[#2BD36B]/70"
-          animate={{ scale: [0.45, 1.55, 0.45], opacity: [0.46, 0, 0.46], x: [-58, 58, -58], y: [74, 22, 74] }}
+          animate={{ scale: [0.45, 1.55, 0.45], opacity: [0.46, 0, 0.46], x: [-58, 58, -58], y: [68, 18, 68] }}
           transition={{ duration: 2.25, repeat: 1, ease: "easeInOut" }}
         />
       </div>

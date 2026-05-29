@@ -881,6 +881,7 @@ export default function RestaurantMapView({
 
       {cardDishUsers.length ? (
         <div
+          data-restaurant-card-scroll="true"
           className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
@@ -925,6 +926,7 @@ export default function RestaurantMapView({
                       carouselTapRef.current = null;
                     }, 0);
                   }}
+                  data-restaurant-card-scroll="true"
                 >
                   {userDishes.map((dish) => (
                     <button
@@ -1111,7 +1113,7 @@ export default function RestaurantMapView({
                   ref={carouselTrackRef}
                   className="absolute bottom-0 left-1/2 flex w-[86%] max-w-[27rem] items-end gap-4"
                   onPointerDown={(event) => {
-                    if (event.target?.closest?.("button, a, input, textarea, select, [role='button']")) return;
+                    if (event.target?.closest?.("button, a, input, textarea, select, [role='button'], [data-restaurant-card-scroll='true']")) return;
                     carouselDragRef.current = { x: event.clientX, y: event.clientY, active: false };
                     setCarouselDragging(true);
                     setCarouselDragX(0);

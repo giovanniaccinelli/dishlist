@@ -11,7 +11,6 @@ import AuthPromptModal from "../components/AuthPromptModal";
 import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
-  getActiveStoriesForUser,
   getAllDishlistsForUser,
   getCommentsForDish,
   getCommentsForStory,
@@ -336,20 +335,30 @@ export default function Feed() {
     let cancelled = false;
     (async () => {
       try {
-        const usersSnap = await getDocs(query(collection(db, "users"), where("hasActiveStory", "==", true), limitResults(16)));
-        const groups = await Promise.all(
-          usersSnap.docs.map(async (userDoc) => {
-            const data = userDoc.data() || {};
-            const stories = await getActiveStoriesForUser(userDoc.id);
-            if (!stories.length) return null;
-            return {
-              ownerId: userDoc.id,
-              ownerName: data.displayName || data.name || "User",
-              ownerPhotoURL: normalizeProfilePhotoURL(data.photoURL || data.photoUrl || ""),
-              stories,
-            };
-          })
-        );
+        const now = Date.now();
+        const storySnap = await getDocs(query(collectionGroup(db, "stories"), orderBy("createdAt", "desc"), limitResults(80)));
+        const storiesByOwner = new Map();
+        storySnap.docs.forEach((storyDoc) => {
+          const ownerId = storyDoc.ref.parent?.parent?.id || "";
+          const story = { id: storyDoc.id, ...storyDoc.data() };
+          if (!ownerId || (story.expiresAtMs || 0) <= now) return;
+          if (!storiesByOwner.has(ownerId)) storiesByOwner.set(ownerId, []);
+          storiesByOwner.get(ownerId).push(story);
+        });
+        const ownerIds = Array.from(storiesByOwner.keys()).slice(0, 16);
+        const owners = await getUsersByIds(ownerIds);
+        const ownerMap = new Map(owners.map((owner) => [owner.id, owner]));
+        const groups = ownerIds.map((ownerId) => {
+          const owner = ownerMap.get(ownerId) || {};
+          const stories = storiesByOwner.get(ownerId) || [];
+          if (!stories.length) return null;
+          return {
+            ownerId,
+            ownerName: owner.displayName || owner.name || "User",
+            ownerPhotoURL: normalizeProfilePhotoURL(owner.photoURL || owner.photoUrl || ""),
+            stories,
+          };
+        });
         if (cancelled) return;
         const ordered = groups
           .filter(Boolean)

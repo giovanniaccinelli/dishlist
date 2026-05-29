@@ -1050,15 +1050,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-180, Math.min(180, info.offset.y));
-      const duration = 1.38;
+      const releaseX = dragX.get();
+      const releaseY = dragY.get();
+      const duration = 1.72;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
-        startX: info.offset.x,
-        startY: info.offset.y,
+        startX: Number.isFinite(releaseX) ? releaseX : info.offset.x,
+        startY: Number.isFinite(releaseY) ? releaseY : info.offset.y,
         targetX,
         targetY,
-        rotateStart: Math.max(-11, Math.min(11, (info.offset.x / 260) * 11)),
+        rotateStart: Math.max(-11, Math.min(11, ((Number.isFinite(releaseX) ? releaseX : info.offset.x) / 260) * 11)),
         rotateEnd: direction * 16,
         duration,
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
@@ -1309,9 +1311,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               exit={{ opacity: 0 }}
               transition={{
-                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
+                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
+                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
                 opacity: { duration: 0.12 },
               }}
               style={{ borderColor: outgoingSwipe.borderColor }}

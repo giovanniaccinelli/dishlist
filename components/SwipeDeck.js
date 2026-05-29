@@ -1110,22 +1110,22 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         >
           {swipeAddEnabled && (
             <motion.div
-              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#1FA463]/24"
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22"
               style={{ opacity: rightCueOpacity }}
             >
               <motion.div
                 style={{ scale: rightCueScale }}
-                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-white/80 bg-[#1FA463]/34 px-5 text-center backdrop-blur-sm"
+                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm"
               >
                 {typeof onRightSwipe === "function" ? (
                   <>
-                    <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-white">
+                    <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-[#23C268]">
                       All dishes
                     </div>
-                    <Plus size={92} strokeWidth={2.2} className="text-white" />
+                    <Plus size={92} strokeWidth={2.35} className="text-[#23C268]" />
                   </>
                 ) : (
-                  <Plus size={110} strokeWidth={2.1} className="text-white" />
+                  <Plus size={110} strokeWidth={2.35} className="text-[#23C268]" />
                 )}
               </motion.div>
             </motion.div>

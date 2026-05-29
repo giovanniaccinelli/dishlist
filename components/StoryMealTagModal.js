@@ -1,15 +1,15 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Coffee, Croissant, Moon, Sandwich, Sparkles, Utensils, X } from "lucide-react";
+import { Clock3, Croissant, Martini, Moon, Sandwich, Utensils, X } from "lucide-react";
 
 export const STORY_MEAL_TAG_OPTIONS = [
   { id: "pranzo", it: "Pranzo", en: "Lunch", color: "#FFD34D", icon: Utensils },
   { id: "cena", it: "Cena", en: "Dinner", color: "#E64646", icon: Moon },
   { id: "snack", it: "Snack", en: "Snack", color: "#23C268", icon: Sandwich },
-  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#FF8A3D", icon: Coffee },
+  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#FF8A3D", icon: Martini },
   { id: "colazione", it: "Colazione", en: "Breakfast", color: "#F8B84E", icon: Croissant },
-  { id: "altro", it: "Altro", en: "Other", color: "#A0A7B4", icon: Sparkles },
+  { id: "altro", it: "Altro", en: "Other", color: "#A0A7B4", icon: Clock3 },
 ];
 
 export function normalizeStoryMealTag(value) {
@@ -37,10 +37,7 @@ export default function StoryMealTagModal({
   language = "it",
   darkMode = true,
 }) {
-  const title = language === "it" ? "Quando lo mangi?" : "When are you eating it?";
-  const subtitle = language === "it"
-    ? "Questo tag apparira al posto dell'orario nella storia."
-    : "This tag will replace the upload time in the story.";
+  const title = language === "it" ? "Tag storia" : "Story tag";
 
   return (
     <AnimatePresence>
@@ -62,11 +59,8 @@ export default function StoryMealTagModal({
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-semibold leading-tight">{title}</h3>
-                <p className={`mt-1 text-sm ${darkMode ? "text-white/56" : "text-black/52"}`}>{subtitle}</p>
-              </div>
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <h3 className="text-[1.35rem] font-semibold leading-tight">{title}</h3>
               <button
                 type="button"
                 onClick={onClose}
@@ -79,7 +73,7 @@ export default function StoryMealTagModal({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {STORY_MEAL_TAG_OPTIONS.map((option) => {
                 const Icon = option.icon;
                 const label = language === "it" ? option.it : option.en;
@@ -88,13 +82,21 @@ export default function StoryMealTagModal({
                     key={option.id}
                     type="button"
                     onClick={() => onSelect?.(option.id)}
-                    className="flex min-h-[3.35rem] items-center gap-2.5 rounded-[1rem] px-3 text-left text-black shadow-[inset_0_-1px_0_rgba(0,0,0,0.14)] transition active:scale-[0.98]"
-                    style={{ backgroundColor: option.color }}
+                    className={`flex min-h-[3.05rem] items-center gap-2.5 rounded-full border px-3 text-left transition active:scale-[0.98] ${
+                      darkMode ? "bg-[#171717] text-white" : "bg-white text-black"
+                    }`}
+                    style={{
+                      borderColor: option.color,
+                      boxShadow: darkMode ? `inset 0 0 0 1px ${option.color}33` : `0 8px 18px ${option.color}18`,
+                    }}
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/12 text-black">
-                      <Icon size={17} strokeWidth={2.4} />
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-black"
+                      style={{ backgroundColor: option.color }}
+                    >
+                      <Icon size={15} strokeWidth={2.35} />
                     </span>
-                    <span className="min-w-0 text-sm font-extrabold">{label}</span>
+                    <span className="min-w-0 text-sm font-semibold">{label}</span>
                   </button>
                 );
               })}

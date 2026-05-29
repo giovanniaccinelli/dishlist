@@ -21,10 +21,10 @@ const storyFaceVariants = {
   enter: (direction) => {
     if (!direction) return { opacity: 0.96 };
     return {
-      opacity: 0.82,
-      x: `${direction * 42}%`,
-      rotateY: direction * -74,
-      scale: 0.96,
+      opacity: 0.9,
+      x: "0%",
+      rotateY: direction * -88,
+      scale: 0.995,
       transformOrigin: direction > 0 ? "100% 50%" : "0% 50%",
     };
   },
@@ -38,10 +38,10 @@ const storyFaceVariants = {
   exit: (direction) => {
     if (!direction) return { opacity: 0 };
     return {
-      opacity: 0.75,
-      x: `${direction * -42}%`,
-      rotateY: direction * 74,
-      scale: 0.96,
+      opacity: 0.86,
+      x: "0%",
+      rotateY: direction * 88,
+      scale: 0.995,
       transformOrigin: direction > 0 ? "0% 50%" : "100% 50%",
     };
   },
@@ -525,7 +525,7 @@ export default function StoryViewerModal({
             }
             if (info.offset.y > 120 || info.velocity.y > 700) onClose?.();
           }}
-          style={{ transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
+          style={{ perspective: 900, transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >
           <AnimatePresence initial={false} custom={groupTurnDirection} mode="popLayout">
             <motion.div
@@ -536,7 +536,7 @@ export default function StoryViewerModal({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={groupTurnDirection ? { duration: 0.34, ease: [0.2, 0.82, 0.22, 1] } : { duration: 0.16, ease: "easeOut" }}
+              transition={groupTurnDirection ? { duration: 0.42, ease: [0.2, 0.82, 0.22, 1] } : { duration: 0.16, ease: "easeOut" }}
               style={{
                 backfaceVisibility: "hidden",
                 transformStyle: "preserve-3d",

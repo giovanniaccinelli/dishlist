@@ -20,12 +20,13 @@ const STORY_HOLD_PAUSE_THRESHOLD_MS = 320;
 const storyFaceVariants = {
   enter: (direction) => {
     if (!direction) return { opacity: 0.96 };
+    const next = direction > 0;
     return {
-      opacity: 0.98,
-      x: "0%",
-      rotateY: direction * 72,
+      opacity: 1,
+      x: next ? "50%" : "-50%",
+      rotateY: next ? -90 : 90,
       scale: 1,
-      transformOrigin: direction > 0 ? "100% 50%" : "0% 50%",
+      transformOrigin: next ? "0% 50%" : "100% 50%",
     };
   },
   center: {
@@ -37,12 +38,13 @@ const storyFaceVariants = {
   },
   exit: (direction) => {
     if (!direction) return { opacity: 0 };
+    const next = direction > 0;
     return {
-      opacity: 0.98,
-      x: "0%",
-      rotateY: direction * -72,
+      opacity: 1,
+      x: next ? "-50%" : "50%",
+      rotateY: next ? 90 : -90,
       scale: 1,
-      transformOrigin: direction > 0 ? "0% 50%" : "100% 50%",
+      transformOrigin: next ? "100% 50%" : "0% 50%",
     };
   },
 };
@@ -546,7 +548,7 @@ export default function StoryViewerModal({
             }
             if (info.offset.y > 120 || info.velocity.y > 700) onClose?.();
           }}
-          style={{ perspective: 900, transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
+          style={{ perspective: 1100, transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >
           <AnimatePresence initial={false} custom={groupTurnDirection} mode="popLayout">
             <motion.div
@@ -561,6 +563,7 @@ export default function StoryViewerModal({
               style={{
                 backfaceVisibility: "hidden",
                 transformStyle: "preserve-3d",
+                transformPerspective: 1100,
               }}
             >
               {isDishVideo(currentStory) ? (

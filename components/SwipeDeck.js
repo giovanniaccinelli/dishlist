@@ -1124,7 +1124,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   }
 
-  const freezeCurrentMotion = outgoingSwipe || promotedCardMotionLocked;
+  const freezeCurrentMotion = promotedCardMotionLocked;
   const releasePromotedMotionLock = (event) => {
     const target = event.target;
     if (
@@ -1135,6 +1135,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       return;
     }
     resetDragPosition();
+    setOutgoingSwipe(null);
     setPromotedCardMotionLocked(false);
   };
 
@@ -1198,7 +1199,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         </AnimatePresence>
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : true}
+          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.74}
           dragMomentum={false}

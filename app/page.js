@@ -30,7 +30,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Hand, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import StoryViewerModal from "../components/StoryViewerModal";
@@ -66,6 +66,7 @@ const FEED_VIEWED_FIELD = "feedViewedDishIds";
 const FEED_FOLLOWING_SEEN_FIELD = "feedFollowingSeenAt";
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 const activitySeenStorageKey = (userId) => `feed:activitySeenAt:${userId}`;
+const swipeHintStorageKey = (userId, guestMode = null) => `feed:swipeHintSeen:v1:${userId || guestMode || "guest"}`;
 
 function timestampToMs(value) {
   if (!value) return 0;
@@ -102,6 +103,51 @@ const ACTIVITY_PAGE_SIZE = 30;
 const FEED_INITIAL_PAGE_SIZE = 600;
 
 const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
+
+function FeedSwipeHint({ onDismiss }) {
+  return (
+    <motion.button
+      type="button"
+      className="absolute inset-0 z-[55] flex items-center justify-center bg-black/10 backdrop-blur-[1px]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      onPointerDown={onDismiss}
+      onClick={onDismiss}
+      aria-label="Dismiss swipe hint"
+    >
+      <div className="pointer-events-none relative flex h-40 w-64 items-center justify-center">
+        <motion.div
+          className="absolute h-28 w-44 rounded-[1.7rem] border border-white/22 bg-black/24 shadow-[0_18px_46px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+          animate={{
+            x: [-48, 52, -48],
+            y: [10, -4, 10],
+            rotate: [-6, 8, -6],
+          }}
+          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/18 bg-white text-black shadow-[0_14px_34px_rgba(0,0,0,0.32)]"
+          animate={{
+            x: [-58, 58, -58],
+            y: [28, 2, 28],
+            rotate: [-18, 10, -18],
+            scale: [0.98, 1.04, 0.98],
+          }}
+          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
+        >
+          <Hand size={28} strokeWidth={2.25} />
+        </motion.div>
+        <motion.div
+          className="absolute h-20 w-20 rounded-full border border-[#2BD36B]/40"
+          animate={{ scale: [0.55, 1.35, 0.55], opacity: [0.42, 0, 0.42], x: [-58, 58, -58], y: [28, 2, 28] }}
+          transition={{ duration: 2.15, repeat: 1, ease: "easeInOut" }}
+        />
+      </div>
+    </motion.button>
+  );
+}
 
 export default function Feed() {
   const { user, loading } = useAuth();
@@ -171,6 +217,7 @@ export default function Feed() {
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
   const [firstFeedCardReady, setFirstFeedCardReady] = useState(false);
   const [feedHasRendered, setFeedHasRendered] = useState(false);
+  const [swipeHintVisible, setSwipeHintVisible] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
@@ -1263,6 +1310,14 @@ export default function Feed() {
   const hasLoadedFeedCards = forYouDeck.length > 0 || followingDeck.length > 0;
   const firstVisibleFeedCardKey = firstVisibleFeedCard?.id || firstVisibleFeedCard?._key || "";
 
+  const dismissSwipeHint = () => {
+    setSwipeHintVisible(false);
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(swipeHintStorageKey(userId, guestMode), "1");
+    } catch {}
+  };
+
   useEffect(() => {
     if (feedHasRendered) return undefined;
     if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) {
@@ -1304,6 +1359,19 @@ export default function Feed() {
       cancelled = true;
     };
   }, [feedClientReady, feedHasRendered, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
+
+  useEffect(() => {
+    if (!feedHasRendered || !firstVisibleFeedCardKey || !hasLoadedFeedCards || loading || loadingDishes || needsOpeningDishMode) return undefined;
+    if (typeof window === "undefined") return undefined;
+    const key = swipeHintStorageKey(userId, guestMode);
+    try {
+      if (window.localStorage.getItem(key) === "1") return undefined;
+      window.localStorage.setItem(key, "1");
+    } catch {}
+    setSwipeHintVisible(true);
+    const timeout = window.setTimeout(() => setSwipeHintVisible(false), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [feedHasRendered, firstVisibleFeedCardKey, guestMode, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode, userId]);
 
   if (!feedClientReady || needsOpeningDishMode) {
     return (
@@ -1552,6 +1620,9 @@ export default function Feed() {
             />
           )}
         </div>
+        <AnimatePresence>
+          {swipeHintVisible ? <FeedSwipeHint onDismiss={dismissSwipeHint} /> : null}
+        </AnimatePresence>
       </div>
       <AnimatePresence>
         {filterOpen ? (

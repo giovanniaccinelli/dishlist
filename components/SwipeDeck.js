@@ -296,7 +296,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const SWIPE_EJECT_THRESHOLD = 70;
+  const SWIPE_EJECT_THRESHOLD = 112;
+  const SWIPE_EJECT_VELOCITY = 540;
+  const SWIPE_PROJECTED_THRESHOLD = 132;
 
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -852,12 +854,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const goToNextCardFromArrow = async () => {
     if (disabled || isEjecting || !currentCard) return;
     setIsEjecting(true);
-    const targetX = -(typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
+    const targetX = -(typeof window !== "undefined" ? window.innerWidth + 180 : 760);
     try {
       await animate(dragX, targetX, {
         type: "tween",
-        duration: 0.48,
-        ease: [0.2, 0.86, 0.28, 1],
+        duration: 0.38,
+        ease: [0.16, 1, 0.3, 1],
       }).finished;
     } catch {}
     if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
@@ -969,13 +971,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
-    if (Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD) {
-      const direction = info.offset.x > 0 ? 1 : -1;
+    const projectedX = info.offset.x + info.velocity.x * 0.18;
+    const shouldEject =
+      Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD ||
+      Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY ||
+      Math.abs(projectedX) >= SWIPE_PROJECTED_THRESHOLD;
+    if (shouldEject) {
+      const direction = projectedX >= 0 ? 1 : -1;
       setIsEjecting(true);
-      if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && info.offset.x > 0) {
+      if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && direction > 0) {
         runAction(dish);
       }
-      if (!advanceOnAnySwipe && info.offset.x > 0 && typeof onRightSwipe === "function") {
+      if (!advanceOnAnySwipe && direction > 0 && typeof onRightSwipe === "function") {
         setToastVariant("swipe");
         setToast(rightSwipeToast);
         setTimeout(() => setToast(""), 1450);
@@ -998,12 +1005,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
 
       const targetX =
-        direction * (typeof window !== "undefined" ? window.innerWidth * 1.2 : 700);
+        direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
+      const remainingDistance = Math.max(120, Math.abs(targetX - info.offset.x));
+      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 3.2 : 0.38;
+      const duration = Math.max(0.28, Math.min(0.44, velocityDuration));
       try {
         await animate(dragX, targetX, {
           type: "tween",
-          duration: 0.48,
-          ease: [0.2, 0.86, 0.28, 1],
+          duration,
+          ease: [0.16, 1, 0.3, 1],
         }).finished;
       } catch {}
       advanceCard();
@@ -1098,7 +1108,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.9}
+          dragElastic={0.82}
+          dragMomentum={false}
           style={{
             x: dragX,
             rotate: cardRotate,

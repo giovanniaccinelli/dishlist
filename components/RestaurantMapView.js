@@ -997,8 +997,8 @@ export default function RestaurantMapView({
                   animate={{ x: getCarouselTrackX(selectedIndex) }}
                   transition={{ duration: 0.38, ease: [0.18, 0.82, 0.24, 1] }}
                   drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.18}
+                  dragConstraints={{ left: -190, right: 190 }}
+                  dragElastic={0.08}
                   dragMomentum={false}
                   onDragEnd={(_, info) => {
                     const offsetX = info.offset.x;

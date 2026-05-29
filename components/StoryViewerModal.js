@@ -23,7 +23,7 @@ const storyFaceVariants = {
     return {
       opacity: 0.98,
       x: "0%",
-      rotateY: direction * -72,
+      rotateY: direction * 72,
       scale: 1,
       transformOrigin: direction > 0 ? "100% 50%" : "0% 50%",
     };
@@ -40,7 +40,7 @@ const storyFaceVariants = {
     return {
       opacity: 0.98,
       x: "0%",
-      rotateY: direction * 72,
+      rotateY: direction * -72,
       scale: 1,
       transformOrigin: direction > 0 ? "0% 50%" : "100% 50%",
     };
@@ -93,6 +93,8 @@ export default function StoryViewerModal({
   const [isPaused, setIsPaused] = useState(false);
   const didAdvanceRef = useRef(false);
   const pressStartedAtRef = useRef(0);
+  const holdPauseTimerRef = useRef(null);
+  const holdPauseActivatedRef = useRef(false);
   const suppressTapUntilRef = useRef(0);
   const videoRef = useRef(null);
   const [storyDurationMs, setStoryDurationMs] = useState(STORY_DURATION_MS);
@@ -116,6 +118,15 @@ export default function StoryViewerModal({
     setProgressMs(0);
     setIsPaused(false);
   }, [open, initialGroupIndex, groups.length]);
+
+  useEffect(() => {
+    return () => {
+      if (holdPauseTimerRef.current) {
+        window.clearTimeout(holdPauseTimerRef.current);
+        holdPauseTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const currentGroup = groups[groupIndex] || null;
   const currentStories = currentGroup?.stories || [];
@@ -376,14 +387,24 @@ export default function StoryViewerModal({
   const handlePressStart = (event) => {
     if (event.target.closest("[data-no-story-pause='true']")) return;
     pressStartedAtRef.current = Date.now();
-    setIsPaused(true);
+    holdPauseActivatedRef.current = false;
+    if (holdPauseTimerRef.current) window.clearTimeout(holdPauseTimerRef.current);
+    holdPauseTimerRef.current = window.setTimeout(() => {
+      holdPauseActivatedRef.current = true;
+      setIsPaused(true);
+    }, STORY_HOLD_PAUSE_THRESHOLD_MS);
   };
 
   const handlePressEnd = () => {
-    if (pressStartedAtRef.current && Date.now() - pressStartedAtRef.current > STORY_HOLD_PAUSE_THRESHOLD_MS) {
+    if (holdPauseTimerRef.current) {
+      window.clearTimeout(holdPauseTimerRef.current);
+      holdPauseTimerRef.current = null;
+    }
+    if (holdPauseActivatedRef.current) {
       suppressTapUntilRef.current = Date.now() + 280;
     }
     pressStartedAtRef.current = 0;
+    holdPauseActivatedRef.current = false;
     setIsPaused(false);
   };
 

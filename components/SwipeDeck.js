@@ -296,19 +296,20 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const SWIPE_EJECT_THRESHOLD = 86;
-  const SWIPE_EJECT_VELOCITY = 460;
-  const SWIPE_PROJECTED_THRESHOLD = 104;
+  const SWIPE_EJECT_THRESHOLD = 64;
+  const SWIPE_EJECT_VELOCITY = 360;
+  const SWIPE_PROJECTED_THRESHOLD = 78;
 
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [deckInitialized, setDeckInitialized] = useState(false);
   const [deckEmpty, setDeckEmpty] = useState(false);
-  const [currentMediaReadyKey, setCurrentMediaReadyKey] = useState("");
+  const [, setCurrentMediaReadyKey] = useState("");
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
+  const [outgoingSwipe, setOutgoingSwipe] = useState(null);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
@@ -403,7 +404,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const nextCard = deck[currentIndex + 1] || null;
-  const currentMediaReady = Boolean(currentCard?._key && currentMediaReadyKey === currentCard._key);
 
   useEffect(() => {
     if (!currentCard?._key) {
@@ -983,7 +983,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const handleSwipeEnd = async (info, dish) => {
     if (disabled || isEjecting) return;
-    const projectedX = info.offset.x + info.velocity.x * 0.22;
+    const projectedX = info.offset.x + info.velocity.x * 0.28;
     const shouldEject =
       Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD ||
       Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY ||
@@ -1019,23 +1019,20 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-220, Math.min(220, info.offset.y + info.velocity.y * 0.12));
-      const remainingDistance = Math.max(120, Math.abs(targetX - info.offset.x));
-      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 1.82 : 0.66;
-      const duration = Math.max(0.52, Math.min(0.78, velocityDuration));
-      try {
-        await Promise.all([
-          animate(dragX, targetX, {
-            type: "tween",
-            duration,
-            ease: [0.16, 1, 0.3, 1],
-          }).finished,
-          animate(dragY, targetY, {
-            type: "tween",
-            duration,
-            ease: [0.16, 1, 0.3, 1],
-          }).finished,
-        ]);
-      } catch {}
+      const duration = 0.88;
+      setOutgoingSwipe({
+        key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
+        card: dish,
+        startX: info.offset.x,
+        startY: info.offset.y,
+        targetX,
+        targetY,
+        rotateStart: Math.max(-11, Math.min(11, (info.offset.x / 260) * 11)),
+        rotateEnd: direction * 16,
+        duration,
+        borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
+        borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
+      });
       advanceCard();
       setIsEjecting(false);
       resetDragPosition();
@@ -1119,7 +1116,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         onTouchStartCapture={handleDeckMediaUnlock}
         onClickCapture={handleDeckMediaUnlock}
       >
-        {nextCard && currentMediaReady ? (
+        {nextCard ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
@@ -1132,6 +1129,37 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             })}
           </motion.div>
         ) : null}
+        <AnimatePresence>
+          {outgoingSwipe ? (
+            <motion.div
+              key={outgoingSwipe.key}
+              className={`dish-card-shell pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+              initial={{
+                x: outgoingSwipe.startX,
+                y: outgoingSwipe.startY,
+                rotate: outgoingSwipe.rotateStart,
+                opacity: 1,
+              }}
+              animate={{
+                x: outgoingSwipe.targetX,
+                y: outgoingSwipe.targetY,
+                rotate: outgoingSwipe.rotateEnd,
+                opacity: 1,
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                x: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                y: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                rotate: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                opacity: { duration: 0.12 },
+              }}
+              style={{ borderColor: outgoingSwipe.borderColor }}
+              onAnimationComplete={() => setOutgoingSwipe(null)}
+            >
+              {renderImage(outgoingSwipe.card, { preview: true })}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
         <motion.div
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}

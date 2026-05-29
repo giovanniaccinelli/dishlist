@@ -1034,7 +1034,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-180, Math.min(180, info.offset.y + info.velocity.y * 0.06));
-      const duration = 1.12;
+      const duration = 1.38;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,

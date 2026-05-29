@@ -24,7 +24,7 @@ const storyFaceVariants = {
     return {
       opacity: 1,
       x: next ? "100%" : "-100%",
-      rotateY: next ? -90 : 90,
+      rotateY: next ? 90 : -90,
       scale: 1,
       transformOrigin: next ? "0% 50%" : "100% 50%",
     };
@@ -42,7 +42,7 @@ const storyFaceVariants = {
     return {
       opacity: 1,
       x: next ? "-100%" : "100%",
-      rotateY: next ? 90 : -90,
+      rotateY: next ? -90 : 90,
       scale: 1,
       transformOrigin: next ? "100% 50%" : "0% 50%",
     };

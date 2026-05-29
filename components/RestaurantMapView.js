@@ -919,7 +919,7 @@ export default function RestaurantMapView({
                     event.stopPropagation();
                   }}
                   onPointerUp={(event) => {
-                    event.stopPropagation();
+                    if (carouselTapRef.current?.moved) event.stopPropagation();
                     window.setTimeout(() => {
                       carouselTapRef.current = null;
                     }, 0);
@@ -1111,7 +1111,7 @@ export default function RestaurantMapView({
                   ref={carouselTrackRef}
                   className="absolute bottom-0 left-1/2 flex w-[86%] max-w-[27rem] items-end gap-4"
                   onPointerDown={(event) => {
-                    if (event.target?.closest?.("button, a, input, textarea, select, [role='button'], [data-restaurant-card-scroll='true']")) return;
+                    if (event.target?.closest?.("button, a, input, textarea, select, [role='button']")) return;
                     carouselDragRef.current = { x: event.clientX, y: event.clientY, active: false };
                     setCarouselDragging(true);
                     setCarouselDragX(0);

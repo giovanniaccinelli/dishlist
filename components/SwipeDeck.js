@@ -352,6 +352,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const mediaUnlockInFlightRef = useRef(false);
   const cardBackTapRef = useRef(null);
   const cardSidePreferenceRef = useRef(new Map());
+  const autoResetRequestedRef = useRef(false);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const resetDragPosition = useCallback(() => {
@@ -440,6 +441,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
     setCurrentMediaReadyKey("");
   }, [currentCard?._key, currentCard]);
+
+  useEffect(() => {
+    if (!deckEmpty) {
+      autoResetRequestedRef.current = false;
+      return;
+    }
+    if (typeof onResetFeed !== "function" || autoResetRequestedRef.current) return;
+    autoResetRequestedRef.current = true;
+    onResetFeed();
+  }, [deckEmpty, onResetFeed]);
 
   useEffect(() => {
     const upcoming = deck
@@ -1269,6 +1280,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   if (deckEmpty || !currentCard) {
+    if (typeof onResetFeed === "function") {
+      return (
+        <div className={`flex items-center justify-center ${fitHeight ? "h-full" : "h-[70vh]"}`}>
+          <img
+            src="/logo-real.png"
+            alt="DishList"
+            className="h-20 w-20 object-contain dishlist-loading-logo"
+          />
+        </div>
+      );
+    }
     return (
       <div className={`flex flex-col items-center justify-center text-gray-500 text-lg ${fitHeight ? "h-full" : "h-[70vh]"}`}>
         You&apos;re all caught up!

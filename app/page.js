@@ -973,7 +973,7 @@ export default function Feed() {
         const followedSet = new Set(expandedFollowingIds);
         setFollowingIds(expandedFollowingIds);
         const matchedFollowingItems = ordered.filter((dish) => isFromFollowedUser(dish, followedSet));
-        setFollowingDeck(sortNewest(matchedFollowingItems.length || !expandedFollowingIds.length ? matchedFollowingItems : ordered));
+        setFollowingDeck(shuffleArray(sortNewest(matchedFollowingItems.length || !expandedFollowingIds.length ? matchedFollowingItems : ordered)));
         setFollowingIndex(0);
         setFollowingIndexByMode((prev) => ({ ...(prev || {}), [selectedDishMode]: 0 }));
         setFollowingLoading(false);

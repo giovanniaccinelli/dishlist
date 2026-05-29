@@ -19,20 +19,16 @@ function MapPageLoading({ title = "Mappa ristoranti" }) {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden bg-[#000000] px-4 pt-1 text-white">
       <div className="app-top-nav -mx-4 mb-2 flex items-center justify-between px-4 pb-1.5">
-        <div className="h-7 w-44 animate-pulse rounded-full bg-white/12" />
+        <div className="h-7 w-44 animate-pulse rounded-full bg-white/10" />
         <div className="h-11 w-11 animate-pulse rounded-[1rem] bg-white/10" />
       </div>
-      <div className="mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.75rem)] min-h-[24rem] w-full max-w-[42rem] overflow-hidden rounded-[2rem] border border-white/10 bg-[#111] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
-        <div className="relative h-full w-full bg-[radial-gradient(circle_at_28%_24%,rgba(230,70,70,0.20),transparent_22%),radial-gradient(circle_at_74%_40%,rgba(228,180,63,0.16),transparent_20%),linear-gradient(135deg,#161616_0%,#0B0B0B_48%,#191919_100%)]">
-          <div className="absolute left-[22%] top-[28%] h-10 w-9 animate-pulse rounded-full border-2 border-white/18 bg-[#E64646]/80 shadow-[0_10px_24px_rgba(230,70,70,0.26)]" />
-          <div className="absolute right-[24%] top-[44%] h-9 w-8 animate-pulse rounded-full border-2 border-white/18 bg-[#E4B43F]/90 shadow-[0_10px_24px_rgba(228,180,63,0.24)]" />
-          <div className="absolute bottom-5 left-4 right-4 rounded-[1.6rem] border border-white/10 bg-black/72 p-4">
-            <div className="mb-3 h-5 w-40 animate-pulse rounded-full bg-white/18" />
-            <div className="flex gap-2">
-              <div className="h-20 w-24 animate-pulse rounded-[1rem] bg-white/10" />
-              <div className="h-20 w-24 animate-pulse rounded-[1rem] bg-white/10" />
-              <div className="h-20 flex-1 animate-pulse rounded-[1rem] bg-white/8" />
-            </div>
+      <div className="mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.75rem)] min-h-[24rem] w-full max-w-[42rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-[#0D0D0D] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+        <div className="relative h-full w-full">
+          <div className="absolute inset-0 opacity-45 [background-image:linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] [background-size:42px_42px]" />
+          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-[#E64646] shadow-[0_0_0_8px_rgba(230,70,70,0.16)]" />
+          <div className="absolute bottom-5 left-4 right-4 rounded-[1.45rem] border border-white/8 bg-black/78 p-4">
+            <div className="h-5 w-44 animate-pulse rounded-full bg-white/14" />
+            <div className="mt-3 h-4 w-28 animate-pulse rounded-full bg-white/10" />
           </div>
           <span className="sr-only">{title}</span>
         </div>

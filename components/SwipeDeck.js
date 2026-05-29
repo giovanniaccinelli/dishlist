@@ -1050,7 +1050,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-180, Math.min(180, info.offset.y + info.velocity.y * 0.06));
-      const duration = 1.38;
+      const viewportTravel = typeof window !== "undefined" ? window.innerWidth + 180 : 760;
+      const remainingTravel = Math.max(0, viewportTravel - Math.abs(info.offset.x));
+      const duration = Math.max(1.18, Math.min(1.52, 1.22 + remainingTravel / 900));
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
@@ -1122,6 +1124,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
     const previewPriceLabel = formatDishPrice(dish);
     const previewUploadDate = getRelativeUploadTime(dish.createdAt);
+    const previewIsRestaurant = isRestaurantDish(dish);
+    const previewHasRecipe = !previewIsRestaurant && (Boolean(String(dish?.recipeIngredients || "").trim()) || Boolean(String(dish?.recipeMethod || "").trim()));
+    const previewHasRestaurantMap = previewIsRestaurant && Boolean(getSafeRestaurantPlaceId(dish) && previewRestaurantLabel);
+    const previewHasToggle = previewHasRecipe || previewHasRestaurantMap;
+    const previewBackAccent = previewHasRestaurantMap ? "#B93A32" : "#FFC247";
+    const previewSelectedTextColor = previewHasRestaurantMap ? "#FFE7C7" : "#050505";
 
     return (
       <>
@@ -1156,10 +1164,35 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
         </div>
-        <div className="pointer-events-none absolute right-4 top-4 z-[13] inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
+        <div className="no-accent-border pointer-events-none absolute right-4 top-4 z-[13] inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
           <Users size={13} strokeWidth={2.25} />
           <span>{Math.max(0, Number(dish.saves || 0))}</span>
         </div>
+        {previewHasToggle ? (
+          <div className="pointer-events-none absolute left-5 z-[14]" style={{ bottom: viewToggleBottom }}>
+            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/82 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+              <div
+                className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none"
+                style={{ backgroundColor: previewBackAccent, color: previewSelectedTextColor, WebkitTextFillColor: previewSelectedTextColor }}
+              >
+                {previewHasRestaurantMap ? "piatto" : "dish"}
+              </div>
+              <div className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
+                {previewHasRestaurantMap ? "ristorante" : "recipe"}
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {actionLabel ? (
+          <div className="pointer-events-none absolute right-6 z-[14] flex items-center gap-3" style={{ bottom: actionBottom }}>
+            <div className="inline-flex h-14 items-center justify-center gap-1.5 px-1 text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+              <MessageCircle size={28} strokeWidth={2.15} />
+            </div>
+            <div className={actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}>
+              {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+            </div>
+          </div>
+        ) : null}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
           style={{
@@ -1278,9 +1311,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               exit={{ opacity: 0 }}
               transition={{
-                x: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                y: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                rotate: { duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
                 opacity: { duration: 0.12 },
               }}
               style={{ borderColor: outgoingSwipe.borderColor }}

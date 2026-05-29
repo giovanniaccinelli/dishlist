@@ -23,8 +23,8 @@ const storyFaceVariants = {
     const next = direction > 0;
     return {
       opacity: 1,
-      x: next ? "50%" : "-50%",
-      rotateY: next ? 90 : -90,
+      x: next ? "100%" : "-100%",
+      rotateY: next ? -90 : 90,
       scale: 1,
       transformOrigin: next ? "0% 50%" : "100% 50%",
     };
@@ -41,8 +41,8 @@ const storyFaceVariants = {
     const next = direction > 0;
     return {
       opacity: 1,
-      x: next ? "-50%" : "50%",
-      rotateY: next ? -90 : 90,
+      x: next ? "-100%" : "100%",
+      rotateY: next ? 90 : -90,
       scale: 1,
       transformOrigin: next ? "100% 50%" : "0% 50%",
     };
@@ -550,7 +550,7 @@ export default function StoryViewerModal({
           }}
           style={{ perspective: 1100, transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >
-          <AnimatePresence initial={false} custom={groupTurnDirection} mode="popLayout">
+          <AnimatePresence initial={false} custom={groupTurnDirection}>
             <motion.div
               key={`${currentGroup?.ownerId || "group"}-${currentStory?.id || "story"}`}
               className="absolute inset-0 origin-center"

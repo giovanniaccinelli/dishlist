@@ -1352,7 +1352,9 @@ export default function Feed() {
                       } ${index > 0 ? "-ml-4" : ""}`}
                       style={{ zIndex: feedStoryPreviewGroups.length - index }}
                     >
-                      <span className="no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#F6F6F2] p-[1.5px]">
+                      <span className={`no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full p-[1.5px] ${
+                        viewedAll ? "bg-[#2A2A2A]" : "bg-[#F6F6F2]"
+                      }`}>
                         <span className="no-accent-border flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-black">
                           {group.ownerPhotoURL ? (
                             <img src={group.ownerPhotoURL} alt={group.ownerName || "Story"} className="h-full w-full object-cover" />

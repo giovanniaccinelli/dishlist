@@ -337,7 +337,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
   const dragX = useMotionValue(0);
-  const cardRotate = useTransform(dragX, [-240, 0, 240], [-14, 0, 14]);
+  const dragY = useMotionValue(0);
+  const resetDragPosition = useCallback(() => {
+    dragX.set(0);
+    dragY.set(0);
+  }, [dragX, dragY]);
+  const cardRotate = useTransform(dragX, [-260, 0, 260], [-11, 0, 11]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
@@ -848,7 +853,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setDeckEmpty(false);
     setShowRecipe(false);
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    dragX.set(0);
+    resetDragPosition();
   };
 
   const goToNextCardFromArrow = async () => {
@@ -856,16 +861,23 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setIsEjecting(true);
     const targetX = -(typeof window !== "undefined" ? window.innerWidth + 180 : 760);
     try {
-      await animate(dragX, targetX, {
-        type: "tween",
-        duration: 0.38,
-        ease: [0.16, 1, 0.3, 1],
-      }).finished;
+      await Promise.all([
+        animate(dragX, targetX, {
+          type: "tween",
+          duration: 0.38,
+          ease: [0.16, 1, 0.3, 1],
+        }).finished,
+        animate(dragY, -24, {
+          type: "tween",
+          duration: 0.38,
+          ease: [0.16, 1, 0.3, 1],
+        }).finished,
+      ]);
     } catch {}
     if (trackSwipes && typeof onSwiped === "function") onSwiped(currentCard.id);
     advanceCard();
     setIsEjecting(false);
-    dragX.set(0);
+    resetDragPosition();
   };
 
   useImperativeHandle(
@@ -908,7 +920,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (disabled || isEjecting) return;
     const card = currentCard;
     if (dismissOnAction) advanceCard();
-    dragX.set(0);
+    resetDragPosition();
     runAction(card);
   };
 
@@ -919,7 +931,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (typeof onSecondaryAction !== "function") return;
     const card = currentCard;
     if (dismissOnSecondaryAction) advanceCard();
-    dragX.set(0);
+    resetDragPosition();
     Promise.resolve(onSecondaryAction(card))
       .then((result) => {
         if (result === false) {
@@ -949,7 +961,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (typeof onTertiaryAction !== "function") return;
     const card = currentCard;
     if (dismissOnTertiaryAction) advanceCard();
-    dragX.set(0);
+    resetDragPosition();
     Promise.resolve(onTertiaryAction(card)).catch((err) => {
       console.error("Deck tertiary action failed:", err);
       setToastVariant("error");
@@ -966,7 +978,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setCurrentIndex(0);
     setDeckEmpty(false);
     setShowRecipe(false);
-    dragX.set(0);
+    resetDragPosition();
   };
 
   const handleSwipeEnd = async (info, dish) => {
@@ -1006,27 +1018,43 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
+      const targetY = Math.max(-220, Math.min(220, info.offset.y + info.velocity.y * 0.12));
       const remainingDistance = Math.max(120, Math.abs(targetX - info.offset.x));
       const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 3.2 : 0.38;
       const duration = Math.max(0.28, Math.min(0.44, velocityDuration));
       try {
-        await animate(dragX, targetX, {
-          type: "tween",
-          duration,
-          ease: [0.16, 1, 0.3, 1],
-        }).finished;
+        await Promise.all([
+          animate(dragX, targetX, {
+            type: "tween",
+            duration,
+            ease: [0.16, 1, 0.3, 1],
+          }).finished,
+          animate(dragY, targetY, {
+            type: "tween",
+            duration,
+            ease: [0.16, 1, 0.3, 1],
+          }).finished,
+        ]);
       } catch {}
       advanceCard();
       setIsEjecting(false);
-      dragX.set(0);
+      resetDragPosition();
       return;
     }
-    animate(dragX, 0, {
-      type: "spring",
-      stiffness: 420,
-      damping: 34,
-      mass: 0.55,
-    });
+    void Promise.all([
+      animate(dragX, 0, {
+        type: "spring",
+        stiffness: 360,
+        damping: 32,
+        mass: 0.72,
+      }).finished,
+      animate(dragY, 0, {
+        type: "spring",
+        stiffness: 360,
+        damping: 32,
+        mass: 0.72,
+      }).finished,
+    ]);
   };
 
   const renderImage = (
@@ -1106,12 +1134,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : "x"}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.82}
+          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          dragElastic={0.74}
           dragMomentum={false}
           style={{
             x: dragX,
+            y: dragY,
             rotate: cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: activeCardBorderColor,

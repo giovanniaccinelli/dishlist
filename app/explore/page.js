@@ -874,6 +874,7 @@ export default function Explore() {
     setExpandedRow(null);
     router.replace(buildExploreUrl({ category: "" }), { scroll: false });
   };
+  const searchIsActive = search.trim().length > 0;
 
   return (
     <div
@@ -982,7 +983,7 @@ export default function Explore() {
         <CategoryRowsLoading />
       ) : (
         <div>
-          <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
+          {!searchIsActive ? <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} /> : null}
           {categoryRows.map((row, index) => (
             <div key={row.key}>
               <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />

@@ -712,6 +712,18 @@ html.dark .restaurant-accent-border input[class*="bg-transparent"] {
   background: transparent !important;
 }
 
+.map-restaurant-card-solid {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+html.dark .map-restaurant-card-solid {
+  background: #121212 !important;
+  background-color: #121212 !important;
+  background-image: none !important;
+}
+
 .bottom-nav-floating-action {
   bottom: calc(var(--app-bottom-nav-height) + 1rem);
 }

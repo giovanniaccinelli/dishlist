@@ -211,6 +211,7 @@ export default function RestaurantMapView({
   const [followingIds, setFollowingIds] = useState([]);
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
+  const cardSwipeHandledUntilRef = useRef(0);
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
   const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
 
@@ -575,7 +576,7 @@ export default function RestaurantMapView({
     return (
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute bottom-0 z-0 flex h-[58%] w-[22%] flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 bg-white px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] ${
+        className={`map-restaurant-card-solid pointer-events-none absolute bottom-0 z-0 flex h-[58%] w-[22%] flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] ${
           side === "left" ? "-left-2" : "-right-2"
         }`}
         style={{ transform: "scale(0.9)", transformOrigin: "bottom center", opacity: 1, backgroundColor: "#ffffff" }}
@@ -731,7 +732,8 @@ export default function RestaurantMapView({
               const dx = event.clientX - swipeStartRef.current.x;
               const dy = event.clientY - swipeStartRef.current.y;
               swipeStartRef.current = null;
-              if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+              if (Date.now() < cardSwipeHandledUntilRef.current) return;
+              if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy) * 0.55) {
                 cycleRestaurant(dx < 0 ? 1 : -1);
               }
             }}
@@ -753,12 +755,24 @@ export default function RestaurantMapView({
                   animate={{ x: 0, opacity: 1, scale: 1 }}
                   exit={{ x: sheetDirection > 0 ? "-104%" : sheetDirection < 0 ? "104%" : 0, opacity: 1 }}
                   transition={{ duration: 0.34, ease: [0.2, 0.76, 0.26, 1] }}
-                  className={`restaurant-accent-border absolute left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 bg-white shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.22}
+                  dragMomentum={false}
+                  onDragEnd={(_, info) => {
+                    const offsetX = info.offset.x;
+                    const offsetY = info.offset.y;
+                    if (Math.abs(offsetX) > 24 && Math.abs(offsetX) > Math.abs(offsetY) * 0.5) {
+                      cardSwipeHandledUntilRef.current = Date.now() + 160;
+                      cycleRestaurant(offsetX < 0 ? 1 : -1);
+                    }
+                  }}
+                  className={`map-restaurant-card-solid restaurant-accent-border absolute left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
                     embedded
                       ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
                       : "bottom-0 max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
                   }`}
-                  style={{ backgroundColor: "#ffffff", opacity: 1 }}
+                  style={{ opacity: 1, touchAction: "pan-y" }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

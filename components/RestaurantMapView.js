@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -212,6 +212,7 @@ export default function RestaurantMapView({
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const sheetRef = useRef(null);
+  const carouselTrackRef = useRef(null);
   const markersRef = useRef([]);
   const mapGestureUntilRef = useRef(0);
   const autocompleteServiceRef = useRef(null);
@@ -226,6 +227,7 @@ export default function RestaurantMapView({
   const [sheetDirection, setSheetDirection] = useState(0);
   const [followingIds, setFollowingIds] = useState([]);
   const [restaurantCardHeight, setRestaurantCardHeight] = useState(0);
+  const [carouselStepPx, setCarouselStepPx] = useState(0);
   const [carouselAnchorPlaceId, setCarouselAnchorPlaceId] = useState("");
   const [carouselDragX, setCarouselDragX] = useState(0);
   const [carouselDragging, setCarouselDragging] = useState(false);
@@ -625,7 +627,33 @@ export default function RestaurantMapView({
 
   const carouselGapRem = 1;
   const getCarouselTrackX = (index) => `calc(-50% - ${index * 100}% - ${index * carouselGapRem}rem)`;
-  const getCarouselTrackTransform = () => `translateX(calc(${getCarouselTrackX(selectedIndex)} + ${carouselDragX}px))`;
+  const getCarouselTrackTransform = () => {
+    if (carouselStepPx > 0) {
+      return `translateX(calc(-50% - ${selectedIndex * carouselStepPx}px + ${carouselDragX}px))`;
+    }
+    return `translateX(calc(${getCarouselTrackX(selectedIndex)} + ${carouselDragX}px))`;
+  };
+
+  useLayoutEffect(() => {
+    if (!useRestaurantCarousel || !carouselTrackRef.current) return undefined;
+    const measureStep = () => {
+      const track = carouselTrackRef.current;
+      const firstCard = track?.firstElementChild;
+      if (!track || !firstCard) return;
+      const styles = window.getComputedStyle(track);
+      const columnGap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+      const nextStep = Math.round(firstCard.getBoundingClientRect().width + columnGap);
+      if (nextStep > 0) setCarouselStepPx(nextStep);
+    };
+    measureStep();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measureStep) : null;
+    if (resizeObserver) resizeObserver.observe(carouselTrackRef.current);
+    window.addEventListener("resize", measureStep);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", measureStep);
+    };
+  }, [carouselGroups.length, useRestaurantCarousel]);
 
   useEffect(() => {
     setCarouselDragX(0);
@@ -988,6 +1016,7 @@ export default function RestaurantMapView({
             >
               {useRestaurantCarousel ? (
                 <div
+                  ref={carouselTrackRef}
                   className="absolute bottom-0 left-1/2 flex w-[86%] max-w-[27rem] items-end gap-4"
                   onPointerDown={(event) => {
                     if (event.target?.closest?.("button, a, input, textarea, select, [role='button']")) return;

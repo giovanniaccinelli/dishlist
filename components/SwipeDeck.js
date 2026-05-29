@@ -338,6 +338,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextVideoRef = useRef(null);
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
+  const cardBackTapRef = useRef(null);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const resetDragPosition = useCallback(() => {
@@ -1466,10 +1467,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
-                  onClick={(e) => {
+                  onPointerDown={(e) => {
+                    cardBackTapRef.current = { x: e.clientX, y: e.clientY };
+                  }}
+                  onPointerUp={(e) => {
+                    const start = cardBackTapRef.current;
+                    cardBackTapRef.current = null;
+                    const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) : 0;
+                    if (moved > 10) return;
                     e.stopPropagation();
+                    e.preventDefault();
                     setShowRecipe(true);
                   }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowRecipe(true);
+                  }}
+                  style={{ touchAction: "manipulation" }}
                   aria-label={hasRestaurantMapView ? "Open restaurant map view" : "Open recipe view"}
                 />
               ) : null}

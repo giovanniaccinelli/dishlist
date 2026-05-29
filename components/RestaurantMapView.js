@@ -507,6 +507,7 @@ export default function RestaurantMapView({
   );
   const previousGroup = groups.length > 1 ? groups[(selectedIndex - 1 + groups.length) % groups.length] : null;
   const nextGroup = groups.length > 1 ? groups[(selectedIndex + 1) % groups.length] : null;
+  const useRestaurantCarousel = !embedded;
 
   const cycleRestaurant = (direction) => {
     if (!groups.length) return;
@@ -725,9 +726,11 @@ export default function RestaurantMapView({
               onMapClick();
             }}
             onPointerDown={(event) => {
+              if (!useRestaurantCarousel) return;
               swipeStartRef.current = { x: event.clientX, y: event.clientY };
             }}
             onPointerUp={(event) => {
+              if (!useRestaurantCarousel) return;
               if (!swipeStartRef.current) return;
               const dx = event.clientX - swipeStartRef.current.x;
               const dy = event.clientY - swipeStartRef.current.y;
@@ -741,21 +744,27 @@ export default function RestaurantMapView({
             <div
               className={`relative mx-auto w-full overflow-visible ${
                 embedded
-                  ? "h-[min(17rem,calc(100%-6.2rem))]"
+                  ? ""
                   : "h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))]"
               }`}
             >
-              {renderRestaurantGhostCard(previousGroup, "left")}
-              {renderRestaurantGhostCard(nextGroup, "right")}
-              <AnimatePresence initial={false} custom={sheetDirection}>
+              {useRestaurantCarousel ? renderRestaurantGhostCard(previousGroup, "left") : null}
+              {useRestaurantCarousel ? renderRestaurantGhostCard(nextGroup, "right") : null}
+              <AnimatePresence initial={false} mode={useRestaurantCarousel ? undefined : "wait"} custom={sheetDirection}>
                 <motion.div
                   key={selectedGroup.placeId}
                   custom={sheetDirection}
-                  initial={{ x: sheetDirection > 0 ? "104%" : sheetDirection < 0 ? "-104%" : 0, opacity: 1 }}
+                  initial={{
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "104%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-104%" : -86) : 0,
+                    opacity: useRestaurantCarousel ? 1 : 0,
+                  }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
-                  exit={{ x: sheetDirection > 0 ? "-104%" : sheetDirection < 0 ? "104%" : 0, opacity: 1 }}
-                  transition={{ duration: 0.34, ease: [0.2, 0.76, 0.26, 1] }}
-                  drag="x"
+                  exit={{
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-104%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "104%" : 86) : 0,
+                    opacity: useRestaurantCarousel ? 1 : 0,
+                  }}
+                  transition={useRestaurantCarousel ? { duration: 0.34, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
+                  drag={useRestaurantCarousel ? "x" : false}
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.22}
                   dragMomentum={false}
@@ -767,7 +776,9 @@ export default function RestaurantMapView({
                       cycleRestaurant(offsetX < 0 ? 1 : -1);
                     }
                   }}
-                  className={`map-restaurant-card-solid restaurant-accent-border absolute left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
+                  className={`map-restaurant-card-solid restaurant-accent-border ${
+                    useRestaurantCarousel ? "absolute left-0 right-0 w-[88%] max-w-[27rem]" : "relative w-full"
+                  } z-10 mx-auto flex min-h-0 flex-col overflow-hidden border-2 shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
                     embedded
                       ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
                       : "bottom-0 max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"

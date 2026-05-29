@@ -267,14 +267,16 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
-function TagDishlistPreview({ dishlist, darkMode = false }) {
+function getTagDishlistCardClass(dishlist, darkMode = false) {
   const active = Number(dishlist?.count || 0) > 0;
+  return darkMode ? getDarkTagChipClass(dishlist?.tag, active) : getTagChipClass(dishlist?.tag, active);
+}
+
+function TagDishlistPreview({ dishlist }) {
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
   return (
-    <div className={`flex aspect-square items-center justify-center rounded-[1.1rem] border-2 p-4 text-center ${
-      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
-    }`}>
+    <div className="flex aspect-square items-center justify-center p-4 text-center">
       {Icon ? <Icon className={`h-[5.35rem] w-[5.35rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
     </div>
   );
@@ -2804,9 +2806,7 @@ export default function Profile() {
                         }
                         isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
                       }}
-                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? "aspect-square" : ""} ${
-                        darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
-                      }`}
+                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
@@ -3933,9 +3933,7 @@ export default function Profile() {
                 {allDishlists.map((dishlist) => {
                   const preview = getDishlistPreviewDishes(dishlist);
                   return (
-                    <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${
-                      darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
-                    }`}>
+                    <div key={dishlist.id} className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.06)] ${dishlist.type === "tag_system" ? `border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}>
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <button
                           type="button"
@@ -4139,7 +4137,7 @@ export default function Profile() {
                             key={`create-${dishlist.id}`}
                             type="button"
                             onClick={() => setCreateSourceDishlistId(dishlist.id)}
-                            className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${dishlist.type === "tag_system" ? "aspect-square" : ""} ${
+                            className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${dishlist.type === "tag_system" ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : ""} ${
                               selected
                                 ? darkMode
                                   ? "border-[#45C47A] bg-[#12351F] text-white"
@@ -4287,7 +4285,7 @@ export default function Profile() {
                         key={`add-source-${dishlist.id}`}
                         type="button"
                         onClick={() => setAddDishesSourceId(dishlist.id)}
-                        className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${dishlist.type === "tag_system" ? "aspect-square" : ""} ${
+                        className={`rounded-[1.35rem] border p-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] ${dishlist.type === "tag_system" ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : ""} ${
                           selected
                             ? darkMode
                               ? "border-[#45C47A] bg-[#12351F] text-white"

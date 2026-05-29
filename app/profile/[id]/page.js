@@ -167,14 +167,16 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
-function TagDishlistPreview({ dishlist, darkMode = false }) {
+function getTagDishlistCardClass(dishlist, darkMode = false) {
   const active = Number(dishlist?.count || 0) > 0;
+  return darkMode ? getDarkTagChipClass(dishlist?.tag, active) : getTagChipClass(dishlist?.tag, active);
+}
+
+function TagDishlistPreview({ dishlist }) {
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
   return (
-    <div className={`flex aspect-square items-center justify-center rounded-[1.1rem] border-2 p-4 text-center ${
-      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
-    }`}>
+    <div className="flex aspect-square items-center justify-center p-4 text-center">
       {Icon ? <Icon className={`h-[5.35rem] w-[5.35rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
     </div>
   );
@@ -1296,9 +1298,7 @@ export default function PublicProfile() {
                   key={dishlist.id}
                   type="button"
                   onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
-                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? "aspect-square" : ""} ${
-                    darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
-                  }`}
+                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>

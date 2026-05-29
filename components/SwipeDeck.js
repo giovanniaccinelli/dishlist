@@ -1052,7 +1052,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetY = Math.max(-180, Math.min(180, info.offset.y + info.velocity.y * 0.06));
       const viewportTravel = typeof window !== "undefined" ? window.innerWidth + 180 : 760;
       const remainingTravel = Math.max(0, viewportTravel - Math.abs(info.offset.x));
-      const duration = Math.max(1.18, Math.min(1.52, 1.22 + remainingTravel / 900));
+      const duration = Math.max(1.28, Math.min(1.58, 1.3 + remainingTravel / 1050));
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
@@ -1311,12 +1311,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               exit={{ opacity: 0 }}
               transition={{
-                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
-                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.22, 0.62, 0.28, 1] },
+                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.16, 0.9, 0.24, 1] },
+                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.16, 0.9, 0.24, 1] },
+                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.16, 0.9, 0.24, 1] },
                 opacity: { duration: 0.12 },
               }}
-              style={{ borderColor: outgoingSwipe.borderColor }}
+              style={{ borderColor: outgoingSwipe.borderColor, willChange: "transform" }}
               onAnimationComplete={() => setOutgoingSwipe(null)}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}
@@ -1335,6 +1335,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             rotate: freezeCurrentMotion ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
+            willChange: "transform",
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative z-30 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

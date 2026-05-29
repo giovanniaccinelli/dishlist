@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Lock, Plus, Star } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import { TAG_DECOR } from "../app/lib/tagDecor";
+import { getTagForDishlistId, isTagDishlistId } from "../app/lib/tagDishlists";
 
 const PICKER_ORDER = ["saved", "to_try", "uploaded"];
 
@@ -225,6 +227,8 @@ export default function DishlistPickerModal({
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
                     const accent = getAccent(dishlist, index);
+                    const tag = isTagDishlistId(dishlist.id) ? getTagForDishlistId(dishlist.id) : "";
+                    const TagIcon = tag ? TAG_DECOR[tag]?.icon : null;
                     return (
                       <button
                         key={dishlist.id}
@@ -258,6 +262,7 @@ export default function DishlistPickerModal({
                           <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                             <span className="inline-flex items-center gap-1.5">
                               {dishlist.id === "saved" ? <Star size={14} className="text-[#D9B550] fill-[#F3D88C]" /> : null}
+                              {TagIcon ? <TagIcon className={`h-4 w-4 shrink-0 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.1} /> : null}
                               <span>{t(dishlist.name)}</span>
                             </span>
                           </div>

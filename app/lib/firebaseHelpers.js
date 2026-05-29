@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { normalizeRestaurant } from "./restaurants";
+import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "./tagDishlists";
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
 const ownerPhotoCache = new Map();
@@ -925,10 +926,13 @@ export async function getCustomDishlistsForUser(userId) {
         const dishes = itemSnap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
         const merged = await mergeDishesWithCanonical(dishes);
         const enriched = await enrichWithOwnerPhotos(merged);
+        const tag = getTagForDishlistId(dishlistDoc.id);
+        const isTagSystem = isTagDishlistId(dishlistDoc.id) && Boolean(tag);
         return {
           id: dishlistDoc.id,
-          name: data.name || "Dishlist",
-          type: "custom",
+          name: isTagSystem ? tag : data.name || "Dishlist",
+          type: isTagSystem ? "tag_system" : "custom",
+          tag: isTagSystem ? tag : undefined,
           createdAt: data.createdAt || null,
           updatedAt: data.updatedAt || null,
           dishIds: enriched.map((dish) => dish.id).filter(Boolean),
@@ -973,12 +977,15 @@ export async function getAllDishlistsForUser(userId) {
   const toTryCollection = dedupeDishArray([
     ...toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)),
   ]);
+  const tagDishlists = buildDefaultTagDishlists(custom);
+  const nonTagCustom = custom.filter((dishlist) => !isTagDishlistId(dishlist.id));
   return [
     makeSystemDishlist("saved", "Your Classics", saved),
     makeSystemDishlist("to_try", "To Try", toTryCollection),
     makeSystemDishlist("uploaded", "Uploaded", uploaded),
     makeSystemDishlist("all_dishes", "All dishes", allDishes),
-    ...custom,
+    ...tagDishlists,
+    ...nonTagCustom,
   ];
 }
 
@@ -1039,12 +1046,15 @@ export async function getAllDishlistsForUserAliases(userIds = []) {
   const savedIds = new Set(saved.map((dish) => dish?.id).filter(Boolean));
   const toTryCollection = dedupeDishArray(toTry.filter((dish) => dish?.id && !savedIds.has(dish.id)));
 
+  const tagDishlists = buildDefaultTagDishlists(custom);
+  const nonTagCustom = custom.filter((dishlist) => !isTagDishlistId(dishlist.id));
   return [
     makeSystemDishlist("saved", "Your Classics", saved),
     makeSystemDishlist("to_try", "To Try", toTryCollection),
     makeSystemDishlist("uploaded", "Uploaded", uploaded),
     makeSystemDishlist("all_dishes", "All dishes", allDishes),
-    ...custom,
+    ...tagDishlists,
+    ...nonTagCustom,
   ];
 }
 

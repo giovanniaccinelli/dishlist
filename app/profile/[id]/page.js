@@ -35,8 +35,9 @@ import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import { resolveRepresentativeTags } from "../../lib/profileTags";
-import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
+import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import { TAG_DECOR } from "../../lib/tagDecor";
+import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../../lib/tagDishlists";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -154,32 +155,16 @@ function parseCalendarMonthValue(value = "") {
 }
 
 function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
-  if (String(id || "").startsWith("tag:")) return <span className={`${className} inline-flex items-center justify-center text-[0.85em] font-black leading-none text-[#2BD36B]`}>#</span>;
+  if (String(id || "").startsWith("tag:")) {
+    const tag = getTagForDishlistId(id);
+    const Icon = TAG_DECOR[tag]?.icon;
+    return Icon ? <Icon className={`${className} ${TAG_DECOR[tag]?.iconClass || "text-[#2BD36B]"}`} strokeWidth={2.1} /> : null;
+  }
   if (id === "saved") return <Trophy className={`${className} text-[#F2D46D]`} strokeWidth={2.1} />;
   if (id === "to_try") return <NotebookText className={`${className} text-[#38BDF8]`} strokeWidth={2.1} />;
   if (id === "uploaded") return <Upload className={`${className} text-[#F2A23A]`} strokeWidth={2.1} />;
   if (id === "all_dishes") return <ListChecks className={`${className} text-[#2BD36B]`} strokeWidth={2.1} />;
   return null;
-}
-
-function getTagDishlistId(tag) {
-  return `tag:${String(tag || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
-}
-
-function dishHasTag(dish, tag) {
-  const normalizedTag = String(tag || "").trim().toLowerCase();
-  return Array.isArray(dish?.tags) && dish.tags.some((item) => String(item || "").trim().toLowerCase() === normalizedTag);
-}
-
-function buildTagDishlists(allDishes = []) {
-  return TAG_OPTIONS.map((tag, index) => ({
-    id: getTagDishlistId(tag),
-    name: tag,
-    type: "tag_system",
-    tag,
-    tagRank: index,
-    dishes: allDishes.filter((dish) => dishHasTag(dish, tag)),
-  })).sort((a, b) => (b.dishes.length - a.dishes.length) || (a.tagRank - b.tagRank));
 }
 
 function TagDishlistPreview({ dishlist, darkMode = false, t = (value) => value }) {
@@ -598,7 +583,7 @@ export default function PublicProfile() {
   }, []);
 
   useEffect(() => {
-    if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded") return;
+    if (activeDishlistId === "overview" || activeDishlistId === "saved" || activeDishlistId === "to_try" || activeDishlistId === "all_dishes" || activeDishlistId === "uploaded" || isTagDishlistId(activeDishlistId)) return;
     if (customDishlists.some((dishlist) => dishlist.id === activeDishlistId)) return;
     setActiveDishlistId("overview");
     if (typeof window !== "undefined") {
@@ -930,11 +915,12 @@ export default function PublicProfile() {
       count: allDishesCollection.length,
     },
   ].map(normalizeProfileDishlist);
-  const tagDishlists = buildTagDishlists(allDishesCollection).map(normalizeProfileDishlist);
+  const tagDishlists = buildDefaultTagDishlists(customDishlists).map(normalizeProfileDishlist);
+  const nonTagCustomDishlists = customDishlists.filter((dishlist) => dishlist.type !== "tag_system");
   const localDishlists = [
     ...baseDishlists,
     ...tagDishlists,
-    ...customDishlists.map((dishlist) => ({
+    ...nonTagCustomDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: dishlist.dishes || [],
     })).map(normalizeProfileDishlist),
@@ -1441,7 +1427,7 @@ export default function PublicProfile() {
                   href={(() => {
 	                    const deckParam = encodeURIComponent(searchedActiveDishlistDishes.map((item) => item.id).filter(Boolean).join(","));
                     const returnParam = encodeURIComponent(buildProfileReturnTo());
-                    return activeDishlist?.type === "custom"
+                    return activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system"
                       ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`
                       : `/dish/${dish.id}?source=${activeDishlist?.id || "all_dishes"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
                   })()}

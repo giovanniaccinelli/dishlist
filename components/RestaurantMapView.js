@@ -235,6 +235,7 @@ export default function RestaurantMapView({
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
   const carouselPendingGroupRef = useRef(null);
+  const carouselSilentResetRef = useRef(false);
   const cardSwipeHandledUntilRef = useRef(0);
   const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
@@ -607,11 +608,15 @@ export default function RestaurantMapView({
     const pending = carouselPendingGroupRef.current;
     if (!pending?.group) return;
     carouselPendingGroupRef.current = null;
+    carouselSilentResetRef.current = true;
     setCarouselDragging(true);
     focusGroup(pending.group, pending.direction, { preserveAnchor: true });
     setCarouselDragX(0);
     window.requestAnimationFrame(() => {
-      setCarouselDragging(false);
+      window.requestAnimationFrame(() => {
+        carouselSilentResetRef.current = false;
+        setCarouselDragging(false);
+      });
     });
   };
 
@@ -703,6 +708,7 @@ export default function RestaurantMapView({
   }, [carouselWindowItems.length, useRestaurantCarousel]);
 
   useEffect(() => {
+    if (carouselSilentResetRef.current) return;
     setCarouselDragX(0);
     setCarouselDragging(false);
     carouselDragRef.current = null;

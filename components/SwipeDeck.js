@@ -206,6 +206,13 @@ function getSafeRestaurantPlaceId(dish) {
   return typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
 }
 
+function formatDeckDishes(dishes = []) {
+  return dishes.map((dish, index) => ({
+    ...dish,
+    _key: dish.id || `${dish.owner || "local"}-${dish.name || "dish"}-${index}`,
+  }));
+}
+
 function getRelativeUploadTime(value) {
   const rawDate = value?.toDate?.() || value;
   const date = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
@@ -299,11 +306,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const SWIPE_EJECT_THRESHOLD = 64;
   const SWIPE_EJECT_VELOCITY = 360;
   const SWIPE_PROJECTED_THRESHOLD = 78;
+  const initialDeck = formatDeckDishes(dishes);
+  const initialDeckIndex = initialDeck.length > 0 ? Math.max(0, Math.min(initialIndex, initialDeck.length - 1)) : 0;
 
-  const [deck, setDeck] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [deckInitialized, setDeckInitialized] = useState(false);
-  const [deckEmpty, setDeckEmpty] = useState(false);
+  const [deck, setDeck] = useState(() => initialDeck);
+  const [currentIndex, setCurrentIndex] = useState(() => initialDeckIndex);
+  const [deckInitialized, setDeckInitialized] = useState(() => initialDeck.length > 0);
+  const [deckEmpty, setDeckEmpty] = useState(() => initialDeck.length === 0);
   const [currentMediaReadyKey, setCurrentMediaReadyKey] = useState("");
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -369,10 +378,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [deck, currentIndex]);
 
   useEffect(() => {
-    const formatted = dishes.map((d, i) => ({
-      ...d,
-      _key: d.id || `${d.owner || "local"}-${d.name || "dish"}-${i}`,
-    }));
+    const formatted = formatDeckDishes(dishes);
 
     if (formatted.length > 0 && deckEmpty && currentIndex < formatted.length) {
       setDeckEmpty(false);
@@ -1228,7 +1234,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div
-        className={`relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
+        className={`isolate relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
         onPointerDownCapture={(event) => {
           handleDeckMediaUnlock(event);
           releasePromotedMotionLock(event);
@@ -1241,8 +1247,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       >
         {nextCard && currentMediaReady ? (
           <motion.div
-            className={`dish-card-shell pointer-events-none absolute inset-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
-            style={{ scale: nextCardScale, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
+            className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {renderImage(nextCard, {
               preview: true,
@@ -1257,7 +1263,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           {outgoingSwipe ? (
             <motion.div
               key={outgoingSwipe.key}
-              className={`dish-card-shell pointer-events-none absolute inset-0 z-[60] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+              className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
               initial={{
                 x: outgoingSwipe.startX,
                 y: outgoingSwipe.startY,
@@ -1298,7 +1304,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative z-10 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative z-30 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && !outgoingSwipe && (
             <motion.div

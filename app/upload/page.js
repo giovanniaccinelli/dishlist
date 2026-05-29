@@ -12,6 +12,7 @@ import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import ImageFramingModal from "../../components/ImageFramingModal";
 import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
+import StoryMealTagModal from "../../components/StoryMealTagModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
 import { RatingStars } from "../../components/RatingStars";
@@ -80,6 +81,7 @@ export default function UploadPage() {
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes", "uploaded"]);
   const [uploadToStory, setUploadToStory] = useState(false);
+  const [storyMealTagPickerOpen, setStoryMealTagPickerOpen] = useState(false);
   const [targetDishlistId, setTargetDishlistId] = useState("to_try");
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
@@ -192,7 +194,8 @@ export default function UploadPage() {
     return `https://${trimmed}`;
   };
 
-  const handlePost = async () => {
+  const handlePost = async (selectedStoryMealTag = "") => {
+    const storyMealTag = typeof selectedStoryMealTag === "string" ? selectedStoryMealTag : "";
     if (!user) {
       setShowAuthPrompt(true);
       return;
@@ -203,7 +206,13 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
+    if ((storyMode || uploadToStory) && !storyMealTag) {
       setDishlistPickerOpen(false);
+      setStoryMealTagPickerOpen(true);
+      return;
+    }
+      setDishlistPickerOpen(false);
+      setStoryMealTagPickerOpen(false);
       setLoadingUpload(true);
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
@@ -234,6 +243,7 @@ export default function UploadPage() {
           ownerPhotoURL: user.photoURL || "",
           taggedUserName: storyTaggedUser.trim(),
           restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
+          storyMealTag,
         });
         if (!ok) throw new Error("Failed to publish story.");
         await dispatchPushEvent("story_posted", {
@@ -287,7 +297,7 @@ export default function UploadPage() {
             savedTargets.map((dishlistId) => saveDishToSelectedDishlist(user.uid, dishlistId, savedDish))
           );
           if (uploadToStory) {
-            const storyOk = await publishDishAsStory(user.uid, savedDish);
+            const storyOk = await publishDishAsStory(user.uid, savedDish, { storyMealTag });
             if (storyOk) {
               await dispatchPushEvent("story_posted", {
                 ownerId: user.uid,
@@ -1208,6 +1218,16 @@ export default function UploadPage() {
         }
         onConfirm={handlePost}
         confirmLabel="Upload dish"
+      />
+      <StoryMealTagModal
+        open={storyMealTagPickerOpen}
+        onClose={() => {
+          setStoryMealTagPickerOpen(false);
+          if (!storyMode) setDishlistPickerOpen(true);
+        }}
+        onSelect={(tag) => handlePost(tag)}
+        language={language}
+        darkMode={darkMode}
       />
       <AppToast message={toast} variant={toastVariant} />
       {!showUploadForm ? <BottomNav /> : null}

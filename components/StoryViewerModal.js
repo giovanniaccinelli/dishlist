@@ -9,6 +9,8 @@ import { addCommentToStory, deleteStoryCommentThread, getCommentsForStory, getUs
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import StoryViewsModal from "./StoryViewsModal";
+import { getStoryMealTagLabel, getStoryMealTagOption } from "./StoryMealTagModal";
+import { useLanguage } from "./LanguageProvider";
 import { db } from "../app/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -28,6 +30,7 @@ export default function StoryViewerModal({
   currentUser = null,
 }) {
   const router = useRouter();
+  const { language } = useLanguage();
   const groups = useMemo(() => {
     if (Array.isArray(storyGroups) && storyGroups.length > 0) {
       return storyGroups
@@ -303,6 +306,8 @@ export default function StoryViewerModal({
   const currentStoryDishId = currentStory?.dishId || currentStory?.id || null;
   const resolvedStoryName = storyDishMeta?.name || currentStory?.name || currentStory?.dishName || "Untitled dish";
   const resolvedRestaurant = storyDishMeta?.restaurant || currentStory?.restaurant || null;
+  const storyMealTagOption = getStoryMealTagOption(currentStory?.storyMealTag || currentStory?.mealTag);
+  const storyMealTagLabel = getStoryMealTagLabel(currentStory?.storyMealTag || currentStory?.mealTag, language, { showOther: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -561,7 +566,16 @@ export default function StoryViewerModal({
               <div className="min-w-0">
                 <div className="text-sm font-semibold truncate">{currentGroup?.ownerName || "User"}</div>
                 <div className="text-xs text-white/70 truncate">
-                  {publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")}
+                  {storyMealTagLabel ? (
+                    <span
+                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-black"
+                      style={{ backgroundColor: storyMealTagOption?.color || "#23C268" }}
+                    >
+                      {storyMealTagLabel}
+                    </span>
+                  ) : (
+                    publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")
+                  )}
                 </div>
               </div>
             </button>

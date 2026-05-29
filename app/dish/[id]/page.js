@@ -44,6 +44,7 @@ import IngredientBulletTextarea from "../../../components/IngredientBulletTextar
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
 import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
+import StoryMealTagModal from "../../../components/StoryMealTagModal";
 import { useLanguage } from "../../../components/LanguageProvider";
 import { clearSessionPageCache } from "../../lib/sessionPageCache";
 
@@ -125,6 +126,7 @@ export default function DishDetail() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareDish, setShareDish] = useState(null);
   const [storyPushStats, setStoryPushStats] = useState({});
+  const [storyMealTagDish, setStoryMealTagDish] = useState(null);
   const [dishlistPickerOpen, setDishlistPickerOpen] = useState(false);
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlists, setDishlists] = useState([]);
@@ -744,12 +746,19 @@ export default function DishDetail() {
       setTimeout(() => setPageToast(""), 1200);
       return false;
     }
-    const ok = await publishDishAsStory(userId, dishCard);
+    setProfileCardActionsDish(null);
+    setStoryMealTagDish(dishCard);
+    return { skipToast: true };
+  };
+
+  const publishStoryMealTagDish = async (storyMealTag) => {
+    if (!userId || !storyMealTagDish?.id) return false;
+    const ok = await publishDishAsStory(userId, storyMealTagDish, { storyMealTag });
     if (ok) {
       const stats = await getStoryPushStatsForUser(userId);
       setStoryPushStats(stats);
     }
-    setProfileCardActionsDish(null);
+    setStoryMealTagDish(null);
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Story published" : "Story failed");
     setTimeout(() => setPageToast(""), 1200);
@@ -1666,6 +1675,13 @@ export default function DishDetail() {
         onConfirm={handleDishlistSelect}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
+      />
+      <StoryMealTagModal
+        open={Boolean(storyMealTagDish)}
+        onClose={() => setStoryMealTagDish(null)}
+        onSelect={publishStoryMealTagDish}
+        language={language}
+        darkMode={darkMode}
       />
 
       <BottomNav />

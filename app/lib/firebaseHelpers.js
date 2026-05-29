@@ -1719,6 +1719,7 @@ function buildStoryPayload(userId, story) {
     recipeMethod: story.recipeMethod || "",
     taggedUserName: story.taggedUserName || "",
     taggedUserId: story.taggedUserId || "",
+    storyMealTag: story.storyMealTag || story.mealTag || "",
     tags: normalizeTags(story.tags),
     restaurant: story.restaurant || null,
     cardURL: story.cardURL || story.imageURL || story.imageUrl || "",
@@ -1730,12 +1731,12 @@ function buildStoryPayload(userId, story) {
   };
 }
 
-export async function publishDishAsStory(userId, dish) {
+export async function publishDishAsStory(userId, dish, storyMeta = {}) {
   if (!userId || !dish?.id) return false;
   try {
     const publishedAtMs = Date.now();
     const storyRef = doc(db, "users", userId, "stories", dish.id);
-    await setDoc(storyRef, buildStoryPayload(userId, { ...dish, dishId: dish.id }), { merge: true });
+    await setDoc(storyRef, buildStoryPayload(userId, { ...dish, ...storyMeta, dishId: dish.id }), { merge: true });
     await setDoc(
       doc(db, "users", userId),
       {
@@ -1752,6 +1753,7 @@ export async function publishDishAsStory(userId, dish) {
         history: arrayUnion({
           pushedAtMs: publishedAtMs,
           pushedAtISO: new Date(publishedAtMs).toISOString(),
+          storyMealTag: storyMeta.storyMealTag || storyMeta.mealTag || "",
         }),
         updatedAt: serverTimestamp(),
       },

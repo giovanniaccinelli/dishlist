@@ -64,6 +64,7 @@ import DishRatingBadge from "../../components/DishRatingBadge";
 import ProfileTakesStrip from "../../components/ProfileTakesStrip";
 import MapPreview from "../../components/MapPreview";
 import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
+import StoryMealTagModal, { getStoryMealTagLabel, getStoryMealTagOption } from "../../components/StoryMealTagModal";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import {
   dishModeMatches,
@@ -212,6 +213,7 @@ async function getMealCalendarEntriesForUserIds(userIds = []) {
         name: data.name || data.title || "",
         dayKey: data.dayKey || getStoryCalendarKey(ateAtMs),
         ms: ateAtMs,
+        storyMealTag: data.storyMealTag || data.mealTag || "",
         createdAt: data.createdAt || null,
         calendarOnly: true,
       };
@@ -485,6 +487,7 @@ export default function Profile() {
   const [activeStories, setActiveStories] = useState(() => cachedOwnProfile?.activeStories || []);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+  const [storyMealTagDish, setStoryMealTagDish] = useState(null);
   const [storyPushStats, setStoryPushStats] = useState(() => cachedOwnProfile?.storyPushStats || {});
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
@@ -493,6 +496,7 @@ export default function Profile() {
   const [mealCalendarEntries, setMealCalendarEntries] = useState(() => cachedOwnProfile?.mealCalendarEntries || []);
   const [mealCalendarEntryOpen, setMealCalendarEntryOpen] = useState(false);
   const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
+  const [mealCalendarEntryNeedsTag, setMealCalendarEntryNeedsTag] = useState(false);
   const [mealCalendarEntrySaving, setMealCalendarEntrySaving] = useState(false);
   const [leaderboardTakes, setLeaderboardTakes] = useState(() => cachedOwnProfile?.leaderboardTakes || []);
   const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
@@ -556,11 +560,17 @@ export default function Profile() {
     setProfileCalendarSelectedDay(dayKey);
     setProfileCalendarMonthDate(getCalendarMonthDate(new Date(`${dayKey}T12:00:00`)));
     setMealCalendarEntryName("");
+    setMealCalendarEntryNeedsTag(false);
     setMealCalendarEntryOpen(true);
   };
-  const saveMealCalendarEntry = async () => {
+  const saveMealCalendarEntry = async (selectedStoryMealTag = "") => {
+    const storyMealTag = typeof selectedStoryMealTag === "string" ? selectedStoryMealTag : "";
     const name = mealCalendarEntryName.trim();
     if (!name || !user?.uid || mealCalendarEntrySaving) return;
+    if (!storyMealTag) {
+      setMealCalendarEntryNeedsTag(true);
+      return;
+    }
     setMealCalendarEntrySaving(true);
     try {
       const dayKey = profileCalendarSelectedDay || getStoryCalendarKey(Date.now());
@@ -569,6 +579,7 @@ export default function Profile() {
         name,
         dayKey,
         ateAtMs: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
+        storyMealTag,
         createdAt: serverTimestamp(),
       });
       setMealCalendarEntries((prev) => [
@@ -577,12 +588,14 @@ export default function Profile() {
           name,
           dayKey,
           ms: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
+          storyMealTag,
           createdAt: null,
           calendarOnly: true,
         },
         ...prev,
       ]);
       setMealCalendarEntryOpen(false);
+      setMealCalendarEntryNeedsTag(false);
       setMealCalendarEntryName("");
       setToast(t("Saved"));
       setToastVariant("success");
@@ -914,6 +927,7 @@ export default function Profile() {
             name: data.name || data.title || "",
             dayKey: data.dayKey || getStoryCalendarKey(ateAtMs),
             ms: ateAtMs,
+            storyMealTag: data.storyMealTag || data.mealTag || "",
             createdAt: data.createdAt || null,
             calendarOnly: true,
           };
@@ -1216,13 +1230,19 @@ export default function Profile() {
     if (guard?.dishId === dish.id && Date.now() < Number(guard.until || 0)) {
       return;
     }
-    const ok = await publishDishAsStory(user.uid, dish);
+    setDishCardActionTarget(null);
+    setStoryMealTagDish(dish);
+  };
+
+  const publishDishCardToStory = async (storyMealTag) => {
+    if (!user?.uid || !storyMealTagDish?.id) return;
+    const ok = await publishDishAsStory(user.uid, storyMealTagDish, { storyMealTag });
     if (ok) {
       getStoryPushStatsForUser(user.uid)
         .then((stats) => setStoryPushStats(stats))
         .catch((err) => console.warn("Failed to refresh story push stats:", err));
     }
-    setDishCardActionTarget(null);
+    setStoryMealTagDish(null);
     setToastVariant(ok ? "success" : "error");
     setToast(ok ? "Story posted" : "Story failed");
     setTimeout(() => setToast(""), 1200);
@@ -1931,6 +1951,7 @@ export default function Profile() {
           dishId,
           name: dish.name || entry?.name || "Untitled dish",
           imageDish: dish,
+          storyMealTag: entry?.storyMealTag || entry?.mealTag || "",
         });
       });
     });
@@ -1945,6 +1966,7 @@ export default function Profile() {
         dishId: story.dishId || story.id || "",
         name: story.name || story.dishName || "Untitled dish",
         imageDish: story,
+        storyMealTag: story.storyMealTag || story.mealTag || "",
       });
     });
 
@@ -1959,6 +1981,7 @@ export default function Profile() {
         dishId: "",
         name: entry.name || "Untitled",
         imageDish: null,
+        storyMealTag: entry.storyMealTag || entry.mealTag || "",
         calendarOnly: true,
       });
     });
@@ -4622,6 +4645,8 @@ export default function Profile() {
                 {profileCalendarSelectedItems.length ? (
                   <div className="space-y-2">
                     {profileCalendarSelectedItems.map((item) => {
+                      const mealTagLabel = getStoryMealTagLabel(item.storyMealTag, language, { showOther: false });
+                      const mealTagOption = getStoryMealTagOption(item.storyMealTag);
                       const content = (
                         <>
                           {item.calendarOnly ? (
@@ -4641,12 +4666,21 @@ export default function Profile() {
                           <div className="min-w-0">
                             <div className={`truncate text-base font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>
                             <div className={`mt-1 text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>
-                              {item.calendarOnly
-                                ? t("Calendar only")
-                                : new Date(item.ms).toLocaleTimeString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
+                              {mealTagLabel ? (
+                                <span
+                                  className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-black"
+                                  style={{ backgroundColor: mealTagOption?.color || "#23C268" }}
+                                >
+                                  {mealTagLabel}
+                                </span>
+                              ) : (
+                                item.calendarOnly
+                                  ? t("Calendar only")
+                                  : new Date(item.ms).toLocaleTimeString(language === LANGUAGE_IT ? "it-IT" : "en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                              )}
                             </div>
                           </div>
                         </>
@@ -4744,6 +4778,22 @@ export default function Profile() {
             </motion.div>
           </motion.div>
         ) : null}
+        <StoryMealTagModal
+          open={Boolean(storyMealTagDish) || mealCalendarEntryNeedsTag}
+          onClose={() => {
+            setStoryMealTagDish(null);
+            setMealCalendarEntryNeedsTag(false);
+          }}
+          onSelect={(tag) => {
+            if (storyMealTagDish) {
+              publishDishCardToStory(tag);
+              return;
+            }
+            saveMealCalendarEntry(tag);
+          }}
+          language={language}
+          darkMode={darkMode}
+        />
         {profileMapOpen ? (
           <motion.div
             className="fixed inset-0 z-[90] flex items-start justify-center bg-black/45 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[calc(var(--app-top-nav-offset)+0.55rem)] backdrop-blur-sm"

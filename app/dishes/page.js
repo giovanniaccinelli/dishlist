@@ -24,6 +24,8 @@ import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
+import StoryMealTagModal from "../../components/StoryMealTagModal";
+import { useLanguage } from "../../components/LanguageProvider";
 import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterModal } from "../../components/DishModeControls";
 
 const DISHES_PAGE_SIZE = 24;
@@ -130,8 +132,10 @@ function StoryPlateIcon({ size = 16, className = "" }) {
 export default function Dishes() {
   const router = useRouter();
   const { user } = useAuth();
+  const { language, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const [storyPicker, setStoryPicker] = useState(false);
+  const [storyMealTagDish, setStoryMealTagDish] = useState(null);
   const [dishes, setDishes] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -448,16 +452,7 @@ export default function Dishes() {
       return;
     }
     if (storyPicker) {
-      const saved = await publishDishAsStory(user.uid, dish);
-      if (!saved) {
-        setToastVariant("error");
-        setToast("Story failed");
-        setTimeout(() => setToast(""), 1200);
-        return;
-      }
-      setToastVariant("success");
-      setToast("Added to Story");
-      setTimeout(() => setToast(""), 1200);
+      setStoryMealTagDish(dish);
       return;
     }
     setDishlistPickerDish(dish);
@@ -473,6 +468,21 @@ export default function Dishes() {
     } finally {
       setDishlistsLoading(false);
     }
+  };
+
+  const publishStoryPickerDish = async (storyMealTag) => {
+    if (!user?.uid || !storyMealTagDish?.id) return;
+    const saved = await publishDishAsStory(user.uid, storyMealTagDish, { storyMealTag });
+    if (!saved) {
+      setToastVariant("error");
+      setToast("Story failed");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
+    setStoryMealTagDish(null);
+    setToastVariant("success");
+    setToast("Added to Story");
+    setTimeout(() => setToast(""), 1200);
   };
 
   const handleDishlistSelect = async () => {
@@ -812,6 +822,13 @@ export default function Dishes() {
           setSelectedDishMode(mode);
           setDishModeFilterOpen(false);
         }}
+      />
+      <StoryMealTagModal
+        open={Boolean(storyMealTagDish)}
+        onClose={() => setStoryMealTagDish(null)}
+        onSelect={publishStoryPickerDish}
+        language={language}
+        darkMode={darkMode}
       />
       <AppToast message={toast} variant={toastVariant} />
     </div>

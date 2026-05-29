@@ -1736,6 +1736,7 @@ export async function publishDishAsStory(userId, dish, storyMeta = {}) {
   try {
     const publishedAtMs = Date.now();
     const storyRef = doc(db, "users", userId, "stories", dish.id);
+    const storyPushRef = doc(db, "users", userId, "storyPushes", dish.id);
     await setDoc(storyRef, buildStoryPayload(userId, { ...dish, ...storyMeta, dishId: dish.id }), { merge: true });
     await setDoc(
       doc(db, "users", userId),
@@ -1745,15 +1746,22 @@ export async function publishDishAsStory(userId, dish, storyMeta = {}) {
       },
       { merge: true }
     );
+    const storyMealTag = storyMeta.storyMealTag || storyMeta.mealTag || "";
+    const existingPushSnap = await getDoc(storyPushRef).catch(() => null);
+    const existingHistory = existingPushSnap?.exists() ? existingPushSnap.data()?.history : [];
+    const lastPush = Array.isArray(existingHistory) ? existingHistory[existingHistory.length - 1] : null;
+    const lastPushMs = Number(lastPush?.pushedAtMs || Date.parse(lastPush?.pushedAtISO || "")) || 0;
+    const isDuplicatePush = lastPushMs && publishedAtMs - lastPushMs < 3000 && (lastPush?.storyMealTag || "") === storyMealTag;
+    if (isDuplicatePush) return true;
     await setDoc(
-      doc(db, "users", userId, "storyPushes", dish.id),
+      storyPushRef,
       {
         dishId: dish.id,
         count: increment(1),
         history: arrayUnion({
           pushedAtMs: publishedAtMs,
           pushedAtISO: new Date(publishedAtMs).toISOString(),
-          storyMealTag: storyMeta.storyMealTag || storyMeta.mealTag || "",
+          storyMealTag,
         }),
         updatedAt: serverTimestamp(),
       },

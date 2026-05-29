@@ -50,7 +50,7 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { CalendarDays, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
@@ -197,6 +197,26 @@ function parseCalendarMonthValue(value = "") {
   const [year, month] = String(value).split("-").map((part) => Number(part));
   if (!Number.isFinite(year) || !Number.isFinite(month)) return getCalendarMonthDate(new Date());
   return new Date(year, month - 1, 1, 12);
+}
+
+function getMealCalendarDocId(dayKey, name, storyMealTag = "") {
+  const safeName = String(name || "meal")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64) || "meal";
+  const safeTag = String(storyMealTag || "altro").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "altro";
+  return `${dayKey || getStoryCalendarKey(Date.now())}-${safeTag}-${safeName}`;
+}
+
+function getCalendarEntryDedupeKey(entry) {
+  const dayKey = entry?.dayKey || getStoryCalendarKey(entry?.ms || Date.now());
+  const identity = entry?.dishId
+    ? `dish:${entry.dishId}`
+    : `name:${String(entry?.name || "").trim().toLowerCase()}`;
+  const tag = String(entry?.storyMealTag || entry?.mealTag || "").trim().toLowerCase();
+  return `${dayKey}|${identity}|${tag}`;
 }
 
 async function getMealCalendarEntriesForUserIds(userIds = []) {
@@ -498,6 +518,7 @@ export default function Profile() {
   const [mealCalendarEntryName, setMealCalendarEntryName] = useState("");
   const [mealCalendarEntryNeedsTag, setMealCalendarEntryNeedsTag] = useState(false);
   const [mealCalendarEntrySaving, setMealCalendarEntrySaving] = useState(false);
+  const mealCalendarEntrySavingRef = useRef(false);
   const [leaderboardTakes, setLeaderboardTakes] = useState(() => cachedOwnProfile?.leaderboardTakes || []);
   const [leaderboardAdminOpen, setLeaderboardAdminOpen] = useState(false);
   const [leaderboardAdminPassword, setLeaderboardAdminPassword] = useState("");
@@ -566,34 +587,35 @@ export default function Profile() {
   const saveMealCalendarEntry = async (selectedStoryMealTag = "") => {
     const storyMealTag = typeof selectedStoryMealTag === "string" ? selectedStoryMealTag : "";
     const name = mealCalendarEntryName.trim();
-    if (!name || !user?.uid || mealCalendarEntrySaving) return;
+    if (!name || !user?.uid || mealCalendarEntrySaving || mealCalendarEntrySavingRef.current) return;
     if (!storyMealTag) {
       setMealCalendarEntryNeedsTag(true);
       return;
     }
+    mealCalendarEntrySavingRef.current = true;
     setMealCalendarEntrySaving(true);
     try {
       const dayKey = profileCalendarSelectedDay || getStoryCalendarKey(Date.now());
       const ateAtMs = new Date(`${dayKey}T12:00:00`).getTime();
-      const docRef = await addDoc(collection(db, "users", user.uid, "mealCalendar"), {
+      const docId = getMealCalendarDocId(dayKey, name, storyMealTag);
+      const docRef = doc(db, "users", user.uid, "mealCalendar", docId);
+      await setDoc(docRef, {
         name,
         dayKey,
         ateAtMs: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
         storyMealTag,
         createdAt: serverTimestamp(),
-      });
-      setMealCalendarEntries((prev) => [
-        {
-          id: docRef.id,
-          name,
-          dayKey,
-          ms: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
-          storyMealTag,
-          createdAt: null,
-          calendarOnly: true,
-        },
-        ...prev,
-      ]);
+      }, { merge: true });
+      const nextEntry = {
+        id: docRef.id,
+        name,
+        dayKey,
+        ms: Number.isFinite(ateAtMs) ? ateAtMs : Date.now(),
+        storyMealTag,
+        createdAt: null,
+        calendarOnly: true,
+      };
+      setMealCalendarEntries((prev) => [nextEntry, ...prev.filter((entry) => entry.id !== docRef.id)]);
       setMealCalendarEntryOpen(false);
       setMealCalendarEntryNeedsTag(false);
       setMealCalendarEntryName("");
@@ -607,6 +629,7 @@ export default function Profile() {
       setTimeout(() => setToast(""), 1400);
     } finally {
       setMealCalendarEntrySaving(false);
+      mealCalendarEntrySavingRef.current = false;
     }
   };
 
@@ -1995,7 +2018,8 @@ export default function Profile() {
           byDay.set(entry.dayKey, { key: entry.dayKey, ms: entry.ms, items: [] });
         }
         const day = byDay.get(entry.dayKey);
-        if (!day.items.some((item) => item.id === entry.id || (item.dishId && item.dishId === entry.dishId && item.ms === entry.ms))) {
+        const entryKey = getCalendarEntryDedupeKey(entry);
+        if (!day.items.some((item) => item.id === entry.id || getCalendarEntryDedupeKey(item) === entryKey)) {
           day.items.push(entry);
         }
       });
@@ -4668,7 +4692,7 @@ export default function Profile() {
                             <div className={`mt-1 text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>
                               {mealTagLabel ? (
                                 <span
-                                  className="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em]"
+                                  className="inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold normal-case tracking-0"
                                   style={{
                                     backgroundColor: mealTagOption?.bg || "#102818",
                                     borderColor: `${mealTagOption?.color || "#22C55E"}BF`,

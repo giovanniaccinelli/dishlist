@@ -4,12 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Clock3, Croissant, Martini, Moon, Sandwich, Utensils, X } from "lucide-react";
 
 export const STORY_MEAL_TAG_OPTIONS = [
-  { id: "pranzo", it: "Pranzo", en: "Lunch", color: "#FBBF24", bg: "#30220A", text: "#FDE68A", icon: Utensils },
-  { id: "cena", it: "Cena", en: "Dinner", color: "#EF4444", bg: "#310F0F", text: "#FECACA", icon: Moon },
-  { id: "snack", it: "Snack", en: "Snack", color: "#22C55E", bg: "#102818", text: "#BBF7D0", icon: Sandwich },
-  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#FB923C", bg: "#321A0A", text: "#FED7AA", icon: Martini },
-  { id: "colazione", it: "Colazione", en: "Breakfast", color: "#F59E0B", bg: "#2F2107", text: "#FDE68A", icon: Croissant },
-  { id: "altro", it: "Altro", en: "Other", color: "#94A3B8", bg: "#181D24", text: "#E2E8F0", icon: Clock3 },
+  { id: "pranzo", it: "Pranzo", en: "Lunch", color: "#E4B43F", bg: "#251D0B", text: "#F8D96B", icon: Utensils },
+  { id: "cena", it: "Cena", en: "Dinner", color: "#E54848", bg: "#2A1010", text: "#FF9F9F", icon: Moon },
+  { id: "snack", it: "Snack", en: "Snack", color: "#35C96F", bg: "#0D2617", text: "#8AF0B0", icon: Sandwich },
+  { id: "aperitivo", it: "Aperitivo", en: "Aperitivo", color: "#B56BFF", bg: "#21112F", text: "#D9B7FF", icon: Martini },
+  { id: "colazione", it: "Colazione", en: "Breakfast", color: "#FF7A45", bg: "#2B150C", text: "#FFB28F", icon: Croissant },
+  { id: "altro", it: "Altro", en: "Other", color: "#8EA2B8", bg: "#141B23", text: "#D5E0EB", icon: Clock3 },
 ];
 
 export function normalizeStoryMealTag(value) {

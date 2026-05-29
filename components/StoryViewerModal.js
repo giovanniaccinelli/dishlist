@@ -15,6 +15,37 @@ import { db } from "../app/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 const STORY_DURATION_MS = 4500;
+const STORY_HOLD_PAUSE_THRESHOLD_MS = 320;
+
+const storyFaceVariants = {
+  enter: (direction) => {
+    if (!direction) return { opacity: 0.96 };
+    return {
+      opacity: 0.82,
+      x: `${direction * 42}%`,
+      rotateY: direction * -74,
+      scale: 0.96,
+      transformOrigin: direction > 0 ? "100% 50%" : "0% 50%",
+    };
+  },
+  center: {
+    opacity: 1,
+    x: "0%",
+    rotateY: 0,
+    scale: 1,
+    transformOrigin: "50% 50%",
+  },
+  exit: (direction) => {
+    if (!direction) return { opacity: 0 };
+    return {
+      opacity: 0.75,
+      x: `${direction * -42}%`,
+      rotateY: direction * 74,
+      scale: 0.96,
+      transformOrigin: direction > 0 ? "0% 50%" : "100% 50%",
+    };
+  },
+};
 
 export default function StoryViewerModal({
   open,
@@ -57,6 +88,7 @@ export default function StoryViewerModal({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [groupTurnDirection, setGroupTurnDirection] = useState(0);
   const [progressMs, setProgressMs] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const didAdvanceRef = useRef(false);
@@ -80,6 +112,7 @@ export default function StoryViewerModal({
     if (!open) return;
     setGroupIndex(Math.min(initialGroupIndex, Math.max(groups.length - 1, 0)));
     setStoryIndex(0);
+    setGroupTurnDirection(0);
     setProgressMs(0);
     setIsPaused(false);
   }, [open, initialGroupIndex, groups.length]);
@@ -249,10 +282,12 @@ export default function StoryViewerModal({
     if (Date.now() < suppressTapUntilRef.current) return;
     if (!currentGroup) return onClose?.();
     if (storyIndex < currentStories.length - 1) {
+      setGroupTurnDirection(0);
       setStoryIndex((prev) => prev + 1);
       return;
     }
     if (groupIndex < groups.length - 1) {
+      setGroupTurnDirection(1);
       setGroupIndex((prev) => prev + 1);
       setStoryIndex(0);
       return;
@@ -264,11 +299,13 @@ export default function StoryViewerModal({
     if (Date.now() < suppressTapUntilRef.current) return;
     if (!currentGroup) return;
     if (storyIndex > 0) {
+      setGroupTurnDirection(0);
       setStoryIndex((prev) => prev - 1);
       return;
     }
     if (groupIndex > 0) {
       const previousGroup = groups[groupIndex - 1];
+      setGroupTurnDirection(-1);
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(Math.max((previousGroup?.stories?.length || 1) - 1, 0));
     }
@@ -276,6 +313,7 @@ export default function StoryViewerModal({
 
   const goNextGroup = () => {
     if (groupIndex < groups.length - 1) {
+      setGroupTurnDirection(1);
       setGroupIndex((prev) => prev + 1);
       setStoryIndex(0);
       return;
@@ -285,6 +323,7 @@ export default function StoryViewerModal({
 
   const goPrevGroup = () => {
     if (groupIndex > 0) {
+      setGroupTurnDirection(-1);
       setGroupIndex((prev) => prev - 1);
       setStoryIndex(0);
       return;
@@ -341,7 +380,7 @@ export default function StoryViewerModal({
   };
 
   const handlePressEnd = () => {
-    if (pressStartedAtRef.current && Date.now() - pressStartedAtRef.current > 180) {
+    if (pressStartedAtRef.current && Date.now() - pressStartedAtRef.current > STORY_HOLD_PAUSE_THRESHOLD_MS) {
       suppressTapUntilRef.current = Date.now() + 280;
     }
     pressStartedAtRef.current = 0;
@@ -488,37 +527,46 @@ export default function StoryViewerModal({
           }}
           style={{ transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >
-          <motion.div
-            key={`${currentGroup?.ownerId || "group"}-${currentStory?.id || "story"}`}
-            className="absolute inset-0"
-            initial={{ opacity: 0.96 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
-          >
-            {isDishVideo(currentStory) ? (
-              <video
-                ref={videoRef}
-                src={getDishImageUrl(currentStory)}
-                className="w-full h-full object-cover"
-                autoPlay
-                muted={false}
-                playsInline
-                preload="auto"
-                controls={false}
-                disablePictureInPicture
-              />
-            ) : (
-              <img
-                src={getDishImageUrl(currentStory)}
-                alt={currentStory.name || "Story"}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                }}
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
-          </motion.div>
+          <AnimatePresence initial={false} custom={groupTurnDirection} mode="popLayout">
+            <motion.div
+              key={`${currentGroup?.ownerId || "group"}-${currentStory?.id || "story"}`}
+              className="absolute inset-0 origin-center"
+              custom={groupTurnDirection}
+              variants={storyFaceVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={groupTurnDirection ? { duration: 0.34, ease: [0.2, 0.82, 0.22, 1] } : { duration: 0.16, ease: "easeOut" }}
+              style={{
+                backfaceVisibility: "hidden",
+                transformStyle: "preserve-3d",
+              }}
+            >
+              {isDishVideo(currentStory) ? (
+                <video
+                  ref={videoRef}
+                  src={getDishImageUrl(currentStory)}
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  muted={false}
+                  playsInline
+                  preload="auto"
+                  controls={false}
+                  disablePictureInPicture
+                />
+              ) : (
+                <img
+                  src={getDishImageUrl(currentStory)}
+                  alt={currentStory.name || "Story"}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
+            </motion.div>
+          </AnimatePresence>
 
           <div
             className="absolute left-4 right-4 z-40 flex gap-1"

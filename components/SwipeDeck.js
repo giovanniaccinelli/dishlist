@@ -1020,8 +1020,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
       const targetY = Math.max(-220, Math.min(220, info.offset.y + info.velocity.y * 0.12));
       const remainingDistance = Math.max(120, Math.abs(targetX - info.offset.x));
-      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 3.2 : 0.38;
-      const duration = Math.max(0.28, Math.min(0.44, velocityDuration));
+      const velocityDuration = Math.abs(info.velocity.x) > 1 ? remainingDistance / Math.abs(info.velocity.x) / 2.55 : 0.46;
+      const duration = Math.max(0.34, Math.min(0.56, velocityDuration));
       try {
         await Promise.all([
           animate(dragX, targetX, {

@@ -575,8 +575,8 @@ export default function RestaurantMapView({
     return (
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute top-1/2 z-0 flex h-[66%] w-[22%] -translate-y-1/2 flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 bg-white/82 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] backdrop-blur-md ${
-          side === "left" ? "left-0" : "right-0"
+        className={`pointer-events-none absolute top-1/2 z-0 flex h-[66%] w-[22%] -translate-y-1/2 flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 bg-white px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] ${
+          side === "left" ? "-left-2" : "-right-2"
         }`}
         style={{ transform: `translateY(-50%) scale(0.9)` }}
       >
@@ -753,10 +753,10 @@ export default function RestaurantMapView({
                   animate={{ x: 0, opacity: 1, scale: 1 }}
                   exit={{ x: sheetDirection > 0 ? "-104%" : sheetDirection < 0 ? "104%" : 0, opacity: 0.92 }}
                   transition={{ duration: 0.34, ease: [0.2, 0.76, 0.26, 1] }}
-                  className={`restaurant-accent-border absolute inset-y-0 left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 bg-white/96 shadow-[0_18px_40px_rgba(0,0,0,0.14)] backdrop-blur-md ${
+                  className={`restaurant-accent-border absolute left-0 right-0 z-10 mx-auto flex min-h-0 w-[88%] max-w-[27rem] flex-col overflow-hidden border-2 bg-white shadow-[0_18px_40px_rgba(0,0,0,0.14)] ${
                     embedded
-                      ? "rounded-[1.35rem] p-3"
-                      : "rounded-[1.7rem] p-4"
+                      ? "bottom-0 h-[min(17rem,calc(100%-6.2rem))] rounded-[1.35rem] p-3"
+                      : "bottom-0 max-h-[min(28rem,calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-1.5rem))] rounded-[1.7rem] p-4"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">

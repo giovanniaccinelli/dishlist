@@ -1018,13 +1018,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
       const targetX =
         direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
-      const targetY = Math.max(-220, Math.min(220, info.offset.y + info.velocity.y * 0.12));
+      const targetY = Math.max(-54, Math.min(54, info.offset.y * 0.22));
       const duration = 0.88;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
         startX: info.offset.x,
-        startY: info.offset.y,
+        startY: Math.max(-54, Math.min(54, info.offset.y * 0.22)),
         targetX,
         targetY,
         rotateStart: Math.max(-11, Math.min(11, (info.offset.x / 260) * 11)),
@@ -1162,13 +1162,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         </AnimatePresence>
         <motion.div
           key={currentCard._key}
-          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : true}
+          drag={disabled || isEjecting || outgoingSwipe || scrollPanelActive || visibleRestaurantMap ? false : "x"}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.74}
           dragMomentum={false}
           style={{
             x: outgoingSwipe ? 0 : dragX,
-            y: outgoingSwipe ? 0 : dragY,
+            y: 0,
             rotate: outgoingSwipe ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: outgoingSwipe ? currentCardBaseBorderColor : activeCardBorderColor,

@@ -430,10 +430,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       return;
     }
     setCurrentMediaReadyKey("");
-    const timeout = window.setTimeout(() => {
-      setCurrentMediaReadyKey(currentCard._key);
-    }, 900);
-    return () => window.clearTimeout(timeout);
   }, [currentCard?._key, currentCard]);
 
   useEffect(() => {
@@ -1222,7 +1218,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             rotate: freezeCurrentMotion ? 0 : cardRotate,
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
-            opacity: currentMediaReady ? 1 : 0,
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative z-10 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

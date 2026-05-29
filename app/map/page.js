@@ -2,10 +2,11 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import RestaurantMapView from "../../components/RestaurantMapView";
+import SwipeDeck from "../../components/SwipeDeck";
 import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore, getLeaderboardRestaurantAnswers } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
@@ -25,6 +26,7 @@ function MapPageContent() {
   const [dishes, setDishes] = useState(() => cachedMap?.dishes || []);
   const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState(() => cachedMap?.leaderboardRestaurantAnswers || []);
   const [loadingMapData, setLoadingMapData] = useState(() => !cachedMap);
+  const [selectedDish, setSelectedDish] = useState(null);
 
   useEffect(() => {
     const cached = getSessionPageCache(MAP_CACHE_KEY)?.value;
@@ -96,7 +98,37 @@ function MapPageContent() {
         emptyText="Restaurant dishes with a selected place will show up here."
         className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.75rem)] min-h-[24rem] max-h-none w-full max-w-[42rem]"
         dishHrefBuilder={(dish) => `/dish/${dish.id}?source=public&mode=single`}
+        onDishSelect={setSelectedDish}
       />
+
+      {selectedDish ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/72 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
+          onClick={() => setSelectedDish(null)}
+        >
+          <div
+            className="relative h-[min(78dvh,42rem)] w-full max-w-md"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedDish(null)}
+              className="no-accent-border absolute right-3 top-3 z-[130] flex h-10 w-10 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+              aria-label="Close dish"
+            >
+              <X size={18} />
+            </button>
+            <SwipeDeck
+              dishes={[selectedDish]}
+              fitHeight
+              trackSwipes={false}
+              actionLabel=""
+              dismissOnAction={false}
+              currentUser={user}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <BottomNav />
     </div>

@@ -63,6 +63,7 @@ import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import ProfileTakesStrip from "../../components/ProfileTakesStrip";
 import MapPreview from "../../components/MapPreview";
+import SwipeDeck from "../../components/SwipeDeck";
 import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
 import StoryMealTagModal, { getStoryMealTagLabel, getStoryMealTagOption } from "../../components/StoryMealTagModal";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
@@ -531,6 +532,7 @@ export default function Profile() {
   const [leaderboardQuestionSaving, setLeaderboardQuestionSaving] = useState(false);
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
+  const [profileMapDish, setProfileMapDish] = useState(null);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
@@ -4861,8 +4863,40 @@ export default function Profile() {
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."
                 dishHrefBuilder={(dish) => `/dish/${dish.id}?source=uploaded&mode=single&returnTo=${encodeURIComponent("/profile?list=uploaded")}`}
+                onDishSelect={setProfileMapDish}
               />
             </motion.div>
+            {profileMapDish ? (
+              <div
+                className="fixed inset-0 z-[120] flex items-center justify-center bg-black/72 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setProfileMapDish(null);
+                }}
+              >
+                <div
+                  className="relative h-[min(78dvh,42rem)] w-full max-w-md"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setProfileMapDish(null)}
+                    className="no-accent-border absolute right-3 top-3 z-[130] flex h-10 w-10 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+                    aria-label="Close dish"
+                  >
+                    <X size={18} />
+                  </button>
+                  <SwipeDeck
+                    dishes={[profileMapDish]}
+                    fitHeight
+                    trackSwipes={false}
+                    actionLabel=""
+                    dismissOnAction={false}
+                    currentUser={user}
+                  />
+                </div>
+              </div>
+            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>

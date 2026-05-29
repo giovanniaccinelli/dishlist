@@ -231,7 +231,6 @@ export default function RestaurantMapView({
   const [carouselAnchorPlaceId, setCarouselAnchorPlaceId] = useState("");
   const [carouselDragX, setCarouselDragX] = useState(0);
   const [carouselDragging, setCarouselDragging] = useState(false);
-  const [modalDish, setModalDish] = useState(null);
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
@@ -554,10 +553,6 @@ export default function RestaurantMapView({
     if (!dish?.id) return;
     if (onDishSelect) {
       onDishSelect(dish);
-      return;
-    }
-    if (!embedded) {
-      setModalDish(dish);
       return;
     }
     const href = dishHrefBuilder ? dishHrefBuilder(dish) : `/dish/${dish.id}?source=public&mode=single`;
@@ -1182,47 +1177,6 @@ export default function RestaurantMapView({
           </div>
         ) : null}
       </div>
-      {modalDish ? (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/72 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
-          onClick={() => setModalDish(null)}
-        >
-          <div
-            className="restaurant-accent-border relative h-[min(78dvh,42rem)] w-full max-w-md overflow-hidden rounded-[2rem] border-2 bg-black shadow-[0_28px_80px_rgba(0,0,0,0.4)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setModalDish(null)}
-              className="no-accent-border absolute right-3 top-3 z-[130] flex h-10 w-10 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
-              aria-label="Close dish"
-            >
-              <X size={18} />
-            </button>
-            <img
-              src={getDishImageUrl(modalDish)}
-              alt={modalDish.name || "Dish"}
-              className="h-full w-full object-cover"
-              onError={(event) => {
-                event.currentTarget.src = DEFAULT_DISH_IMAGE;
-              }}
-            />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex min-h-[45%] flex-col justify-end bg-gradient-to-t from-black via-black/82 to-transparent px-5 pb-6 pt-20 text-white">
-              <div className="mb-2 flex items-center gap-2">
-                <RatingStars value={modalDish.rating} size="text-[1.05rem]" readOnly />
-              </div>
-              <h2 className="text-3xl font-black leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]">
-                {modalDish.name || "Untitled dish"}
-              </h2>
-              {modalDish.description ? (
-                <p className="mt-2 line-clamp-3 text-sm font-semibold leading-5 text-white/82">
-                  {modalDish.description}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

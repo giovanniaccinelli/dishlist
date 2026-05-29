@@ -38,6 +38,22 @@ function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
   return unprojectLatLng({ x: point.x, y: point.y + verticalOffsetPx }, zoom);
 }
 
+function getMapDistanceMeters(a, b) {
+  if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) {
+    return Number.POSITIVE_INFINITY;
+  }
+  const earthRadius = 6371000;
+  const toRad = (value) => (value * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * earthRadius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
 const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
@@ -210,6 +226,7 @@ export default function RestaurantMapView({
   const [sheetDirection, setSheetDirection] = useState(0);
   const [followingIds, setFollowingIds] = useState([]);
   const [restaurantCardHeight, setRestaurantCardHeight] = useState(0);
+  const [carouselAnchorPlaceId, setCarouselAnchorPlaceId] = useState("");
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const cardSwipeHandledUntilRef = useRef(0);
@@ -248,6 +265,17 @@ export default function RestaurantMapView({
     if (!selectedPlaceId) return null;
     return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
   }, [groups, selectedPlaceId]);
+  const carouselGroups = useMemo(() => {
+    if (!useRestaurantCarousel || !groups.length) return groups;
+    const anchor = groups.find((group) => group.placeId === carouselAnchorPlaceId) || selectedGroup || groups[0];
+    return [...groups].sort((a, b) => {
+      if (a.placeId === anchor.placeId) return -1;
+      if (b.placeId === anchor.placeId) return 1;
+      const distanceDiff = getMapDistanceMeters(anchor, a) - getMapDistanceMeters(anchor, b);
+      if (distanceDiff !== 0) return distanceDiff;
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+  }, [carouselAnchorPlaceId, groups, selectedGroup, useRestaurantCarousel]);
   const selectedGroupUsers = useMemo(() => {
     const users = Array.isArray(selectedGroup?.users) ? [...selectedGroup.users] : [];
     return users.sort((a, b) => {
@@ -285,7 +313,8 @@ export default function RestaurantMapView({
   useEffect(() => {
     if (!initialSelectedPlaceId) return;
     setSelectedPlaceId(initialSelectedPlaceId);
-  }, [initialSelectedPlaceId]);
+    if (useRestaurantCarousel) setCarouselAnchorPlaceId(initialSelectedPlaceId);
+  }, [initialSelectedPlaceId, useRestaurantCarousel]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -467,6 +496,7 @@ export default function RestaurantMapView({
       marker.addListener("click", () => {
         if (Date.now() < mapGestureUntilRef.current) return;
         mapGestureUntilRef.current = Date.now() + 120;
+        if (useRestaurantCarousel) setCarouselAnchorPlaceId(group.placeId);
         setSelectedPlaceId(group.placeId);
       });
       markersRef.current.push(marker);
@@ -478,6 +508,7 @@ export default function RestaurantMapView({
           onClick: () => {
             if (Date.now() < mapGestureUntilRef.current) return;
             mapGestureUntilRef.current = Date.now() + 120;
+            if (useRestaurantCarousel) setCarouselAnchorPlaceId(group.placeId);
             setSelectedPlaceId(group.placeId);
           },
         });
@@ -509,7 +540,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [followingIdSet, groups, mapState, ownIdSet, selectedPlaceId]);
+  }, [followingIdSet, groups, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;
@@ -522,21 +553,22 @@ export default function RestaurantMapView({
   };
 
   const selectedIndex = useMemo(
-    () => Math.max(0, groups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
-    [groups, selectedGroup?.placeId]
+    () => Math.max(0, carouselGroups.findIndex((group) => group.placeId === selectedGroup?.placeId)),
+    [carouselGroups, selectedGroup?.placeId]
   );
-  const previousGroup = groups.length > 1 ? groups[(selectedIndex - 1 + groups.length) % groups.length] : null;
-  const nextGroup = groups.length > 1 ? groups[(selectedIndex + 1) % groups.length] : null;
+  const previousGroup = carouselGroups.length > 1 ? carouselGroups[(selectedIndex - 1 + carouselGroups.length) % carouselGroups.length] : null;
+  const nextGroup = carouselGroups.length > 1 ? carouselGroups[(selectedIndex + 1) % carouselGroups.length] : null;
 
   const cycleRestaurant = (direction) => {
-    if (!groups.length) return;
-    const nextIndex = (selectedIndex + direction + groups.length) % groups.length;
-    focusGroup(groups[nextIndex], direction);
+    if (!carouselGroups.length) return;
+    const nextIndex = (selectedIndex + direction + carouselGroups.length) % carouselGroups.length;
+    focusGroup(carouselGroups[nextIndex], direction, { preserveAnchor: true });
   };
 
-  const focusGroup = (group, direction = 0) => {
+  const focusGroup = (group, direction = 0, { preserveAnchor = false } = {}) => {
     if (!group) return;
     setSheetDirection(direction);
+    if (useRestaurantCarousel && !preserveAnchor) setCarouselAnchorPlaceId(group.placeId || "");
     setSelectedPlaceId(group.placeId || "");
     focusMapOnGroup(group, { keepAboveSheet: true });
     setQuery(group.name || "");
@@ -603,24 +635,21 @@ export default function RestaurantMapView({
           cardSwipeHandledUntilRef.current = Date.now() + 160;
           cycleRestaurant(direction);
         }}
-        className={`map-restaurant-card-solid absolute bottom-0 z-0 flex w-[22%] flex-col overflow-hidden rounded-[1rem] border-2 border-[#E64646]/65 px-2.5 py-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] transition active:scale-[0.88] ${
-          side === "left" ? "-left-2" : "-right-2"
-        }`}
+        className="map-restaurant-card-solid absolute bottom-0 z-0 flex w-[88%] max-w-[27rem] flex-col overflow-hidden rounded-[1.7rem] border-2 border-[#E64646]/65 px-4 py-4 text-left shadow-[0_12px_24px_rgba(0,0,0,0.11)] transition active:scale-[0.99]"
         style={{
           height: restaurantCardHeight ? `${restaurantCardHeight}px` : undefined,
-          transform: "scale(0.9)",
-          transformOrigin: "bottom center",
+          ...(side === "left" ? { right: "calc(100% - 14px)" } : { left: "calc(100% - 14px)" }),
           opacity: 1,
           backgroundColor: "#ffffff",
         }}
         aria-label={side === "left" ? "Previous restaurant" : "Next restaurant"}
       >
         <div className="min-w-0">
-          <div className="truncate text-[11px] font-black leading-tight text-black/64">{group.name}</div>
+          <div className="truncate text-[1rem] font-semibold leading-tight text-black/64">{group.name}</div>
           <div className="mt-1 flex items-center gap-1">
-            <RatingStars value={getGroupRating(group)} size="text-[0.64rem]" readOnly />
+            <RatingStars value={getGroupRating(group)} size="text-[0.95rem]" readOnly />
           </div>
-          <div className="mt-1 truncate text-[9px] font-bold text-black/38">
+          <div className="mt-1 truncate text-[11px] font-bold text-black/38">
             {dishUsers.length} {t(dishUsers.length === 1 ? "person count" : "people count")}
           </div>
         </div>
@@ -631,12 +660,12 @@ export default function RestaurantMapView({
                 key={`${group.placeId}-${dishUser.id}-ghost`}
                 src={dishUser.photoURL}
                 alt=""
-                className="h-6 w-6 rounded-full object-cover shadow-sm"
+                className="h-8 w-8 rounded-full object-cover shadow-sm"
               />
             ) : (
               <span
                 key={`${group.placeId}-${dishUser.id}-ghost`}
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[9px] font-black text-white shadow-sm"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-[10px] font-black text-white shadow-sm"
               >
                 {(dishUser.name || "U").slice(0, 1).toUpperCase()}
               </span>
@@ -789,17 +818,17 @@ export default function RestaurantMapView({
                   data-restaurant-active-card="true"
                   custom={sheetDirection}
                   initial={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "55%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-55%" : -86) : 0,
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "107%" : 86) : sheetDirection < 0 ? (useRestaurantCarousel ? "-107%" : -86) : 0,
                     opacity: useRestaurantCarousel ? 1 : 0,
-                    scale: useRestaurantCarousel && sheetDirection ? 0.9 : 1,
+                    scale: 1,
                   }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
                   exit={{
-                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-55%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "55%" : 86) : 0,
+                    x: sheetDirection > 0 ? (useRestaurantCarousel ? "-107%" : -86) : sheetDirection < 0 ? (useRestaurantCarousel ? "107%" : 86) : 0,
                     opacity: useRestaurantCarousel ? 1 : 0,
-                    scale: useRestaurantCarousel && sheetDirection ? 0.9 : 1,
+                    scale: 1,
                   }}
-                  transition={useRestaurantCarousel ? { duration: 0.34, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
+                  transition={useRestaurantCarousel ? { duration: 0.32, ease: [0.2, 0.76, 0.26, 1] } : { duration: 0.22, ease: "easeOut" }}
                   drag={useRestaurantCarousel ? "x" : false}
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.22}

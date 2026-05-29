@@ -35,7 +35,7 @@ import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import { resolveRepresentativeTags } from "../../lib/profileTags";
-import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
+import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import StoryViewerModal from "../../../components/StoryViewerModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import DishRatingBadge from "../../../components/DishRatingBadge";
@@ -153,11 +153,56 @@ function parseCalendarMonthValue(value = "") {
 }
 
 function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
+  if (String(id || "").startsWith("tag:")) return <span className={`${className} inline-flex items-center justify-center text-[0.85em] font-black leading-none text-[#2BD36B]`}>#</span>;
   if (id === "saved") return <Trophy className={`${className} text-[#F2D46D]`} strokeWidth={2.1} />;
   if (id === "to_try") return <NotebookText className={`${className} text-[#38BDF8]`} strokeWidth={2.1} />;
   if (id === "uploaded") return <Upload className={`${className} text-[#F2A23A]`} strokeWidth={2.1} />;
   if (id === "all_dishes") return <ListChecks className={`${className} text-[#2BD36B]`} strokeWidth={2.1} />;
   return null;
+}
+
+function getTagDishlistId(tag) {
+  return `tag:${String(tag || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+}
+
+function getTagInitials(tag) {
+  return String(tag || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+}
+
+function dishHasTag(dish, tag) {
+  const normalizedTag = String(tag || "").trim().toLowerCase();
+  return Array.isArray(dish?.tags) && dish.tags.some((item) => String(item || "").trim().toLowerCase() === normalizedTag);
+}
+
+function buildTagDishlists(allDishes = []) {
+  return TAG_OPTIONS.map((tag, index) => ({
+    id: getTagDishlistId(tag),
+    name: tag,
+    type: "tag_system",
+    tag,
+    tagRank: index,
+    dishes: allDishes.filter((dish) => dishHasTag(dish, tag)),
+  })).sort((a, b) => (b.dishes.length - a.dishes.length) || (a.tagRank - b.tagRank));
+}
+
+function TagDishlistPreview({ dishlist, darkMode = false, t = (value) => value }) {
+  const active = Number(dishlist?.count || 0) > 0;
+  return (
+    <div className={`grid aspect-square place-items-center rounded-[1.1rem] border-2 ${
+      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
+    }`}>
+      <div className="flex flex-col items-center gap-1 text-center">
+        <div className="text-[2.4rem] font-black leading-none">#{getTagInitials(dishlist.tag)}</div>
+        <div className="max-w-[8rem] truncate px-3 text-[0.82rem] font-black leading-none">{t(dishlist.tag)}</div>
+      </div>
+    </div>
+  );
 }
 
 function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value }) {
@@ -882,7 +927,7 @@ export default function PublicProfile() {
     ).values()
   );
 
-  const localDishlists = [
+  const baseDishlists = [
     { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
     { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
     { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
@@ -893,11 +938,16 @@ export default function PublicProfile() {
       dishes: allDishesCollection,
       count: allDishesCollection.length,
     },
+  ].map(normalizeProfileDishlist);
+  const tagDishlists = buildTagDishlists(allDishesCollection).map(normalizeProfileDishlist);
+  const localDishlists = [
+    ...baseDishlists,
+    ...tagDishlists,
     ...customDishlists.map((dishlist) => ({
       ...dishlist,
       dishes: dishlist.dishes || [],
-    })),
-  ].map(normalizeProfileDishlist);
+    })).map(normalizeProfileDishlist),
+  ];
   const allDishlists = localDishlists.map(normalizeProfileDishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
@@ -1259,17 +1309,18 @@ export default function PublicProfile() {
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
-              ...allDishlists.filter((dishlist) => dishlist.type === "system"),
-              ...allDishlists.filter((dishlist) => dishlist.type !== "system"),
+              ...allDishlists.filter((dishlist) => dishlist.type === "system" || dishlist.type === "tag_system"),
+              ...allDishlists.filter((dishlist) => dishlist.type !== "system" && dishlist.type !== "tag_system"),
             ].map((dishlist) => {
               const isMap = dishlist.type === "map";
+              const isTagDishlist = dishlist.type === "tag_system";
               const preview = getDishlistPreviewDishes(dishlist);
               return (
                 <button
                   key={dishlist.id}
                   type="button"
                   onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
-                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${
+                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? "aspect-square" : ""} ${
                     darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
                   }`}
                 >
@@ -1277,7 +1328,9 @@ export default function PublicProfile() {
                     <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
                     <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />
                   </div>
-                  {isMap ? (
+                  {isTagDishlist ? (
+                    <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} t={t} />
+                  ) : isMap ? (
                     <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-[1rem] border ${
                       darkMode ? "border-white/10 bg-[#0C1711]" : "border-black/10 bg-[#EAF6E9]"
                     }`}>

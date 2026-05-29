@@ -1033,9 +1033,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
       });
+      resetDragPosition();
       advanceCard();
       setIsEjecting(false);
-      resetDragPosition();
       return;
     }
     void Promise.all([

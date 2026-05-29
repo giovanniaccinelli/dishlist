@@ -1392,7 +1392,7 @@ export default function Feed() {
     );
   }
 
-  if (loading || loadingDishes) {
+  if (loading || loadingDishes || !firstFeedCardReady) {
     return <FeedLogoLoading />;
   }
 

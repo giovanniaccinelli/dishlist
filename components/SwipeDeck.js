@@ -455,7 +455,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setNoRecipeNoticeOpen(false);
     setScrollPanelActive(false);
     scrollPanelActiveRef.current = false;
-  }, [currentCard?._key, currentCard]);
+  }, [currentCard?._key]);
 
   useLayoutEffect(() => {
     if (!currentCard?.description || showRecipe) {

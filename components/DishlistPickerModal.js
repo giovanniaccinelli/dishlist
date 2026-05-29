@@ -6,6 +6,7 @@ import { useLanguage } from "./LanguageProvider";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { TAG_DECOR } from "../app/lib/tagDecor";
 import { getTagForDishlistId, isTagDishlistId } from "../app/lib/tagDishlists";
+import { getDarkTagChipClass, getTagChipClass } from "../app/lib/tags";
 
 const PICKER_ORDER = ["saved", "to_try", "uploaded"];
 
@@ -37,6 +38,13 @@ function orderPickerLists(lists = [], pinAllDishesFirst = false) {
     const bRank = systemRank.has(b.id) ? systemRank.get(b.id) : 50;
     return aRank - bRank;
   });
+}
+
+function getSortingTagCardClass(dishlist, darkMode = false) {
+  const tag = isTagDishlistId(dishlist?.id) ? getTagForDishlistId(dishlist.id) : dishlist?.tag;
+  if (!tag) return "";
+  const active = Number(dishlist?.count || 0) > 0;
+  return darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active);
 }
 
 export default function DishlistPickerModal({
@@ -186,7 +194,7 @@ export default function DishlistPickerModal({
               </div>
             ) : (
               <>
-                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+                <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto ${isSortingCard ? "px-1 py-1" : "pr-1"}`}>
                   {storyOption ? (
                     <button
                       type="button"
@@ -234,6 +242,7 @@ export default function DishlistPickerModal({
                         const preview = Array.isArray(dishlist.dishes) ? dishlist.dishes.slice(0, 4) : [];
                         const tag = isTagDishlistId(dishlist.id) ? getTagForDishlistId(dishlist.id) : "";
                         const TagIcon = tag ? TAG_DECOR[tag]?.icon : null;
+                        const tagCardClass = TagIcon ? getSortingTagCardClass(dishlist, darkMode) : "";
                         return (
                           <button
                             key={dishlist.id}
@@ -247,6 +256,8 @@ export default function DishlistPickerModal({
                                 ? darkMode
                                   ? "border-[#2BD36B] bg-[#102817] ring-2 ring-[#2BD36B]/90 ring-offset-2 ring-offset-[#0D120E]"
                                   : "border-[#1FA463] bg-[#F2FFF6] ring-2 ring-[#1FA463]/85 ring-offset-2 ring-offset-white"
+                                : TagIcon
+                                  ? `border-2 ${tagCardClass}`
                                 : darkMode
                                   ? "border-white/12 bg-[#181818]"
                                   : "border-black/10 bg-white"
@@ -255,15 +266,10 @@ export default function DishlistPickerModal({
                           >
                             <div className="mb-2 flex items-center justify-between gap-2">
                               <div className={`min-w-0 truncate text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
-                              {TagIcon ? <TagIcon className={`h-4 w-4 shrink-0 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.1} /> : null}
                             </div>
                             {TagIcon ? (
-                              <div className={`grid aspect-square place-items-center rounded-[1rem] border ${
-                                selected
-                                  ? darkMode ? "border-[#2BD36B]/70 bg-[#102817]" : "border-[#2BD36B]/70 bg-[#F2FFF6]"
-                                  : darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-black/[0.03]"
-                              }`}>
-                                <TagIcon className={`h-12 w-12 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.05} />
+                              <div className="grid aspect-square place-items-center">
+                                <TagIcon className={`h-16 w-16 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.05} />
                               </div>
                             ) : (
                               <div className="grid grid-cols-2 gap-1.5">

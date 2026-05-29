@@ -4152,7 +4152,7 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <div className="max-h-[58vh] overflow-y-auto pr-1">
+                  <div className="max-h-[58vh] overflow-y-auto px-1 pb-1">
                     <div className={`mb-4 flex items-center gap-2 rounded-[1.15rem] border px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)] ${
                       darkMode ? "border-white/12 bg-[#1B1B1B]" : "border-black/10 bg-white"
                     }`}>
@@ -4311,7 +4311,7 @@ export default function Profile() {
                   {t("Close")}
                 </button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-1">
                 <div className={`mb-4 flex items-center gap-2 rounded-[1.15rem] border px-3 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.04)] ${
                   darkMode ? "border-white/12 bg-[#1B1B1B]" : "border-black/10 bg-white"
                 }`}>

@@ -1233,13 +1233,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         ) : null}
         {actionLabel ? (
           <div className="pointer-events-none absolute right-6 z-[14] flex items-center gap-1.5" style={{ bottom: actionBottom }}>
-            <div className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+            <div className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
               <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none" />
               <MessageCircle size={28} strokeWidth={2.15} />
             </div>
-            <div className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+            <div className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
               <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{Number(dish.likes || 0) > 0 ? Number(dish.likes || 0) : ""}</span>
-              <Heart size={29} strokeWidth={2.15} />
+              <Heart size={31} strokeWidth={2.2} />
             </div>
             <div className={actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}>
               {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
@@ -2050,7 +2050,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
@@ -2066,14 +2066,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
                 disabled={dishLikeSaving}
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart
-                  size={29}
-                  strokeWidth={2.15}
+                  size={31}
+                  strokeWidth={2.2}
                   className={dishLiked ? "" : "text-white"}
                   fill={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "none"}
                   color={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "currentColor"}
@@ -2223,7 +2223,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.preventDefault();
                   openComments("dish");
                 }}
-                className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label="Open comments"
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishCommentCount > 0 ? dishCommentCount : ""}</span>
@@ -2239,14 +2239,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                className="relative inline-flex h-14 w-14 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
                 disabled={dishLikeSaving}
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart
-                  size={29}
-                  strokeWidth={2.15}
+                  size={31}
+                  strokeWidth={2.2}
                   className={dishLiked ? "" : "text-white"}
                   fill={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "none"}
                   color={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "currentColor"}

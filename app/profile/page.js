@@ -267,11 +267,14 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
-function TagDishlistPreview({ dishlist }) {
+function TagDishlistPreview({ dishlist, darkMode = false }) {
+  const active = Number(dishlist?.count || 0) > 0;
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
   return (
-    <div className="flex aspect-square items-center justify-center p-4 text-center">
+    <div className={`flex aspect-square items-center justify-center rounded-[1.1rem] border-2 p-4 text-center ${
+      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
+    }`}>
       {Icon ? <Icon className={`h-[5.35rem] w-[5.35rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
     </div>
   );
@@ -478,13 +481,14 @@ export default function Profile() {
   const [profileAliasIds, setProfileAliasIds] = useState(() => cachedOwnProfile?.profileAliasIds || []);
   const [profileUser, setProfileUser] = useState(() => cachedOwnProfile?.profileUser || null);
   const [profileContentReady, setProfileContentReady] = useState(() => Boolean(cachedOwnProfile));
-  const [profileMeta, setProfileMeta] = useState(() => cachedOwnProfile?.profileMeta || { followers: [], following: [], savedDishes: [], bio: "", representativeTags: null });
+  const [profileMeta, setProfileMeta] = useState(() => cachedOwnProfile?.profileMeta || { followers: [], following: [], savedDishes: [], bio: "", representativeTags: null, profileDishlistOrder: [] });
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
   const [dishlistSearchOpen, setDishlistSearchOpen] = useState(false);
   const [dishlistSearch, setDishlistSearch] = useState("");
   const profileSearchPendingRef = useRef(false);
   const [dishlistsOpen, setDishlistsOpen] = useState(false);
   const [dishlistsEditMode, setDishlistsEditMode] = useState(false);
+  const [dishlistManagementMode, setDishlistManagementMode] = useState(false);
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
   const [dishlistRenameTarget, setDishlistRenameTarget] = useState(null);
   const [dishlistRenameValue, setDishlistRenameValue] = useState("");
@@ -572,6 +576,8 @@ export default function Profile() {
   const profileCalendarMonthSwipeRef = useRef(null);
   const dishlistDetailSwipeRef = useRef(null);
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
+  const dishlistLongPressRef = useRef(null);
+  const dishlistLongPressTriggeredRef = useRef(false);
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL = normalizeProfilePhotoURL(
     profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "")
@@ -737,6 +743,7 @@ export default function Profile() {
             photoURL: nextProfileUser.photoURL || "",
             bio: nextProfileUser.bio || "",
             representativeTags: normalizeRepresentativeTags(nextProfileUser.representativeTags),
+            profileDishlistOrder: Array.isArray(nextProfileUser.profileDishlistOrder) ? nextProfileUser.profileDishlistOrder : [],
           }));
         }
         setProfileContentReady(true);
@@ -793,14 +800,6 @@ export default function Profile() {
   }, [profileContentReady, user?.uid]);
 
   useEffect(() => {
-    if (!user?.uid || dishlistPickerOpen || dishlistPickerLoading) return;
-    const dismissedSet = new Set(dismissedPendingDishIds);
-    const nextPending = pendingDishlistSorting.find((dish) => dish?.id && !dismissedSet.has(dish.id));
-    if (!nextPending) return;
-    openPendingDishlistPicker(nextPending);
-  }, [dismissedPendingDishIds, dishlistPickerLoading, dishlistPickerOpen, pendingDishlistSorting, user?.uid]);
-
-  useEffect(() => {
     if (!user?.uid || !profileContentReady) return;
     setSessionPageCache(`profile:own:${user.uid}`, {
       profileAliasIds,
@@ -852,6 +851,7 @@ export default function Profile() {
             photoURL: data.photoURL || "",
             bio: data.bio || "",
             representativeTags: normalizeRepresentativeTags(data.representativeTags),
+            profileDishlistOrder: Array.isArray(data.profileDishlistOrder) ? data.profileDishlistOrder : [],
           }));
         }
       } catch (err) {
@@ -1629,6 +1629,48 @@ export default function Profile() {
     }
   };
 
+  const pendingQueueDishes = pendingDishlistSorting.filter((dish) => dish?.id && !dismissedPendingDishIds.includes(dish.id));
+  const pendingQueueCount = pendingQueueDishes.length;
+
+  const openPendingDishlistQueue = () => {
+    const nextPending = pendingQueueDishes[0];
+    if (nextPending) openPendingDishlistPicker(nextPending);
+  };
+
+  const persistDishlistOrder = async (ids) => {
+    if (!user?.uid) return;
+    setProfileMeta((prev) => ({ ...prev, profileDishlistOrder: ids }));
+    try {
+      await setDoc(doc(db, "users", user.uid), { profileDishlistOrder: ids }, { merge: true });
+    } catch (err) {
+      console.error("Failed to save dishlist order:", err);
+    }
+  };
+
+  const moveDishlistInProfile = (dishlistId, direction) => {
+    const ids = allDishlists.map((dishlist) => dishlist.id);
+    const index = ids.indexOf(dishlistId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= ids.length) return;
+    const nextIds = [...ids];
+    const [item] = nextIds.splice(index, 1);
+    nextIds.splice(nextIndex, 0, item);
+    persistDishlistOrder(nextIds);
+  };
+
+  const startDishlistLongPress = () => {
+    dishlistLongPressTriggeredRef.current = false;
+    window.clearTimeout(dishlistLongPressRef.current);
+    dishlistLongPressRef.current = window.setTimeout(() => {
+      dishlistLongPressTriggeredRef.current = true;
+      setDishlistManagementMode(true);
+    }, 650);
+  };
+
+  const clearDishlistLongPress = () => {
+    window.clearTimeout(dishlistLongPressRef.current);
+  };
+
   const closeDishlistPicker = () => {
     if (dishlistPickerSource === "pending" && dishlistPickerDish?.id) {
       setDismissedPendingDishIds((prev) =>
@@ -1894,8 +1936,6 @@ export default function Profile() {
 
   const baseDishlists = [
     { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -1903,6 +1943,8 @@ export default function Profile() {
       dishes: allDishesCollection,
       count: allDishesCollection.length,
     },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes: uploadedDishes, count: uploadedDishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
   ].map(normalizeProfileDishlist);
   const tagDishlists = buildDefaultTagDishlists(customDishlists).map(normalizeProfileDishlist);
   const nonTagCustomDishlists = customDishlists.filter((dishlist) => dishlist.type !== "tag_system");
@@ -1914,7 +1956,16 @@ export default function Profile() {
       dishes: dishlist.dishes || [],
     })).map(normalizeProfileDishlist),
   ];
-  const allDishlists = localDishlists.map(normalizeProfileDishlist);
+  const storedDishlistOrder = Array.isArray(profileMeta.profileDishlistOrder) ? profileMeta.profileDishlistOrder : [];
+  const orderRank = new Map(storedDishlistOrder.map((id, index) => [id, index]));
+  const allDishlists = localDishlists
+    .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
+    .sort((a, b) => {
+      const aRank = orderRank.has(a.id) ? orderRank.get(a.id) : Number.POSITIVE_INFINITY;
+      const bRank = orderRank.has(b.id) ? orderRank.get(b.id) : Number.POSITIVE_INFINITY;
+      return aRank - bRank || a.fallbackRank - b.fallbackRank;
+    })
+    .map(({ fallbackRank, ...dishlist }) => dishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags =
     profileMeta.representativeTags === null
@@ -2632,26 +2683,61 @@ export default function Profile() {
 
           {showingDishlistOverview ? (
             <div className="mx-auto w-full max-w-3xl px-2 pb-4">
+              {dishlistManagementMode ? (
+                <div className="mb-3 flex items-center justify-between rounded-[1rem] border border-[#E64646]/35 bg-[#E64646]/12 px-3 py-2 text-sm font-bold text-[#FF8A8A]">
+                  <span>{t("Gestisci dishlists")}</span>
+                  <button type="button" onClick={() => setDishlistManagementMode(false)} className="rounded-full bg-black/30 px-3 py-1 text-white">
+                    {t("Done")}
+                  </button>
+                </div>
+              ) : null}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {[
-                  ...allDishlists.filter((dishlist) => dishlist.type === "system" || dishlist.type === "tag_system"),
-                  ...allDishlists.filter((dishlist) => dishlist.type !== "system" && dishlist.type !== "tag_system"),
-                ].map((dishlist) => {
+                {allDishlists.map((dishlist) => {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
+                  const hasPendingBadge = dishlist.id === "all_dishes" && pendingQueueCount > 0;
                   const preview = getDishlistPreviewDishes(dishlist);
                   return (
-                    <button
+                    <motion.div
                       key={dishlist.id}
+                      className="relative"
+                      animate={dishlistManagementMode ? { rotate: [-0.7, 0.7, -0.7] } : { rotate: 0 }}
+                      transition={dishlistManagementMode ? { duration: 0.18, repeat: Infinity, ease: "easeInOut" } : { duration: 0.12 }}
+                    >
+                    <button
                       type="button"
-                      onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
-                      className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? "aspect-square" : ""} ${
+                      onPointerDown={startDishlistLongPress}
+                      onPointerUp={clearDishlistLongPress}
+                      onPointerCancel={clearDishlistLongPress}
+                      onPointerLeave={clearDishlistLongPress}
+                      onClick={() => {
+                        if (dishlistLongPressTriggeredRef.current) {
+                          dishlistLongPressTriggeredRef.current = false;
+                          return;
+                        }
+                        if (dishlistManagementMode) return;
+                        if (hasPendingBadge) {
+                          openPendingDishlistQueue();
+                          return;
+                        }
+                        isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
+                      }}
+                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? "aspect-square" : ""} ${
                         darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"
                       }`}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
-                        {!isTagDishlist ? <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" /> : null}
+                        {!isTagDishlist ? (
+                          <span className="relative shrink-0">
+                            <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem]" />
+                            {hasPendingBadge ? (
+                              <span className="absolute -right-2.5 -top-2.5 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-[#151515] bg-[#E64646] px-1 text-[10px] font-black leading-none text-white shadow-[0_6px_14px_rgba(230,70,70,0.45)]">
+                                {pendingQueueCount > 99 ? "99+" : pendingQueueCount}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : null}
                       </div>
                       {isTagDishlist ? (
                         <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} t={t} />
@@ -2667,6 +2753,27 @@ export default function Profile() {
                       )}
                       <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                     </button>
+                    {dishlistManagementMode ? (
+                      <div className="absolute inset-x-2 top-1/2 z-20 flex -translate-y-1/2 justify-between pointer-events-none">
+                        <button
+                          type="button"
+                          onClick={() => moveDishlistInProfile(dishlist.id, -1)}
+                          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-black/75 text-white shadow-lg"
+                          aria-label="Move dishlist left"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveDishlistInProfile(dishlist.id, 1)}
+                          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-black/75 text-white shadow-lg"
+                          aria-label="Move dishlist right"
+                        >
+                          ›
+                        </button>
+                      </div>
+                    ) : null}
+                    </motion.div>
                   );
                 })}
                 <button

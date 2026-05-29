@@ -167,11 +167,14 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
-function TagDishlistPreview({ dishlist }) {
+function TagDishlistPreview({ dishlist, darkMode = false }) {
+  const active = Number(dishlist?.count || 0) > 0;
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
   return (
-    <div className="flex aspect-square items-center justify-center p-4 text-center">
+    <div className={`flex aspect-square items-center justify-center rounded-[1.1rem] border-2 p-4 text-center ${
+      darkMode ? getDarkTagChipClass(dishlist.tag, active) : getTagChipClass(dishlist.tag, active)
+    }`}>
       {Icon ? <Icon className={`h-[5.35rem] w-[5.35rem] shrink-0 ${decor.iconClass || ""}`} strokeWidth={2.05} /> : null}
     </div>
   );
@@ -901,8 +904,6 @@ export default function PublicProfile() {
 
   const baseDishlists = [
     { id: "saved", name: "Your Classics", type: "system", dishes: savedDishes, count: savedDishes.length },
-    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
-    { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
     {
       id: "all_dishes",
       name: "All dishes",
@@ -910,6 +911,8 @@ export default function PublicProfile() {
       dishes: allDishesCollection,
       count: allDishesCollection.length,
     },
+    { id: "uploaded", name: "Uploaded", type: "system", dishes, count: dishes.length },
+    { id: "to_try", name: "To Try", type: "system", dishes: toTryCollection, count: toTryCollection.length },
   ].map(normalizeProfileDishlist);
   const tagDishlists = buildDefaultTagDishlists(customDishlists).map(normalizeProfileDishlist);
   const nonTagCustomDishlists = customDishlists.filter((dishlist) => dishlist.type !== "tag_system");

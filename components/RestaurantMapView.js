@@ -669,6 +669,29 @@ export default function RestaurantMapView({
   const getGroupDishUsers = (group) =>
     (Array.isArray(group?.users) ? group.users : []).filter((groupUser) => (groupUser.dishes || []).some((dish) => dish?.id));
 
+  const getSortedGroupUsers = (group) => {
+    const users = Array.isArray(group?.users) ? [...group.users] : [];
+    return users.sort((a, b) => {
+      const aFollowed = mapUserMatchesIdSet(a, followingIdSet) ? 1 : 0;
+      const bFollowed = mapUserMatchesIdSet(b, followingIdSet) ? 1 : 0;
+      if (aFollowed !== bFollowed) return bFollowed - aFollowed;
+      const aOwn = mapUserMatchesIdSet(a, ownIdSet) ? 1 : 0;
+      const bOwn = mapUserMatchesIdSet(b, ownIdSet) ? 1 : 0;
+      if (aOwn !== bOwn) return bOwn - aOwn;
+      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    });
+  };
+
+  const getGroupDishes = (groupUsers) =>
+    groupUsers
+      .flatMap((groupUser) =>
+        (groupUser.dishes || []).map((dish) => ({
+          dish,
+          user: groupUser,
+        }))
+      )
+      .filter((item) => item.dish?.id);
+
   const getGroupRating = (group) => {
     const ratings = (Array.isArray(group?.users) ? group.users : [])
       .flatMap((groupUser) => groupUser.dishes || [])
@@ -768,9 +791,23 @@ export default function RestaurantMapView({
     );
   };
 
-  const renderActiveRestaurantCard = () => (
+  const renderActiveRestaurantCard = (group = selectedGroup, keyValue = group?.placeId) => {
+    if (!group) return null;
+    const cardUsers = group.placeId === selectedGroup?.placeId ? selectedGroupUsers : getSortedGroupUsers(group);
+    const cardDishUsers = cardUsers.filter((groupUser) => (groupUser.dishes || []).some((dish) => dish?.id));
+    const cardGroupDishes = group.placeId === selectedGroup?.placeId ? selectedGroupDishes : getGroupDishes(cardUsers);
+    const cardRating = group.placeId === selectedGroup?.placeId
+      ? selectedGroupRating
+      : (() => {
+          const ratings = cardGroupDishes
+            .map((item) => Math.max(0, Math.min(5, Number(item.dish?.rating) || 0)))
+            .filter((rating) => rating > 0);
+          return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
+        })();
+
+    return (
     <motion.div
-      key={selectedGroup.placeId}
+      key={keyValue}
       data-restaurant-active-card="true"
       custom={sheetDirection}
       initial={{
@@ -810,27 +847,27 @@ export default function RestaurantMapView({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <MapPin size={15} className="shrink-0 text-[#E64646]" />
-            {selectedGroup.googleMapsUrl ? (
+            {group.googleMapsUrl ? (
               <a
-                href={selectedGroup.googleMapsUrl}
+                href={group.googleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="truncate text-[1rem] font-semibold text-black underline decoration-black/30 underline-offset-2"
                 onClick={(event) => event.stopPropagation()}
               >
-                {selectedGroup.name}
+                {group.name}
               </a>
             ) : (
-              <div className="truncate text-[1rem] font-semibold text-black">{selectedGroup.name}</div>
+              <div className="truncate text-[1rem] font-semibold text-black">{group.name}</div>
             )}
           </div>
           <div className="mt-1 flex items-center gap-2">
-            <RatingStars value={selectedGroupRating} size="text-[0.95rem]" readOnly />
+            <RatingStars value={cardRating} size="text-[0.95rem]" readOnly />
             <span className="text-[11px] font-bold text-black/45">
-              {selectedDishUsers.length} {t(selectedDishUsers.length === 1 ? "person count" : "people count")}
+              {cardDishUsers.length} {t(cardDishUsers.length === 1 ? "person count" : "people count")}
             </span>
           </div>
-          <div className="mt-1 text-xs leading-5 text-black/52">{selectedGroup.address || "Pinned restaurant"}</div>
+          <div className="mt-1 text-xs leading-5 text-black/52">{group.address || "Pinned restaurant"}</div>
         </div>
         <button
           type="button"
@@ -842,16 +879,16 @@ export default function RestaurantMapView({
         </button>
       </div>
 
-      {selectedDishUsers.length ? (
+      {cardDishUsers.length ? (
         <div
           className="mt-3 flex min-h-0 flex-1 touch-pan-y flex-col gap-4 overflow-y-auto overscroll-y-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {selectedDishUsers.map((dishUser) => {
+          {cardDishUsers.map((dishUser) => {
             const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
             if (!userDishes.length) return null;
             return (
-              <div key={`${selectedGroup.placeId}-${dishUser.id}`} className="min-w-0">
+              <div key={`${group.placeId}-${dishUser.id}`} className="min-w-0">
                 <button
                   type="button"
                   onClick={() => dishUser.id && router.push(`/profile/${encodeURIComponent(dishUser.id)}`)}
@@ -891,7 +928,7 @@ export default function RestaurantMapView({
                 >
                   {userDishes.map((dish) => (
                     <button
-                      key={`${selectedGroup.placeId}-${dishUser.id}-${dish.id}`}
+                      key={`${group.placeId}-${dishUser.id}-${dish.id}`}
                       type="button"
                       onClick={() => openDish(dish)}
                   className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
@@ -923,10 +960,10 @@ export default function RestaurantMapView({
         </div>
       ) : null}
 
-      {selectedGroupUsers.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
+      {cardUsers.some((mapUser) => mapUser.leaderboardAnswers?.[0]) ? (
         <div className="mt-3 flex max-w-full touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
-          {selectedGroupUsers.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
-            <div key={`${selectedGroup.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
+          {cardUsers.filter((mapUser) => mapUser.leaderboardAnswers?.[0]).map((mapUser) => (
+            <div key={`${group.placeId}-${mapUser.id}-leaderboard`} className="w-40 shrink-0 snap-start">
                 <button
                   type="button"
                   onClick={() => router.push(`/leaderboard/${mapUser.leaderboardAnswers[0].questionId}`)}
@@ -936,7 +973,7 @@ export default function RestaurantMapView({
                     {mapUser.leaderboardAnswers[0].questionTitle || "Leaderboard"}
                   </div>
                   <div className="mt-2 truncate text-[13px] font-bold text-[#FFB4B4]">
-                    {mapUser.leaderboardAnswers[0].text || selectedGroup.name}
+                    {mapUser.leaderboardAnswers[0].text || group.name}
                   </div>
                   <div className="mt-2 inline-flex items-center rounded-full border border-[#E64646]/35 bg-[#E64646]/18 px-2 py-1 text-[10px] font-black text-[#FFD7D7]">
                     {Math.max(0, Number(mapUser.leaderboardAnswers[0].voteCount || 0))} voti
@@ -947,7 +984,8 @@ export default function RestaurantMapView({
         </div>
       ) : null}
     </motion.div>
-  );
+    );
+  };
 
   return (
     <div className={embedded ? `h-full w-full overflow-hidden ${className}` : `restaurant-accent-border min-h-[22rem] overflow-hidden rounded-[2rem] border-2 bg-[#F4EFE6] shadow-[0_24px_50px_rgba(0,0,0,0.10)] ${className}`}>
@@ -1127,9 +1165,7 @@ export default function RestaurantMapView({
                   }}
                 >
                   {carouselWindowItems.map(({ group, offset, key }) => (
-                    group.placeId === selectedGroup.placeId && offset === 0
-                      ? renderActiveRestaurantCard()
-                      : renderRestaurantPreviewCard(group, offset < 0 ? -1 : 1, key)
+                    renderActiveRestaurantCard(group, key)
                   ))}
                 </div>
               ) : (

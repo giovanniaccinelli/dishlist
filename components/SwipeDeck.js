@@ -1139,8 +1139,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 580;
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const cardWidth = Math.min(viewportWidth, 448);
-      const oldTargetX = direction * (viewportWidth + 180);
-      const targetX = direction * (cardWidth + 24);
+      const targetX = direction * (cardWidth + 28);
       const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
       const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
@@ -1148,9 +1147,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const targetRotate = releaseRotate;
-      const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
-      const exitDistance = Math.max(1, Math.abs(targetX - startX));
-      const duration = Math.max(1.05, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
+      const duration = 1.34;
       outgoingClearedRef.current = false;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
@@ -1425,9 +1422,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               exit={{ opacity: 0 }}
               transition={{
-                x: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
-                y: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
-                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
+                x: { type: "tween", duration: outgoingSwipe.duration, ease: "linear" },
+                y: { type: "tween", duration: outgoingSwipe.duration, ease: "linear" },
+                rotate: { type: "tween", duration: outgoingSwipe.duration, ease: "linear" },
                 opacity: { duration: 0.12 },
               }}
               style={{

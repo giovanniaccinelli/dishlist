@@ -136,6 +136,9 @@ function PlateIcon({ className = "" }) {
 function PastaPlateIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M8.8 9.6c-.8-.9-.5-1.8.2-2.5.7-.8.9-1.5.1-2.3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.72" />
+      <path d="M12 9.1c-.9-1-.5-1.9.2-2.7.8-.8.9-1.6.1-2.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.72" />
+      <path d="M15.2 9.5c-.7-.8-.5-1.7.2-2.4.7-.7.8-1.4.1-2.2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.72" />
       <ellipse cx="12" cy="16.4" rx="8.2" ry="4.4" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.65" />
       <ellipse cx="12" cy="16" rx="5.7" ry="2.45" fill="none" stroke="currentColor" strokeWidth="1.25" opacity="0.7" />
       <path d="M7.2 14.9c1.4-2 3.7-3.1 6.5-2.6 2 .4 3.2 1.5 3.8 2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -339,8 +342,8 @@ function ChiliIcon({ className = "" }) {
         strokeWidth="1.75"
         strokeLinejoin="round"
       />
-      <path d="M16.7 6.5c-.2-1.6.4-2.8 1.7-3.6" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M16.7 6.5c1-.4 1.9-.2 2.8.4" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M16.4 6.3c-.2-1.6.5-2.8 1.8-3.5" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M16.4 6.3c1-.4 1.9-.2 2.8.4" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

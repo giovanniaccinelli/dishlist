@@ -355,21 +355,45 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const autoResetRequestedRef = useRef(false);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
+  const dragTiltFactor = useMotionValue(0);
   const resetDragPosition = useCallback(() => {
     dragX.stop();
     dragY.stop();
     dragX.set(0);
     dragY.set(0);
+    dragTiltFactor.set(0);
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
         dragX.stop();
         dragY.stop();
         dragX.set(0);
         dragY.set(0);
+        dragTiltFactor.set(0);
       });
     }
-  }, [dragX, dragY]);
-  const cardRotate = useTransform(dragX, [-260, 0, 260], [-6, 0, 6]);
+  }, [dragTiltFactor, dragX, dragY]);
+  const updateDragTiltFactor = useCallback((event) => {
+    const target = event.target;
+    if (
+      typeof Element !== "undefined" &&
+      target instanceof Element &&
+      target.closest("[data-no-drag='true']")
+    ) {
+      dragTiltFactor.set(0);
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    const halfHeight = Math.max(1, rect.height / 2);
+    const fromCenter = (event.clientY - centerY) / halfHeight;
+    const deadZone = 0.14;
+    const rawFactor = Math.abs(fromCenter) < deadZone ? 0 : Math.max(-1, Math.min(1, fromCenter));
+    dragTiltFactor.set(rawFactor);
+  }, [dragTiltFactor]);
+  const cardRotate = useTransform([dragX, dragTiltFactor], ([x, factor]) => {
+    const rotate = (x / 260) * 8 * factor;
+    return Math.max(-8, Math.min(8, rotate));
+  });
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
@@ -1422,6 +1446,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             transformOrigin: "50% 50%",
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
+          }}
+          onPointerDownCapture={updateDragTiltFactor}
+          onTouchStartCapture={(event) => {
+            const touch = event.touches?.[0];
+            if (!touch) return;
+            updateDragTiltFactor({
+              target: event.target,
+              currentTarget: event.currentTarget,
+              clientY: touch.clientY,
+            });
           }}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative z-30 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}

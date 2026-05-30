@@ -352,6 +352,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const mediaUnlockedRef = useRef(false);
   const mediaUnlockInFlightRef = useRef(false);
   const cardBackTapRef = useRef(null);
+  const cardBackTapCancelledRef = useRef(false);
   const cardSidePreferenceRef = useRef(new Map());
   const autoResetRequestedRef = useRef(false);
   const dragTiltFactorRef = useRef(0);
@@ -1305,7 +1306,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none" />
               <MessageCircle size={28} strokeWidth={2.15} />
             </div>
-            <div className="relative inline-flex h-14 w-10 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
+            <div className="relative inline-flex h-14 w-10 -translate-x-1 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]">
               <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{Number(dish.likes || 0) > 0 ? Number(dish.likes || 0) : ""}</span>
               <Heart size={31} strokeWidth={2.2} />
             </div>
@@ -1501,6 +1502,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             y: freezeCurrentMotion ? 0 : dragY,
             rotate: freezeCurrentMotion ? 0 : cardRotate,
             transformOrigin: "50% 50%",
+            willChange: "transform",
+            backfaceVisibility: "hidden",
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
@@ -1773,13 +1776,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   type="button"
                   className="absolute inset-0 z-10"
                   onPointerDown={(e) => {
+                    cardBackTapCancelledRef.current = false;
                     cardBackTapRef.current = { x: e.clientX, y: e.clientY };
+                  }}
+                  onPointerMove={(e) => {
+                    const start = cardBackTapRef.current;
+                    if (!start) return;
+                    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) {
+                      cardBackTapCancelledRef.current = true;
+                    }
                   }}
                   onPointerUp={(e) => {
                     const start = cardBackTapRef.current;
                     cardBackTapRef.current = null;
                     const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) : 0;
-                    if (moved > 10) return;
+                    if (moved > 10 || cardBackTapCancelledRef.current) return;
                     e.stopPropagation();
                     e.preventDefault();
                     setCardBackVisible(true);
@@ -1787,6 +1798,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    if (cardBackTapCancelledRef.current) {
+                      cardBackTapCancelledRef.current = false;
+                      return;
+                    }
                     setCardBackVisible(true);
                   }}
                   style={{ touchAction: "manipulation" }}

@@ -1150,7 +1150,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const targetRotate = releaseRotate;
-      const duration = 0.94;
+      const duration = 0.7;
       outgoingClearedRef.current = false;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
@@ -1178,6 +1178,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         mass: 0.72,
       }).finished,
       animate(dragY, 0, {
+        type: "spring",
+        stiffness: 360,
+        damping: 32,
+        mass: 0.72,
+      }).finished,
+      animate(cardRotate, 0, {
         type: "spring",
         stiffness: 360,
         damping: 32,

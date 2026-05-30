@@ -303,10 +303,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const SWIPE_EJECT_THRESHOLD = 104;
-  const SWIPE_EJECT_VELOCITY = 760;
-  const SWIPE_PROJECTED_THRESHOLD = 150;
-  const SWIPE_MIN_ACTUAL_TRAVEL = 64;
+  const SWIPE_EJECT_THRESHOLD = 88;
+  const SWIPE_EJECT_VELOCITY = 680;
+  const SWIPE_PROJECTED_THRESHOLD = 128;
+  const SWIPE_MIN_ACTUAL_TRAVEL = 52;
   const initialDeck = formatDeckDishes(dishes);
   const initialDeckIndex = initialDeck.length > 0 ? Math.max(0, Math.min(initialIndex, initialDeck.length - 1)) : 0;
 
@@ -1150,7 +1150,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const targetRotate = releaseRotate;
-      const duration = 0.6;
+      const duration = 0.5;
       outgoingClearedRef.current = false;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,

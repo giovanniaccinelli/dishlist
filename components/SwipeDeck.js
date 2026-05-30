@@ -354,10 +354,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const cardSidePreferenceRef = useRef(new Map());
   const autoResetRequestedRef = useRef(false);
   const dragTiltFactorRef = useRef(0);
+  const outgoingClearedRef = useRef(false);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const cardRotate = useMotionValue(0);
-  const unlockSwipeDeck = useCallback(() => {
+  const finishOutgoingSwipe = useCallback(() => {
+    if (outgoingClearedRef.current) return;
+    outgoingClearedRef.current = true;
+    setOutgoingSwipe(null);
     setPromotedCardMotionLocked(false);
     setIsEjecting(false);
   }, []);
@@ -1148,6 +1152,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
       const exitDistance = Math.max(1, Math.abs(targetX - startX));
       const duration = Math.max(1.05, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
+      outgoingClearedRef.current = false;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
@@ -1372,8 +1377,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       return;
     }
     resetDragPosition();
-    setOutgoingSwipe(null);
-    setPromotedCardMotionLocked(false);
+    finishOutgoingSwipe();
   };
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
@@ -1435,8 +1439,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 backfaceVisibility: "hidden",
               }}
               onAnimationComplete={() => {
-                setOutgoingSwipe(null);
-                unlockSwipeDeck();
+                finishOutgoingSwipe();
               }}
               onUpdate={(latest) => {
                 const x = Number(latest.x || 0);
@@ -1444,7 +1447,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   outgoingSwipe?.unlockX &&
                   Math.abs(x) >= Math.abs(outgoingSwipe.unlockX)
                 ) {
-                  unlockSwipeDeck();
+                  finishOutgoingSwipe();
                 }
               }}
             >

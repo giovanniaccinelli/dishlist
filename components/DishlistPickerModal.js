@@ -158,7 +158,7 @@ export default function DishlistPickerModal({
                         {t("Salvato")}
                       </div>
                     ) : null}
-                    <div className="mt-1 truncate text-[1.55rem] font-black leading-none">
+                    <div className={`mt-1 truncate leading-none ${isSortingCard ? "text-[1.34rem] font-bold" : "text-[1.55rem] font-black"}`}>
                       {dishPreview?.name || dishName}
                     </div>
                   </div>

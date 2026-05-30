@@ -926,7 +926,19 @@ export default function PublicProfile() {
       dishes: dishlist.dishes || [],
     })).map(normalizeProfileDishlist),
   ];
-  const allDishlists = localDishlists.map(normalizeProfileDishlist);
+  const storedDishlistOrder = Array.isArray(profileUser?.profileDishlistOrder) ? profileUser.profileDishlistOrder : [];
+  const orderRank = new Map(storedDishlistOrder.map((id, index) => [id, index]));
+  const allDishlists = localDishlists
+    .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
+    .sort((a, b) => {
+      const aCount = Number(a.count || 0);
+      const bCount = Number(b.count || 0);
+      if (aCount !== bCount) return bCount - aCount;
+      const aRank = orderRank.has(a.id) ? orderRank.get(a.id) : Number.POSITIVE_INFINITY;
+      const bRank = orderRank.has(b.id) ? orderRank.get(b.id) : Number.POSITIVE_INFINITY;
+      return aRank - bRank || a.fallbackRank - b.fallbackRank;
+    })
+    .map(({ fallbackRank, ...dishlist }) => dishlist);
   const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
   const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
 
@@ -1286,10 +1298,7 @@ export default function PublicProfile() {
       {showingDishlistOverview ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {[
-              ...allDishlists.filter((dishlist) => dishlist.type === "system" || dishlist.type === "tag_system"),
-              ...allDishlists.filter((dishlist) => dishlist.type !== "system" && dishlist.type !== "tag_system"),
-            ].map((dishlist) => {
+            {allDishlists.map((dishlist) => {
               const isMap = dishlist.type === "map";
               const isTagDishlist = dishlist.type === "tag_system";
               const preview = getDishlistPreviewDishes(dishlist);

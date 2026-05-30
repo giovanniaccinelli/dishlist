@@ -1971,6 +1971,9 @@ export default function Profile() {
   const allDishlists = localDishlists
     .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
     .sort((a, b) => {
+      const aCount = Number(a.count || 0);
+      const bCount = Number(b.count || 0);
+      if (aCount !== bCount) return bCount - aCount;
       const aRank = orderRank.has(a.id) ? orderRank.get(a.id) : Number.POSITIVE_INFINITY;
       const bRank = orderRank.has(b.id) ? orderRank.get(b.id) : Number.POSITIVE_INFINITY;
       return aRank - bRank || a.fallbackRank - b.fallbackRank;

@@ -1149,7 +1149,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetY = Math.max(-viewportHeight * 0.42, Math.min(viewportHeight * 0.42, projectedTargetY));
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
-      const targetRotate = releaseRotate;
+      const continuedRotate = Math.abs(releaseRotate) > 0.5 ? releaseRotate * 1.22 : releaseRotate;
+      const targetRotate = Math.max(-22, Math.min(22, continuedRotate));
       const duration = 0.5;
       outgoingClearedRef.current = false;
       setOutgoingSwipe({
@@ -1261,15 +1262,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
             </div>
           </div>
-          {showStoryHistoryCounter ? (
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
+            {showStoryHistoryCounter ? (
               <div className="no-accent-border inline-flex h-8 items-center gap-1 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md self-center">
                 <StoryStatIcon size={12} />
                 <span>:</span>
                 <span>{previewStoryPushCount}</span>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
           {isRestaurantDish(dish) && previewRestaurantLabel ? (
             <div
               className="restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"

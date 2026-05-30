@@ -398,14 +398,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const centerY = rect.top + rect.height / 2;
     const halfHeight = Math.max(1, rect.height / 2);
     const fromCenter = (event.clientY - centerY) / halfHeight;
-    const deadZone = 0.05;
-    const rawFactor = Math.abs(fromCenter) < deadZone ? 0 : Math.max(-1, Math.min(1, -fromCenter));
+    const distance = Math.min(1, Math.abs(fromCenter));
+    const rawFactor = fromCenter === 0 ? 0 : Math.sign(-fromCenter) * Math.min(1, Math.max(0.38, distance * 1.35));
     dragTiltFactorRef.current = rawFactor;
   }, []);
   const updateDragRotation = useCallback(() => {
     const x = dragX.get();
-    const rotate = (x / 220) * 11 * dragTiltFactorRef.current;
-    cardRotate.set(Math.max(-11, Math.min(11, rotate)));
+    const rotate = (x / 170) * 18 * dragTiltFactorRef.current;
+    cardRotate.set(Math.max(-18, Math.min(18, rotate)));
   }, [cardRotate, dragX]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
@@ -1140,14 +1140,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const cardWidth = Math.min(viewportWidth, 448);
       const oldTargetX = direction * (viewportWidth + 180);
-      const targetX = direction * (cardWidth + 72);
-      const unlockX = direction * (cardWidth * 0.74);
+      const targetX = direction * (cardWidth + 24);
       const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
       const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
       const targetY = Math.max(-viewportHeight * 0.42, Math.min(viewportHeight * 0.42, projectedTargetY));
       const liveRotate = cardRotate.get();
-      const releaseRotate = Math.max(-8, Math.min(8, Number.isFinite(liveRotate) ? liveRotate : 0));
+      const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const targetRotate = releaseRotate;
       const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
       const exitDistance = Math.max(1, Math.abs(targetX - startX));
@@ -1163,7 +1162,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         rotateStart: releaseRotate,
         rotateEnd: targetRotate,
         duration,
-        unlockX,
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
       });
@@ -1440,15 +1438,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               onAnimationComplete={() => {
                 finishOutgoingSwipe();
-              }}
-              onUpdate={(latest) => {
-                const x = Number(latest.x || 0);
-                if (
-                  outgoingSwipe?.unlockX &&
-                  Math.abs(x) >= Math.abs(outgoingSwipe.unlockX)
-                ) {
-                  finishOutgoingSwipe();
-                }
               }}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}

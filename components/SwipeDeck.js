@@ -1454,8 +1454,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {renderImage(outgoingSwipe.card, { preview: true })}
               {renderPreviewChrome(outgoingSwipe.card)}
               {outgoingSwipe.targetX > 0 ? (
-                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22">
-                  <div className="flex h-48 w-48 scale-110 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm">
+                <>
+                  <div className="pointer-events-none absolute inset-0 z-[11] bg-[#23C268]/22" />
+                  <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                    <div className="flex h-48 w-48 scale-110 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm">
                     {typeof onRightSwipe === "function" ? (
                       <>
                         <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-[#23C268]">
@@ -1466,14 +1468,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     ) : (
                       <Plus size={110} strokeWidth={2.35} className="text-[#23C268]" />
                     )}
+                    </div>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30">
-                  <div className="flex h-48 w-48 scale-110 items-center justify-center rounded-full border-4 border-white/80 bg-black/30 text-[110px] font-light leading-none text-white backdrop-blur-sm">
-                    ×
+                <>
+                  <div className="pointer-events-none absolute inset-0 z-[11] bg-black/30" />
+                  <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                    <div className="flex h-48 w-48 scale-110 items-center justify-center rounded-full border-4 border-white/80 bg-black/30 text-[110px] font-light leading-none text-white backdrop-blur-sm">
+                      ×
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </motion.div>
           ) : null}
@@ -1507,39 +1513,45 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           className={`dish-card-shell pressable-card relative z-30 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && !outgoingSwipe && (
-            <motion.div
-              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22"
-              style={{ opacity: rightCueOpacity }}
-            >
+            <>
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-[11] bg-[#23C268]/22"
+                style={{ opacity: rightCueOpacity }}
+              />
               <motion.div
                 style={{ scale: rightCueScale }}
-                className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm"
+                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
               >
-                {typeof onRightSwipe === "function" ? (
-                  <>
-                    <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-[#23C268]">
-                      All dishes
-                    </div>
-                    <Plus size={92} strokeWidth={2.35} className="text-[#23C268]" />
-                  </>
-                ) : (
-                  <Plus size={110} strokeWidth={2.35} className="text-[#23C268]" />
-                )}
+                <div className="flex h-48 w-48 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm">
+                  {typeof onRightSwipe === "function" ? (
+                    <>
+                      <div className="mb-2 text-[1.15rem] font-black uppercase tracking-[0.1em] text-[#23C268]">
+                        All dishes
+                      </div>
+                      <Plus size={92} strokeWidth={2.35} className="text-[#23C268]" />
+                    </>
+                  ) : (
+                    <Plus size={110} strokeWidth={2.35} className="text-[#23C268]" />
+                  )}
+                </div>
               </motion.div>
-            </motion.div>
+            </>
           )}
           {!outgoingSwipe ? (
-            <motion.div
-              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30"
-              style={{ opacity: leftCueOpacity }}
-            >
+            <>
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-[11] bg-black/30"
+                style={{ opacity: leftCueOpacity }}
+              />
               <motion.div
                 style={{ scale: leftCueScale }}
-                className="w-48 h-48 rounded-full border-4 border-white/80 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white text-[110px] leading-none font-light"
+                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
               >
-                ×
+                <div className="flex h-48 w-48 items-center justify-center rounded-full border-4 border-white/80 bg-black/30 text-[110px] font-light leading-none text-white backdrop-blur-sm">
+                  ×
+                </div>
               </motion.div>
-            </motion.div>
+            </>
           ) : null}
           {!darkMode ? (
             <div

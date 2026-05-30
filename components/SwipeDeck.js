@@ -708,6 +708,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel);
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
+  const nextCardOpacity = useTransform(dragX, [-22, -10, 0, 10, 22], [1, 0, 0, 0, 1]);
 
   const startCardVideo = useCallback((video) => {
     if (!video) return () => {};
@@ -1143,11 +1144,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 580;
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const cardWidth = Math.min(viewportWidth, 448);
-      const targetX = direction * (cardWidth + 28);
-      const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
-      const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
-      const projectedTargetY = startY + (targetX - startX) * slope;
-      const targetY = Math.max(-viewportHeight * 0.42, Math.min(viewportHeight * 0.42, projectedTargetY));
+      const vectorX = Math.abs(startX) > 6 ? startX : direction * 80;
+      const vectorY = Number.isFinite(startY) ? startY : 0;
+      const vectorLength = Math.max(1, Math.hypot(vectorX, vectorY));
+      const targetDistance = Math.max(cardWidth + 28, viewportHeight * 0.7);
+      const targetX = (vectorX / vectorLength) * targetDistance;
+      const targetY = Math.max(-viewportHeight * 0.7, Math.min(viewportHeight * 0.7, (vectorY / vectorLength) * targetDistance));
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const continuedRotate = Math.abs(releaseRotate) > 0.5 ? releaseRotate * 1.22 : releaseRotate;
@@ -1418,7 +1420,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
-            style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
+            style={{ scale: nextCardScale, opacity: nextCardOpacity, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {renderImage(nextCard, {
               preview: true,
@@ -1602,9 +1604,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 top-0 z-[24] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
+              style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
             />
           ) : null}
-          <div className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}`}>
+          <div
+            className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}`}
+            style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+          >
             {darkMode ? (
               <div className="flex min-w-0 items-center gap-2 text-white">
                 <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 ${restaurantAccentBorder} bg-black/35 flex items-center justify-center text-sm font-bold`}>
@@ -1713,6 +1719,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 ? `no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md`
                 : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
               }
+              style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
             >
               <Users size={13} strokeWidth={2.25} />
               <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
@@ -1837,11 +1844,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     height: "42%",
                     background:
                       "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
+                    backfaceVisibility: "hidden",
+                    transform: "translateZ(0)",
+                    willChange: "transform, opacity",
                   }}
                 />
               ) : null}
               {!visibleRecipe ? (
-                <div className={`absolute left-5 right-5 text-white z-20`} style={{ bottom: textBottom }}>
+                <div
+                  className={`absolute left-5 right-5 text-white z-20`}
+                  style={{ bottom: textBottom, backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+                >
                   {!darkMode ? (
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`w-7 h-7 rounded-full border-2 ${restaurantAccentBorder} bg-white/20 overflow-hidden flex items-center justify-center text-xs font-bold`}>
@@ -2171,7 +2184,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           </motion.div>
 
           {!visibleRestaurantMap && actionLabel && !hasBottomActionRow ? (
-            <div className={`absolute right-6 z-30 flex items-center gap-1.5`} style={{ bottom: actionBottom }}>
+            <div
+              className={`absolute right-6 z-30 flex items-center gap-1.5`}
+              style={{ bottom: actionBottom, backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+            >
               <button
                 type="button"
                 data-no-drag="true"

@@ -128,8 +128,8 @@ function FancyStarsIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path d="M12 4.3 13.7 8l4 .45-2.95 2.7.78 3.95L12 13.05 8.47 15.1l.78-3.95-2.95-2.7L10.3 8 12 4.3Z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.55" strokeLinejoin="round" />
-      <path d="M5.2 12.2 6 13.9l1.85.22-1.35 1.25.35 1.82-1.65-.95-1.65.95.35-1.82-1.35-1.25 1.85-.22.8-1.7Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
-      <path d="M18.8 12.2 19.6 13.9l1.85.22-1.35 1.25.35 1.82-1.65-.95-1.65.95.35-1.82-1.35-1.25 1.85-.22.8-1.7Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
+      <path d="M4.8 9.35 5.82 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
+      <path d="M19.2 9.35 20.22 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
     </svg>
   );
 }

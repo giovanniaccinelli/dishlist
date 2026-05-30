@@ -22,7 +22,6 @@ import {
   Sprout,
   Timer,
   Trophy,
-  Utensils,
   Users,
   Wheat,
   X,
@@ -233,6 +232,16 @@ function FastFoodIcon({ className = "" }) {
   );
 }
 
+function FancyStarsIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 4.3 13.7 8l4 .45-2.95 2.7.78 3.95L12 13.05 8.47 15.1l.78-3.95-2.95-2.7L10.3 8 12 4.3Z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.55" strokeLinejoin="round" />
+      <path d="M5.2 12.2 6 13.9l1.85.22-1.35 1.25.35 1.82-1.65-.95-1.65.95.35-1.82-1.35-1.25 1.85-.22.8-1.7Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
+      <path d="M18.8 12.2 19.6 13.9l1.85.22-1.35 1.25.35 1.82-1.65-.95-1.65.95.35-1.82-1.35-1.25 1.85-.22.8-1.7Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function PizzaSliceIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -358,7 +367,7 @@ const TAG_DECOR = {
   fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
   premium: { icon: CoinStackIcon, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
   veg: { icon: Leaf, iconClass: "text-[#33A047]", pillClass: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
-  fancy: { icon: Utensils, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
+  fancy: { icon: FancyStarsIcon, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
   budget: { icon: WalletIcon, iconClass: "text-[#9B6A4A]", pillClass: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
   winter: { icon: Snowflake, iconClass: "text-[#3C89C9]", pillClass: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
   "late night": { icon: MoonStar, iconClass: "text-[#5E54C7]", pillClass: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },

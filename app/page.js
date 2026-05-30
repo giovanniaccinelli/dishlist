@@ -29,7 +29,7 @@ import {
   saveDishToUserList,
 } from "./lib/firebaseHelpers";
 import SaversModal from "../components/SaversModal";
-import { Bell, ChevronLeft, ChevronRight, Hand, Heart, MessageCircle, Send, UserPlus, Users, Utensils, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Hand, Heart, MessageCircle, Plus, Send, UserPlus, Users, Utensils, X } from "lucide-react";
 import ShareModal from "../components/ShareModal";
 import DishlistPickerModal from "../components/DishlistPickerModal";
 import StoryViewerModal from "../components/StoryViewerModal";
@@ -95,7 +95,7 @@ const ACTIVITY_STYLE = {
   follow: { color: "#38BDF8", bg: "rgba(56,189,248,0.12)", border: "rgba(56,189,248,0.28)" },
   post: { color: "#F0A623", bg: "rgba(240,166,35,0.13)", border: "rgba(240,166,35,0.28)" },
   comment: { color: "#2BD36B", bg: "rgba(43,211,107,0.12)", border: "rgba(43,211,107,0.26)" },
-  save: { color: "#E64646", bg: "rgba(230,70,70,0.13)", border: "rgba(230,70,70,0.28)" },
+  save: { color: "#2BD36B", bg: "rgba(43,211,107,0.12)", border: "rgba(43,211,107,0.28)" },
   like: { color: "#FF5A7A", bg: "rgba(255,90,122,0.13)", border: "rgba(255,90,122,0.3)" },
 };
 const ACTIVITY_INITIAL_LIMIT = 30;
@@ -1123,7 +1123,7 @@ export default function Feed() {
         return {
           id: `${kind}-${event.dishId}-${event.actorId}`,
           kind,
-          icon: Heart,
+          icon: kind === "like" ? Heart : Plus,
           actor: actor?.displayName || actor?.name || "Someone",
           text: t(kind === "like" ? "liked your dish" : "saved your dish"),
           detail: event.dishName || "",
@@ -1233,7 +1233,7 @@ export default function Feed() {
                 return {
                   id: `save-${dish.id}-${event.saverId}`,
                   kind: "save",
-                  icon: Heart,
+                  icon: Plus,
                   actor: saver?.displayName || saver?.name || "Someone",
                   text: t("saved your dish"),
                   detail: dish.name || "",
@@ -1259,7 +1259,7 @@ export default function Feed() {
                 .map(({ saver, savedAt }) => ({
                   id: `save-${dish.id}-${saver.id}`,
                   kind: "save",
-                  icon: Heart,
+                  icon: Plus,
                   actor: saver.displayName || saver.name || "Someone",
                   text: t("saved your dish"),
                   detail: dish.name || "",

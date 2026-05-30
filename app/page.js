@@ -1868,11 +1868,11 @@ export default function Feed() {
                   <X size={18} />
                 </button>
               </div>
-              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto p-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="max-h-[calc(100dvh-9rem)] overflow-y-auto p-3.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {activityLoading && !activityItems.length ? (
                   <div className="py-10 text-center text-sm font-semibold text-white/42">{t("Loading updates...")}</div>
                 ) : activityItems.length ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {activityItems.slice(0, activityVisibleCount).map((item) => {
                       const Icon = item.icon || Bell;
                       const fresh = Number(item.timeMs || 0) > Number(activitySeenAt || 0);
@@ -1882,23 +1882,23 @@ export default function Feed() {
                           key={item.id}
                           href={item.href || "#"}
                           onClick={() => setActivityOpen(false)}
-                          className="flex items-center gap-3 rounded-[1.35rem] border px-3 py-3.5 text-left transition active:scale-[0.99]"
+                          className="flex items-start gap-3.5 rounded-[1.45rem] border px-3.5 py-4 text-left transition active:scale-[0.99]"
                           style={{ borderColor: fresh ? style.border : "rgba(255,255,255,0.08)", background: fresh ? style.bg : "rgba(255,255,255,0.045)" }}
                         >
-                          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: style.bg, color: style.color }}>
-                            <Icon size={18} />
+                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ background: style.bg, color: style.color }}>
+                            <Icon size={19} />
                             {fresh ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[0.94rem] font-black">
+                          <div className="min-w-0 flex-1 pt-0.5">
+                            <div className="text-[1.02rem] font-black leading-snug">
                               {item.actor}
                               <span className="font-semibold text-white/62"> {item.text}</span>
                             </div>
-                            {item.detail ? <div className="mt-1 truncate text-xs font-semibold text-white/42">{item.detail}</div> : null}
+                            {item.detail ? <div className="mt-1.5 text-[0.86rem] font-semibold leading-snug text-white/48">{item.detail}</div> : null}
+                            {item.timeMs ? (
+                              <div className="mt-2 inline-flex rounded-full bg-white/7 px-2.5 py-1 text-[11px] font-bold text-white/45">{formatActivityTime(item.timeMs)}</div>
+                            ) : null}
                           </div>
-                          {item.timeMs ? (
-                            <div className="shrink-0 rounded-full bg-white/7 px-2 py-1 text-[11px] font-bold text-white/45">{formatActivityTime(item.timeMs)}</div>
-                          ) : null}
                         </Link>
                       );
                     })}

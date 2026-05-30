@@ -99,7 +99,7 @@ export default function DishlistPickerModal({
           onClick={onClose}
         >
           <motion.div
-          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
+          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${isSortingCard ? "pb-3" : "pb-5"} ${
               isSortingCard ? "h-[88dvh] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
@@ -369,7 +369,7 @@ export default function DishlistPickerModal({
                 </div>
                 {mode === "multiple" ? (
                   <div className={`sticky bottom-0 flex shrink-0 items-center justify-between gap-3 border-t ${
-                    isSortingCard ? "mt-2 pt-3" : "mt-4 pt-4"
+                    isSortingCard ? "mt-1 pt-2" : "mt-4 pt-4"
                   } ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
@@ -385,7 +385,7 @@ export default function DishlistPickerModal({
                       onClick={onConfirm}
                       className={`rounded-full px-6 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
                         isSortingCard
-                          ? "border border-[#2BD36B] bg-[#2BD36B] py-3 text-black shadow-[0_14px_30px_rgba(43,211,107,0.24)]"
+                          ? "border border-[#2BD36B]/70 bg-[#12351F] py-2.5 text-[#E7FFF0] shadow-[0_12px_26px_rgba(0,0,0,0.22)]"
                           : darkMode || isSwipeCard
                             ? "border border-[#45C47A]/45 bg-[#1FA463] py-3.5 text-white"
                             : "bg-[#111111] py-3.5 text-white"

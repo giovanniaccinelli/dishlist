@@ -11,6 +11,7 @@ import {
   Sprout,
   Sun,
   Timer,
+  Utensils,
   Wheat,
 } from "lucide-react";
 
@@ -121,21 +122,6 @@ function FastFoodIcon({ className = "" }) {
   );
 }
 
-function FancyPlateIcon({ className = "" }) {
-  return (
-    <svg viewBox="0 0 26 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <circle cx="12" cy="12" r="4.05" strokeWidth="1.8" />
-      <circle cx="12" cy="12" r="6.8" strokeWidth="1.8" opacity="0.88" />
-      <path d="M1.35 3.55V8.7" strokeWidth="1.7" />
-      <path d="M0.2 3.55V6.2" strokeWidth="1.25" />
-      <path d="M2.5 3.55V6.2" strokeWidth="1.25" />
-      <path d="M1.35 8.7V19" strokeWidth="1.7" />
-      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" strokeWidth="1.7" />
-      <path d="M23.6 3.55V19" strokeWidth="1.7" />
-    </svg>
-  );
-}
-
 function PizzaSliceIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -223,10 +209,10 @@ function CoinStackIcon({ className = "" }) {
 function ChiliIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M17.3 6.6c-1.8 1.7-4.6 2.3-7.3 4.1-2.9 2-4.2 5.4-2.5 7.1 1.6 1.7 5.1.6 7.4-2.2 2.2-2.7 2.6-6.1 2.4-9Z" fill="currentColor" fillOpacity="0.13" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
-      <path d="M8.1 17.1c3.4-.5 6.2-3.4 7-7.4" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.8" />
-      <path d="M16.7 7c-.2-1.7.4-3 1.6-3.9" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16.8 7c1.1-.3 2-.1 2.9.5" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M17.6 6.1c-.7 4.9-2.6 8.7-5.8 11.2-2.1 1.7-4.7 2.1-6 .8-1-1.1-.2-2.9 1.8-3.5 2.4-.8 4.6-2.2 6.4-4.3 1.1-1.2 2-2.7 2.7-4.4l.9.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.85" strokeLinejoin="round" />
+      <path d="M7.1 17.2c3.5-.9 6.9-4.1 8.6-8.6" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.78" />
+      <path d="M17.2 6.4c-.2-1.6.4-2.8 1.7-3.6" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M17.2 6.4c1-.4 1.9-.2 2.8.4" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }
@@ -241,7 +227,7 @@ export const TAG_DECOR = {
   fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
   premium: { icon: CoinStackIcon, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
   veg: { icon: Leaf, iconClass: "text-[#33A047]", pillClass: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },
-  fancy: { icon: FancyPlateIcon, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
+  fancy: { icon: Utensils, iconClass: "text-[#7C4CC2]", pillClass: "bg-[#F1E8FF] text-[#5C2D91] border-[#CEB5F6]" },
   budget: { icon: WalletIcon, iconClass: "text-[#9B6A4A]", pillClass: "bg-[#F3E8E2] text-[#7A4B35] border-[#D6B6A6]" },
   winter: { icon: Snowflake, iconClass: "text-[#3C89C9]", pillClass: "bg-[#E3F2FF] text-[#1E4F7A] border-[#A9D2F5]" },
   "late night": { icon: MoonStar, iconClass: "text-[#5E54C7]", pillClass: "bg-[#E8E6FF] text-[#3E358C] border-[#B8B2F3]" },

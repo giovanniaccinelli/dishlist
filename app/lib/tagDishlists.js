@@ -13,6 +13,11 @@ export function getTagForDishlistId(id) {
   return TAG_OPTIONS.find((tag) => getTagDishlistId(tag) === value) || "";
 }
 
+function formatTagDishlistName(tag) {
+  const value = String(tag || "").trim();
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
+}
+
 export function buildDefaultTagDishlists(existingLists = []) {
   const byId = new Map((existingLists || []).filter((list) => list?.id).map((list) => [list.id, list]));
   return TAG_OPTIONS.map((tag, index) => {
@@ -22,7 +27,7 @@ export function buildDefaultTagDishlists(existingLists = []) {
     return {
       ...existing,
       id,
-      name: tag,
+      name: formatTagDishlistName(tag),
       type: "tag_system",
       tag,
       tagRank: index,

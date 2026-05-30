@@ -369,7 +369,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       });
     }
   }, [dragX, dragY]);
-  const cardRotate = useTransform(dragX, [-260, 0, 260], [-11, 0, 11]);
+  const cardRotate = useTransform(dragX, [-260, 0, 260], [-8, 0, 8]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
@@ -1095,21 +1095,31 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       }
       if (trackSwipes && typeof onSwiped === "function") onSwiped(dish.id);
 
-      const targetX =
-        direction * (typeof window !== "undefined" ? window.innerWidth + 180 : 760);
-      const targetY = Math.max(-180, Math.min(180, info.offset.y));
       const releaseX = dragX.get();
       const releaseY = dragY.get();
+      const startX = Number.isFinite(releaseX) ? releaseX : info.offset.x;
+      const startY = Number.isFinite(releaseY) ? releaseY : info.offset.y;
+      const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 580;
+      const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
+      const targetX = direction * (viewportWidth + 180);
+      const travelReferenceX = Math.abs(startX) > 28 ? startX : info.velocity.x;
+      const travelReferenceY = Math.abs(startX) > 28 ? startY : info.velocity.y * 0.22;
+      const slope = Math.abs(travelReferenceX) > 1 ? travelReferenceY / travelReferenceX : 0;
+      const projectedTargetY = startY + (targetX - startX) * slope;
+      const targetY = Math.max(-viewportHeight * 0.45, Math.min(viewportHeight * 0.45, projectedTargetY));
+      const releaseRotate = Math.max(-10, Math.min(10, (startX / 260) * 8));
+      const velocityRotate = Math.max(-7, Math.min(7, info.velocity.x / 1400));
+      const targetRotate = Math.max(-18, Math.min(18, releaseRotate + velocityRotate));
       const duration = 1.72;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
-        startX: Number.isFinite(releaseX) ? releaseX : info.offset.x,
-        startY: Number.isFinite(releaseY) ? releaseY : info.offset.y,
+        startX,
+        startY,
         targetX,
         targetY,
-        rotateStart: Math.max(-11, Math.min(11, ((Number.isFinite(releaseX) ? releaseX : info.offset.x) / 260) * 11)),
-        rotateEnd: direction * 16,
+        rotateStart: releaseRotate,
+        rotateEnd: targetRotate,
         duration,
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
@@ -1380,7 +1390,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
                 opacity: { duration: 0.12 },
               }}
-              style={{ borderColor: outgoingSwipe.borderColor }}
+              style={{ borderColor: outgoingSwipe.borderColor, transformOrigin: "50% 50%" }}
               onAnimationComplete={() => setOutgoingSwipe(null)}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}
@@ -1397,6 +1407,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             x: freezeCurrentMotion ? 0 : dragX,
             y: freezeCurrentMotion ? 0 : dragY,
             rotate: freezeCurrentMotion ? 0 : cardRotate,
+            transformOrigin: "50% 50%",
             touchAction: visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}

@@ -353,16 +353,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const cardBackTapRef = useRef(null);
   const cardSidePreferenceRef = useRef(new Map());
   const autoResetRequestedRef = useRef(false);
-  const swipeUnlockTimerRef = useRef(null);
   const dragTiltFactorRef = useRef(0);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const cardRotate = useMotionValue(0);
   const unlockSwipeDeck = useCallback(() => {
-    if (swipeUnlockTimerRef.current) {
-      clearTimeout(swipeUnlockTimerRef.current);
-      swipeUnlockTimerRef.current = null;
-    }
     setPromotedCardMotionLocked(false);
     setIsEjecting(false);
   }, []);
@@ -418,10 +413,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!rawLink) return "";
     return /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
   }, [deck, currentIndex]);
-
-  useEffect(() => () => {
-    if (swipeUnlockTimerRef.current) clearTimeout(swipeUnlockTimerRef.current);
-  }, []);
 
   useEffect(() => {
     const formatted = formatDeckDishes(dishes);
@@ -1145,7 +1136,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const cardWidth = Math.min(viewportWidth, 448);
       const oldTargetX = direction * (viewportWidth + 180);
-      const targetX = direction * (cardWidth + 18);
+      const targetX = direction * (cardWidth + 72);
+      const unlockX = direction * (cardWidth * 0.74);
       const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
       const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
@@ -1155,7 +1147,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetRotate = releaseRotate;
       const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
       const exitDistance = Math.max(1, Math.abs(targetX - startX));
-      const duration = Math.max(0.64, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
+      const duration = Math.max(1.05, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,
@@ -1166,15 +1158,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         rotateStart: releaseRotate,
         rotateEnd: targetRotate,
         duration,
+        unlockX,
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
       });
       setPromotedCardMotionLocked(true);
       resetDragPosition();
       advanceCard();
-      const unlockDelay = Math.max(220, Math.min(520, duration * 520));
-      if (swipeUnlockTimerRef.current) clearTimeout(swipeUnlockTimerRef.current);
-      swipeUnlockTimerRef.current = setTimeout(unlockSwipeDeck, unlockDelay);
       return;
     }
     void Promise.all([
@@ -1447,6 +1437,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onAnimationComplete={() => {
                 setOutgoingSwipe(null);
                 unlockSwipeDeck();
+              }}
+              onUpdate={(latest) => {
+                const x = Number(latest.x || 0);
+                if (
+                  outgoingSwipe?.unlockX &&
+                  Math.abs(x) >= Math.abs(outgoingSwipe.unlockX)
+                ) {
+                  unlockSwipeDeck();
+                }
               }}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}

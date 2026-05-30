@@ -1125,7 +1125,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       setPromotedCardMotionLocked(true);
       resetDragPosition();
       advanceCard();
-      setIsEjecting(false);
       return;
     }
     void Promise.all([
@@ -1367,6 +1366,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         <AnimatePresence>
           {outgoingSwipe ? (
             <motion.div
+              layout={false}
               key={outgoingSwipe.key}
               className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
               initial={{
@@ -1388,8 +1388,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 rotate: { type: "tween", duration: outgoingSwipe.duration, ease: [0.18, 0.72, 0.26, 1] },
                 opacity: { duration: 0.12 },
               }}
-              style={{ borderColor: outgoingSwipe.borderColor, transformOrigin: "50% 50%" }}
-              onAnimationComplete={() => setOutgoingSwipe(null)}
+              style={{
+                borderColor: outgoingSwipe.borderColor,
+                transformOrigin: "50% 50%",
+                willChange: "transform",
+                backfaceVisibility: "hidden",
+              }}
+              onAnimationComplete={() => {
+                setOutgoingSwipe(null);
+                setIsEjecting(false);
+              }}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}
             </motion.div>

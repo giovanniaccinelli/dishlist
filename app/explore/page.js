@@ -301,13 +301,14 @@ function HeartIcon({ className = "" }) {
 function ClinkingGlassesIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M6.2 4.5h4.8l-.55 4.35a2.4 2.4 0 0 1-3.7 0L6.2 4.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-      <path d="M13 4.5h4.8l-.55 4.35a2.4 2.4 0 0 1-3.7 0L13 4.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-      <path d="M8.6 10.1v6.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M15.4 10.1v6.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M6.5 18.2h4.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M13.3 18.2h4.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M10.8 8.2h2.4" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M6.2 4.1h4.5l-.7 5.2a2.05 2.05 0 0 1-3.1 0L6.2 4.1Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
+      <path d="M13.3 4.1h4.5l-.7 5.2a2.05 2.05 0 0 1-3.1 0L13.3 4.1Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.65" strokeLinejoin="round" />
+      <path d="M8.45 10.35v5.9" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M15.55 10.35v5.9" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M6.35 18.35h4.2" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M13.45 18.35h4.2" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M7 6.8h3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.8" />
+      <path d="M14.1 6.8h3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.8" />
     </svg>
   );
 }
@@ -343,11 +344,11 @@ function SaladIcon({ className = "" }) {
 function ChopsticksIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M7.2 4.3 16.4 20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M10.5 3.7 18.9 18.1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M5.1 15.6c2.5-1.6 5.6-1.7 8.2-.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M4.8 18.2h8.9" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M6.4 12.9c1.3-.5 2.7-.5 4.1-.1" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.8" />
+      <path d="M5.2 12.1h13.6l-1.45 4.3a4.1 4.1 0 0 1-3.9 2.8h-2.9a4.1 4.1 0 0 1-3.9-2.8L5.2 12.1Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M6.1 12.1c1.25 1.35 3.25 2.15 5.9 2.15s4.65-.8 5.9-2.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.85" />
+      <path d="M8.4 4.3 14.7 12" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M12.1 3.8 17.4 11.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M8.2 16.5h7.6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.75" />
     </svg>
   );
 }

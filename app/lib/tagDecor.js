@@ -185,8 +185,6 @@ function ClinkingGlassesIcon({ className = "" }) {
       <path d="M15.55 10.35v5.9" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
       <path d="M6.35 18.35h4.2" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
       <path d="M13.45 18.35h4.2" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
-      <path d="M7 6.8h3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.8" />
-      <path d="M14.1 6.8h3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.8" />
     </svg>
   );
 }
@@ -224,8 +222,8 @@ function ChopsticksIcon({ className = "" }) {
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path d="M5.2 12.1h13.6l-1.45 4.3a4.1 4.1 0 0 1-3.9 2.8h-2.9a4.1 4.1 0 0 1-3.9-2.8L5.2 12.1Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
       <path d="M6.1 12.1c1.25 1.35 3.25 2.15 5.9 2.15s4.65-.8 5.9-2.15" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity="0.85" />
-      <path d="M8.4 4.3 14.7 12" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
-      <path d="M12.1 3.8 17.4 11.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M16.7 4.3 10.4 12" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M13 3.8 7.6 11.6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
       <path d="M8.2 16.5h7.6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.75" />
     </svg>
   );

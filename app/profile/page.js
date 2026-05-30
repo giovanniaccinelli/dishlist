@@ -3963,9 +3963,9 @@ export default function Profile() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/38" : "text-black/38"}`}>
-                    Dishlists
+                    {t("Dishlists")}
                   </div>
-                  <h3 className={`mt-2 text-[1.9rem] leading-none font-bold ${darkMode ? "text-white" : "text-black"}`}>Your DishLists</h3>
+                  <h3 className={`mt-2 text-[1.9rem] leading-none font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Your DishLists")}</h3>
                 </div>
                 <button
                   type="button"
@@ -3979,7 +3979,7 @@ export default function Profile() {
                   }`}
                 >
                   <Pencil size={14} />
-                  {dishlistsEditMode ? "Done" : "Edit"}
+                  {dishlistsEditMode ? t("Done") : t("Edit")}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -4476,13 +4476,13 @@ export default function Profile() {
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B34747]">
-                    Delete Dishlist
+                    {t("Delete Dishlist")}
                   </p>
                   <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight text-black">
-                    Delete {dishlistDeleteTarget.name}?
+                    {t("Delete")} {getDishlistDisplayName(dishlistDeleteTarget, t)}?
                   </h3>
                   <p className="mt-1 text-sm text-black/55">
-                    This removes the dishlist itself, but keeps the dishes in your profile.
+                    {t("This removes the dishlist itself, but keeps the dishes in your profile.")}
                   </p>
                 </div>
                 <button
@@ -4500,7 +4500,7 @@ export default function Profile() {
                   onClick={() => setDishlistDeleteTarget(null)}
                   className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -4508,7 +4508,7 @@ export default function Profile() {
                   className="inline-flex items-center gap-2 rounded-full bg-[#C93A3A] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(201,58,58,0.25)]"
                 >
                   <Trash2 size={16} />
-                  Delete
+                  {t("Delete")}
                 </button>
               </div>
             </motion.div>

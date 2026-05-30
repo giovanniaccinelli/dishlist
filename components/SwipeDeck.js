@@ -386,13 +386,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const centerY = rect.top + rect.height / 2;
     const halfHeight = Math.max(1, rect.height / 2);
     const fromCenter = (event.clientY - centerY) / halfHeight;
-    const deadZone = 0.14;
-    const rawFactor = Math.abs(fromCenter) < deadZone ? 0 : Math.max(-1, Math.min(1, fromCenter));
+    const deadZone = 0.05;
+    const rawFactor = Math.abs(fromCenter) < deadZone ? 0 : Math.max(-1, Math.min(1, -fromCenter));
     dragTiltFactor.set(rawFactor);
   }, [dragTiltFactor]);
   const cardRotate = useTransform([dragX, dragTiltFactor], ([x, factor]) => {
-    const rotate = (x / 260) * 8 * factor;
-    return Math.max(-8, Math.min(8, rotate));
+    const rotate = (x / 220) * 11 * factor;
+    return Math.max(-11, Math.min(11, rotate));
   });
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
@@ -1285,9 +1285,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
           style={{
-            height: "36%",
+            height: "42%",
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.54) 0%, rgba(0,0,0,0.48) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
           }}
         />
         <div className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
@@ -1761,9 +1761,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{
-                    height: "36%",
+                    height: "42%",
                     background:
-                      "linear-gradient(to top, rgba(0,0,0,0.54) 0%, rgba(0,0,0,0.48) 42%, rgba(0,0,0,0.26) 72%, rgba(0,0,0,0) 100%)",
+                      "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
                   }}
                 />
               ) : null}

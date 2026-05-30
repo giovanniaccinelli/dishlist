@@ -128,8 +128,8 @@ function FancyStarsIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path d="M12 4.3 13.7 8l4 .45-2.95 2.7.78 3.95L12 13.05 8.47 15.1l.78-3.95-2.95-2.7L10.3 8 12 4.3Z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.55" strokeLinejoin="round" />
-      <path d="M4.8 9.35 5.82 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
-      <path d="M19.2 9.35 20.22 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
+      <path d="M3.8 9.35 4.82 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
+      <path d="M20.2 9.35 21.22 11.55l2.4.28-1.78 1.62.47 2.37-2.11-1.23-2.11 1.23.47-2.37-1.78-1.62 2.4-.28 1.02-2.2Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.32" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -179,28 +179,53 @@ function HeartIcon({ className = "" }) {
 function ClinkingGlassesIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M6.6 4.4h5.1l-.5 4.1a3 3 0 0 1-3.1 2.4L6.6 4.4Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" transform="rotate(-14 9.15 7.65)" />
-      <path d="M12.3 4.4h5.1l-1.5 6.5a3 3 0 0 1-3.1-2.4l-.5-4.1Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" transform="rotate(14 14.85 7.65)" />
-      <path d="M9.6 10.7v5.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M14.4 10.7v5.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M7.6 18.2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M12.4 18.2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-      <path d="M10.9 8.4 13.1 7" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+      <path d="M6.2 4.5h4.8l-.55 4.35a2.4 2.4 0 0 1-3.7 0L6.2 4.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M13 4.5h4.8l-.55 4.35a2.4 2.4 0 0 1-3.7 0L13 4.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M8.6 10.1v6.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M15.4 10.1v6.1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M6.5 18.2h4.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M13.3 18.2h4.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M10.8 8.2h2.4" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
     </svg>
   );
 }
 
 function NoWheatIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M12 4.5v14.5" />
-      <path d="M12 7c-1.3 0-2.5-.8-3.1-2" />
-      <path d="M12 9.5c-1.5 0-2.8-.9-3.6-2.2" />
-      <path d="M12 12c-1.4 0-2.6-.8-3.3-2" />
-      <path d="M12 7c1.3 0 2.5-.8 3.1-2" />
-      <path d="M12 9.5c1.5 0 2.8-.9 3.6-2.2" />
-      <path d="M12 12c1.4 0 2.6-.8 3.3-2" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M12 4.5v14.5" stroke="#D9A400" />
+      <path d="M12 7c-1.3 0-2.5-.8-3.1-2" stroke="#D9A400" />
+      <path d="M12 9.5c-1.5 0-2.8-.9-3.6-2.2" stroke="#D9A400" />
+      <path d="M12 12c-1.4 0-2.6-.8-3.3-2" stroke="#D9A400" />
+      <path d="M12 7c1.3 0 2.5-.8 3.1-2" stroke="#D9A400" />
+      <path d="M12 9.5c1.5 0 2.8-.9 3.6-2.2" stroke="#D9A400" />
+      <path d="M12 12c1.4 0 2.6-.8 3.3-2" stroke="#D9A400" />
       <path d="M5 19 19 5" stroke="#D72D2D" strokeWidth="2.3" />
+    </svg>
+  );
+}
+
+function SaladIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.3 11.2h13.4l-1.35 5.1a4.2 4.2 0 0 1-4.05 3.1h-2.6a4.2 4.2 0 0 1-4.05-3.1L5.3 11.2Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M8.1 10.8c-.6-1.8.5-3.5 2.5-4 1.4 1.5 1.3 3.3-.1 4.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13.1 10.9c-.3-2.1 1.1-3.8 3.1-4 1.1 1.8.6 3.4-1 4.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9.1" cy="14.2" r="0.8" fill="currentColor" opacity="0.85" />
+      <circle cx="12.1" cy="15.2" r="0.75" fill="currentColor" opacity="0.75" />
+      <circle cx="15.2" cy="14" r="0.8" fill="currentColor" opacity="0.85" />
+    </svg>
+  );
+}
+
+function ChopsticksIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M7.2 4.3 16.4 20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M10.5 3.7 18.9 18.1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M5.1 15.6c2.5-1.6 5.6-1.7 8.2-.2" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M4.8 18.2h8.9" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M6.4 12.9c1.3-.5 2.7-.5 4.1-.1" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.8" />
     </svg>
   );
 }
@@ -254,8 +279,8 @@ export const TAG_DECOR = {
   ethnic: { icon: Globe2, iconClass: "text-[#3B82F6]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#60A5FA]" },
   seafood: { icon: Fish, iconClass: "text-[#0891B2]", pillClass: "bg-[#CFFAFE] text-[#155E75] border-[#22D3EE]" },
   aesthetic: { icon: Camera, iconClass: "text-[#DB2777]", pillClass: "bg-[#FCE7F3] text-[#831843] border-[#F472B6]" },
-  fresh: { icon: null, pillClass: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]" },
-  asian: { icon: null, pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]" },
+  fresh: { icon: SaladIcon, iconClass: "text-[#10B981]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#D1FAE5] text-[#065F46] border-[#34D399]" },
+  asian: { icon: ChopsticksIcon, iconClass: "text-[#DC2626]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F87171]" },
   fried: { icon: FriedIcon, iconClass: "text-[#C46A1A]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFEDD5] text-[#7C2D12] border-[#FB923C]" },
   delivery: { icon: DeliveryBagIcon, iconClass: "text-[#0EA5E9]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#E0F2FE] text-[#075985] border-[#38BDF8]" },
   dessert: { icon: DessertIcon, iconClass: "text-[#DB2777]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]" },

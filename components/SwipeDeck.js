@@ -1103,7 +1103,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const cardWidth = Math.min(viewportWidth, 448);
       const oldTargetX = direction * (viewportWidth + 180);
-      const targetX = direction * ((viewportWidth + cardWidth) / 2 + 48);
+      const targetX = direction * (cardWidth + 18);
       const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
       const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
@@ -1112,7 +1112,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const targetRotate = Math.max(-16, Math.min(16, releaseRotate * 1.35));
       const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
       const exitDistance = Math.max(1, Math.abs(targetX - startX));
-      const duration = Math.max(0.86, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
+      const duration = Math.max(0.64, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,

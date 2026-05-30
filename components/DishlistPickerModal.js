@@ -99,8 +99,8 @@ export default function DishlistPickerModal({
           onClick={onClose}
         >
           <motion.div
-          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${isSortingCard ? "pb-0" : "pb-5"} ${
-              isSortingCard ? "h-[min(84dvh,43rem)] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
+          className={`no-accent-border relative flex min-h-0 w-full max-w-md flex-col overflow-hidden rounded-[2rem] border px-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${isSortingCard ? "pb-0" : "pb-5"} ${
+              isSortingCard ? "h-[min(92dvh,50rem)] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
                 ? `text-white ${isSwipeCard || isSortingCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
@@ -196,7 +196,7 @@ export default function DishlistPickerModal({
               </div>
             ) : (
               <>
-                <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto ${isSortingCard ? "px-1 py-1" : "pr-1"}`}>
+                <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto ${isSortingCard ? "px-1 pb-24 pt-1" : "pr-1"}`}>
                   {storyOption ? (
                     <button
                       type="button"
@@ -368,9 +368,7 @@ export default function DishlistPickerModal({
                   })}
                 </div>
                 {mode === "multiple" ? (
-                  <div className={`sticky bottom-0 flex shrink-0 items-center gap-3 border-t ${
-                    isSortingCard ? "mt-1 min-h-[3.55rem] justify-end pb-3 pt-2" : "mt-4 justify-between pt-4"
-                  } ${
+                  <div className={`${isSortingCard ? "absolute bottom-0 left-5 right-5 z-10 flex h-[5.75rem] items-end justify-end gap-3 border-t pb-5 pt-2" : "sticky bottom-0 mt-4 flex shrink-0 items-center justify-between gap-3 border-t pt-4"} ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
                     {isSwipeCard || isSortingCard ? (

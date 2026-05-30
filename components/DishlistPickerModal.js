@@ -8,7 +8,7 @@ import { TAG_DECOR } from "../app/lib/tagDecor";
 import { getTagForDishlistId, isTagDishlistId } from "../app/lib/tagDishlists";
 import { getDarkTagChipClass, getTagChipClass } from "../app/lib/tags";
 
-const PICKER_ORDER = ["saved", "to_try", "uploaded"];
+const PICKER_ORDER = ["all_dishes", "saved", "uploaded", "to_try"];
 
 function StoryStatIcon({ size = 18 }) {
   return (
@@ -32,8 +32,6 @@ function orderPickerLists(lists = [], pinAllDishesFirst = false) {
       if (a.id === "all_dishes") return -1;
       if (b.id === "all_dishes") return 1;
     }
-    if (a.id === "all_dishes") return 1;
-    if (b.id === "all_dishes") return -1;
     const aRank = systemRank.has(a.id) ? systemRank.get(a.id) : 50;
     const bRank = systemRank.has(b.id) ? systemRank.get(b.id) : 50;
     return aRank - bRank;
@@ -82,9 +80,10 @@ export default function DishlistPickerModal({
     { border: "#E94B35", bg: "#FFF0EC", darkBg: "#371813", soft: "rgba(233,75,53,0.16)" },
   ];
   const getAccent = (dishlist, index) => {
+    if (dishlist.id === "all_dishes") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     if (dishlist.id === "saved") return { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" };
     if (dishlist.id === "to_try") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
-    if (dishlist.id === "uploaded") return { border: "#E94B35", bg: "#FFF0EC", darkBg: "#371813", soft: "rgba(233,75,53,0.16)" };
+    if (dishlist.id === "uploaded") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     return accentPalette[index % accentPalette.length];
   };
 

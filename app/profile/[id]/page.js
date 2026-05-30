@@ -57,6 +57,8 @@ import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "../../lib/sessionPageCache";
 
+const CORE_PROFILE_DISHLIST_ORDER = ["saved", "all_dishes", "uploaded", "to_try"];
+
 function StoryStatIcon({ size = 10 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 26 24" fill="none" aria-hidden="true" className="shrink-0">
@@ -928,9 +930,13 @@ export default function PublicProfile() {
   ];
   const storedDishlistOrder = Array.isArray(profileUser?.profileDishlistOrder) ? profileUser.profileDishlistOrder : [];
   const orderRank = new Map(storedDishlistOrder.map((id, index) => [id, index]));
+  const coreOrderRank = new Map(CORE_PROFILE_DISHLIST_ORDER.map((id, index) => [id, index]));
   const allDishlists = localDishlists
     .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
     .sort((a, b) => {
+      const aCoreRank = coreOrderRank.has(a.id) ? coreOrderRank.get(a.id) : Number.POSITIVE_INFINITY;
+      const bCoreRank = coreOrderRank.has(b.id) ? coreOrderRank.get(b.id) : Number.POSITIVE_INFINITY;
+      if (aCoreRank !== bCoreRank) return aCoreRank - bCoreRank;
       const aCount = Number(a.count || 0);
       const bCount = Number(b.count || 0);
       if (aCount !== bCount) return bCount - aCount;

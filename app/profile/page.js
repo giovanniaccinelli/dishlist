@@ -92,6 +92,7 @@ const STORY_CHOOSER_STEPS = [
 const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
 const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
 const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
+const CORE_PROFILE_DISHLIST_ORDER = ["saved", "all_dishes", "uploaded", "to_try"];
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -1968,9 +1969,13 @@ export default function Profile() {
   ];
   const storedDishlistOrder = Array.isArray(profileMeta.profileDishlistOrder) ? profileMeta.profileDishlistOrder : [];
   const orderRank = new Map(storedDishlistOrder.map((id, index) => [id, index]));
+  const coreOrderRank = new Map(CORE_PROFILE_DISHLIST_ORDER.map((id, index) => [id, index]));
   const allDishlists = localDishlists
     .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
     .sort((a, b) => {
+      const aCoreRank = coreOrderRank.has(a.id) ? coreOrderRank.get(a.id) : Number.POSITIVE_INFINITY;
+      const bCoreRank = coreOrderRank.has(b.id) ? coreOrderRank.get(b.id) : Number.POSITIVE_INFINITY;
+      if (aCoreRank !== bCoreRank) return aCoreRank - bCoreRank;
       const aCount = Number(a.count || 0);
       const bCount = Number(b.count || 0);
       if (aCount !== bCount) return bCount - aCount;
@@ -4045,7 +4050,7 @@ export default function Profile() {
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2BD36B] text-white">
                       <Plus size={22} />
                     </div>
-                    <div className="text-sm font-semibold">Create dishlist</div>
+                    <div className="text-sm font-semibold">{t("Create dishlist")}</div>
                   </div>
                 </button>
               </div>
@@ -4078,10 +4083,10 @@ export default function Profile() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
-                    New Dishlist
+                    {t("New Dishlist")}
                   </div>
                   <h3 className={`mt-2 text-[1.7rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                    {createDishlistStep === 0 ? "Name it" : "Add dishes"}
+                    {createDishlistStep === 0 ? t("Name it") : t("Add dishes")}
                   </h3>
                 </div>
                 <button
@@ -4089,7 +4094,7 @@ export default function Profile() {
                   onClick={() => setCreateDishlistOpen(false)}
                   className={`text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}
                 >
-                  Close
+                  {t("Close")}
                 </button>
               </div>
 
@@ -4099,7 +4104,7 @@ export default function Profile() {
                     type="text"
                     value={newDishlistName}
                     onChange={(event) => setNewDishlistName(event.target.value)}
-                    placeholder="Dishlist name"
+                    placeholder={t("Dishlist name")}
                     className={`w-full rounded-full border px-4 py-3 focus:outline-none focus:ring-2 ${
                       darkMode ? "border-white/12 bg-[#1B1B1B] text-white placeholder:text-white/35 focus:ring-white/10" : "border-black/10 bg-[#F7F4ED] text-black focus:ring-black/10"
                     }`}
@@ -4107,7 +4112,7 @@ export default function Profile() {
                   {popularDishlistNames.length ? (
                     <div className="mt-4">
                       <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/42"}`}>
-                        Popular names
+                        {t("Popular names")}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {popularDishlistNames.map((name, index) => (
@@ -4149,7 +4154,7 @@ export default function Profile() {
                       }}
                       className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)]"
                     >
-                      Next
+                      {t("Next")}
                     </button>
                   </div>
                 </>
@@ -4164,7 +4169,7 @@ export default function Profile() {
                         type="text"
                         value={createDishSearch}
                         onChange={(e) => setCreateDishSearch(e.target.value)}
-                        placeholder="Search your dishes"
+                        placeholder={t("Search your dishes")}
                         className={`profile-search-input min-w-0 flex-1 bg-transparent text-base focus:outline-none ${darkMode ? "text-white placeholder:text-white/35" : "text-black placeholder:text-black/35"}`}
                       />
                     </div>
@@ -4211,7 +4216,7 @@ export default function Profile() {
                     {createSourceDishlist ? (
                       <div className="mt-5">
                         <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                          {createDishSearchTerm ? "Search results" : createSourceDishlist.name}
+                          {createDishSearchTerm ? t("Search results") : t(createSourceDishlist.name)}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           {visibleCreateDishes.map((dish) => {
@@ -4241,7 +4246,7 @@ export default function Profile() {
                                   }}
                                 />
                                 <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode ? "bg-[#151515] text-white" : "text-black"}`}>
-                                  {dish.name || "Untitled dish"}
+                                  {dish.name || t("Untitled dish")}
                                 </div>
                               </button>
                             );
@@ -4249,7 +4254,7 @@ export default function Profile() {
                         </div>
                         {visibleCreateDishes.length === 0 ? (
                           <div className="mt-2 rounded-[1rem] border border-dashed border-black/10 bg-white/70 px-4 py-5 text-center text-sm text-black/50">
-                            No matching dishes.
+                            {t("No matching dishes.")}
                           </div>
                         ) : null}
                       </div>
@@ -4262,7 +4267,7 @@ export default function Profile() {
                       className="rounded-full border border-black/12 px-4 py-3 text-sm font-medium text-black/72"
                       disabled={creatingDishlist}
                     >
-                      Back
+                      {t("Back")}
                     </button>
                     <button
                       type="button"
@@ -4270,7 +4275,7 @@ export default function Profile() {
                       disabled={creatingDishlist}
                       className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)] disabled:opacity-60"
                     >
-                      {creatingDishlist ? "Creating..." : `Create (${selectedCreateDishes.length})`}
+                      {creatingDishlist ? t("Creating...") : `${t("Create")} (${selectedCreateDishes.length})`}
                     </button>
                   </div>
                 </>

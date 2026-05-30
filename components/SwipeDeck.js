@@ -1372,6 +1372,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const freezeCurrentMotion = promotedCardMotionLocked;
   const releasePromotedMotionLock = (event) => {
+    if (outgoingSwipe || isEjecting) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     const target = event.target;
     if (
       typeof Element !== "undefined" &&

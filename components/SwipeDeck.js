@@ -1400,6 +1400,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
               onAnimationComplete={() => {
                 setOutgoingSwipe(null);
+                setPromotedCardMotionLocked(false);
                 setIsEjecting(false);
               }}
             >

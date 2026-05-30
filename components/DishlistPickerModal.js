@@ -92,7 +92,7 @@ export default function DishlistPickerModal({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className={`fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex justify-center p-4 ${isSwipeCard || isSortingCard ? "items-center" : "items-end"}`}
+          className={`fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm flex justify-center p-4 ${isSortingCard ? "items-end" : isSwipeCard ? "items-center" : "items-end"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export default function DishlistPickerModal({
         >
           <motion.div
           className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${
-              isSwipeCard || isSortingCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
+              isSortingCard ? "h-[88dvh] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
                 ? `text-white ${isSwipeCard || isSortingCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
@@ -143,7 +143,7 @@ export default function DishlistPickerModal({
               <div className={`mb-4 shrink-0 overflow-hidden rounded-[1.55rem] border ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>
-                <div className="relative h-52 w-full overflow-hidden">
+                <div className={`relative w-full overflow-hidden ${isSortingCard ? "h-40" : "h-52"}`}>
                   <img
                     src={getDishImageUrl(dishPreview)}
                     alt={dishPreview?.name || dishName}
@@ -152,10 +152,12 @@ export default function DishlistPickerModal({
                       event.currentTarget.src = DEFAULT_DISH_IMAGE;
                     }}
                   />
-                  <div className="absolute inset-x-0 bottom-0 flex min-h-[62%] flex-col justify-end bg-gradient-to-t from-black via-black/78 via-55% to-transparent px-4 pb-4 pt-16 text-white">
-                    <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/64">
-                      {t("Salvato")}
-                    </div>
+                  <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/78 via-55% to-transparent px-4 text-white ${isSortingCard ? "min-h-[54%] pb-3 pt-12" : "min-h-[62%] pb-4 pt-16"}`}>
+                    {!isSortingCard ? (
+                      <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/64">
+                        {t("Salvato")}
+                      </div>
+                    ) : null}
                     <div className="mt-1 truncate text-[1.55rem] font-black leading-none">
                       {dishPreview?.name || dishName}
                     </div>
@@ -366,11 +368,13 @@ export default function DishlistPickerModal({
                   })}
                 </div>
                 {mode === "multiple" ? (
-                  <div className={`sticky bottom-0 mt-4 flex shrink-0 items-center justify-between gap-3 border-t pt-4 ${
+                  <div className={`sticky bottom-0 flex shrink-0 items-center justify-between gap-3 border-t ${
+                    isSortingCard ? "mt-2 pt-3" : "mt-4 pt-4"
+                  } ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
                     {isSwipeCard || isSortingCard ? (
-                      <div className="h-2 w-2 rounded-full bg-[#2BD36B]" />
+                      isSortingCard ? <div /> : <div className="h-2 w-2 rounded-full bg-[#2BD36B]" />
                     ) : (
                       <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
                         {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
@@ -379,8 +383,12 @@ export default function DishlistPickerModal({
                     <button
                       type="button"
                       onClick={onConfirm}
-                      className={`rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
-                        darkMode || isSwipeCard || isSortingCard ? "border border-[#45C47A]/45 bg-[#1FA463] text-white" : "bg-[#111111] text-white"
+                      className={`rounded-full px-6 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
+                        isSortingCard
+                          ? "border border-[#2BD36B] bg-[#2BD36B] py-3 text-black shadow-[0_14px_30px_rgba(43,211,107,0.24)]"
+                          : darkMode || isSwipeCard
+                            ? "border border-[#45C47A]/45 bg-[#1FA463] py-3.5 text-white"
+                            : "bg-[#111111] py-3.5 text-white"
                       }`}
                     >
                       {t(resolvedConfirmLabel)}

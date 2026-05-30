@@ -369,7 +369,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       });
     }
   }, [dragX, dragY]);
-  const cardRotate = useTransform(dragX, [-260, 0, 260], [-8, 0, 8]);
+  const cardRotate = useTransform(dragX, [-260, 0, 260], [-6, 0, 6]);
   const swipeAddEnabled = actionLabel === "+" && typeof onAction === "function";
   const rightCueOpacity = useTransform(dragX, [0, 50, 160], [0, 0.25, 0.75]);
   const leftCueOpacity = useTransform(dragX, [0, -50, -160], [0, 0.25, 0.75]);
@@ -1108,8 +1108,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
       const targetY = Math.max(-viewportHeight * 0.42, Math.min(viewportHeight * 0.42, projectedTargetY));
-      const releaseRotate = Math.max(-10, Math.min(10, (startX / 260) * 8));
-      const targetRotate = Math.max(-16, Math.min(16, releaseRotate * 1.35));
+      const liveRotate = typeof cardRotate.get === "function" ? cardRotate.get() : (startX / 260) * 6;
+      const releaseRotate = Math.max(-8, Math.min(8, Number.isFinite(liveRotate) ? liveRotate : 0));
+      const targetRotate = releaseRotate;
       const fullDistance = Math.max(1, Math.abs(oldTargetX - startX));
       const exitDistance = Math.max(1, Math.abs(targetX - startX));
       const duration = Math.max(0.64, Math.min(1.84, 1.84 * (exitDistance / fullDistance)));

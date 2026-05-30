@@ -303,9 +303,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const SWIPE_EJECT_THRESHOLD = 64;
-  const SWIPE_EJECT_VELOCITY = 360;
-  const SWIPE_PROJECTED_THRESHOLD = 78;
+  const SWIPE_EJECT_THRESHOLD = 104;
+  const SWIPE_EJECT_VELOCITY = 760;
+  const SWIPE_PROJECTED_THRESHOLD = 150;
+  const SWIPE_MIN_ACTUAL_TRAVEL = 64;
   const initialDeck = formatDeckDishes(dishes);
   const initialDeckIndex = initialDeck.length > 0 ? Math.max(0, Math.min(initialIndex, initialDeck.length - 1)) : 0;
 
@@ -1097,10 +1098,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (disabled || isEjecting) return;
     const projectedX = info.offset.x + info.velocity.x * 0.28;
     const horizontalTravel = Math.abs(projectedX);
+    const actualHorizontalTravel = Math.abs(info.offset.x);
     const horizontalIntent =
-      Math.abs(info.offset.x) >= SWIPE_EJECT_THRESHOLD ||
-      Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY ||
-      horizontalTravel >= SWIPE_PROJECTED_THRESHOLD;
+      actualHorizontalTravel >= SWIPE_EJECT_THRESHOLD ||
+      (actualHorizontalTravel >= SWIPE_MIN_ACTUAL_TRAVEL &&
+        Math.abs(info.velocity.x) >= SWIPE_EJECT_VELOCITY &&
+        horizontalTravel >= SWIPE_PROJECTED_THRESHOLD);
     const verticalDominant = Math.abs(info.offset.y) > Math.max(90, horizontalTravel * 1.45);
     const shouldEject =
       horizontalIntent && !verticalDominant;
@@ -1147,7 +1150,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const liveRotate = cardRotate.get();
       const releaseRotate = Math.max(-18, Math.min(18, Number.isFinite(liveRotate) ? liveRotate : 0));
       const targetRotate = releaseRotate;
-      const duration = 1.34;
+      const duration = 0.94;
       outgoingClearedRef.current = false;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,

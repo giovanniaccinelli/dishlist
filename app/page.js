@@ -96,6 +96,7 @@ const ACTIVITY_STYLE = {
   post: { color: "#F0A623", bg: "rgba(240,166,35,0.13)", border: "rgba(240,166,35,0.28)" },
   comment: { color: "#2BD36B", bg: "rgba(43,211,107,0.12)", border: "rgba(43,211,107,0.26)" },
   save: { color: "#E64646", bg: "rgba(230,70,70,0.13)", border: "rgba(230,70,70,0.28)" },
+  like: { color: "#FF5A7A", bg: "rgba(255,90,122,0.13)", border: "rgba(255,90,122,0.3)" },
 };
 const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
@@ -1102,12 +1103,12 @@ export default function Feed() {
       ]);
       const userData = userSnap?.exists?.() ? userSnap.data() || {} : {};
       const followers = Array.isArray(userData.followers) ? userData.followers : [];
-      const savedActivityEvents = activitySnap.docs
+      const reactionActivityEvents = activitySnap.docs
         .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
-        .filter((event) => event.kind === "save" && event.actorId && event.actorId !== userId && event.dishId);
-      const [saveActivityUsers, followerUsers] = await Promise.all([
-        getUsersByIds(savedActivityEvents.map((event) => event.actorId)).catch((error) => {
-          console.error("Failed to load timestamped save actors:", error);
+        .filter((event) => ["save", "like"].includes(event.kind) && event.actorId && event.actorId !== userId && event.dishId);
+      const [reactionActivityUsers, followerUsers] = await Promise.all([
+        getUsersByIds(reactionActivityEvents.map((event) => event.actorId)).catch((error) => {
+          console.error("Failed to load timestamped activity actors:", error);
           return [];
         }),
         getUsersByIds(followers).catch((error) => {
@@ -1115,15 +1116,16 @@ export default function Feed() {
           return [];
         }),
       ]);
-      const saveActivityUsersById = new Map(saveActivityUsers.map((actor) => [actor.id, actor]));
-      const saveActivityItems = savedActivityEvents.map((event) => {
-        const actor = saveActivityUsersById.get(event.actorId);
+      const reactionActivityUsersById = new Map(reactionActivityUsers.map((actor) => [actor.id, actor]));
+      const reactionActivityItems = reactionActivityEvents.map((event) => {
+        const actor = reactionActivityUsersById.get(event.actorId);
+        const kind = event.kind === "like" ? "like" : "save";
         return {
-          id: `save-${event.dishId}-${event.actorId}`,
-          kind: "save",
+          id: `${kind}-${event.dishId}-${event.actorId}`,
+          kind,
           icon: Heart,
           actor: actor?.displayName || actor?.name || "Someone",
-          text: t("saved your dish"),
+          text: t(kind === "like" ? "liked your dish" : "saved your dish"),
           detail: event.dishName || "",
           href: `/dish/${event.dishId}?source=uploaded&mode=single`,
           timeMs: timestampToMs(event.createdAt || event.updatedAt),
@@ -1273,7 +1275,7 @@ export default function Feed() {
       const items = [
         ...followerItems,
         ...followedPostItems,
-        ...saveActivityItems,
+        ...reactionActivityItems,
         ...expandedItems,
       ]
         .filter((item) => item.id)

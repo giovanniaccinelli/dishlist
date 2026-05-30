@@ -1102,15 +1102,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 580;
       const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 820;
       const targetX = direction * (viewportWidth + 180);
-      const travelReferenceX = Math.abs(startX) > 28 ? startX : info.velocity.x;
-      const travelReferenceY = Math.abs(startX) > 28 ? startY : info.velocity.y * 0.22;
-      const slope = Math.abs(travelReferenceX) > 1 ? travelReferenceY / travelReferenceX : 0;
+      const referenceX = Math.abs(startX) > 18 ? startX : direction * 80;
+      const slope = Math.abs(referenceX) > 1 ? startY / referenceX : 0;
       const projectedTargetY = startY + (targetX - startX) * slope;
-      const targetY = Math.max(-viewportHeight * 0.45, Math.min(viewportHeight * 0.45, projectedTargetY));
+      const targetY = Math.max(-viewportHeight * 0.42, Math.min(viewportHeight * 0.42, projectedTargetY));
       const releaseRotate = Math.max(-10, Math.min(10, (startX / 260) * 8));
-      const velocityRotate = Math.max(-7, Math.min(7, info.velocity.x / 1400));
-      const targetRotate = Math.max(-18, Math.min(18, releaseRotate + velocityRotate));
-      const duration = 1.72;
+      const targetRotate = Math.max(-16, Math.min(16, releaseRotate * 1.35));
+      const duration = 1.84;
       setOutgoingSwipe({
         key: `${dish?._key || dish?.id || "dish"}-${Date.now()}`,
         card: dish,

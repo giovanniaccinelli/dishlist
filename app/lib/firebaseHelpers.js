@@ -249,6 +249,27 @@ async function recordDishSaveActivity(userId, dishId, payload = null) {
   }
 }
 
+async function recordDishLikeActivity(userId, dishId, payload = null) {
+  const ownerId = dishActivityOwnerId(payload);
+  if (!ownerId || !userId || ownerId === userId || !dishId) return;
+  try {
+    await setDoc(
+      doc(db, "users", ownerId, "activity", `like_${dishId}_${userId}`),
+      {
+        kind: "like",
+        actorId: userId,
+        dishId,
+        dishName: payload?.name || "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn("Failed to record dish like activity:", err);
+  }
+}
+
 async function mergeDishesWithCanonical(dishes = []) {
   const items = (Array.isArray(dishes) ? dishes : []).filter((dish) => dish?.id);
   if (!items.length) return [];
@@ -1653,18 +1674,30 @@ export async function toggleDishLike(dishId, userId) {
         transaction.get(dishRef),
         transaction.get(likeRef),
       ]);
+      const dishData = dishSnap.exists() ? dishSnap.data() || {} : {};
+      const ownerId = dishActivityOwnerId(dishData);
+      const dishName = dishData.name || "";
       const currentCount = Math.max(0, Number(dishSnap.exists() ? dishSnap.data()?.likes || 0 : 0));
       if (likeSnap.exists()) {
         const nextCount = Math.max(0, currentCount - 1);
         transaction.delete(likeRef);
         transaction.set(dishRef, { likes: nextCount }, { merge: true });
-        return { liked: false, count: nextCount };
+        return { liked: false, count: nextCount, ownerId, dishName };
       }
       const nextCount = currentCount + 1;
       transaction.set(likeRef, { userId, createdAt: serverTimestamp() }, { merge: true });
       transaction.set(dishRef, { likes: nextCount }, { merge: true });
-      return { liked: true, count: nextCount };
+      return { liked: true, count: nextCount, ownerId, dishName };
     });
+    if (result?.ownerId && result.ownerId !== userId) {
+      if (result.liked) {
+        await recordDishLikeActivity(userId, dishId, { owner: result.ownerId, name: result.dishName });
+      } else {
+        await deleteDoc(doc(db, "users", result.ownerId, "activity", `like_${dishId}_${userId}`)).catch((err) => {
+          console.warn("Failed to remove dish like activity:", err);
+        });
+      }
+    }
     clearReadCache();
     return result;
   } catch (err) {

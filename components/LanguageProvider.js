@@ -44,6 +44,7 @@ const translations = {
     "commented on your dish": "ha commentato un tuo piatto",
     "commented on your story": "ha commentato una tua storia",
     "saved your dish": "ha salvato un tuo piatto",
+    "liked your dish": "ha messo like a un tuo piatto",
     Leaderboard: "Leaderboard",
     Takes: "Takes",
     "Leaderboard question": "Domanda leaderboard",

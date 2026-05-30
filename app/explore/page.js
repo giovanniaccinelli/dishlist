@@ -135,14 +135,13 @@ function PlateIcon({ className = "" }) {
 function PastaPlateIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <ellipse cx="12" cy="17.1" rx="8" ry="3.3" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M6.9 16.2c.9-2.2 2.7-3.5 5.1-3.5s4.2 1.2 5.1 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M8.3 15.7c.9.8 1.8.8 2.7 0 .8-.8 1.8-.8 2.7 0 .8.8 1.7.8 2.6 0" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
-      <path d="M8.1 13.9c1.2-1 2.5-1.2 3.8-.4 1.4.8 2.7.7 4-.3" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M8.8 11.6c2.2-1.3 4.3-1.4 6.4-.1" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
-      <path d="M9.8 10.2 9.2 4.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M12 9.8 12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M14.2 10.2 14.8 4.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <ellipse cx="12" cy="16.4" rx="8.2" ry="4.4" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.65" />
+      <ellipse cx="12" cy="16" rx="5.7" ry="2.45" fill="none" stroke="currentColor" strokeWidth="1.25" opacity="0.7" />
+      <path d="M7.2 14.9c1.4-2 3.7-3.1 6.5-2.6 2 .4 3.2 1.5 3.8 2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M7.4 15.7c1.1.9 2.2.9 3.3 0s2.2-.9 3.3 0 2.2.9 3.3 0" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      <path d="M8.2 13.8c1-.8 2.1-.9 3.2-.2 1.2.8 2.5.7 3.8-.2" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <path d="M9.1 12.2c1.9-1.1 3.8-1.2 5.8-.1" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" />
+      <circle cx="12.2" cy="12.8" r="1.35" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
 }
@@ -151,8 +150,8 @@ function ItalianFlagIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
       <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="#fff" />
-      <path d="M5.9 5.2h4.25v13.6H5.9a2.4 2.4 0 0 1-2.4-2.4V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#229246" />
-      <path d="M13.85 5.2h4.25a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4h-4.25V5.2Z" fill="#CE2B37" />
+      <path d="M5.9 5.2h3.27v13.6H5.9a2.4 2.4 0 0 1-2.4-2.4V7.6a2.4 2.4 0 0 1 2.4-2.4Z" fill="#229246" />
+      <path d="M14.83 5.2h3.27a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4h-3.27V5.2Z" fill="#CE2B37" />
       <rect x="3.5" y="5.2" width="17" height="13.6" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.28" />
     </svg>
   );
@@ -232,15 +231,15 @@ function FastFoodIcon({ className = "" }) {
 
 function FancyPlateIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <circle cx="12" cy="12" r="4.25" />
-      <circle cx="12" cy="12" r="7.2" />
-      <path d="M3.5 4.5v4.2" />
-      <path d="M2.2 4.5v2.3" />
-      <path d="M4.8 4.5v2.3" />
-      <path d="M3.5 8.7v10.8" />
-      <path d="M20.3 4.5c-2.4 1.1-3.6 3-3.6 5.5v1.6" />
-      <path d="M20.3 4.5v15" />
+    <svg viewBox="0 0 26 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.05" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="6.8" strokeWidth="1.8" opacity="0.88" />
+      <path d="M1.35 3.55V8.7" strokeWidth="1.7" />
+      <path d="M0.2 3.55V6.2" strokeWidth="1.25" />
+      <path d="M2.5 3.55V6.2" strokeWidth="1.25" />
+      <path d="M1.35 8.7V19" strokeWidth="1.7" />
+      <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" strokeWidth="1.7" />
+      <path d="M23.6 3.55V19" strokeWidth="1.7" />
     </svg>
   );
 }
@@ -304,24 +303,13 @@ function HeartIcon({ className = "" }) {
 function ClinkingGlassesIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M7.1 4.8h4.4L10.8 9a3 3 0 0 1-3 .1L7.1 4.8Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12.5 4.8h4.4l-.7 4.3a3 3 0 0 1-3-.1l-.7-4.2Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M9.4 9.1v7.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M14.6 9.1v7.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M7.8 18.2h3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M13 18.2h3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M10.4 7.1 13.6 4.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M10.4 4.8 13.6 7.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.6 4.4h5.1l-.5 4.1a3 3 0 0 1-3.1 2.4L6.6 4.4Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" transform="rotate(-14 9.15 7.65)" />
+      <path d="M12.3 4.4h5.1l-1.5 6.5a3 3 0 0 1-3.1-2.4l-.5-4.1Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" transform="rotate(14 14.85 7.65)" />
+      <path d="M9.6 10.7v5.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M14.4 10.7v5.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M7.6 18.2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M12.4 18.2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M10.9 8.4 13.1 7" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
     </svg>
   );
 }
@@ -358,15 +346,16 @@ function ChiliIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path
-        d="M6.2 15.9c0-4.5 3.1-7.4 7.5-7.4 1.3 0 2.5.3 3.6.9-.2 5.4-3.8 9.3-8.8 9.3-1.5 0-2.3-1.1-2.3-2.8Z"
+        d="M17.3 6.6c-1.8 1.7-4.6 2.3-7.3 4.1-2.9 2-4.2 5.4-2.5 7.1 1.6 1.7 5.1.6 7.4-2.2 2.2-2.7 2.6-6.1 2.4-9Z"
         fill="currentColor"
-        fillOpacity="0.12"
+        fillOpacity="0.13"
         stroke="currentColor"
-        strokeWidth="1.95"
+        strokeWidth="1.9"
         strokeLinejoin="round"
       />
-      <path d="M15.5 8.5c-.2-1.6.3-2.9 1.4-4.1" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M15.8 8.5c1-.3 1.9-.2 2.8.3" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8.1 17.1c3.4-.5 6.2-3.4 7-7.4" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.8" />
+      <path d="M16.7 7c-.2-1.7.4-3 1.6-3.9" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M16.8 7c1.1-.3 2-.1 2.9.5" stroke="#2E9E57" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

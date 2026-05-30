@@ -173,6 +173,15 @@ function getTagDishlistCardClass(dishlist, darkMode = false) {
   return darkMode ? getDarkTagChipClass(dishlist?.tag, active) : getTagChipClass(dishlist?.tag, active);
 }
 
+function getDishlistDisplayName(dishlist, t = (value) => value) {
+  if (dishlist?.type === "tag_system") {
+    const tag = dishlist?.tag || getTagForDishlistId(dishlist?.id);
+    const translated = t(tag || dishlist?.name || "");
+    return translated ? translated.charAt(0).toUpperCase() + translated.slice(1) : translated;
+  }
+  return t(dishlist?.name || "");
+}
+
 function TagDishlistPreview({ dishlist }) {
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
@@ -1315,7 +1324,7 @@ export default function PublicProfile() {
                   className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                    <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                     {!isTagDishlist ? <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" /> : null}
                   </div>
                   {isTagDishlist ? (

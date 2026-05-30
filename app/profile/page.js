@@ -275,6 +275,15 @@ function getTagDishlistCardClass(dishlist, darkMode = false) {
   return darkMode ? getDarkTagChipClass(dishlist?.tag, active) : getTagChipClass(dishlist?.tag, active);
 }
 
+function getDishlistDisplayName(dishlist, t = (value) => value) {
+  if (dishlist?.type === "tag_system") {
+    const tag = dishlist?.tag || getTagForDishlistId(dishlist?.id);
+    const translated = t(tag || dishlist?.name || "");
+    return translated ? translated.charAt(0).toUpperCase() + translated.slice(1) : translated;
+  }
+  return t(dishlist?.name || "");
+}
+
 function TagDishlistPreview({ dishlist }) {
   const decor = TAG_DECOR[String(dishlist?.tag || "").toLowerCase()] || {};
   const Icon = decor.icon;
@@ -2842,7 +2851,7 @@ export default function Profile() {
                       className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                        <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                         {!isTagDishlist ? (
                           <span className="relative shrink-0">
                             <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem]" />
@@ -3006,7 +3015,7 @@ export default function Profile() {
 	              <DishGrid
                 title={
                   <span className="inline-flex items-center gap-2">
-                    {activeDishlist?.name || "All dishes"}
+                    {activeDishlist ? getDishlistDisplayName(activeDishlist, t) : t("All dishes")}
                     {activeDishlist?.type !== "tag_system" ? <SystemDishlistIcon id={activeDishlist?.id} className="h-5 w-5" /> : null}
                   </span>
                 }
@@ -3988,7 +3997,7 @@ export default function Profile() {
                           }}
                           className="no-accent-border min-w-0 flex-1 bg-transparent text-left"
                         >
-                          <div className={`truncate pr-1 text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
+                          <div className={`truncate pr-1 text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                         </button>
                         {dishlistsEditMode && dishlist.type === "custom" ? (
                           <div className="flex shrink-0 items-center gap-1.5">
@@ -4191,7 +4200,7 @@ export default function Profile() {
                                   : "border-black/10 bg-white text-black"
                             }`}
                           >
-                            <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{dishlist.name}</div>
+                            <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                             {dishlist.type === "tag_system" ? (
                               <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} t={t} />
                             ) : (
@@ -4215,7 +4224,7 @@ export default function Profile() {
                     {createSourceDishlist ? (
                       <div className="mt-5">
                         <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                          {createDishSearchTerm ? t("Search results") : t(createSourceDishlist.name)}
+                          {createDishSearchTerm ? t("Search results") : getDishlistDisplayName(createSourceDishlist, t)}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           {visibleCreateDishes.map((dish) => {
@@ -4350,7 +4359,7 @@ export default function Profile() {
                               : "border-black/10 bg-white text-black"
                         }`}
                       >
-                        <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                        <div className={`mb-2 truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                         {dishlist.type === "tag_system" ? (
                           <TagDishlistPreview dishlist={dishlist} darkMode={darkMode} />
                         ) : (
@@ -4374,7 +4383,7 @@ export default function Profile() {
                 {addDishesSourceDishlist ? (
                   <div className="mt-5">
                     <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                      {addDishesSearchTerm ? t("Search results") : t(addDishesSourceDishlist.name)}
+                      {addDishesSearchTerm ? t("Search results") : getDishlistDisplayName(addDishesSourceDishlist, t)}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {visibleAddDishes.map((dish) => {

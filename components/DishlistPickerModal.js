@@ -45,6 +45,15 @@ function getSortingTagCardClass(dishlist, darkMode = false) {
   return darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active);
 }
 
+function getDishlistDisplayName(dishlist, t = (value) => value) {
+  const tag = isTagDishlistId(dishlist?.id) ? getTagForDishlistId(dishlist.id) : dishlist?.tag;
+  if (tag) {
+    const translated = t(tag);
+    return translated ? translated.charAt(0).toUpperCase() + translated.slice(1) : translated;
+  }
+  return t(dishlist?.name || "");
+}
+
 export default function DishlistPickerModal({
   open,
   onClose,
@@ -266,7 +275,7 @@ export default function DishlistPickerModal({
                             style={selected ? { boxShadow: "0 0 0 1px rgba(43,211,107,0.95), 0 14px 28px rgba(0,0,0,0.18)" } : undefined}
                           >
                             <div className="mb-2 flex items-center justify-between gap-2">
-                              <div className={`min-w-0 truncate text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t(dishlist.name)}</div>
+                              <div className={`min-w-0 truncate text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                             </div>
                             {TagIcon ? (
                               <div className="grid aspect-square place-items-center">
@@ -341,7 +350,7 @@ export default function DishlistPickerModal({
                             <span className="inline-flex items-center gap-1.5">
                               {dishlist.id === "saved" ? <Star size={14} className="text-[#D9B550] fill-[#F3D88C]" /> : null}
                               {TagIcon ? <TagIcon className={`h-4 w-4 shrink-0 ${TAG_DECOR[tag]?.iconClass || ""}`} strokeWidth={2.1} /> : null}
-                              <span>{t(dishlist.name)}</span>
+                              <span>{getDishlistDisplayName(dishlist, t)}</span>
                             </span>
                           </div>
                           {!isSwipeCard ? <div className={`mt-0.5 text-xs ${darkMode ? "text-white/55" : "text-black/48"}`}>

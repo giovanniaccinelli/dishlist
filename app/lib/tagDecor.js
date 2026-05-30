@@ -209,8 +209,7 @@ function CoinStackIcon({ className = "" }) {
 function ChiliIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M16.9 6.2c1.4 2.8.4 7.1-2.4 10.1-2.4 2.6-5.9 3.9-8.5 2.4-.7-.4-.8-1.3-.1-1.8 2.4-1.6 4.2-3.7 5.7-6.2 1.2-2.1 2.7-3.8 4.6-4.5h.7Z" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.85" strokeLinejoin="round" />
-      <path d="M6.7 17.8c4.2-1.9 7.7-5.8 9.4-10.1" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" opacity="0.78" />
+      <path d="M16.7 6.1c1.1 3.2-.7 7.8-4 10.6-2.3 2-5.2 2.6-6.8 1.7-.7-.4-.7-1.2 0-1.6 2.5-1.5 4.1-3.6 5.2-6.1 1-2.3 2.8-4.2 5-4.7l.6.1Z" fill="currentColor" fillOpacity="0.13" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
       <path d="M16.7 6.5c-.2-1.6.4-2.8 1.7-3.6" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
       <path d="M16.7 6.5c1-.4 1.9-.2 2.8.4" stroke="#2E9E57" strokeWidth="1.75" strokeLinecap="round" />
     </svg>

@@ -99,8 +99,8 @@ export default function DishlistPickerModal({
           onClick={onClose}
         >
           <motion.div
-          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${isSortingCard ? "pb-3" : "pb-5"} ${
-              isSortingCard ? "h-[88dvh] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
+          className={`no-accent-border flex min-h-0 w-full max-w-md flex-col rounded-[2rem] border px-5 pt-4 shadow-[0_24px_60px_rgba(0,0,0,0.18)] ${isSortingCard ? "pb-0" : "pb-5"} ${
+              isSortingCard ? "h-[min(84dvh,43rem)] max-h-[calc(100dvh-1rem)]" : isSwipeCard ? "h-[82vh]" : "h-[min(82vh,calc(100dvh-2rem))]"
             } ${
               darkMode
                 ? `text-white ${isSwipeCard || isSortingCard ? "border-[#2BD36B]/28 bg-[#0D120E]" : "border-white/12 bg-[#101010]"}`
@@ -369,7 +369,7 @@ export default function DishlistPickerModal({
                 </div>
                 {mode === "multiple" ? (
                   <div className={`sticky bottom-0 flex shrink-0 items-center gap-3 border-t ${
-                    isSortingCard ? "mt-0 h-10 justify-end pt-0" : "mt-4 justify-between pt-4"
+                    isSortingCard ? "mt-1 min-h-[3.55rem] justify-end pb-3 pt-2" : "mt-4 justify-between pt-4"
                   } ${
                     darkMode ? "border-white/10 bg-[#101010]" : "border-black/8 bg-[#FAF7F0]"
                   }`}>
@@ -385,7 +385,7 @@ export default function DishlistPickerModal({
                       onClick={onConfirm}
                       className={`rounded-full px-6 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
                         isSortingCard
-                          ? "h-8 border border-[#2BD36B]/70 bg-[#12351F] py-0 text-[#E7FFF0] shadow-[0_12px_26px_rgba(0,0,0,0.22)]"
+                          ? "border border-[#2BD36B]/70 bg-[#12351F] py-3.5 text-[#E7FFF0] shadow-[0_12px_26px_rgba(0,0,0,0.22)]"
                           : darkMode || isSwipeCard
                             ? "border border-[#45C47A]/45 bg-[#1FA463] py-3.5 text-white"
                             : "bg-[#111111] py-3.5 text-white"

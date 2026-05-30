@@ -81,10 +81,10 @@ export default function DishlistPickerModal({
   ];
   const getAccent = (dishlist, index) => {
     if (dishlist.id === "all_dishes") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
-    if (dishlist.id === "saved") return { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" };
+    if (dishlist.id === "saved") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     if (dishlist.id === "to_try") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     if (dishlist.id === "uploaded") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
-    return accentPalette[index % accentPalette.length];
+    return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
   };
 
   return (

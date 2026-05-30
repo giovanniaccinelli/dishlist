@@ -172,7 +172,7 @@ export default function StoryViewerModal({
   }, [open, currentStory?.id]);
 
   useEffect(() => {
-    if (!open || !currentStory?.id || isPaused || commentsOpen || currentStoryIsVideo) return;
+    if (!open || !currentStory?.id || isPaused || commentsOpen || viewsOpen || currentStoryIsVideo) return;
     let frameId = 0;
     let previousTime = performance.now();
 
@@ -198,7 +198,7 @@ export default function StoryViewerModal({
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs, currentStoryIsVideo, commentsOpen]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, isPaused, storyDurationMs, currentStoryIsVideo, commentsOpen, viewsOpen]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -270,12 +270,12 @@ export default function StoryViewerModal({
         video.pause?.();
       } catch {}
     };
-  }, [open, currentStory?.id, groupIndex, storyIndex, currentStoryIsVideo, commentsOpen]);
+  }, [open, currentStory?.id, groupIndex, storyIndex, currentStoryIsVideo, commentsOpen, viewsOpen]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !currentStoryIsVideo) return;
-    if (isPaused || commentsOpen) {
+    if (isPaused || commentsOpen || viewsOpen) {
       try {
         video.pause?.();
       } catch {}
@@ -290,7 +290,7 @@ export default function StoryViewerModal({
         if (mutedPlay?.catch) mutedPlay.catch(() => {});
       });
     }
-  }, [isPaused, currentStoryIsVideo, currentStory?.id, commentsOpen]);
+  }, [isPaused, currentStoryIsVideo, currentStory?.id, commentsOpen, viewsOpen]);
 
   const goNext = () => {
     if (Date.now() < suppressTapUntilRef.current) return;
@@ -541,6 +541,12 @@ export default function StoryViewerModal({
       event.stopPropagation();
       event.preventDefault();
     }
+    if (holdPauseTimerRef.current) {
+      window.clearTimeout(holdPauseTimerRef.current);
+      holdPauseTimerRef.current = null;
+    }
+    holdPauseActivatedRef.current = false;
+    setIsPaused(true);
     setViewsOpen(true);
     const viewerIds = Array.isArray(currentStory?.viewedBy)
       ? currentStory.viewedBy.filter((id) => id && id !== currentGroup?.ownerId)
@@ -907,7 +913,10 @@ export default function StoryViewerModal({
       />
       <StoryViewsModal
         open={viewsOpen}
-        onClose={() => setViewsOpen(false)}
+        onClose={() => {
+          setViewsOpen(false);
+          setIsPaused(false);
+        }}
         viewers={viewers}
         loading={viewsLoading}
       />

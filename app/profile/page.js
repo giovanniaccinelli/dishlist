@@ -77,7 +77,6 @@ import {
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantMapIcon,
-  usePersistentDishMode,
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
@@ -584,7 +583,7 @@ export default function Profile() {
   const [pendingDishlistSorting, setPendingDishlistSorting] = useState([]);
   const [dismissedPendingDishIds, setDismissedPendingDishIds] = useState([]);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
   const profileCalendarRailRef = useRef(null);
   const profileCalendarMonthSwipeRef = useRef(null);

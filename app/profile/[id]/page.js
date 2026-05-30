@@ -51,7 +51,6 @@ import {
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantMapIcon,
-  usePersistentDishMode,
 } from "../../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
@@ -399,7 +398,7 @@ export default function PublicProfile() {
   const [leaderboardTakes, setLeaderboardTakes] = useState([]);
   const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
-  const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:profile", DISH_MODE_ALL);
+  const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [profileMapDish, setProfileMapDish] = useState(null);
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);

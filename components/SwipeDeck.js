@@ -1452,6 +1452,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               }}
             >
               {renderImage(outgoingSwipe.card, { preview: true })}
+              {renderPreviewChrome(outgoingSwipe.card)}
             </motion.div>
           ) : null}
         </AnimatePresence>

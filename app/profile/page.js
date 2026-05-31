@@ -955,15 +955,13 @@ export default function Profile() {
     });
 
     const savedRef = collection(db, "users", user.uid, "saved");
-    const unsubscribeSaved = onSnapshot(savedRef, async (snap) => {
-      setSavedDishes(snap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() })));
+    const unsubscribeSaved = onSnapshot(savedRef, async () => {
       const saved = await getSavedDishesFromFirestore(user.uid, { force: true });
       setSavedDishes(saved);
     });
 
     const toTryRef = collection(db, "users", user.uid, "toTry");
-    const unsubscribeToTry = onSnapshot(toTryRef, async (snap) => {
-      setToTryDishes(snap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() })));
+    const unsubscribeToTry = onSnapshot(toTryRef, async () => {
       const items = await getToTryDishesFromFirestore(user.uid, { force: true });
       setToTryDishes(items);
     });
@@ -1274,11 +1272,23 @@ export default function Profile() {
   };
 
   const handleDeleteDish = async (dish) => {
+    if (!dish?.id) return;
+    const dishId = dish.id;
+    setUploadedDishes((prev) => prev.filter((item) => item.id !== dishId));
+    setSavedDishes((prev) => prev.filter((item) => item.id !== dishId));
+    setToTryDishes((prev) => prev.filter((item) => item.id !== dishId));
+    setCustomDishlists((prev) =>
+      prev.map((dishlist) => ({
+        ...dishlist,
+        dishes: (dishlist.dishes || []).filter((item) => item.id !== dishId),
+        count: Math.max(0, Number(dishlist.count || 0) - ((dishlist.dishes || []).some((item) => item.id === dishId) ? 1 : 0)),
+      }))
+    );
     await deleteDishAndImage(
-      dish.id,
+      dishId,
       dish.imageURL || dish.imageUrl || dish.image_url || dish.image
     );
-    await removeDishFromAllUsers(dish.id);
+    await removeDishFromAllUsers(dishId);
     const refreshedUploaded = await loadOwnUploadedDishes();
     const refreshedSaved = await getSavedDishesFromFirestore(user.uid);
     setUploadedDishes(refreshedUploaded);

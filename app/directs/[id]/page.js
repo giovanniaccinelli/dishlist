@@ -260,7 +260,7 @@ export default function DirectChat() {
   }
 
   return (
-    <div className={`bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent relative flex flex-col ${darkMode ? "text-white" : "text-black"}`}>
+    <div className={`h-[100dvh] overflow-hidden overscroll-none bg-transparent relative flex flex-col ${darkMode ? "text-white" : "text-black"}`}>
       <div className="app-top-nav flex shrink-0 items-center justify-between px-4 pb-2">
         <AppBackButton fallback="/directs" />
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-3">
@@ -286,8 +286,8 @@ export default function DirectChat() {
         <div className="w-[44px]" />
       </div>
 
-      <div ref={scrollRef} className="bottom-nav-chat-scroll flex flex-1 min-h-0 flex-col overflow-y-auto px-4">
-        <div className="mx-auto mt-auto flex w-full max-w-md flex-col gap-3">
+      <div ref={scrollRef} className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 pb-3">
+        <div className="mx-auto mt-auto flex w-full max-w-md flex-col gap-3 pb-1">
         {messages.map((m, index) => {
           const isMine = m.senderId === user.uid;
           const previousMessage = index > 0 ? messages[index - 1] : null;
@@ -452,7 +452,7 @@ export default function DirectChat() {
         </div>
       </div>
 
-      <div className="bottom-nav-chat-bar fixed left-0 right-0 z-40 px-4">
+      <div className="shrink-0 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.65rem)] pt-2">
         <div className={`mx-auto w-full max-w-md rounded-[24px] border p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.12)] ${
           darkMode
             ? "border-white/10 bg-[linear-gradient(180deg,rgba(28,28,26,0.98)_0%,rgba(13,13,12,0.98)_100%)]"

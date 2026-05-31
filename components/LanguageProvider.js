@@ -449,6 +449,7 @@ const translations = {
     "Loading map...": "Caricamento mappa...",
     fit: "fit",
     "high protein": "high protein",
+    meat: "carne",
     veg: "veg",
     vegan: "vegano",
     light: "light",
@@ -468,6 +469,7 @@ const translations = {
     gourmet: "gourmet",
     "date night": "date night",
     pasta: "pasta",
+    bakery: "forno",
     italian: "italiano",
     ethnic: "etnico",
     seafood: "pesce",
@@ -479,6 +481,7 @@ const translations = {
     dessert: "dolce",
     american: "americano",
     rice: "riso",
+    sandwich: "panino",
     "fast food": "fast food",
   },
 };

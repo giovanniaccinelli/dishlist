@@ -1,6 +1,7 @@
 export const TAG_OPTIONS = [
   "fit",
   "high protein",
+  "meat",
   "veg",
   "vegan",
   "light",
@@ -20,6 +21,7 @@ export const TAG_OPTIONS = [
   "gourmet",
   "date night",
   "pasta",
+  "bakery",
   "italian",
   "ethnic",
   "seafood",
@@ -31,12 +33,14 @@ export const TAG_OPTIONS = [
   "dessert",
   "american",
   "rice",
+  "sandwich",
   "fast food",
 ];
 
 const TAG_COLOR_MAP = {
   fit: "bg-[#DCFCE7] text-[#14532D] border-[#86EFAC]",
   "high protein": "bg-[#FFE4D6] text-[#8A2C0D] border-[#FDBA74]",
+  meat: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F97373]",
   veg: "bg-[#E0F2FE] text-[#075985] border-[#7DD3FC]",
   vegan: "bg-[#D1FAE5] text-[#065F46] border-[#6EE7B7]",
   light: "bg-[#F1F5F9] text-[#334155] border-[#CBD5E1]",
@@ -56,6 +60,7 @@ const TAG_COLOR_MAP = {
   gourmet: "bg-[#F5F3FF] text-[#6D28D9] border-[#DDD6FE]",
   "date night": "bg-[#FAE8FF] text-[#86198F] border-[#E879F9]",
   pasta: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]",
+  bakery: "bg-[#FEF3C7] text-[#7C2D12] border-[#D6A647]",
   italian: "bg-[#DCFCE7] text-[#14532D] border-[#EF4444]",
   ethnic: "bg-[#DBEAFE] text-[#1E3A8A] border-[#60A5FA]",
   seafood: "bg-[#CFFAFE] text-[#155E75] border-[#22D3EE]",
@@ -67,12 +72,14 @@ const TAG_COLOR_MAP = {
   dessert: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]",
   american: "bg-[#DBEAFE] text-[#1E3A8A] border-[#EF4444]",
   rice: "bg-[#FEFCE8] text-[#713F12] border-[#FDE047]",
+  sandwich: "bg-[#FFF7ED] text-[#7C2D12] border-[#FDBA74]",
   "fast food": "bg-[#FFE4E6] text-[#9F1239] border-[#FB7185]",
 };
 
 const TAG_DARK_COLOR_MAP = {
   fit: "border-[#22C55E]/75 bg-[#102818] text-[#BBF7D0]",
   "high protein": "border-[#FB923C]/75 bg-[#321708] text-[#FED7AA]",
+  meat: "border-[#EF4444]/75 bg-[#321010] text-[#FECACA]",
   veg: "border-[#38BDF8]/75 bg-[#082436] text-[#BAE6FD]",
   vegan: "border-[#34D399]/75 bg-[#08251A] text-[#A7F3D0]",
   light: "border-[#94A3B8]/75 bg-[#181D24] text-[#E2E8F0]",
@@ -92,6 +99,7 @@ const TAG_DARK_COLOR_MAP = {
   gourmet: "border-[#C084FC]/75 bg-[#241238] text-[#E9D5FF]",
   "date night": "border-[#E879F9]/75 bg-[#2D1235] text-[#F5D0FE]",
   pasta: "border-[#F59E0B]/80 bg-[#2F2107] text-[#FDE68A]",
+  bakery: "border-[#D6A647]/80 bg-[#2D2109] text-[#FDE68A]",
   italian: "border-[#EF4444]/75 bg-[#0D2518] text-[#BBF7D0]",
   ethnic: "border-[#60A5FA]/75 bg-[#0C1B33] text-[#BFDBFE]",
   seafood: "border-[#22D3EE]/75 bg-[#092A32] text-[#CFFAFE]",
@@ -103,6 +111,7 @@ const TAG_DARK_COLOR_MAP = {
   dessert: "border-[#F472B6]/75 bg-[#321325] text-[#FBCFE8]",
   american: "border-[#EF4444]/75 bg-[#0A1E3A] text-[#BFDBFE]",
   rice: "border-[#FDE047]/75 bg-[#2A2407] text-[#FEF9C3]",
+  sandwich: "border-[#FDBA74]/75 bg-[#321A0A] text-[#FED7AA]",
   "fast food": "border-[#FB7185]/75 bg-[#35111A] text-[#FFE4E6]",
 };
 

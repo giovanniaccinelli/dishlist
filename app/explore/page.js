@@ -232,6 +232,29 @@ function FastFoodIcon({ className = "" }) {
   );
 }
 
+function BreadIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.1 11.2c0-3.8 3.1-6.7 6.9-6.7s6.9 2.9 6.9 6.7v5.5a2.8 2.8 0 0 1-2.8 2.8H7.9a2.8 2.8 0 0 1-2.8-2.8v-5.5Z" fill="currentColor" fillOpacity="0.13" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M8.4 10.4v5.7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
+      <path d="M12 9.2v6.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
+      <path d="M15.6 10.4v5.7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
+    </svg>
+  );
+}
+
+function SandwichIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.6 8.4c4.2-3.1 10.6-3.1 14.8 0l-1 3.2H5.6L4.6 8.4Z" fill="currentColor" fillOpacity="0.13" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M5.6 11.6h12.8l-1.2 5.3a2.4 2.4 0 0 1-2.4 1.9H9.2a2.4 2.4 0 0 1-2.4-1.9L5.6 11.6Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M7.1 13.7c1.3.9 2.6.9 3.9 0s2.6-.9 3.9 0 1.9.8 2.5.3" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.85" />
+      <circle cx="10.1" cy="8.3" r=".45" fill="currentColor" />
+      <circle cx="13.7" cy="7.9" r=".45" fill="currentColor" />
+    </svg>
+  );
+}
+
 function FancyStarsIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -381,8 +404,19 @@ function ChiliIcon({ className = "" }) {
   );
 }
 
+function SteakIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.1 14.1c-.7-3 1.2-6.2 4.6-7.7 3.8-1.7 8-.8 9.8 2.1 1.9 3-.2 6.8-4.5 8.6-4.6 2-8.9.9-9.9-3Z" fill="currentColor" fillOpacity="0.13" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M8.8 13.1c-.6-1.6.4-3.4 2.3-4.2 2-.8 4-.3 4.8 1.1.8 1.5-.2 3.3-2.3 4.1-2.1.9-4.1.5-4.8-1Z" stroke="currentColor" strokeWidth="1.35" opacity="0.85" />
+      <path d="M17.3 8.7c1.2-.8 2.1-2.1 2.2-3.4" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" opacity="0.85" />
+    </svg>
+  );
+}
+
 const TAG_DECOR = {
   "high protein": { icon: DrumstickIcon, iconClass: "text-[#A34723]", pillClass: "bg-[#FDE6D8] text-[#7C2D12] border-[#F2B38D]" },
+  meat: { icon: SteakIcon, iconClass: "text-[#B9352C]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FEE2E2] text-[#7F1D1D] border-[#F97373]" },
   comfort: { icon: HeartIcon, iconClass: "text-[#C96A1B]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFE7C7] text-[#8A4B14] border-[#F5C37A]" },
   "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
   quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
@@ -403,6 +437,7 @@ const TAG_DECOR = {
   summer: { icon: Sun, iconClass: "text-[#D9A400]", pillClass: "bg-[#FFF0BF] text-[#8A5A00] border-[#F0CB68]" },
   "date night": { icon: ClinkingGlassesIcon, iconClass: "text-[#B13D56]", pillClass: "bg-[#FFE3EA] text-[#8E2338] border-[#F2A7B8]" },
   pasta: { icon: PastaPlateIcon, iconClass: "text-[#D99116]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FDE68A] text-[#78350F] border-[#F59E0B]" },
+  bakery: { icon: BreadIcon, iconClass: "text-[#B87925]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FEF3C7] text-[#7C2D12] border-[#D6A647]" },
   italian: { icon: ItalianFlagIcon, iconClass: "text-black/50", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#DCFCE7] text-[#14532D] border-[#EF4444]" },
   ethnic: { icon: Globe2, iconClass: "text-[#3B82F6]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#60A5FA]" },
   seafood: { icon: Fish, iconClass: "text-[#0891B2]", pillClass: "bg-[#CFFAFE] text-[#155E75] border-[#22D3EE]" },
@@ -414,6 +449,7 @@ const TAG_DECOR = {
   dessert: { icon: DessertIcon, iconClass: "text-[#DB2777]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FCE7F3] text-[#9D174D] border-[#F9A8D4]" },
   american: { icon: AmericanFlagIcon, iconClass: "text-black/50", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#DBEAFE] text-[#1E3A8A] border-[#EF4444]" },
   rice: { icon: RiceIcon, iconClass: "text-[#C8A31B]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FEFCE8] text-[#713F12] border-[#FDE047]" },
+  sandwich: { icon: SandwichIcon, iconClass: "text-[#B85F22]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FFF7ED] text-[#7C2D12] border-[#FDBA74]" },
   "fast food": { icon: FastFoodIcon, iconClass: "text-[#E11D48]", iconSize: "h-[1.45rem] w-[1.45rem]", pillClass: "bg-[#FFE4E6] text-[#9F1239] border-[#FB7185]" },
 };
 

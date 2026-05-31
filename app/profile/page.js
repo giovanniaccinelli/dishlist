@@ -4168,7 +4168,7 @@ export default function Profile() {
                         if (!newDishlistName.trim()) return;
                         setCreateDishlistStep(1);
                       }}
-                      className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)]"
+                      className="dish-modal-primary-btn min-h-[3.15rem] rounded-full px-6 text-sm font-bold transition"
                     >
                       {t("Next")}
                     </button>
@@ -4222,10 +4222,13 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={() => setCreateSourceDishlistsExpanded(true)}
-                        className={`mt-3 flex h-10 w-full items-center justify-center rounded-full border text-sm font-bold ${
-                          darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
+                        className={`no-accent-border mx-auto mt-4 inline-flex min-h-11 w-full max-w-[15rem] items-center justify-center gap-2 rounded-[1rem] border px-4 text-[13px] font-bold transition active:scale-[0.98] ${
+                          darkMode
+                            ? "border-white/10 bg-[#151515] text-white/78 shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
+                            : "border-black/8 bg-[#F7F4EC] text-black/62 shadow-[0_10px_22px_rgba(54,43,23,0.08)]"
                         }`}
                       >
+                        <ChevronDown size={15} strokeWidth={2.3} />
                         {t("Load more")}
                       </button>
                     ) : null}
@@ -4289,7 +4292,7 @@ export default function Profile() {
                       type="button"
                       onClick={handleCreateDishlist}
                       disabled={creatingDishlist}
-                      className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)] disabled:opacity-60"
+                      className="dish-modal-primary-btn min-h-[3.15rem] rounded-full px-6 text-sm font-bold transition disabled:opacity-60"
                     >
                       {creatingDishlist ? t("Creating...") : `${t("Create")} (${selectedCreateDishes.length})`}
                     </button>
@@ -4381,10 +4384,13 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setAddDishesSourceExpanded(true)}
-                    className={`mt-3 flex h-10 w-full items-center justify-center rounded-full border text-sm font-bold ${
-                      darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
+                    className={`no-accent-border mx-auto mt-4 inline-flex min-h-11 w-full max-w-[15rem] items-center justify-center gap-2 rounded-[1rem] border px-4 text-[13px] font-bold transition active:scale-[0.98] ${
+                      darkMode
+                        ? "border-white/10 bg-[#151515] text-white/78 shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
+                        : "border-black/8 bg-[#F7F4EC] text-black/62 shadow-[0_10px_22px_rgba(54,43,23,0.08)]"
                     }`}
                   >
+                    <ChevronDown size={15} strokeWidth={2.3} />
                     {t("Load more")}
                   </button>
                 ) : null}
@@ -4450,7 +4456,7 @@ export default function Profile() {
                   type="button"
                   onClick={confirmAddExistingDishes}
                   disabled={addingExistingDishes}
-                  className="rounded-full border border-[#45C47A]/45 bg-[#1FA463] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.18)] disabled:opacity-60"
+                  className="dish-modal-primary-btn min-h-[3.15rem] rounded-full px-6 text-sm font-bold transition disabled:opacity-60"
                 >
                   {addingExistingDishes ? t("Saving...") : `${t("Add dishes")} (${selectedAddDishes.length})`}
                 </button>

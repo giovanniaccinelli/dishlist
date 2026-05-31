@@ -389,13 +389,7 @@ export default function DishlistPickerModal({
                     <button
                       type="button"
                       onClick={onConfirm}
-                      className={`rounded-full px-6 text-sm font-bold shadow-[0_12px_26px_rgba(31,164,99,0.2)] ${
-                        isSortingCard
-                          ? "border border-[#2BD36B]/70 bg-[#12351F] py-3.5 text-[#E7FFF0] shadow-[0_12px_26px_rgba(0,0,0,0.22)]"
-                          : darkMode || isSwipeCard
-                            ? "border border-[#45C47A]/45 bg-[#1FA463] py-3.5 text-white"
-                            : "bg-[#111111] py-3.5 text-white"
-                      }`}
+                      className="dish-modal-primary-btn min-h-[3.15rem] rounded-full px-6 text-sm font-bold transition disabled:opacity-60"
                     >
                       {t(resolvedConfirmLabel)}
                     </button>

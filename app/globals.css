@@ -135,13 +135,16 @@
 }
 
 .dish-modal-next-btn {
-  border: 2px solid rgba(43, 211, 107, 0.72);
-  background: linear-gradient(180deg, #141414 0%, #050805 100%);
-  color: #2BD36B;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  border: 2px solid rgba(143, 243, 173, 0.62);
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #35de73 0%, #20b85a 100%);
+  color: #041107;
   box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.34),
-    0 0 0 4px rgba(43, 211, 107, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 12px 26px rgba(35, 194, 104, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .dish-modal-next-btn:hover {

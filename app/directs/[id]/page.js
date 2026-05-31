@@ -286,8 +286,8 @@ export default function DirectChat() {
         <div className="w-[44px]" />
       </div>
 
-      <div ref={scrollRef} className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-md flex-col gap-3">
+      <div ref={scrollRef} className="bottom-nav-chat-scroll flex flex-1 min-h-0 flex-col overflow-y-auto px-4">
+        <div className="mx-auto mt-auto flex w-full max-w-md flex-col gap-3">
         {messages.map((m, index) => {
           const isMine = m.senderId === user.uid;
           const previousMessage = index > 0 ? messages[index - 1] : null;

@@ -445,7 +445,10 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title, t, priority = false }) {
+function DishPreview({ dish, title, t, priority = false, counterKind = "saves" }) {
+  const showStoryCounter = counterKind === "stories";
+  const CounterIcon = showStoryCounter ? Camera : Users;
+  const counterValue = showStoryCounter ? dish.storyCount : dish.saves;
   return (
     <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
@@ -466,8 +469,8 @@ function DishPreview({ dish, title, t, priority = false }) {
                   {dish.name || t("Untitled dish")}
                 </div>
         <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
-          <Users size={10} strokeWidth={2.2} />
-          <span>{Math.max(0, Number(dish.saves || 0))}</span>
+          <CounterIcon size={10} strokeWidth={2.2} />
+          <span>{Math.max(0, Number(counterValue || 0))}</span>
         </div>
       </div>
     </div>
@@ -536,6 +539,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
   const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
   if (!visible.length) return null;
   const isRestaurantRow = row.key.startsWith("restaurant-");
+  const counterKind = row.key === "trending" ? "stories" : "saves";
 
   return (
     <section className="explore-row no-accent-border mb-6 shadow-none" style={{ contentVisibility: "auto", containIntrinsicSize: "180px", boxShadow: "none" }}>
@@ -576,7 +580,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
       <div className="no-accent-border flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory shadow-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish, index) => (
           <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
-            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 3} />
+            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 3} counterKind={counterKind} />
           </div>
         ))}
       </div>
@@ -650,6 +654,8 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
 
 function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
   if (!row) return null;
+  const showStoryCounter = row.key === "trending";
+  const CounterIcon = showStoryCounter ? Camera : Users;
 
   return (
     <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
@@ -687,8 +693,8 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
                   {dish.name || t("Untitled dish")}
                 </div>
                 <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
-                  <Users size={10} strokeWidth={2.2} />
-                  <span>{Math.max(0, Number(dish.saves || 0))}</span>
+                  <CounterIcon size={10} strokeWidth={2.2} />
+                  <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
                 </div>
               </div>
             </div>

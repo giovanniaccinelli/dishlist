@@ -1002,7 +1002,7 @@ export default function RestaurantMapView({
                 onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search restaurant"
-                className="w-full bg-transparent text-[15px] text-black placeholder:text-black/35 focus:outline-none"
+                className="w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none"
               />
               {query ? (
                 <button

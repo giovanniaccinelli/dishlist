@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, X } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 function ViewerAvatar({ viewer }) {
   if (viewer?.photoURL) {
@@ -22,6 +23,7 @@ function ViewerAvatar({ viewer }) {
 }
 
 export default function StoryViewsModal({ open, onClose, viewers = [], loading = false }) {
+  const { t } = useLanguage();
   return (
     <AnimatePresence>
       {open ? (
@@ -48,10 +50,10 @@ export default function StoryViewsModal({ open, onClose, viewers = [], loading =
                 </div>
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/38">
-                    Story views
+                    {t("Story views")}
                   </div>
                   <h3 className="mt-1 text-[1.3rem] font-bold leading-none text-black">
-                    Seen by {viewers.length}
+                    {t("Seen by")} {viewers.length}
                   </h3>
                 </div>
               </div>
@@ -59,17 +61,17 @@ export default function StoryViewsModal({ open, onClose, viewers = [], loading =
                 type="button"
                 onClick={onClose}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
-                aria-label="Close story views"
+                aria-label={t("Close story views")}
               >
                 <X size={16} />
               </button>
             </div>
 
             {loading ? (
-              <div className="py-8 text-center text-sm text-black/55">Loading views...</div>
+              <div className="py-8 text-center text-sm text-black/55">{t("Loading views...")}</div>
             ) : viewers.length === 0 ? (
               <div className="rounded-[1.5rem] bg-[#F7F3EC] px-4 py-5 text-center text-sm text-black/55">
-                Nobody has viewed this story yet.
+                {t("Nobody has viewed this story yet.")}
               </div>
             ) : (
               <div className="max-h-[52dvh] space-y-2 overflow-y-auto pr-1">
@@ -81,7 +83,7 @@ export default function StoryViewsModal({ open, onClose, viewers = [], loading =
                     <ViewerAvatar viewer={viewer} />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-black">
-                        {viewer.displayName || viewer.name || "User"}
+                        {viewer.displayName || viewer.name || t("User")}
                       </div>
                     </div>
                   </div>

@@ -439,7 +439,7 @@ function SearchBar({ value, onChange, placeholder }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="min-h-[2.75rem] w-full rounded-[0.95rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] py-2 pl-10 pr-3.5 text-[15px] text-black shadow-[0_10px_22px_rgba(0,0,0,0.055)] placeholder:text-black/38 focus:outline-none focus:ring-2 focus:ring-black/12"
+        className="min-h-[2.75rem] w-full rounded-[0.95rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] py-2 pl-10 pr-3.5 text-[16px] text-black shadow-[0_10px_22px_rgba(0,0,0,0.055)] placeholder:text-black/38 focus:outline-none focus:ring-2 focus:ring-black/12"
       />
     </div>
   );

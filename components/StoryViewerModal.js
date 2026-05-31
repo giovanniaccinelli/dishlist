@@ -63,7 +63,7 @@ export default function StoryViewerModal({
   currentUser = null,
 }) {
   const router = useRouter();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const groups = useMemo(() => {
     if (Array.isArray(storyGroups) && storyGroups.length > 0) {
       return storyGroups
@@ -96,6 +96,7 @@ export default function StoryViewerModal({
   const didAdvanceRef = useRef(false);
   const pressStartedAtRef = useRef(0);
   const tapZonePressRef = useRef(null);
+  const storyShellPressRef = useRef(null);
   const holdPauseTimerRef = useRef(null);
   const holdPauseActivatedRef = useRef(false);
   const suppressTapUntilRef = useRef(0);
@@ -570,10 +571,10 @@ export default function StoryViewerModal({
     if (!date || Number.isNaN(date.getTime())) return "";
     const diffMs = Date.now() - date.getTime();
     const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-    if (diffHours < 1) return "Just now";
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 1) return t("Just now");
+    if (diffHours < 24) return language === "it" ? `${diffHours} h fa` : `${diffHours}h ago`;
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    return language === "it" ? `${diffDays} g fa` : `${diffDays}d ago`;
   })();
 
   return (
@@ -589,9 +590,27 @@ export default function StoryViewerModal({
           drag
           dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
           dragElastic={0.12}
-          onPointerDown={handlePressStart}
-          onPointerUp={handlePressEnd}
-          onPointerCancel={handlePressEnd}
+          onPointerDown={(event) => {
+            if (!event.target.closest("[data-no-story-pause='true']")) {
+              storyShellPressRef.current = { x: event.clientX, y: event.clientY };
+            }
+            handlePressStart(event);
+          }}
+          onPointerUp={(event) => {
+            const start = storyShellPressRef.current;
+            storyShellPressRef.current = null;
+            const dy = start ? event.clientY - start.y : 0;
+            const dx = start ? event.clientX - start.x : 0;
+            handlePressEnd();
+            if (dy > 120 && Math.abs(dy) > Math.abs(dx) * 1.1) {
+              suppressTapUntilRef.current = Date.now() + 320;
+              onClose?.();
+            }
+          }}
+          onPointerCancel={() => {
+            storyShellPressRef.current = null;
+            handlePressEnd();
+          }}
           onDragEnd={(_, info) => {
             setIsPaused(false);
             if (Math.abs(info.offset.x) > Math.abs(info.offset.y) && Math.abs(info.offset.x) > 70) {
@@ -701,7 +720,7 @@ export default function StoryViewerModal({
                       {storyMealTagLabel}
                     </span>
                   ) : (
-                    publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : "Story")
+                    publishedAtLabel || (groups.length > 1 ? `${groupIndex + 1}/${groups.length}` : t("Story"))
                   )}
                 </div>
               </div>
@@ -870,7 +889,7 @@ export default function StoryViewerModal({
                   onClick={openComments}
                   className="text-left text-xs text-white/72"
                 >
-                  Be the first to comment
+                  {t("Be the first to comment")}
                 </button>
               )}
             </div>
@@ -888,7 +907,7 @@ export default function StoryViewerModal({
                 }}
                 className="rounded-full bg-white/14 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md border border-white/15"
               >
-                More
+                {t("More")}
               </button>
             </div>
           </div>

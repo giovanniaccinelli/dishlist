@@ -59,6 +59,17 @@ const getLastActiveMs = (user) => {
   return date?.getTime?.() || 0;
 };
 
+const getUserDisplayName = (user, fallback = "User") =>
+  String(
+    user?.displayName ||
+      user?.name ||
+      user?.username ||
+      user?.handle ||
+      user?.fullName ||
+      user?.email?.split?.("@")?.[0] ||
+      fallback
+  ).trim() || fallback;
+
 const isUserOnline = (user) => {
   const lastActiveMs = getLastActiveMs(user);
   return lastActiveMs > 0 && Date.now() - lastActiveMs < 2 * 60 * 1000;
@@ -99,6 +110,7 @@ export default function DirectChat() {
   const isRestaurantDish = (dish) => String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
   const otherOnline = isUserOnline(otherUser);
   const otherActiveLabel = formatActiveStatus(otherUser, t);
+  const otherDisplayName = getUserDisplayName(otherUser, t("Chat"));
   const latestOwnMessageId = [...messages].reverse().find((message) => message?.senderId === user?.uid)?.id || "";
   const messageReadByOther = (message) =>
     message?.senderId === user?.uid &&
@@ -268,13 +280,13 @@ export default function DirectChat() {
             darkMode ? "bg-white/10 text-white/70" : "bg-black/7 text-black/62"
           }`}>
             {otherUser?.photoURL ? (
-              <img src={otherUser.photoURL} alt={otherUser?.displayName || "Profile"} className="h-full w-full object-cover" />
+              <img src={otherUser.photoURL} alt={otherDisplayName || "Profile"} className="h-full w-full object-cover" />
             ) : (
-              otherUser?.displayName?.[0] || "U"
+              otherDisplayName?.[0] || "U"
             )}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-xl font-bold leading-none">{otherUser?.displayName || t("Chat")}</div>
+            <div className="truncate text-xl font-bold leading-none">{otherDisplayName}</div>
             {otherActiveLabel ? (
               <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold leading-none ${otherOnline ? "text-[#2BD36B]" : darkMode ? "text-white/58" : "text-black/52"}`}>
                 {otherOnline ? <span className="h-1.5 w-1.5 rounded-full bg-[#2BD36B]" /> : null}

@@ -2195,9 +2195,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                className="relative inline-flex h-14 w-10 -translate-x-1 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 -translate-x-1 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
-                disabled={dishLikeSaving}
+                aria-disabled={dishLikeSaving}
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart
@@ -2368,9 +2368,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                className="relative inline-flex h-14 w-10 -translate-x-1 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] disabled:opacity-70"
+                className="relative inline-flex h-14 w-10 -translate-x-1 items-center justify-center text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)]"
                 aria-label={dishLiked ? "Unlike dish" : "Like dish"}
-                disabled={dishLikeSaving}
+                aria-disabled={dishLikeSaving}
               >
                 <span className="absolute -top-1 left-1/2 min-h-[14px] -translate-x-1/2 text-[12px] font-bold leading-none">{dishLikeCount > 0 ? dishLikeCount : ""}</span>
                 <Heart

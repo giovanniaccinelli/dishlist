@@ -4,17 +4,29 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Eye, X } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 
+const getUserDisplayName = (user, fallback = "User") =>
+  String(
+    user?.displayName ||
+      user?.name ||
+      user?.username ||
+      user?.handle ||
+      user?.fullName ||
+      user?.email?.split?.("@")?.[0] ||
+      fallback
+  ).trim() || fallback;
+
 function ViewerAvatar({ viewer }) {
+  const displayName = getUserDisplayName(viewer, "Viewer");
   if (viewer?.photoURL) {
     return (
       <img
         src={viewer.photoURL}
-        alt={viewer.displayName || viewer.name || "Viewer"}
+        alt={displayName}
         className="h-10 w-10 rounded-full object-cover"
       />
     );
   }
-  const label = String(viewer?.displayName || viewer?.name || "U").slice(0, 1).toUpperCase();
+  const label = displayName.slice(0, 1).toUpperCase();
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3EBDD] text-sm font-semibold text-black/65">
       {label}
@@ -83,7 +95,7 @@ export default function StoryViewsModal({ open, onClose, viewers = [], loading =
                     <ViewerAvatar viewer={viewer} />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-black">
-                        {viewer.displayName || viewer.name || t("User")}
+                        {getUserDisplayName(viewer, t("User"))}
                       </div>
                     </div>
                   </div>

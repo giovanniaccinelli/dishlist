@@ -39,6 +39,17 @@ const getLastActiveMs = (user) => {
   return date?.getTime?.() || 0;
 };
 
+const getUserDisplayName = (user, fallback = "User") =>
+  String(
+    user?.displayName ||
+      user?.name ||
+      user?.username ||
+      user?.handle ||
+      user?.fullName ||
+      user?.email?.split?.("@")?.[0] ||
+      fallback
+  ).trim() || fallback;
+
 const isUserOnline = (user) => {
   const lastActiveMs = getLastActiveMs(user);
   return lastActiveMs > 0 && Date.now() - lastActiveMs < 2 * 60 * 1000;
@@ -100,10 +111,12 @@ export default function Directs() {
     return conversations.map((c) => {
       const otherId = (c.participants || []).find((p) => p !== user?.uid);
       const otherUser = usersMap[otherId] || {};
+      const otherName = getUserDisplayName(otherUser);
       return {
         ...c,
         otherId,
         otherUser,
+        otherName,
         otherOnline: isUserOnline(otherUser),
         activeLabel: formatActiveStatus(otherUser, t),
         preview:
@@ -178,18 +191,18 @@ export default function Directs() {
                       {c.otherUser?.photoURL ? (
                         <img
                           src={c.otherUser.photoURL}
-                          alt={c.otherUser?.displayName || "Profile"}
+                          alt={c.otherName || "Profile"}
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        c.otherUser?.displayName?.[0] || "U"
+                        c.otherName?.[0] || "U"
                       )}
                     </div>
                     {unread ? <span className={`no-accent-border absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 ${darkMode ? "border-[#151515]" : "border-white"} bg-[#E64646]`} /> : null}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-baseline gap-2">
-                      <div className={`truncate text-[1.02rem] font-bold leading-tight ${darkMode ? "text-white" : "text-black"}`}>{c.otherUser?.displayName || "User"}</div>
+                      <div className={`truncate text-[1.02rem] font-bold leading-tight ${darkMode ? "text-white" : "text-black"}`}>{c.otherName}</div>
                       {c.otherOnline ? <span className="h-2 w-2 shrink-0 rounded-full bg-[#2BD36B] shadow-[0_0_0_2px_rgba(43,211,107,0.16)]" /> : null}
                       {c.updatedLabel ? (
                         <div className={`ml-auto shrink-0 text-[11px] font-semibold ${darkMode ? "text-white/40" : "text-black/38"}`}>{c.updatedLabel}</div>

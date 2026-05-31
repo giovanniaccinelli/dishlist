@@ -17,6 +17,17 @@ import { doc, getDoc } from "firebase/firestore";
 const STORY_DURATION_MS = 4500;
 const STORY_HOLD_PAUSE_THRESHOLD_MS = 320;
 
+const getUserDisplayName = (user, fallback = "User") =>
+  String(
+    user?.displayName ||
+      user?.name ||
+      user?.username ||
+      user?.handle ||
+      user?.fullName ||
+      user?.email?.split?.("@")?.[0] ||
+      fallback
+  ).trim() || fallback;
+
 const storyFaceVariants = {
   enter: (direction) => {
     if (!direction) return { opacity: 0.96 };
@@ -69,9 +80,9 @@ export default function StoryViewerModal({
       return storyGroups
         .filter((group) => Array.isArray(group.stories) && group.stories.length > 0)
         .map((group) => ({
-          ownerId: group.ownerId || "",
-          ownerName: group.ownerName || "User",
-          ownerPhotoURL: group.ownerPhotoURL || "",
+          ownerId: group.ownerId || group.userId || group.id || group.stories?.[0]?.owner || group.stories?.[0]?.ownerId || "",
+          ownerName: getUserDisplayName(group, group.ownerName || "User"),
+          ownerPhotoURL: group.ownerPhotoURL || group.photoURL || "",
           stories: group.stories,
         }));
     }
@@ -80,13 +91,13 @@ export default function StoryViewerModal({
     if (fallbackStories.length === 0) return [];
     return [
       {
-        ownerId: "",
-        ownerName: ownerName || "User",
-        ownerPhotoURL: ownerPhotoURL || "",
+        ownerId: fallbackStories[0]?.owner || fallbackStories[0]?.ownerId || currentUser?.uid || "",
+        ownerName: ownerName || getUserDisplayName(currentUser, "User"),
+        ownerPhotoURL: ownerPhotoURL || currentUser?.photoURL || "",
         stories: fallbackStories,
       },
     ];
-  }, [ownerName, ownerPhotoURL, stories, storyGroups]);
+  }, [currentUser, ownerName, ownerPhotoURL, stories, storyGroups]);
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);

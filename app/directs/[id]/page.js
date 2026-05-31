@@ -93,6 +93,7 @@ export default function DirectChat() {
   const [pickerSearch, setPickerSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [dragOffsets, setDragOffsets] = useState({});
+  const scrollRef = useRef(null);
   const endRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const isRestaurantDish = (dish) => String(dish?.dishMode || "").trim().toLowerCase() === "restaurant";
@@ -157,7 +158,12 @@ export default function DirectChat() {
   }, [otherUserId]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    const node = scrollRef.current;
+    if (!node) return undefined;
+    const frame = requestAnimationFrame(() => {
+      node.scrollTop = node.scrollHeight;
+    });
+    return () => cancelAnimationFrame(frame);
   }, [messages.length]);
 
   useEffect(() => {
@@ -280,7 +286,7 @@ export default function DirectChat() {
         <div className="w-[44px]" />
       </div>
 
-      <div className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className="bottom-nav-chat-scroll px-4 flex-1 min-h-0 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-md flex-col gap-3">
         {messages.map((m, index) => {
           const isMine = m.senderId === user.uid;

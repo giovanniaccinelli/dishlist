@@ -594,12 +594,8 @@ export default function Feed() {
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
         );
         const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
-        const seenPublicItems = publicItems.filter((dish) => seenIds.has(String(dish.id)));
 
-        const quickForYou = [
-          ...shuffleArray(sortNewest(unseenPublicItems)),
-          ...shuffleArray(sortNewest(seenPublicItems)),
-        ];
+        const quickForYou = shuffleArray(sortNewest(unseenPublicItems));
         setForYouDeck(quickForYou);
         setForYouIndex(0);
         setForYouIndexByMode({});
@@ -648,16 +644,10 @@ export default function Feed() {
           setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
           const representativeTags = resolveRepresentativeTags(userData?.representativeTags, [...saved, ...toTry, ...uploaded]);
-          const forYou = [
-            ...buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags),
-            ...buildForYouFeed(seenPublicItems, tagCounts, followedSet, representativeTags),
-          ];
+          const forYou = buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags);
           const matchedFollowingItems = publicItems.filter((dish) => isFromFollowedUser(dish, followedSet));
           const followingSourceItems = matchedFollowingItems.length || !nextFollowingIds.length ? matchedFollowingItems : publicItems;
-          following = [
-            ...sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id)))),
-            ...sortNewest(followingSourceItems.filter((dish) => seenIds.has(String(dish.id)))),
-          ];
+          following = sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id))));
           setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
           setFollowingDeck(following);
@@ -890,16 +880,17 @@ export default function Feed() {
     }
   };
 
-  const handleDishViewed = (dish) => {
-    if (!userId || !dish?.id) return;
+  const handleDishSwiped = (dishOrId) => {
+    const dishId = typeof dishOrId === "string" ? dishOrId : dishOrId?.id;
+    if (!userId || !dishId) return;
     setViewedDishIds((prev) => {
-      if (prev.includes(dish.id)) return prev;
-      const next = [...prev, dish.id];
+      if (prev.includes(dishId)) return prev;
+      const next = [...prev, dishId];
       viewedDishIdsRef.current = next;
       if (typeof window !== "undefined") {
         localStorage.setItem(viewedStorageKey(userId), JSON.stringify(next));
       }
-      setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: arrayUnion(dish.id) }, { merge: true }).catch((err) =>
+      setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: arrayUnion(dishId) }, { merge: true }).catch((err) =>
         console.error("Failed to save viewed feed dish:", err)
       );
       return next;
@@ -1614,10 +1605,10 @@ export default function Feed() {
             actionLabel="+"
             actionClassName="add-action-btn w-14 h-14 text-[36px]"
             actionToast="Added to DishList"
-            trackSwipes={false}
+            trackSwipes
+            onSwiped={handleDishSwiped}
             onAuthRequired={() => setShowAuthPrompt(true)}
             onResetFeed={() => handleResetFeed("for_you")}
-            onCardViewed={activeFeed === "for_you" ? handleDishViewed : undefined}
           />
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
@@ -1673,10 +1664,10 @@ export default function Feed() {
               actionLabel="+"
               actionClassName="add-action-btn w-14 h-14 text-[36px]"
               actionToast="Added to DishList"
-              trackSwipes={false}
+              trackSwipes
+              onSwiped={handleDishSwiped}
               onAuthRequired={() => setShowAuthPrompt(true)}
               onResetFeed={() => handleResetFeed("following")}
-              onCardViewed={activeFeed === "following" ? handleDishViewed : undefined}
             />
           )}
         </div>

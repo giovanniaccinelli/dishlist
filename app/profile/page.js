@@ -3037,14 +3037,15 @@ export default function Profile() {
         </>
       )}
 
-      {/* Profile search button */}
-      <motion.button
-        onClick={openProfileDishSearch}
-        className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
-        aria-label={t("Search dishes")}
-      >
-        <Search size={27} strokeWidth={2.35} />
-      </motion.button>
+      {!showingDishlistOverview ? (
+        <motion.button
+          onClick={openProfileDishSearch}
+          className="bottom-nav-floating-action add-action-btn fixed right-6 w-16 h-16 text-[40px] z-50"
+          aria-label={t("Search dishes")}
+        >
+          <Search size={27} strokeWidth={2.35} />
+        </motion.button>
+      ) : null}
 
       {/* Upload Modal */}
       <AnimatePresence>

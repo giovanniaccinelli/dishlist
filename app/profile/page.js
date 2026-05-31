@@ -51,7 +51,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { CalendarDays, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -1992,8 +1992,10 @@ export default function Profile() {
       return aRank - bRank || a.fallbackRank - b.fallbackRank;
     })
     .map(({ fallbackRank, ...dishlist }) => dishlist);
-  const visibleProfileDishlists = allDishlists.slice(0, visibleProfileDishlistCount);
-  const hasMoreProfileDishlists = visibleProfileDishlistCount < allDishlists.length;
+  const nonEmptyProfileDishlistCount = allDishlists.filter((dishlist) => Number(dishlist.count || 0) > 0).length;
+  const effectiveVisibleProfileDishlistCount = Math.max(visibleProfileDishlistCount, nonEmptyProfileDishlistCount);
+  const visibleProfileDishlists = allDishlists.slice(0, effectiveVisibleProfileDishlistCount);
+  const hasMoreProfileDishlists = effectiveVisibleProfileDishlistCount < allDishlists.length;
   const pinnedSourceDishlists = SOURCE_DISHLIST_PINNED_IDS
     .map((id) => allDishlists.find((dishlist) => dishlist.id === id))
     .filter(Boolean);
@@ -2916,15 +2918,20 @@ export default function Profile() {
                 </button>
               </div>
               {hasMoreProfileDishlists ? (
-                <button
-                  type="button"
-                  onClick={() => setVisibleProfileDishlistCount((count) => Math.min(count + PROFILE_DISHLIST_LOAD_INCREMENT, allDishlists.length))}
-                  className={`mx-auto mt-4 flex h-11 items-center justify-center rounded-full border px-5 text-sm font-bold shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
-                    darkMode ? "border-white/12 bg-[#1A1A1A] text-white" : "border-black/10 bg-white text-black"
-                  }`}
-                >
-                  {t("Load more")}
-                </button>
+                <div className="mt-6 mb-1 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleProfileDishlistCount((count) => Math.min(Math.max(count, nonEmptyProfileDishlistCount) + PROFILE_DISHLIST_LOAD_INCREMENT, allDishlists.length))}
+                    className={`no-accent-border inline-flex min-h-11 w-full max-w-[15rem] items-center justify-center gap-2 rounded-[1rem] border px-4 text-[13px] font-bold transition active:scale-[0.98] ${
+                      darkMode
+                        ? "border-white/10 bg-[#151515] text-white/78 shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
+                        : "border-black/8 bg-[#F7F4EC] text-black/62 shadow-[0_10px_22px_rgba(54,43,23,0.08)]"
+                    }`}
+                  >
+                    <ChevronDown size={15} strokeWidth={2.3} />
+                    {t("Load more")}
+                  </button>
+                </div>
               ) : null}
             </div>
           ) : (

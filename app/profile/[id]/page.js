@@ -940,6 +940,7 @@ export default function PublicProfile() {
   const orderRank = new Map(storedDishlistOrder.map((id, index) => [id, index]));
   const coreOrderRank = new Map(CORE_PROFILE_DISHLIST_ORDER.map((id, index) => [id, index]));
   const allDishlists = localDishlists
+    .filter((dishlist) => dishlist.type !== "tag_system" || Number(dishlist.count || 0) > 0)
     .map((dishlist, index) => ({ ...normalizeProfileDishlist(dishlist), fallbackRank: index }))
     .sort((a, b) => {
       const aCoreRank = coreOrderRank.has(a.id) ? coreOrderRank.get(a.id) : Number.POSITIVE_INFINITY;

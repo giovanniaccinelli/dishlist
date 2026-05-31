@@ -992,9 +992,9 @@ export default function RestaurantMapView({
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
         {showSearch ? (
         <div className="absolute inset-x-3 top-3 z-10">
-          <div className="restaurant-accent-border overflow-hidden rounded-[1.2rem] border-2 bg-white/95 shadow-[0_14px_28px_rgba(0,0,0,0.10)] backdrop-blur-md">
-            <div className="flex items-center gap-2 px-3 py-2.5">
-              <Search size={16} className="shrink-0 text-black/35" />
+          <div className="restaurant-accent-border overflow-hidden rounded-[0.95rem] border bg-white/95 shadow-[0_10px_22px_rgba(0,0,0,0.10)] backdrop-blur-md">
+            <div className="flex min-h-[2.65rem] items-center gap-2 px-3 py-1.5">
+              <Search size={15} className="shrink-0 text-black/35" />
               <input
                 type="text"
                 value={query}
@@ -1002,7 +1002,7 @@ export default function RestaurantMapView({
                 onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search restaurant"
-                className="w-full bg-transparent text-[16px] text-black placeholder:text-black/35 focus:outline-none"
+                className="w-full bg-transparent text-[15px] text-black placeholder:text-black/35 focus:outline-none"
               />
               {query ? (
                 <button
@@ -1012,10 +1012,10 @@ export default function RestaurantMapView({
                     setQuery("");
                     setPredictions([]);
                   }}
-                  className="restaurant-accent-border flex h-7 w-7 items-center justify-center rounded-full border-2 bg-black/5 text-black/55"
+                  className="restaurant-accent-border flex h-6 w-6 items-center justify-center rounded-full border bg-black/5 text-black/55"
                   aria-label="Clear restaurant search"
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               ) : null}
             </div>

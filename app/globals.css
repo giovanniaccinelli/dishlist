@@ -116,17 +116,16 @@
 }
 
 .dish-modal-primary-btn {
-  border: 2px solid rgba(143, 243, 173, 0.58);
-  background: linear-gradient(180deg, #39e978 0%, #24bf5f 100%);
-  color: #031107;
+  border: 1.5px solid rgba(120, 245, 157, 0.58);
+  background: #2BD36B;
+  color: #06110A;
   box-shadow:
-    0 14px 30px rgba(35, 194, 104, 0.22),
-    0 8px 22px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    0 10px 22px rgba(43, 211, 107, 0.18),
+    0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 .dish-modal-primary-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.04);
 }
 
 .dish-modal-primary-btn:disabled {
@@ -137,27 +136,25 @@
 .dish-modal-next-btn {
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
-  border: 2px solid rgba(143, 243, 173, 0.62);
+  border: 1.5px solid rgba(120, 245, 157, 0.58);
   border-radius: 9999px;
-  background: linear-gradient(180deg, #35de73 0%, #20b85a 100%);
-  color: #041107;
+  background: #2BD36B;
+  color: #06110A;
   box-shadow:
-    0 12px 26px rgba(35, 194, 104, 0.2),
-    0 8px 20px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    0 10px 22px rgba(43, 211, 107, 0.18),
+    0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 .dish-modal-next-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.04);
 }
 
 .dish-modal-back-btn {
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%) !important;
-  color: rgba(255, 255, 255, 0.76) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #171717 !important;
+  color: rgba(255, 255, 255, 0.72) !important;
   box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .action-btn-white-ring {

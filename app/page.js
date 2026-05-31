@@ -186,6 +186,7 @@ export default function Feed() {
 	  const forYouDeckRef = useRef(null);
   const followingDeckRef = useRef(null);
   const viewedDishIdsRef = useRef([]);
+  const viewedSwipeTimersRef = useRef(new Map());
   const initialFeedCache = getSessionPageCache(getFeedCacheKey(userId, "guest"))?.value;
   const initialHasCompleteFeedCache = Boolean(initialFeedCache?.forYouDeck?.length && (!userId || initialFeedCache?.followingDeck?.length));
 
@@ -310,6 +311,13 @@ export default function Feed() {
   useEffect(() => {
     viewedDishIdsRef.current = viewedDishIds;
   }, [viewedDishIds]);
+
+  useEffect(() => () => {
+    viewedSwipeTimersRef.current.forEach((timer) => {
+      if (typeof window !== "undefined") window.clearTimeout(timer);
+    });
+    viewedSwipeTimersRef.current.clear();
+  }, []);
 
   useEffect(() => {
     if (!userId || typeof window === "undefined") {
@@ -883,18 +891,28 @@ export default function Feed() {
   const handleDishSwiped = (dishOrId) => {
     const dishId = typeof dishOrId === "string" ? dishOrId : dishOrId?.id;
     if (!userId || !dishId) return;
-    setViewedDishIds((prev) => {
-      if (prev.includes(dishId)) return prev;
-      const next = [...prev, dishId];
-      viewedDishIdsRef.current = next;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(viewedStorageKey(userId), JSON.stringify(next));
-      }
-      setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: arrayUnion(dishId) }, { merge: true }).catch((err) =>
-        console.error("Failed to save viewed feed dish:", err)
-      );
-      return next;
-    });
+    if (viewedSwipeTimersRef.current.has(dishId)) return;
+    const markSeen = () => {
+      viewedSwipeTimersRef.current.delete(dishId);
+      setViewedDishIds((prev) => {
+        if (prev.includes(dishId)) return prev;
+        const next = [...prev, dishId];
+        viewedDishIdsRef.current = next;
+        if (typeof window !== "undefined") {
+          localStorage.setItem(viewedStorageKey(userId), JSON.stringify(next));
+        }
+        setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: arrayUnion(dishId) }, { merge: true }).catch((err) =>
+          console.error("Failed to save viewed feed dish:", err)
+        );
+        return next;
+      });
+    };
+    const timer = typeof window !== "undefined" ? window.setTimeout(markSeen, 560) : null;
+    if (timer === null) {
+      markSeen();
+    } else {
+      viewedSwipeTimersRef.current.set(dishId, timer);
+    }
   };
 
   const isGuestFeedOnboarding = () => {

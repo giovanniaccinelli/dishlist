@@ -116,12 +116,12 @@
 }
 
 .dish-modal-primary-btn {
-  border: 1.5px solid rgba(74, 190, 112, 0.58);
-  background: #1F8F4D;
-  color: #F2FFF6;
+  border: 1.5px solid rgba(43, 211, 107, 0.34);
+  background: #12351F;
+  color: #DDFBE6;
   box-shadow:
-    0 10px 22px rgba(31, 143, 77, 0.16),
-    0 8px 18px rgba(0, 0, 0, 0.22);
+    0 10px 22px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .dish-modal-primary-btn:hover {
@@ -136,13 +136,13 @@
 .dish-modal-next-btn {
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
-  border: 1.5px solid rgba(74, 190, 112, 0.58);
+  border: 1.5px solid rgba(43, 211, 107, 0.38);
   border-radius: 9999px;
-  background: #1F8F4D;
-  color: #F2FFF6;
+  background: #12351F;
+  color: #DDFBE6;
   box-shadow:
-    0 10px 22px rgba(31, 143, 77, 0.16),
-    0 8px 18px rgba(0, 0, 0, 0.22);
+    0 10px 22px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .dish-modal-next-btn:hover {

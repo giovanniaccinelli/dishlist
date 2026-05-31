@@ -1710,7 +1710,7 @@ export default function PublicProfile() {
                           className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
                             hasItems
                               ? selected
-                                ? "bg-[#F0A623] text-black"
+                                ? "bg-[#F0A623] !text-[#050505]"
                                 : darkMode
                                   ? "bg-[#171717] text-white"
                                   : "bg-white text-black"

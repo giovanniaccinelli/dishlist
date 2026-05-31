@@ -708,7 +708,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel);
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
-  const nextCardOpacity = useTransform(dragX, [-22, -10, 0, 10, 22], [1, 0, 0, 0, 1]);
 
   const startCardVideo = useCallback((video) => {
     if (!video) return () => {};
@@ -1420,7 +1419,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         {nextCard && currentMediaReady ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
-            style={{ scale: nextCardScale, opacity: nextCardOpacity, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
+            style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {renderImage(nextCard, {
               preview: true,

@@ -1438,7 +1438,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="dish-edit-action-btn dish-edit-action-btn--save border-2 border-[#45C47A]/55 bg-[#1FA463] px-4 text-white shadow-[0_14px_30px_rgba(31,164,99,0.28)] ring-2 ring-[#2BD36B]/20 transition hover:brightness-105"
+                    className="dish-edit-action-btn dish-edit-action-btn--save dish-modal-primary-btn px-4 transition"
                     disabled={savingEdit}
                   >
                     {savingEdit ? t("Saving...") : t("Save")}
@@ -1453,7 +1453,7 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={goToPreviousEditStep}
-                    className={`w-12 h-12 rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} flex items-center justify-center bg-white shadow-sm`}
+                    className="dish-modal-back-btn flex h-12 w-12 items-center justify-center rounded-full border-2"
                     disabled={savingEdit}
                   >
                     <ArrowLeft size={18} />
@@ -1464,7 +1464,7 @@ export default function DishDetail() {
                 <button
                   type="button"
                   onClick={goToNextEditStep}
-                  className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] text-white shadow-[0_12px_26px_rgba(31,164,99,0.2)] transition hover:brightness-105"
+                  className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition"
                 >
                   <ArrowRight size={20} />
                 </button>

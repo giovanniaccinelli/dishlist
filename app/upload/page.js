@@ -908,7 +908,7 @@ export default function UploadPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={openDishlistPicker}
-                  className="w-full rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] py-3 font-semibold text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)] transition hover:brightness-105"
+                  className="dish-modal-primary-btn w-full rounded-full py-3 font-semibold transition"
                   disabled={loadingUpload}
                 >
                   {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
@@ -921,7 +921,7 @@ export default function UploadPage() {
                 <button
                   type="button"
                   onClick={goToPreviousStep}
-                    className={`w-12 h-12 rounded-full border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} flex items-center justify-center bg-white shadow-sm`}
+                    className="dish-modal-back-btn flex h-12 w-12 items-center justify-center rounded-full border-2"
                   disabled={loadingUpload}
                   aria-label="Previous step"
                 >
@@ -936,7 +936,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={goToNextStep}
-                    className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#45C47A]/55 bg-[#1FA463] text-white shadow-[0_12px_26px_rgba(31,164,99,0.22)] transition hover:brightness-105"
+                    className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition"
                     disabled={loadingUpload}
                     aria-label="Continue"
                   >

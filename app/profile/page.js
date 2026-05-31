@@ -5073,7 +5073,10 @@ export default function Profile() {
                           key={cell.dayKey}
                           type="button"
                           onClick={() => selectProfileCalendarDay(cell.dayKey)}
-                          style={hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid", boxShadow: "inset 0 0 0 1px #F0A623" } : undefined}
+                          style={{
+                            ...(hasItems ? { borderColor: "#F0A623", borderWidth: 2, borderStyle: "solid", boxShadow: "inset 0 0 0 1px #F0A623" } : {}),
+                            ...(hasItems && selected ? { color: "#050505" } : {}),
+                          }}
                           data-logged-day={hasItems ? "true" : undefined}
                           className={`relative flex h-10 items-center justify-center rounded-[0.65rem] border text-sm font-black ${
                             hasItems

@@ -314,7 +314,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [currentIndex, setCurrentIndex] = useState(() => initialDeckIndex);
   const [deckInitialized, setDeckInitialized] = useState(() => initialDeck.length > 0);
   const [deckEmpty, setDeckEmpty] = useState(() => initialDeck.length === 0);
-  const [currentMediaReadyKey, setCurrentMediaReadyKey] = useState("");
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
@@ -467,20 +466,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardStableKey = currentCard?.id || currentCard?._key || "";
-  const currentMediaReady = Boolean(currentCard && (isDishVideo(currentCard) || currentMediaReadyKey === currentCard._key));
-
-  useEffect(() => {
-    if (!currentCard?._key) {
-      setCurrentMediaReadyKey("");
-      return;
-    }
-    if (isDishVideo(currentCard)) {
-      setCurrentMediaReadyKey(currentCard._key);
-      return;
-    }
-    setCurrentMediaReadyKey("");
-  }, [currentCard?._key, currentCard]);
-
   useEffect(() => {
     if (!deckEmpty) {
       autoResetRequestedRef.current = false;
@@ -1416,7 +1401,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         }}
         onClickCapture={handleDeckMediaUnlock}
       >
-        {nextCard && currentMediaReady ? (
+        {nextCard ? (
           <motion.div
             className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
@@ -1816,7 +1801,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {renderImage(currentCard, {
                 active: !visibleRecipe,
-                onImageReady: () => setCurrentMediaReadyKey(currentCard._key),
                 onVideoRef: (node) => {
                   currentVideoRef.current = node;
                 },

@@ -104,6 +104,27 @@ const FEED_INITIAL_PAGE_SIZE = 600;
 
 const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
 
+function preloadFeedImage(src) {
+  if (!src || typeof window === "undefined" || typeof Image === "undefined") return Promise.resolve();
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {}
+      resolve();
+    };
+    image.onerror = () => resolve();
+    image.src = src;
+    if (image.complete && image.naturalWidth > 0) {
+      Promise.resolve(image.decode?.())
+        .catch(() => {})
+        .finally(resolve);
+    }
+  });
+}
+
 function FeedSwipeHint({ onDismiss }) {
   return (
     <motion.button
@@ -857,6 +878,10 @@ export default function Feed() {
     activeFeed === "following"
       ? orderedFollowing[currentFollowingIndex] || null
       : orderedForYou[currentForYouIndex] || null;
+  const firstUnderlayFeedCard =
+    activeFeed === "following"
+      ? orderedFollowing[currentFollowingIndex + 1] || null
+      : orderedForYou[currentForYouIndex + 1] || null;
 
   const handleFeedTabChange = (tab) => {
     setActiveFeed(tab);
@@ -1378,53 +1403,22 @@ export default function Feed() {
       setFeedHasRendered(true);
       return undefined;
     }
-    if (isDishVideo(firstVisibleFeedCard)) {
-      setFirstFeedCardReady(true);
-      setFeedHasRendered(true);
-      return undefined;
-    }
-
     let cancelled = false;
     setFirstFeedCardReady(false);
-    const src = getDishImageUrl(firstVisibleFeedCard);
-    if (!src) {
-      setFirstFeedCardReady(true);
-      setFeedHasRendered(true);
-      return undefined;
-    }
-
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = async () => {
-      try {
-        await image.decode?.();
-      } catch {}
+    const openingCards = [firstVisibleFeedCard, firstUnderlayFeedCard].filter(
+      (dish) => dish && !isDishVideo(dish)
+    );
+    const openingSources = Array.from(new Set(openingCards.map((dish) => getDishImageUrl(dish)).filter(Boolean)));
+    Promise.all(openingSources.map(preloadFeedImage)).finally(() => {
       if (!cancelled) {
         setFirstFeedCardReady(true);
         setFeedHasRendered(true);
       }
-    };
-    image.onerror = () => {
-      if (!cancelled) {
-        setFirstFeedCardReady(true);
-        setFeedHasRendered(true);
-      }
-    };
-    image.src = src;
-    if (image.complete && image.naturalWidth > 0) {
-      Promise.resolve(image.decode?.())
-        .catch(() => {})
-        .finally(() => {
-          if (!cancelled) {
-            setFirstFeedCardReady(true);
-            setFeedHasRendered(true);
-          }
-        });
-    }
+    });
     return () => {
       cancelled = true;
     };
-  }, [feedClientReady, feedHasRendered, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
+  }, [feedClientReady, feedHasRendered, firstUnderlayFeedCard, firstVisibleFeedCard, firstVisibleFeedCardKey, hasLoadedFeedCards, loading, loadingDishes, needsOpeningDishMode]);
 
   useEffect(() => {
     if (!feedHasRendered || !firstVisibleFeedCardKey || !hasLoadedFeedCards || loading || loadingDishes || needsOpeningDishMode) return undefined;
@@ -1596,7 +1590,7 @@ export default function Feed() {
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
-      <div className="bottom-nav-spacer px-4 pt-1 flex-1 min-h-0 overflow-hidden relative">
+      <div className="bottom-nav-spacer px-4 pt-0 flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

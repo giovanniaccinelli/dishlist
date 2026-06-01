@@ -270,6 +270,37 @@ async function recordDishLikeActivity(userId, dishId, payload = null) {
   }
 }
 
+export async function recordFollowActivity(actorId, targetUserId) {
+  if (!actorId || !targetUserId || actorId === targetUserId) return false;
+  try {
+    await setDoc(
+      doc(db, "users", targetUserId, "activity", `follow_${actorId}`),
+      {
+        kind: "follow",
+        actorId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: false }
+    );
+    return true;
+  } catch (err) {
+    console.warn("Failed to record follow activity:", err);
+    return false;
+  }
+}
+
+export async function deleteFollowActivity(actorId, targetUserId) {
+  if (!actorId || !targetUserId || actorId === targetUserId) return false;
+  try {
+    await deleteDoc(doc(db, "users", targetUserId, "activity", `follow_${actorId}`));
+    return true;
+  } catch (err) {
+    console.warn("Failed to delete follow activity:", err);
+    return false;
+  }
+}
+
 async function mergeDishesWithCanonical(dishes = []) {
   const items = (Array.isArray(dishes) ? dishes : []).filter((dish) => dish?.id);
   if (!items.length) return [];

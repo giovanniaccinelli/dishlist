@@ -1110,52 +1110,37 @@ export default function Feed() {
     if (!userId) return [];
     setActivityLoading(true);
     try {
-      const [userSnap, activitySnap] = await Promise.all([
-        getDoc(doc(db, "users", userId)).catch(() => null),
-        getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
+      const activitySnap = await getDocs(query(collection(db, "users", userId, "activity"), orderBy("createdAt", "desc"), limitResults(80))).catch((error) => {
         console.error("Failed to load timestamped activity:", error);
         return { docs: [] };
-        }),
-      ]);
-      const userData = userSnap?.exists?.() ? userSnap.data() || {} : {};
-      const followers = Array.isArray(userData.followers) ? userData.followers : [];
+      });
       const reactionActivityEvents = activitySnap.docs
         .map((eventDoc) => ({ id: eventDoc.id, ...eventDoc.data() }))
-        .filter((event) => ["save", "like"].includes(event.kind) && event.actorId && event.actorId !== userId && event.dishId);
-      const [reactionActivityUsers, followerUsers] = await Promise.all([
+        .filter((event) => {
+          if (!["save", "like", "follow"].includes(event.kind) || !event.actorId || event.actorId === userId) return false;
+          return event.kind === "follow" || Boolean(event.dishId);
+        });
+      const [reactionActivityUsers] = await Promise.all([
         getUsersByIds(reactionActivityEvents.map((event) => event.actorId)).catch((error) => {
           console.error("Failed to load timestamped activity actors:", error);
-          return [];
-        }),
-        getUsersByIds(followers).catch((error) => {
-          console.error("Failed to load follower activity:", error);
           return [];
         }),
       ]);
       const reactionActivityUsersById = new Map(reactionActivityUsers.map((actor) => [actor.id, actor]));
       const reactionActivityItems = reactionActivityEvents.map((event) => {
         const actor = reactionActivityUsersById.get(event.actorId);
-        const kind = event.kind === "like" ? "like" : "save";
+        const kind = event.kind === "follow" ? "follow" : event.kind === "like" ? "like" : "save";
         return {
-          id: `${kind}-${event.dishId}-${event.actorId}`,
+          id: kind === "follow" ? `follow-${event.actorId}` : `${kind}-${event.dishId}-${event.actorId}`,
           kind,
-          icon: kind === "like" ? Heart : Plus,
+          icon: kind === "follow" ? UserPlus : kind === "like" ? Heart : Plus,
           actor: actor?.displayName || actor?.name || "Someone",
-          text: t(kind === "like" ? "liked your dish" : "saved your dish"),
-          detail: event.dishName || "",
-          href: `/dish/${event.dishId}?source=uploaded&mode=single`,
+          text: t(kind === "follow" ? "started following you" : kind === "like" ? "liked your dish" : "saved your dish"),
+          detail: kind === "follow" ? "" : event.dishName || "",
+          href: kind === "follow" ? `/profile/${event.actorId}` : `/dish/${event.dishId}?source=uploaded&mode=single`,
           timeMs: timestampToMs(event.createdAt || event.updatedAt),
         };
       });
-      const followerItems = followerUsers.map((follower) => ({
-        id: `follow-${follower.id}`,
-        kind: "follow",
-        icon: UserPlus,
-        actor: follower.displayName || follower.name || "Someone",
-        text: t("started following you"),
-        href: `/profile/${follower.id}`,
-        timeMs: timestampToMs(userData.followersSince?.[follower.id] || follower.followingSince?.[userId]),
-      }));
 
       const followedPostItems = followingDeck
         .filter((dish) => {
@@ -1289,7 +1274,6 @@ export default function Feed() {
       }
 
       const items = [
-        ...followerItems,
         ...followedPostItems,
         ...reactionActivityItems,
         ...expandedItems,

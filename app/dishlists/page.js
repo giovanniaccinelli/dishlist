@@ -23,7 +23,7 @@ import {
 import { db } from "../lib/firebase";
 import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
-import { getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL } from "../lib/firebaseHelpers";
+import { deleteFollowActivity, getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL, recordFollowActivity } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { CalendarDays, ChevronDown, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -387,6 +387,11 @@ export default function Dishlists() {
       following: alreadyFollowing ? arrayRemove(userId) : arrayUnion(userId),
       [followingSinceField]: alreadyFollowing ? null : Date.now(),
     });
+    if (alreadyFollowing) {
+      await deleteFollowActivity(user.uid, userId);
+    } else {
+      await recordFollowActivity(user.uid, userId);
+    }
     const updateList = (list) =>
       list.map((u) => {
         if (u.id !== userId) return u;

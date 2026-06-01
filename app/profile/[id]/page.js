@@ -28,6 +28,8 @@ import {
   getLeaderboardAnswersForUser,
   getAvatarTone,
   normalizeProfilePhotoURL,
+  recordFollowActivity,
+  deleteFollowActivity,
 } from "../../lib/firebaseHelpers";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Search, Send, Shuffle, Trophy, Upload, UserCheck, UserPlus, Users, X } from "lucide-react";
@@ -734,6 +736,11 @@ export default function PublicProfile() {
       following: newFollowing,
       [`followingSince.${profileDocId}`]: isFollowing ? null : Date.now(),
     });
+    if (isFollowing) {
+      await deleteFollowActivity(user.uid, profileDocId);
+    } else {
+      await recordFollowActivity(user.uid, profileDocId);
+    }
     setProfileUser((prev) => (prev ? { ...prev, followers: newFollowers } : prev));
     setIsFollowing(!isFollowing);
   };

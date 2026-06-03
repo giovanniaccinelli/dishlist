@@ -129,7 +129,11 @@ export default function NotificationsManager() {
         },
       });
 
-      if (localStorage.getItem(ENABLED_KEY) === "1") {
+      const shouldRegister =
+        localStorage.getItem(ENABLED_KEY) === "1" ||
+        enabled ||
+        nativePermission === "granted";
+      if (shouldRegister) {
         await registerForNativePush().catch((error) => {
           console.warn("Native push register failed:", error);
         });
@@ -140,7 +144,7 @@ export default function NotificationsManager() {
       cancelled = true;
       removeListeners?.();
     };
-  }, [user?.uid]);
+  }, [enabled, nativePermission, user?.uid]);
 
   useEffect(() => {
     if (!user?.uid || !enabled) return;

@@ -1,12 +1,14 @@
 "use client";
 
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { auth, db } from "./firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
+const NativePushBridgePlugin = registerPlugin("NativePushBridge");
+
 function getNativePushPlugin() {
   if (typeof window === "undefined") return null;
-  return window.Capacitor?.Plugins?.NativePushBridge || Capacitor?.Plugins?.NativePushBridge || null;
+  return window.Capacitor?.Plugins?.NativePushBridge || Capacitor?.Plugins?.NativePushBridge || NativePushBridgePlugin || null;
 }
 
 function makeTokenDocId(token) {
@@ -40,8 +42,39 @@ export async function registerForNativePush() {
   await plugin.register();
 }
 
+export async function getLastNativePushToken() {
+  if (!isNativePushSupported()) return "";
+  const plugin = getNativePushPlugin();
+  if (typeof plugin.getLastToken !== "function") return "";
+  const result = await plugin.getLastToken();
+  return String(result?.token || "").trim();
+}
+
 export async function saveNativePushToken(userId, token) {
   if (!userId || !token) return;
+  const currentUser = auth.currentUser;
+  if (currentUser?.uid === userId) {
+    const idToken = await currentUser.getIdToken();
+    const response = await fetch("/api/notifications/register-token", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({
+        token,
+        enabled: true,
+        platform: Capacitor.getPlatform(),
+      }),
+    });
+    if (response.ok) return;
+    let details = "";
+    try {
+      details = await response.text();
+    } catch {}
+    console.warn("Server push token registration failed, falling back to client write:", response.status, details);
+  }
+
   const docId = makeTokenDocId(token);
   await setDoc(
     doc(db, "users", userId, "pushTokens", docId),
@@ -58,6 +91,29 @@ export async function saveNativePushToken(userId, token) {
 
 export async function disableNativePushToken(userId, token) {
   if (!userId || !token) return;
+  const currentUser = auth.currentUser;
+  if (currentUser?.uid === userId) {
+    const idToken = await currentUser.getIdToken();
+    const response = await fetch("/api/notifications/register-token", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({
+        token,
+        enabled: false,
+        platform: Capacitor.getPlatform(),
+      }),
+    });
+    if (response.ok) return;
+    let details = "";
+    try {
+      details = await response.text();
+    } catch {}
+    console.warn("Server push token disable failed, falling back to client write:", response.status, details);
+  }
+
   const docId = makeTokenDocId(token);
   await setDoc(
     doc(db, "users", userId, "pushTokens", docId),

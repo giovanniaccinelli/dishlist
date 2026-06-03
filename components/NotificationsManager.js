@@ -11,6 +11,7 @@ import {
   addNativePushListeners,
   disableNativePushToken,
   getNativePushPermissionState,
+  getLastNativePushToken,
   isNativePushSupported,
   registerForNativePush,
   requestNativePushPermission,
@@ -137,6 +138,13 @@ export default function NotificationsManager() {
         await registerForNativePush().catch((error) => {
           console.warn("Native push register failed:", error);
         });
+        const cachedToken = await getLastNativePushToken().catch(() => "");
+        if (cachedToken && !cancelled) {
+          nativePushTokenRef.current = cachedToken;
+          await saveNativePushToken(user.uid, cachedToken);
+          localStorage.setItem(ENABLED_KEY, "1");
+          setEnabled(true);
+        }
       }
     })();
 

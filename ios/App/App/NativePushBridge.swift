@@ -18,6 +18,7 @@ public class NativePushBridge: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getPermissionStatus", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestPermissions", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "register", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getLastToken", returnType: CAPPluginReturnPromise),
     ]
 
     public override func load() {
@@ -78,6 +79,12 @@ public class NativePushBridge: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    @objc func getLastToken(_ call: CAPPluginCall) {
+        call.resolve([
+            "token": UserDefaults.standard.string(forKey: "DishListLastPushToken") ?? "",
+        ])
+    }
+
     private func permissionState(from status: UNAuthorizationStatus) -> String {
         switch status {
         case .authorized, .provisional, .ephemeral:
@@ -94,6 +101,7 @@ public class NativePushBridge: CAPPlugin, CAPBridgedPlugin {
     @objc private func handleRegistration(_ notification: Notification) {
         let token = notification.userInfo?["token"] as? String ?? ""
         guard !token.isEmpty else { return }
+        UserDefaults.standard.set(token, forKey: "DishListLastPushToken")
         notifyListeners("registration", data: ["token": token])
     }
 

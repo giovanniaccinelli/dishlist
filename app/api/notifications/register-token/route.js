@@ -26,6 +26,7 @@ export async function POST(request) {
 
     const db = getAdminDb();
     const docId = makeTokenDocId(token);
+    const now = new Date();
     await db
       .collection("users")
       .doc(decoded.uid)
@@ -36,8 +37,8 @@ export async function POST(request) {
           token,
           enabled: body?.enabled !== false,
           platform: String(body?.platform || "ios"),
-          updatedAt: new Date(),
-          createdAt: new Date(),
+          updatedAt: now,
+          createdAt: now,
         },
         { merge: true }
       );
@@ -47,8 +48,17 @@ export async function POST(request) {
       .doc(decoded.uid)
       .set(
         {
+          pushTokensFlat: {
+            [docId]: {
+              token,
+              enabled: body?.enabled !== false,
+              platform: String(body?.platform || "ios"),
+              updatedAt: now,
+            },
+          },
           pushRegistrationDebug: {
-            lastServerSaveAt: new Date(),
+            lastServerSaveAt: now,
+            lastTokenDocId: docId,
             lastTokenSuffix: token.slice(-8),
             platform: String(body?.platform || "ios"),
             enabled: body?.enabled !== false,

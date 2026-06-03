@@ -65,20 +65,56 @@ async function resolveUserIdsForPush(userIds = []) {
 async function getEnabledTokensForUserIds(userIds = []) {
   const db = getAdminDb();
   const uniqueIds = await resolveUserIdsForPush(userIds);
-  const snapshots = await Promise.all(
-    uniqueIds.map((userId) => db.collection("users").doc(userId).collection("pushTokens").get())
+  const records = await Promise.all(
+    uniqueIds.map(async (userId) => {
+      const userRef = db.collection("users").doc(userId);
+      const [userSnap, tokenSnap] = await Promise.all([
+        userRef.get(),
+        userRef.collection("pushTokens").get(),
+      ]);
+      return { userId, userData: userSnap.data() || {}, tokenSnap };
+    })
   );
-  const tokens = snapshots.flatMap((snap) =>
-    snap.docs
+  const tokens = records.flatMap(({ userData, tokenSnap }) => {
+    const subcollectionTokens = tokenSnap.docs
       .map((doc) => doc.data() || {})
       .filter((item) => item.enabled !== false && typeof item.token === "string" && item.token.trim())
-      .map((item) => item.token.trim())
-  );
+      .map((item) => item.token.trim());
+    const flatTokens = Object.values(userData.pushTokensFlat || {})
+      .filter((item) => item?.enabled !== false && typeof item?.token === "string" && item.token.trim())
+      .map((item) => item.token.trim());
+    return [...subcollectionTokens, ...flatTokens];
+  });
+  const uniqueTokens = Array.from(new Set(tokens));
   console.log("Push token lookup", {
     requestedUserIds: uniqueIds,
-    tokenCount: tokens.length,
+    tokenCount: uniqueTokens.length,
   });
-  return tokens;
+  return uniqueTokens;
+}
+
+async function recordPushDispatchDebug(userIds = [], debug = {}) {
+  const db = getAdminDb();
+  const uniqueIds = await resolveUserIdsForPush(userIds);
+  await Promise.all(
+    uniqueIds.map((userId) =>
+      db
+        .collection("users")
+        .doc(userId)
+        .set(
+          {
+            pushDispatchDebug: {
+              ...debug,
+              checkedAt: new Date(),
+            },
+          },
+          { merge: true }
+        )
+        .catch((error) => {
+          console.warn("Failed to write push dispatch debug:", userId, error);
+        })
+    )
+  );
 }
 
 async function dispatchDishPosted({ decoded, ownerId, dishId, dishName = "" }) {
@@ -93,11 +129,13 @@ async function dispatchDishPosted({ decoded, ownerId, dishId, dishName = "" }) {
     dishId,
   });
   const tokens = await getEnabledTokensForUserIds(followers);
-  return sendApnsNotifications(tokens, {
+  const result = await sendApnsNotifications(tokens, {
     title: `${ownerData.displayName || "Someone"} posted a dish`,
     body: dishName || "Open DishList to see it",
     url: `/dish/${dishId}?source=public&mode=single`,
   });
+  await recordPushDispatchDebug(followers, { type: "dish_posted", ownerId, dishId, tokenCount: tokens.length, result });
+  return result;
 }
 
 async function dispatchStoryPosted({ decoded, ownerId, storyName = "" }) {
@@ -111,11 +149,13 @@ async function dispatchStoryPosted({ decoded, ownerId, storyName = "" }) {
     followerCount: followers.length,
   });
   const tokens = await getEnabledTokensForUserIds(followers);
-  return sendApnsNotifications(tokens, {
+  const result = await sendApnsNotifications(tokens, {
     title: `${ownerData.displayName || "Someone"} added a story`,
     body: storyName || "See what they posted",
     url: `/profile/${encodeURIComponent(ownerId)}`,
   });
+  await recordPushDispatchDebug(followers, { type: "story_posted", ownerId, tokenCount: tokens.length, result });
+  return result;
 }
 
 async function dispatchDirectMessage({ decoded, conversationId, senderId, text = "", type = "text" }) {
@@ -137,11 +177,13 @@ async function dispatchDirectMessage({ decoded, conversationId, senderId, text =
   const senderSnap = await db.collection("users").doc(senderId).get();
   const senderData = senderSnap.data() || {};
   const tokens = await getEnabledTokensForUserIds(recipients);
-  return sendApnsNotifications(tokens, {
+  const result = await sendApnsNotifications(tokens, {
     title: senderData.displayName || "New message",
     body: type === "dish" ? "Shared a dish with you" : text || "Sent you a message on DishList",
     url: `/directs/${conversationId}`,
   });
+  await recordPushDispatchDebug(recipients, { type: "direct_message", conversationId, senderId, tokenCount: tokens.length, result });
+  return result;
 }
 
 async function dispatchCommentPosted({
@@ -169,7 +211,7 @@ async function dispatchCommentPosted({
     isStoryComment,
   });
   if (!tokens.length) return { sent: 0, failed: 0, skipped: 0 };
-  return sendApnsNotifications(tokens, {
+  const result = await sendApnsNotifications(tokens, {
     title: `${actorData.displayName || "Someone"} commented`,
     body: commentText || (isStoryComment ? "Commented on a story" : dishName || "Commented on a dish"),
     url:
@@ -177,6 +219,8 @@ async function dispatchCommentPosted({
         ? `/profile/${encodeURIComponent(storyOwnerId)}`
         : `/dish/${dishId}?source=public&mode=single`,
   });
+  await recordPushDispatchDebug(recipientIds, { type: "comment_posted", actorId, dishId, isStoryComment, tokenCount: tokens.length, result });
+  return result;
 }
 
 export async function POST(request) {

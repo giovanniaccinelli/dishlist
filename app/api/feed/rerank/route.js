@@ -62,6 +62,7 @@ function uniqueKnownIds(ids, allowedIds) {
 }
 
 export async function POST(request) {
+  const debug = new URL(request.url).searchParams.get("debug") === "1";
   let body;
   try {
     body = await request.json();
@@ -137,7 +138,18 @@ export async function POST(request) {
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.warn("Feed AI rerank failed:", response.status, detail.slice(0, 240));
-      return NextResponse.json({ orderedIds: [], aiUsed: false, reason: "provider_error" });
+      return NextResponse.json({
+        orderedIds: [],
+        aiUsed: false,
+        reason: "provider_error",
+        ...(debug
+          ? {
+              providerStatus: response.status,
+              providerDetail: detail.slice(0, 500),
+              model,
+            }
+          : {}),
+      });
     }
 
     const result = await response.json();
@@ -152,7 +164,12 @@ export async function POST(request) {
     });
   } catch (error) {
     if (error?.name !== "AbortError") console.warn("Feed AI rerank error:", error);
-    return NextResponse.json({ orderedIds: [], aiUsed: false, reason: error?.name === "AbortError" ? "timeout" : "error" });
+    return NextResponse.json({
+      orderedIds: [],
+      aiUsed: false,
+      reason: error?.name === "AbortError" ? "timeout" : "error",
+      ...(debug ? { errorName: error?.name || "Error" } : {}),
+    });
   } finally {
     clearTimeout(timeout);
   }

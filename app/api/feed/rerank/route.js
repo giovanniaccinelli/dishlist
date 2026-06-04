@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 const MAX_CANDIDATES = 80;
-const DEFAULT_GATEWAY_MODEL = "openai/gpt-5-mini";
-const DEFAULT_OPENAI_MODEL = "gpt-5-mini";
+const DEFAULT_GATEWAY_MODEL = "openai/gpt-5.4";
+const DEFAULT_OPENAI_MODEL = "gpt-5.4";
 
 function cleanString(value, maxLength = 120) {
   return String(value || "").trim().slice(0, maxLength);

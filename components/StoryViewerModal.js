@@ -108,6 +108,7 @@ export default function StoryViewerModal({
   const pressStartedAtRef = useRef(0);
   const tapZonePressRef = useRef(null);
   const storyShellPressRef = useRef(null);
+  const storyDragCloseTriggeredRef = useRef(false);
   const holdPauseTimerRef = useRef(null);
   const holdPauseActivatedRef = useRef(false);
   const suppressTapUntilRef = useRef(0);
@@ -599,11 +600,12 @@ export default function StoryViewerModal({
         <motion.div
           className="relative w-screen h-screen overflow-hidden bg-black"
           drag
-          dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-          dragElastic={0.12}
+          dragConstraints={{ top: 0, bottom: 900, left: 0, right: 0 }}
+          dragElastic={0.02}
           onPointerDown={(event) => {
             if (!event.target.closest("[data-no-story-pause='true']")) {
               storyShellPressRef.current = { x: event.clientX, y: event.clientY };
+              storyDragCloseTriggeredRef.current = false;
             }
             handlePressStart(event);
           }}
@@ -613,23 +615,38 @@ export default function StoryViewerModal({
             const dy = start ? event.clientY - start.y : 0;
             const dx = start ? event.clientX - start.x : 0;
             handlePressEnd();
-            if (dy > 120 && Math.abs(dy) > Math.abs(dx) * 1.1) {
+            if (!storyDragCloseTriggeredRef.current && dy > 86 && Math.abs(dy) > Math.abs(dx) * 0.8) {
+              storyDragCloseTriggeredRef.current = true;
               suppressTapUntilRef.current = Date.now() + 320;
               onClose?.();
             }
           }}
           onPointerCancel={() => {
             storyShellPressRef.current = null;
+            storyDragCloseTriggeredRef.current = false;
             handlePressEnd();
+          }}
+          onDrag={(_, info) => {
+            if (storyDragCloseTriggeredRef.current) return;
+            if (info.offset.y > 92 && Math.abs(info.offset.y) > Math.abs(info.offset.x) * 0.75) {
+              storyDragCloseTriggeredRef.current = true;
+              suppressTapUntilRef.current = Date.now() + 320;
+              onClose?.();
+            }
           }}
           onDragEnd={(_, info) => {
             setIsPaused(false);
+            if (storyDragCloseTriggeredRef.current) return;
             if (Math.abs(info.offset.x) > Math.abs(info.offset.y) && Math.abs(info.offset.x) > 70) {
               if (info.offset.x < 0) goNextGroup();
               else goPrevGroup();
               return;
             }
-            if (info.offset.y > 120 || info.velocity.y > 700) onClose?.();
+            if (info.offset.y > 86 || info.velocity.y > 520) {
+              storyDragCloseTriggeredRef.current = true;
+              suppressTapUntilRef.current = Date.now() + 320;
+              onClose?.();
+            }
           }}
           style={{ perspective: 1100, transformStyle: "preserve-3d", touchAction: "pan-y pan-x" }}
         >

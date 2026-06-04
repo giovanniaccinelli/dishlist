@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { collection, collectionGroup, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../app/lib/firebase";
 import { useAuth } from "../app/lib/auth";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
+import { useLanguage } from "./LanguageProvider";
 import {
   addNativePushListeners,
   disableNativePushToken,
@@ -51,6 +52,7 @@ async function showAppNotification(title, options = {}) {
 
 export default function NotificationsManager() {
   const { user } = useAuth();
+  const { darkMode, t } = useLanguage();
   const [showPrompt, setShowPrompt] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [nativePermission, setNativePermission] = useState("unsupported");
@@ -239,12 +241,6 @@ export default function NotificationsManager() {
     });
   }, [enabled, user?.uid]);
 
-  const permissionLabel = useMemo(() => {
-    if (isNativePushSupported()) return nativePermission;
-    if (typeof window === "undefined" || !("Notification" in window)) return "";
-    return Notification.permission;
-  }, [nativePermission, showPrompt]);
-
   const requestNotifications = async () => {
     if (typeof window === "undefined") return;
     localStorage.setItem(ASKED_KEY, "1");
@@ -281,26 +277,28 @@ export default function NotificationsManager() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 18 }}
         >
-          <div className="w-full max-w-md rounded-[1.6rem] border border-black/10 bg-white px-4 py-4 shadow-[0_22px_50px_rgba(0,0,0,0.16)]">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/38">
-              Notifications
+          <div className={`w-full max-w-sm rounded-[1.45rem] border px-4 py-4 shadow-[0_22px_54px_rgba(0,0,0,0.28)] ${
+            darkMode ? "border-white/10 bg-[#101411] text-white" : "border-black/10 bg-white text-black"
+          }`}>
+            <div className={`text-[11px] font-bold uppercase tracking-[0.16em] ${darkMode ? "text-[#74E292]" : "text-[#15803D]"}`}>
+              {t("Notifications")}
             </div>
-            <div className="mt-2 text-lg font-semibold text-black">
-              Stay on top of dishes, stories, and directs
+            <div className="mt-2 text-[1.2rem] font-black leading-tight">
+              {t("Turn on notifications")}
             </div>
-            <div className="mt-2 text-sm leading-6 text-black/58">
-              We’ll let you know when people you follow post, or when somebody messages you.
+            <div className={`mt-2 text-sm leading-5 ${darkMode ? "text-white/62" : "text-black/58"}`}>
+              {t("Directs, comments, and new dishes when they matter.")}
             </div>
-            {permissionLabel && permissionLabel !== "default" ? (
-              <div className="mt-2 text-xs text-black/42">Current permission: {permissionLabel}</div>
-            ) : null}
+            <div className={`mt-2 text-xs font-semibold leading-5 ${darkMode ? "text-white/38" : "text-black/38"}`}>
+              {t("If you have not already, update the app first.")}
+            </div>
             <div className="mt-4 flex items-center gap-2">
               <button
                 type="button"
                 onClick={requestNotifications}
-                className="rounded-full bg-black px-4 py-2.5 text-sm font-semibold text-white"
+                className="rounded-full bg-[#2BD36B] px-4 py-2.5 text-sm font-black text-black shadow-[0_10px_24px_rgba(43,211,107,0.22)] active:scale-[0.98]"
               >
-                Allow
+                {t("Turn on")}
               </button>
               <button
                 type="button"
@@ -308,9 +306,11 @@ export default function NotificationsManager() {
                   localStorage.setItem(ASKED_KEY, "1");
                   setShowPrompt(false);
                 }}
-                className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-black/65"
+                className={`rounded-full border px-4 py-2.5 text-sm font-bold active:scale-[0.98] ${
+                  darkMode ? "border-white/10 bg-white/6 text-white/62" : "border-black/10 bg-white text-black/55"
+                }`}
               >
-                Not now
+                {t("Not now")}
               </button>
             </div>
           </div>

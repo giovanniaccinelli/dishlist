@@ -95,7 +95,6 @@ export default function UploadPage() {
   const [tagUsersLoading, setTagUsersLoading] = useState(false);
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const aiSuggestedTagNameRef = useRef("");
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -158,13 +157,11 @@ export default function UploadPage() {
   useEffect(() => {
     if (uploadStep !== 2 || loadingUpload) return undefined;
     const name = dishName.trim();
-    const suggestionKey = `${dishMode}:${name.toLowerCase()}`;
-    if (!name || dishTags.length > 0 || aiSuggestedTagNameRef.current === suggestionKey) return undefined;
+    if (!name || dishTags.length > 0) return undefined;
     let active = true;
     (async () => {
       const suggestedTags = await suggestDishTagsFromName(name, dishMode);
       if (!active || !suggestedTags.length) return;
-      aiSuggestedTagNameRef.current = suggestionKey;
       setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     })();
     return () => {

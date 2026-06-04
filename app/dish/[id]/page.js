@@ -140,7 +140,6 @@ export default function DishDetail() {
   const editPreviewObjectUrlRef = useRef("");
   const editLibraryInputRef = useRef(null);
   const editCameraInputRef = useRef(null);
-  const aiSuggestedEditTagNameRef = useRef("");
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -527,7 +526,6 @@ export default function DishDetail() {
   const openEditModal = (dishToEdit) => {
     if (!dishToEdit || dishToEdit?.owner !== userId) return;
     clearEditPreviewObjectUrl();
-    aiSuggestedEditTagNameRef.current = "";
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
@@ -597,13 +595,11 @@ export default function DishDetail() {
   useEffect(() => {
     if (!editOpen || editStep !== 2 || savingEdit) return undefined;
     const name = editName.trim();
-    const suggestionKey = `${editDishMode}:${name.toLowerCase()}`;
-    if (!name || editTags.length > 0 || aiSuggestedEditTagNameRef.current === suggestionKey) return undefined;
+    if (!name || editTags.length > 0) return undefined;
     let active = true;
     (async () => {
       const suggestedTags = await suggestDishTagsFromName(name, editDishMode);
       if (!active || !suggestedTags.length) return;
-      aiSuggestedEditTagNameRef.current = suggestionKey;
       setEditTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     })();
     return () => {

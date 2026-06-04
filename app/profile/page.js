@@ -601,7 +601,6 @@ export default function Profile() {
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const dishlistLongPressRef = useRef(null);
   const dishlistLongPressTriggeredRef = useRef(false);
-  const aiSuggestedProfileUploadTagNameRef = useRef("");
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL = normalizeProfilePhotoURL(
     profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "")
@@ -624,13 +623,11 @@ export default function Profile() {
   useEffect(() => {
     if (!isModalOpen || loadingUpload) return undefined;
     const name = dishName.trim();
-    const suggestionKey = `home:${name.toLowerCase()}`;
-    if (!name || dishTags.length > 0 || aiSuggestedProfileUploadTagNameRef.current === suggestionKey) return undefined;
+    if (!name || dishTags.length > 0) return undefined;
     let active = true;
     const timer = window.setTimeout(async () => {
       const suggestedTags = await suggestDishTagsFromName(name, DISH_MODE_COOKING);
       if (!active || !suggestedTags.length) return;
-      aiSuggestedProfileUploadTagNameRef.current = suggestionKey;
       setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     }, 450);
     return () => {
@@ -1668,6 +1665,7 @@ export default function Profile() {
     try {
       const lists = allDishlists.filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded");
       const memberships = lists
+        .filter((dishlist) => dishlist.id !== "saved")
         .filter((dishlist) => (dishlist.dishes || []).some((item) => item.id === dish.id))
         .map((dishlist) => dishlist.id);
       setDishlistPickerLists(lists);

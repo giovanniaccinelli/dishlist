@@ -64,7 +64,7 @@ export async function POST(request) {
     : "https://api.openai.com/v1/chat/completions";
   const model = process.env.DISH_TAG_AI_MODEL || (useGateway ? DEFAULT_GATEWAY_MODEL : DEFAULT_OPENAI_MODEL);
   const abortController = new AbortController();
-  const timeout = setTimeout(() => abortController.abort(), 1800);
+  const timeout = setTimeout(() => abortController.abort(), 4500);
 
   try {
     const response = await fetch(endpoint, {

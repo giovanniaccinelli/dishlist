@@ -37,6 +37,7 @@ import {
   uploadDishImageVariants,
 } from "../../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
+import { suggestDishTagsFromName } from "../../lib/dishTagSuggestions";
 import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
@@ -139,6 +140,7 @@ export default function DishDetail() {
   const editPreviewObjectUrlRef = useRef("");
   const editLibraryInputRef = useRef(null);
   const editCameraInputRef = useRef(null);
+  const aiSuggestedEditTagNameRef = useRef("");
 
   const shuffleArray = (arr) => {
     const copy = [...arr];
@@ -525,6 +527,7 @@ export default function DishDetail() {
   const openEditModal = (dishToEdit) => {
     if (!dishToEdit || dishToEdit?.owner !== userId) return;
     clearEditPreviewObjectUrl();
+    aiSuggestedEditTagNameRef.current = "";
     setEditingDish(dishToEdit);
     setEditName(dishToEdit?.name || "");
     setEditDescription(dishToEdit?.description || "");
@@ -590,6 +593,23 @@ export default function DishDetail() {
       setEditRating(0);
     }
   }, [editDishMode, editOpen, editRating]);
+
+  useEffect(() => {
+    if (!editOpen || editStep !== 2 || savingEdit) return undefined;
+    const name = editName.trim();
+    const suggestionKey = `${editDishMode}:${name.toLowerCase()}`;
+    if (!name || editTags.length > 0 || aiSuggestedEditTagNameRef.current === suggestionKey) return undefined;
+    let active = true;
+    aiSuggestedEditTagNameRef.current = suggestionKey;
+    (async () => {
+      const suggestedTags = await suggestDishTagsFromName(name, editDishMode);
+      if (!active || !suggestedTags.length) return;
+      setEditTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
+    })();
+    return () => {
+      active = false;
+    };
+  }, [editDishMode, editName, editOpen, editStep, editTags.length, savingEdit]);
 
   const handleSaveEdit = async () => {
     if (!editingDish?.id || !userId) return;

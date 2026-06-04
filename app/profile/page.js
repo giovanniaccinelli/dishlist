@@ -55,6 +55,7 @@ import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizont
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
+import { suggestDishTagsFromName } from "../lib/dishTagSuggestions";
 import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../lib/dishContent";
@@ -600,6 +601,7 @@ export default function Profile() {
   const dishActionPointerGuardRef = useRef({ dishId: "", until: 0 });
   const dishlistLongPressRef = useRef(null);
   const dishlistLongPressTriggeredRef = useRef(false);
+  const aiSuggestedProfileUploadTagNameRef = useRef("");
   const effectiveDisplayName = profileUser?.displayName || profileMeta.displayName || user?.displayName || "My Profile";
   const effectiveProfilePhotoURL = normalizeProfilePhotoURL(
     profileUser?.photoURL || (typeof profileMeta.photoURL === "string" ? profileMeta.photoURL : user?.photoURL || "")
@@ -618,6 +620,25 @@ export default function Profile() {
         : DISH_MODE_ALL;
     setSelectedDishMode(normalized);
   };
+
+  useEffect(() => {
+    if (!isModalOpen || loadingUpload) return undefined;
+    const name = dishName.trim();
+    const suggestionKey = `home:${name.toLowerCase()}`;
+    if (!name || dishTags.length > 0 || aiSuggestedProfileUploadTagNameRef.current === suggestionKey) return undefined;
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      aiSuggestedProfileUploadTagNameRef.current = suggestionKey;
+      const suggestedTags = await suggestDishTagsFromName(name, DISH_MODE_COOKING);
+      if (!active || !suggestedTags.length) return;
+      setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
+    }, 450);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [dishName, dishTags.length, isModalOpen, loadingUpload]);
+
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);

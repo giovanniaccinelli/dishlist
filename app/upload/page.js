@@ -28,6 +28,7 @@ import {
 } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { getTagDishlistId } from "../lib/tagDishlists";
+import { suggestDishTagsFromName } from "../lib/dishTagSuggestions";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
@@ -94,6 +95,7 @@ export default function UploadPage() {
   const [tagUsersLoading, setTagUsersLoading] = useState(false);
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const aiSuggestedTagNameRef = useRef("");
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -152,6 +154,23 @@ export default function UploadPage() {
       if (preview) URL.revokeObjectURL(preview);
     };
   }, [preview]);
+
+  useEffect(() => {
+    if (uploadStep !== 2 || loadingUpload) return undefined;
+    const name = dishName.trim();
+    const suggestionKey = `${dishMode}:${name.toLowerCase()}`;
+    if (!name || dishTags.length > 0 || aiSuggestedTagNameRef.current === suggestionKey) return undefined;
+    let active = true;
+    aiSuggestedTagNameRef.current = suggestionKey;
+    (async () => {
+      const suggestedTags = await suggestDishTagsFromName(name, dishMode);
+      if (!active || !suggestedTags.length) return;
+      setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
+    })();
+    return () => {
+      active = false;
+    };
+  }, [dishMode, dishName, dishTags.length, loadingUpload, uploadStep]);
 
   const toggleTag = (tag) => {
     setDishTags((prev) => {

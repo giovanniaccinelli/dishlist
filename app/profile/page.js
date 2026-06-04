@@ -628,9 +628,9 @@ export default function Profile() {
     if (!name || dishTags.length > 0 || aiSuggestedProfileUploadTagNameRef.current === suggestionKey) return undefined;
     let active = true;
     const timer = window.setTimeout(async () => {
-      aiSuggestedProfileUploadTagNameRef.current = suggestionKey;
       const suggestedTags = await suggestDishTagsFromName(name, DISH_MODE_COOKING);
       if (!active || !suggestedTags.length) return;
+      aiSuggestedProfileUploadTagNameRef.current = suggestionKey;
       setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     }, 450);
     return () => {

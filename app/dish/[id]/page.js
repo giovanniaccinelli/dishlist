@@ -600,10 +600,10 @@ export default function DishDetail() {
     const suggestionKey = `${editDishMode}:${name.toLowerCase()}`;
     if (!name || editTags.length > 0 || aiSuggestedEditTagNameRef.current === suggestionKey) return undefined;
     let active = true;
-    aiSuggestedEditTagNameRef.current = suggestionKey;
     (async () => {
       const suggestedTags = await suggestDishTagsFromName(name, editDishMode);
       if (!active || !suggestedTags.length) return;
+      aiSuggestedEditTagNameRef.current = suggestionKey;
       setEditTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     })();
     return () => {

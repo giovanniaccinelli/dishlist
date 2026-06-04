@@ -161,10 +161,10 @@ export default function UploadPage() {
     const suggestionKey = `${dishMode}:${name.toLowerCase()}`;
     if (!name || dishTags.length > 0 || aiSuggestedTagNameRef.current === suggestionKey) return undefined;
     let active = true;
-    aiSuggestedTagNameRef.current = suggestionKey;
     (async () => {
       const suggestedTags = await suggestDishTagsFromName(name, dishMode);
       if (!active || !suggestedTags.length) return;
+      aiSuggestedTagNameRef.current = suggestionKey;
       setDishTags((prev) => (prev.length ? prev : suggestedTags.slice(0, 6)));
     })();
     return () => {

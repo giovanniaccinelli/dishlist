@@ -115,7 +115,6 @@ export async function POST(request) {
         model,
         temperature: 0.15,
         max_tokens: 900,
-        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",

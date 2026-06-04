@@ -1640,11 +1640,9 @@ export default function Profile() {
     }
   };
 
-  const openPendingDishlistPicker = async (dish) => {
-    if (!user?.uid || !dish?.id) return;
-    setDishlistPickerSource("pending");
+  const loadPendingDishlistPicker = async (dish) => {
+    if (!dish?.id) return;
     setDishlistPickerDish(dish);
-    setDishlistPickerOpen(true);
     setDishlistPickerLoading(true);
     try {
       const lists = allDishlists.filter((dishlist) => dishlist.id !== "all_dishes" && dishlist.id !== "uploaded");
@@ -1656,6 +1654,13 @@ export default function Profile() {
     } finally {
       setDishlistPickerLoading(false);
     }
+  };
+
+  const openPendingDishlistPicker = async (dish) => {
+    if (!user?.uid || !dish?.id) return;
+    setDishlistPickerSource("pending");
+    setDishlistPickerOpen(true);
+    await loadPendingDishlistPicker(dish);
   };
 
   const pendingQueueDishes = pendingDishlistSorting.filter((dish) => dish?.id && !dismissedPendingDishIds.includes(dish.id));
@@ -1728,13 +1733,22 @@ export default function Profile() {
     if (dishlistPickerSource === "pending") {
       const dish = dishlistPickerDish;
       const userId = user.uid;
-      setDishlistPickerOpen(false);
-      setDishlistPickerDish(null);
-      setDishlistPickerLists([]);
-      setDishlistPickerSelectedIds([]);
-      setDishlistPickerSource("manual");
+      const nextPending = pendingDishlistSorting.find(
+        (item) => item?.id && item.id !== dish.id && !dismissedPendingDishIds.includes(item.id)
+      );
       setPendingDishlistSorting((prev) => prev.filter((item) => item.id !== dish.id));
       setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dish.id));
+      if (nextPending) {
+        setDishlistPickerLists([]);
+        setDishlistPickerSelectedIds([]);
+        loadPendingDishlistPicker(nextPending);
+      } else {
+        setDishlistPickerOpen(false);
+        setDishlistPickerDish(null);
+        setDishlistPickerLists([]);
+        setDishlistPickerSelectedIds([]);
+        setDishlistPickerSource("manual");
+      }
       setToastVariant("success");
       setToast("Fatto");
       setTimeout(() => setToast(""), 1000);

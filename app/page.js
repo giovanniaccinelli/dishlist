@@ -101,8 +101,40 @@ const ACTIVITY_STYLE = {
 const ACTIVITY_INITIAL_LIMIT = 30;
 const ACTIVITY_PAGE_SIZE = 30;
 const FEED_INITIAL_PAGE_SIZE = 600;
+const FEED_AI_CANDIDATE_LIMIT = 80;
 
 const getFeedCacheKey = (userId, guestMode = null) => `feed:${userId || guestMode || "guest"}`;
+
+function mapCountsToObject(counts) {
+  if (!(counts instanceof Map)) return {};
+  return Object.fromEntries(
+    Array.from(counts.entries())
+      .filter(([tag, count]) => tag && Number(count) > 0)
+      .slice(0, 24)
+  );
+}
+
+function getDishCreatedAtSeconds(dish) {
+  if (typeof dish?.createdAt?.seconds === "number") return dish.createdAt.seconds;
+  if (typeof dish?.createdAt === "number") return dish.createdAt;
+  return 0;
+}
+
+function mergeAiFeedOrder(deck, orderedIds) {
+  if (!Array.isArray(deck) || !Array.isArray(orderedIds) || !orderedIds.length) return deck;
+  const byId = new Map(deck.map((dish) => [String(dish?.id || ""), dish]));
+  const used = new Set();
+  const aiOrdered = orderedIds
+    .map((id) => String(id || ""))
+    .filter((id) => {
+      if (!id || used.has(id) || !byId.has(id)) return false;
+      used.add(id);
+      return true;
+    })
+    .map((id) => byId.get(id));
+  if (!aiOrdered.length) return deck;
+  return [...aiOrdered, ...deck.filter((dish) => !used.has(String(dish?.id || "")))];
+}
 
 function preloadFeedImage(src) {
   if (!src || typeof window === "undefined" || typeof Image === "undefined") return Promise.resolve();
@@ -272,6 +304,44 @@ export default function Feed() {
       .map((value) => String(value || "").trim())
       .filter(Boolean);
   const isFromFollowedUser = (dish, followedSet) => getDishOwnerIds(dish).some((ownerId) => followedSet.has(ownerId));
+  const requestAiFeedOrder = async ({ deck, tagCounts, followedSet, representativeTags }) => {
+    if (!Array.isArray(deck) || deck.length < 6) return [];
+    const candidates = deck.slice(0, FEED_AI_CANDIDATE_LIMIT).map((dish) => ({
+      id: dish.id,
+      name: dish.name,
+      tags: Array.isArray(dish.tags) ? dish.tags : [],
+      mode: dish.mode || dish.dishMode || (dish.restaurantName || dish.locationName || dish.placeId ? "restaurant" : "home"),
+      fromFollowedUser: isFromFollowedUser(dish, followedSet),
+      hasLocation: Boolean(dish.restaurantName || dish.locationName || dish.placeId || dish.googlePlaceId),
+      saves: Number(dish.saveCount || dish.savesCount || dish.savedByCount || 0),
+      likes: Number(dish.likeCount || dish.likesCount || 0),
+      createdAt: getDishCreatedAtSeconds(dish),
+    }));
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 2600);
+    try {
+      const response = await fetch("/api/feed/rerank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userTaste: {
+            representativeTags,
+            savedTagCounts: mapCountsToObject(tagCounts),
+            mode: selectedDishMode,
+          },
+          candidates,
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data?.aiUsed && Array.isArray(data.orderedIds) ? data.orderedIds : [];
+    } catch {
+      return [];
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
   const getUserAliasIds = (profile) =>
     [profile?.id, profile?.uid, profile?.userId, profile?.authUid, profile?.appleUserId, profile?.appleSub ? `apple:${profile.appleSub}` : "", profile?.appleSub]
       .map((value) => String(value || "").trim())
@@ -506,6 +576,7 @@ export default function Feed() {
   }, [userId]);
 
   useEffect(() => {
+    let cancelled = false;
     const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
 	    if (cachedFeed) {
       const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length && (!userId || cachedFeed?.followingDeck?.length));
@@ -650,6 +721,14 @@ export default function Feed() {
           following = sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id))));
           setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
+          requestAiFeedOrder({ deck: forYou, tagCounts, followedSet, representativeTags }).then((orderedIds) => {
+            if (cancelled || !orderedIds.length) return;
+            const originalFirstId = String(forYou[0]?.id || "");
+            setForYouDeck((prev) => {
+              if (String(prev?.[0]?.id || "") !== originalFirstId) return prev;
+              return mergeAiFeedOrder(prev, orderedIds);
+            });
+          });
           setFollowingDeck(following);
           setFollowingLoading(false);
           setFollowingResolved(true);
@@ -666,6 +745,9 @@ export default function Feed() {
         setLoadingDishes(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [userId, feedCacheKey]);
 
   useEffect(() => {

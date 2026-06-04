@@ -60,8 +60,10 @@ const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
 const viewedStorageKey = (userId) => `feed:viewedDishes:${userId}`;
+const viewedCountsStorageKey = (userId) => `feed:viewedDishCounts:${userId}`;
 const followingSeenStorageKey = (userId) => `feed:followingSeenAt:${userId}`;
 const FEED_VIEWED_FIELD = "feedViewedDishIds";
+const FEED_VIEWED_COUNTS_FIELD = "feedViewedDishCounts";
 const FEED_FOLLOWING_SEEN_FIELD = "feedFollowingSeenAt";
 const FEED_EXCLUDED_TAGS_KEY = "feed:excludedTags";
 const activitySeenStorageKey = (userId) => `feed:activitySeenAt:${userId}`;
@@ -261,6 +263,7 @@ export default function Feed() {
   const [followingResolved, setFollowingResolved] = useState(() => Boolean(!userId || initialFeedCache?.followingDeck?.length));
   const [followingResetting, setFollowingResetting] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
+  const [viewedDishCounts, setViewedDishCounts] = useState({});
   const [viewedHydrated, setViewedHydrated] = useState(false);
   const [excludedTags, setExcludedTags] = useState([]);
   const [draftExcludedTags, setDraftExcludedTags] = useState([]);
@@ -381,6 +384,45 @@ export default function Feed() {
       return [];
     }
   };
+
+  const normalizeViewedCounts = (value = {}) => {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    return Object.fromEntries(
+      Object.entries(source)
+        .map(([dishId, count]) => [String(dishId || "").trim(), Math.max(0, Number(count || 0))])
+        .filter(([dishId, count]) => dishId && Number.isFinite(count) && count > 0)
+    );
+  };
+
+  const getStoredViewedDishCounts = () => {
+    if (typeof window === "undefined" || !userId) return {};
+    try {
+      return normalizeViewedCounts(JSON.parse(localStorage.getItem(viewedCountsStorageKey(userId)) || "{}"));
+    } catch {
+      return {};
+    }
+  };
+
+  const orderByFewestViews = (items, counts = viewedDishCounts) =>
+    items
+      .slice()
+      .sort((a, b) => {
+        const aViews = Number(counts?.[a?.id] || 0);
+        const bViews = Number(counts?.[b?.id] || 0);
+        if (aViews !== bViews) return aViews - bViews;
+        return (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0);
+      });
+
+  const keepFewestViewsFirst = (items, counts = viewedDishCounts) =>
+    items
+      .map((dish, index) => ({ dish, index }))
+      .sort((a, b) => {
+        const aViews = Number(counts?.[a.dish?.id] || 0);
+        const bViews = Number(counts?.[b.dish?.id] || 0);
+        if (aViews !== bViews) return aViews - bViews;
+        return a.index - b.index;
+      })
+      .map(({ dish }) => dish);
 
   useEffect(() => {
     viewedDishIdsRef.current = viewedDishIds;
@@ -545,6 +587,7 @@ export default function Feed() {
   useEffect(() => {
     if (!userId) {
       setViewedDishIds([]);
+      setViewedDishCounts({});
       viewedDishIdsRef.current = [];
       setViewedHydrated(true);
       return;
@@ -553,23 +596,32 @@ export default function Feed() {
     setViewedHydrated(false);
     (async () => {
       const localIds = getStoredViewedDishIds();
+      const localCounts = getStoredViewedDishCounts();
       let serverIds = [];
+      let serverCounts = {};
       try {
         const snap = await getDoc(doc(db, "users", userId));
         const data = snap.exists() ? snap.data() || {} : {};
         serverIds = Array.isArray(data[FEED_VIEWED_FIELD]) ? data[FEED_VIEWED_FIELD] : [];
+        serverCounts = normalizeViewedCounts(data[FEED_VIEWED_COUNTS_FIELD]);
       } catch (err) {
         console.error("Failed to load viewed feed dishes:", err);
       }
       if (cancelled) return;
       const merged = Array.from(new Set([...localIds, ...serverIds].map(String).filter(Boolean)));
+      const mergedCounts = normalizeViewedCounts({ ...serverCounts, ...localCounts });
+      merged.forEach((dishId) => {
+        if (!mergedCounts[dishId]) mergedCounts[dishId] = 1;
+      });
       viewedDishIdsRef.current = merged;
       setViewedDishIds(merged);
+      setViewedDishCounts(mergedCounts);
       if (typeof window !== "undefined") {
         localStorage.setItem(viewedStorageKey(userId), JSON.stringify(merged));
+        localStorage.setItem(viewedCountsStorageKey(userId), JSON.stringify(mergedCounts));
       }
-      if (localIds.some((id) => !serverIds.includes(id))) {
-        setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: merged }, { merge: true }).catch((err) =>
+      if (localIds.some((id) => !serverIds.includes(id)) || Object.keys(localCounts).length) {
+        setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: merged, [FEED_VIEWED_COUNTS_FIELD]: mergedCounts }, { merge: true }).catch((err) =>
           console.error("Failed to sync viewed feed dishes:", err)
         );
       }
@@ -666,15 +718,24 @@ export default function Feed() {
           : null;
         const { items: allItems } = await feedPagePromise;
         const seenIds = new Set(getStoredViewedDishIds());
+        const seenCounts = getStoredViewedDishCounts();
         const publicItems = allItems.filter(
           (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
         );
-        const unseenPublicItems = publicItems.filter((dish) => !seenIds.has(String(dish.id)));
+        const getLeastSeenItems = (items) => {
+          if (!items.length) return [];
+          const unseen = items.filter((dish) => !seenIds.has(String(dish.id)));
+          if (unseen.length) return orderByFewestViews(unseen, seenCounts);
+          return orderByFewestViews(items, seenCounts);
+        };
+        const unseenPublicItems = getLeastSeenItems(publicItems);
 
         const quickForYou = shuffleArray(sortNewest(unseenPublicItems));
-        setForYouDeck(quickForYou);
-        setForYouIndex(0);
-        setForYouIndexByMode({});
+        if (!userId) {
+          setForYouDeck(quickForYou);
+          setForYouIndex(0);
+          setForYouIndexByMode({});
+        }
         if (!userId) {
           setFollowingDeck([]);
           setFollowingIndex(0);
@@ -720,10 +781,13 @@ export default function Feed() {
           setFollowingSinceById(nextFollowingSince);
           const tagCounts = normalizeTags([...saved, ...toTry, ...uploaded]);
           const representativeTags = resolveRepresentativeTags(userData?.representativeTags, [...saved, ...toTry, ...uploaded]);
-          const forYou = buildForYouFeed(unseenPublicItems, tagCounts, followedSet, representativeTags);
-          const matchedFollowingItems = publicItems.filter((dish) => isFromFollowedUser(dish, followedSet));
-          const followingSourceItems = matchedFollowingItems.length || !nextFollowingIds.length ? matchedFollowingItems : publicItems;
-          following = sortNewest(followingSourceItems.filter((dish) => !seenIds.has(String(dish.id))));
+          const savedOrOwnedIds = new Set([...saved, ...toTry, ...uploaded].map((dish) => String(dish?.id || "")).filter(Boolean));
+          const eligiblePublicItems = publicItems.filter((dish) => !savedOrOwnedIds.has(String(dish.id)));
+          const feedCandidates = getLeastSeenItems(eligiblePublicItems);
+          const forYou = keepFewestViewsFirst(buildForYouFeed(feedCandidates, tagCounts, followedSet, representativeTags), seenCounts);
+          const matchedFollowingItems = eligiblePublicItems.filter((dish) => isFromFollowedUser(dish, followedSet));
+          const followingSourceItems = matchedFollowingItems.length || !nextFollowingIds.length ? matchedFollowingItems : eligiblePublicItems;
+          following = keepFewestViewsFirst(sortNewest(getLeastSeenItems(followingSourceItems.filter((dish) => !savedOrOwnedIds.has(String(dish.id))))), seenCounts);
           setFollowingIds(expandedFollowingIds);
           setForYouDeck(forYou);
           requestAiFeedOrder({ deck: forYou, tagCounts, followedSet, representativeTags }).then((orderedIds) => {
@@ -731,7 +795,7 @@ export default function Feed() {
             const originalFirstId = String(forYou[0]?.id || "");
             setForYouDeck((prev) => {
               if (String(prev?.[0]?.id || "") !== originalFirstId) return prev;
-              return mergeAiFeedOrder(prev, orderedIds);
+              return keepFewestViewsFirst(mergeAiFeedOrder(prev, orderedIds), seenCounts);
             });
           });
           setFollowingDeck(following);
@@ -970,6 +1034,17 @@ export default function Feed() {
   const handleDishSwiped = (dishOrId) => {
     const dishId = typeof dishOrId === "string" ? dishOrId : dishOrId?.id;
     if (!userId || !dishId) return;
+    setViewedDishCounts((prev) => {
+      const next = normalizeViewedCounts(prev);
+      next[dishId] = Number(next[dishId] || 0) + 1;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(viewedCountsStorageKey(userId), JSON.stringify(next));
+      }
+      setDoc(doc(db, "users", userId), { [FEED_VIEWED_COUNTS_FIELD]: next }, { merge: true }).catch((err) =>
+        console.error("Failed to save viewed feed count:", err)
+      );
+      return next;
+    });
     setViewedDishIds((prev) => {
       if (prev.includes(dishId)) return prev;
       const next = [...prev, dishId];

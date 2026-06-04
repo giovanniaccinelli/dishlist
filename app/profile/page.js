@@ -507,6 +507,7 @@ export default function Profile() {
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
   const [dishlistRenameTarget, setDishlistRenameTarget] = useState(null);
   const [dishlistRenameValue, setDishlistRenameValue] = useState("");
+  const [draggedDishlistId, setDraggedDishlistId] = useState("");
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -1711,6 +1712,18 @@ export default function Profile() {
     persistDishlistOrder(nextIds);
   };
 
+  const reorderDishlistInProfile = (fromId, toId) => {
+    if (!fromId || !toId || fromId === toId) return;
+    const ids = allDishlists.map((dishlist) => dishlist.id);
+    const fromIndex = ids.indexOf(fromId);
+    const toIndex = ids.indexOf(toId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const nextIds = [...ids];
+    const [item] = nextIds.splice(fromIndex, 1);
+    nextIds.splice(toIndex, 0, item);
+    persistDishlistOrder(nextIds);
+  };
+
   const startDishlistLongPress = () => {
     dishlistLongPressTriggeredRef.current = false;
     window.clearTimeout(dishlistLongPressRef.current);
@@ -2027,12 +2040,17 @@ export default function Profile() {
       const aCoreRank = coreOrderRank.has(a.id) ? coreOrderRank.get(a.id) : Number.POSITIVE_INFINITY;
       const bCoreRank = coreOrderRank.has(b.id) ? coreOrderRank.get(b.id) : Number.POSITIVE_INFINITY;
       if (aCoreRank !== bCoreRank) return aCoreRank - bCoreRank;
+      const aHasManualRank = orderRank.has(a.id);
+      const bHasManualRank = orderRank.has(b.id);
+      if (aHasManualRank || bHasManualRank) {
+        const aRank = aHasManualRank ? orderRank.get(a.id) : Number.POSITIVE_INFINITY;
+        const bRank = bHasManualRank ? orderRank.get(b.id) : Number.POSITIVE_INFINITY;
+        return aRank - bRank || a.fallbackRank - b.fallbackRank;
+      }
       const aCount = Number(a.count || 0);
       const bCount = Number(b.count || 0);
       if (aCount !== bCount) return bCount - aCount;
-      const aRank = orderRank.has(a.id) ? orderRank.get(a.id) : Number.POSITIVE_INFINITY;
-      const bRank = orderRank.has(b.id) ? orderRank.get(b.id) : Number.POSITIVE_INFINITY;
-      return aRank - bRank || a.fallbackRank - b.fallbackRank;
+      return a.fallbackRank - b.fallbackRank;
     })
     .map(({ fallbackRank, ...dishlist }) => dishlist);
   const nonEmptyProfileDishlistCount = allDishlists.filter((dishlist) => Number(dishlist.count || 0) > 0).length;
@@ -2868,12 +2886,34 @@ export default function Profile() {
                   const isTagDishlist = dishlist.type === "tag_system";
                   const hasPendingBadge = dishlist.id === "all_dishes" && pendingQueueCount > 0;
                   const preview = getDishlistPreviewDishes(dishlist);
+                  const canDeleteManagedDishlist = dishlist.type === "custom";
                   return (
                     <motion.div
                       key={dishlist.id}
-                      className="relative"
+                      className={`relative ${dishlistManagementMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+                      draggable={dishlistManagementMode}
+                      onDragStart={(event) => {
+                        if (!dishlistManagementMode) return;
+                        setDraggedDishlistId(dishlist.id);
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", dishlist.id);
+                      }}
+                      onDragOver={(event) => {
+                        if (!dishlistManagementMode || !draggedDishlistId || draggedDishlistId === dishlist.id) return;
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "move";
+                      }}
+                      onDrop={(event) => {
+                        if (!dishlistManagementMode) return;
+                        event.preventDefault();
+                        const fromId = draggedDishlistId || event.dataTransfer.getData("text/plain");
+                        reorderDishlistInProfile(fromId, dishlist.id);
+                        setDraggedDishlistId("");
+                      }}
+                      onDragEnd={() => setDraggedDishlistId("")}
                       animate={dishlistManagementMode ? { rotate: [-0.7, 0.7, -0.7] } : { rotate: 0 }}
                       transition={dishlistManagementMode ? { duration: 0.18, repeat: Infinity, ease: "easeInOut" } : { duration: 0.12 }}
+                      style={draggedDishlistId === dishlist.id ? { opacity: 0.55 } : undefined}
                     >
                     <button
                       type="button"
@@ -2922,23 +2962,15 @@ export default function Profile() {
                       )}
                       <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                     </button>
-                    {dishlistManagementMode ? (
-                      <div className="absolute inset-x-2 top-1/2 z-20 flex -translate-y-1/2 justify-between pointer-events-none">
+                    {dishlistManagementMode && canDeleteManagedDishlist ? (
+                      <div className="absolute -left-2 -top-2 z-30">
                         <button
                           type="button"
-                          onClick={() => moveDishlistInProfile(dishlist.id, -1)}
-                          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-black/75 text-white shadow-lg"
-                          aria-label="Move dishlist left"
+                          onClick={() => setDishlistDeleteTarget(dishlist)}
+                          className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#151515] bg-[#E64646] text-white shadow-[0_10px_22px_rgba(230,70,70,0.35)]"
+                          aria-label={`Delete ${dishlist.name}`}
                         >
-                          ‹
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveDishlistInProfile(dishlist.id, 1)}
-                          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-black/75 text-white shadow-lg"
-                          aria-label="Move dishlist right"
-                        >
-                          ›
+                          <Minus size={16} strokeWidth={3} />
                         </button>
                       </div>
                     ) : null}

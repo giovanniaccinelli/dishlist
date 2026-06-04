@@ -139,20 +139,25 @@ function mergeAiFeedOrder(deck, orderedIds) {
 function preloadFeedImage(src) {
   if (!src || typeof window === "undefined" || typeof Image === "undefined") return Promise.resolve();
   return new Promise((resolve) => {
+    const timeout = window.setTimeout(resolve, 2200);
+    const finish = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
     const image = new Image();
     image.decoding = "async";
     image.onload = async () => {
       try {
         await image.decode?.();
       } catch {}
-      resolve();
+      finish();
     };
-    image.onerror = () => resolve();
+    image.onerror = finish;
     image.src = src;
     if (image.complete && image.naturalWidth > 0) {
       Promise.resolve(image.decode?.())
         .catch(() => {})
-        .finally(resolve);
+        .finally(finish);
     }
   });
 }
@@ -1451,6 +1456,11 @@ export default function Feed() {
 
   useEffect(() => {
     if (feedHasRendered) return undefined;
+    if (feedClientReady && !needsOpeningDishMode && !loading && !loadingDishes && !hasLoadedFeedCards) {
+      setFirstFeedCardReady(true);
+      setFeedHasRendered(true);
+      return undefined;
+    }
     if (!feedClientReady || needsOpeningDishMode || loading || loadingDishes || !hasLoadedFeedCards) {
       setFirstFeedCardReady(false);
       return undefined;

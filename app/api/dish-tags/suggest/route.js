@@ -39,6 +39,7 @@ function normalizeSuggestedTags(tags) {
 }
 
 export async function POST(request) {
+  const debug = new URL(request.url).searchParams.get("debug") === "1";
   let body;
   try {
     body = await request.json();
@@ -100,7 +101,18 @@ export async function POST(request) {
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.warn("Dish tag AI suggestion failed:", response.status, detail.slice(0, 240));
-      return NextResponse.json({ tags: [], aiUsed: false, reason: "provider_error" });
+      return NextResponse.json({
+        tags: [],
+        aiUsed: false,
+        reason: "provider_error",
+        ...(debug
+          ? {
+              providerStatus: response.status,
+              providerDetail: detail.slice(0, 500),
+              model,
+            }
+          : {}),
+      });
     }
 
     const result = await response.json();
@@ -110,7 +122,12 @@ export async function POST(request) {
     return NextResponse.json({ tags, aiUsed: tags.length > 0, model });
   } catch (error) {
     if (error?.name !== "AbortError") console.warn("Dish tag AI suggestion error:", error);
-    return NextResponse.json({ tags: [], aiUsed: false, reason: error?.name === "AbortError" ? "timeout" : "error" });
+    return NextResponse.json({
+      tags: [],
+      aiUsed: false,
+      reason: error?.name === "AbortError" ? "timeout" : "error",
+      ...(debug ? { errorName: error?.name || "Error" } : {}),
+    });
   } finally {
     clearTimeout(timeout);
   }

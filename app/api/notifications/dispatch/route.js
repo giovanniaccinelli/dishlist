@@ -223,6 +223,38 @@ async function dispatchCommentPosted({
   return result;
 }
 
+async function dispatchDishReaction({ decoded, actorId, dishId = "", reaction = "save" }) {
+  if (decoded.uid !== actorId) throw new Error("Not allowed to dispatch this dish reaction notification.");
+  if (!dishId) throw new Error("Missing dish id.");
+  const db = getAdminDb();
+  const [actorSnap, dishSnap] = await Promise.all([
+    db.collection("users").doc(actorId).get(),
+    db.collection("dishes").doc(dishId).get(),
+  ]);
+  if (!dishSnap.exists) return { sent: 0, failed: 0, skipped: 0 };
+  const actorData = actorSnap.data() || {};
+  const dishData = dishSnap.data() || {};
+  const ownerId = String(dishData.owner || dishData.ownerId || dishData.userId || dishData.uploadedBy || dishData.createdBy || "").trim();
+  if (!ownerId || ownerId === actorId) return { sent: 0, failed: 0, skipped: 0 };
+  const tokens = await getEnabledTokensForUserIds([ownerId]);
+  console.log("Dispatching dish reaction", {
+    reaction,
+    actorId,
+    ownerId,
+    dishId,
+    tokenCount: tokens.length,
+  });
+  if (!tokens.length) return { sent: 0, failed: 0, skipped: 0 };
+  const isLike = reaction === "like";
+  const result = await sendApnsNotifications(tokens, {
+    title: `${actorData.displayName || "Someone"} ${isLike ? "liked" : "saved"} your dish`,
+    body: dishData.name || "Open DishList to see it",
+    url: `/dish/${dishId}?source=uploaded&mode=single`,
+  });
+  await recordPushDispatchDebug([ownerId], { type: isLike ? "dish_liked" : "dish_saved", actorId, dishId, tokenCount: tokens.length, result });
+  return result;
+}
+
 export async function POST(request) {
   try {
     const decoded = await verifyRequest(request);
@@ -254,6 +286,10 @@ export async function POST(request) {
       result = await dispatchDirectMessage({ decoded, ...body });
     } else if (type === "comment_posted") {
       result = await dispatchCommentPosted({ decoded, ...body });
+    } else if (type === "dish_saved") {
+      result = await dispatchDishReaction({ decoded, ...body, reaction: "save" });
+    } else if (type === "dish_liked") {
+      result = await dispatchDishReaction({ decoded, ...body, reaction: "like" });
     } else {
       return NextResponse.json({ error: "Unsupported notification type." }, { status: 400 });
     }

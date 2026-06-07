@@ -251,8 +251,10 @@ async function recordDishSaveActivity(userId, dishId, payload = null) {
   const ownerId = dishActivityOwnerId(payload);
   if (!ownerId || !userId || ownerId === userId || !dishId) return;
   try {
+    const activityRef = doc(db, "users", ownerId, "activity", `save_${dishId}_${userId}`);
+    const existingActivity = await getDoc(activityRef);
     await setDoc(
-      doc(db, "users", ownerId, "activity", `save_${dishId}_${userId}`),
+      activityRef,
       {
         kind: "save",
         actorId: userId,
@@ -263,6 +265,12 @@ async function recordDishSaveActivity(userId, dishId, payload = null) {
       },
       { merge: true }
     );
+    if (!existingActivity.exists()) {
+      await dispatchPushEvent("dish_saved", {
+        actorId: userId,
+        dishId,
+      });
+    }
   } catch (err) {
     console.warn("Failed to record dish save activity:", err);
   }
@@ -272,8 +280,10 @@ async function recordDishLikeActivity(userId, dishId, payload = null) {
   const ownerId = dishActivityOwnerId(payload);
   if (!ownerId || !userId || ownerId === userId || !dishId) return;
   try {
+    const activityRef = doc(db, "users", ownerId, "activity", `like_${dishId}_${userId}`);
+    const existingActivity = await getDoc(activityRef);
     await setDoc(
-      doc(db, "users", ownerId, "activity", `like_${dishId}_${userId}`),
+      activityRef,
       {
         kind: "like",
         actorId: userId,
@@ -284,6 +294,12 @@ async function recordDishLikeActivity(userId, dishId, payload = null) {
       },
       { merge: true }
     );
+    if (!existingActivity.exists()) {
+      await dispatchPushEvent("dish_liked", {
+        actorId: userId,
+        dishId,
+      });
+    }
   } catch (err) {
     console.warn("Failed to record dish like activity:", err);
   }

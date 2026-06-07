@@ -22,6 +22,21 @@ import {
 const ASKED_KEY = "notifications:asked";
 const ENABLED_KEY = "notifications:enabled";
 
+function clearAppBadge() {
+  if (typeof navigator === "undefined") return;
+  try {
+    if (typeof navigator.clearAppBadge === "function") {
+      navigator.clearAppBadge();
+      return;
+    }
+    if (typeof navigator.setAppBadge === "function") {
+      navigator.setAppBadge(0);
+    }
+  } catch (error) {
+    console.warn("Failed to clear app badge:", error);
+  }
+}
+
 async function showAppNotification(title, options = {}) {
   if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
   try {
@@ -65,6 +80,7 @@ export default function NotificationsManager() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    clearAppBadge();
     if (isNativePushSupported()) {
       setEnabled(localStorage.getItem(ENABLED_KEY) === "1");
       getNativePushPermissionState().then(setNativePermission).catch(() => setNativePermission("unsupported"));

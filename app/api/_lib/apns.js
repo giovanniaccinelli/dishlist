@@ -185,7 +185,7 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
     aps: {
       alert: { title, body },
       sound: "default",
-      badge: 1,
+      badge: 0,
     },
     data: {
       url,

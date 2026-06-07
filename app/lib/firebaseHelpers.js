@@ -32,6 +32,25 @@ const ownerPhotoCache = new Map();
 const DATA_CACHE_TTL = 45 * 1000;
 const dataCache = new Map();
 const pendingCache = new Map();
+const SYSTEM_DISHLIST_IDS = new Set(["saved", "to_try", "uploaded", "all_dishes"]);
+const RESERVED_CUSTOM_DISHLIST_IDS = new Set([...SYSTEM_DISHLIST_IDS, "dishlist"]);
+const RESERVED_CUSTOM_DISHLIST_NAME_KEYS = new Set([
+  "all dishes",
+  "tutti",
+  "tutti i piatti",
+  "saved",
+  "salvati",
+  "classici",
+  "your classics",
+  "i miei classici",
+  "to try",
+  "da provare",
+  "uploaded",
+  "caricati",
+  "dishlist",
+  "new dishlist",
+  "nuova dishlist",
+]);
 
 function getCache(key) {
   const cached = dataCache.get(key);
@@ -385,6 +404,18 @@ function normalizeDishlistName(name) {
 
 function normalizeDishlistNameKey(name) {
   return normalizeDishlistName(name).toLowerCase();
+}
+
+export function isValidCustomDishlist(dishlist = {}) {
+  const id = String(dishlist?.id || "").trim();
+  const name = normalizeDishlistName(dishlist?.name || "");
+  const nameKey = normalizeDishlistNameKey(name);
+  if (!id) return false;
+  if (isTagDishlistId(id)) return Boolean(getTagForDishlistId(id));
+  if (RESERVED_CUSTOM_DISHLIST_IDS.has(id)) return false;
+  if (!name) return false;
+  if (RESERVED_CUSTOM_DISHLIST_NAME_KEYS.has(nameKey)) return false;
+  return true;
 }
 
 function normalizeDisplayNameKey(name) {
@@ -974,12 +1005,13 @@ export async function getCustomDishlistsForUser(userId) {
     const items = await Promise.all(
       snapshot.docs.map(async (dishlistDoc) => {
         const data = dishlistDoc.data() || {};
+        const tag = getTagForDishlistId(dishlistDoc.id);
+        const isTagSystem = isTagDishlistId(dishlistDoc.id) && Boolean(tag);
+        if (!isTagSystem && !isValidCustomDishlist({ id: dishlistDoc.id, name: data.name })) return null;
         const itemSnap = await getDocs(customDishlistItemsCollection(userId, dishlistDoc.id));
         const dishes = itemSnap.docs.map((itemDoc) => ({ id: itemDoc.id, ...itemDoc.data() }));
         const merged = await mergeDishesWithCanonical(dishes);
         const enriched = await enrichWithOwnerPhotos(merged);
-        const tag = getTagForDishlistId(dishlistDoc.id);
-        const isTagSystem = isTagDishlistId(dishlistDoc.id) && Boolean(tag);
         return {
           id: dishlistDoc.id,
           name: isTagSystem ? tag : data.name || "Dishlist",
@@ -993,7 +1025,7 @@ export async function getCustomDishlistsForUser(userId) {
         };
       })
     );
-    return items.sort((a, b) => {
+    return items.filter(Boolean).sort((a, b) => {
       const aTime = a?.updatedAt?.seconds || a?.createdAt?.seconds || 0;
       const bTime = b?.updatedAt?.seconds || b?.createdAt?.seconds || 0;
       return bTime - aTime;
@@ -1113,6 +1145,7 @@ export async function getAllDishlistsForUserAliases(userIds = []) {
 export async function createCustomDishlist(userId, name, initialDishes = []) {
   const cleanedName = normalizeDishlistName(name);
   if (!userId || !cleanedName) return null;
+  if (!isValidCustomDishlist({ id: "custom-dishlist", name: cleanedName })) return null;
   const dishlistRef = doc(customDishlistsCollection(userId));
   const now = serverTimestamp();
   const uniqueDishes = Array.from(
@@ -1170,6 +1203,10 @@ export async function getPopularCustomDishlistNames(max = 8) {
 
 export async function addDishToCustomDishlist(userId, dishlistId, dishId, dishData = null) {
   if (!userId || !dishlistId || !dishId) return false;
+  if (!isTagDishlistId(dishlistId)) {
+    const targetSnap = await getDoc(customDishlistDoc(userId, dishlistId));
+    if (!targetSnap.exists() || !isValidCustomDishlist({ id: dishlistId, name: targetSnap.data()?.name })) return false;
+  }
   const payload = await hydrateDishPayload(dishId, buildDishPayload(dishId, dishData));
   try {
     await setDoc(
@@ -1243,6 +1280,7 @@ export async function deleteCustomDishlist(userId, dishlistId) {
 export async function updateCustomDishlistName(userId, dishlistId, name) {
   const cleanedName = normalizeDishlistName(name);
   if (!userId || !dishlistId || !cleanedName) return false;
+  if (!isValidCustomDishlist({ id: dishlistId, name: cleanedName })) return false;
   try {
     await setDoc(
       customDishlistDoc(userId, dishlistId),

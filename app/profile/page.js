@@ -42,6 +42,7 @@ import {
   removePendingDishlistSorting,
   getAvatarTone,
   isDisplayNameTaken,
+  isValidCustomDishlist,
   normalizeProfilePhotoURL,
 } from "../lib/firebaseHelpers";
 import { dispatchPushEvent } from "../lib/pushClient";
@@ -422,6 +423,14 @@ function mergeUniqueById(groups = []) {
   );
 }
 
+function sanitizeCustomDishlists(lists = []) {
+  return (Array.isArray(lists) ? lists : []).filter((dishlist) => {
+    if (!dishlist?.id) return false;
+    if (dishlist.type === "tag_system" || isTagDishlistId(dishlist.id)) return Boolean(getTagForDishlistId(dishlist.id));
+    return isValidCustomDishlist(dishlist);
+  });
+}
+
 function mergeStoryStats(groups = []) {
   const merged = {};
   groups.forEach((group) => {
@@ -491,7 +500,7 @@ export default function Profile() {
   const [uploadedDishes, setUploadedDishes] = useState(() => cachedOwnProfile?.uploadedDishes || []);
   const [savedDishes, setSavedDishes] = useState(() => cachedOwnProfile?.savedDishes || []);
   const [toTryDishes, setToTryDishes] = useState(() => cachedOwnProfile?.toTryDishes || []);
-  const [customDishlists, setCustomDishlists] = useState(() => cachedOwnProfile?.customDishlists || []);
+  const [customDishlists, setCustomDishlists] = useState(() => sanitizeCustomDishlists(cachedOwnProfile?.customDishlists || []));
   const [profileOwnerId, setProfileOwnerId] = useState(() => cachedOwnProfile?.profileOwnerId || "");
   const [profileAliasIds, setProfileAliasIds] = useState(() => cachedOwnProfile?.profileAliasIds || []);
   const [profileUser, setProfileUser] = useState(() => cachedOwnProfile?.profileUser || null);
@@ -640,8 +649,9 @@ export default function Profile() {
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
     const lists = await getCustomDishlistsForUser(ownerId);
-    setCustomDishlists(lists);
-    return lists;
+    const sanitized = sanitizeCustomDishlists(lists);
+    setCustomDishlists(sanitized);
+    return sanitized;
   };
   const openMealCalendarEntry = (dayKey = getStoryCalendarKey(Date.now())) => {
     setProfileCalendarSelectedDay(dayKey);
@@ -722,7 +732,7 @@ export default function Profile() {
       setUploadedDishes(cachedProfile.uploadedDishes || []);
       setSavedDishes(cachedProfile.savedDishes || []);
       setToTryDishes(cachedProfile.toTryDishes || []);
-      setCustomDishlists(cachedProfile.customDishlists || []);
+      setCustomDishlists(sanitizeCustomDishlists(cachedProfile.customDishlists || []));
       setActiveStories(cachedProfile.activeStories || []);
       setStoryPushStats(cachedProfile.storyPushStats || {});
       setMealCalendarEntries(cachedProfile.mealCalendarEntries || []);
@@ -791,7 +801,7 @@ export default function Profile() {
         const candidateIds = aliases.length ? aliases : getProfileIdCandidates(user.uid, userDoc);
         Promise.all(candidateIds.map((candidateId) => getCustomDishlistsForUser(candidateId)))
           .then((lists) => {
-            if (!cancelled) setCustomDishlists(mergeUniqueById(lists));
+            if (!cancelled) setCustomDishlists(sanitizeCustomDishlists(mergeUniqueById(lists)));
           })
           .catch((error) => {
             console.error("Fast own custom dishlists fetch failed:", error);
@@ -813,7 +823,7 @@ export default function Profile() {
         }
         setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
         setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
-        setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
+        setCustomDishlists(customRes.status === "fulfilled" ? sanitizeCustomDishlists(mergeUniqueById(customRes.value)) : []);
         setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
         setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
         setMealCalendarEntries(mealCalendarRes.status === "fulfilled" ? mealCalendarRes.value : []);
@@ -1816,7 +1826,7 @@ export default function Profile() {
         ]);
         setSavedDishes(saved);
         setToTryDishes(toTry);
-        setCustomDishlists(custom);
+        setCustomDishlists(sanitizeCustomDishlists(custom));
       })();
       return;
     }
@@ -1855,7 +1865,7 @@ export default function Profile() {
       ]);
       setSavedDishes(saved);
       setToTryDishes(toTry);
-      setCustomDishlists(custom);
+      setCustomDishlists(sanitizeCustomDishlists(custom));
     }
   };
 
@@ -2387,7 +2397,7 @@ export default function Profile() {
       ]);
       setSavedDishes(saved);
       setToTryDishes(toTry);
-      setCustomDishlists(custom);
+      setCustomDishlists(sanitizeCustomDishlists(custom));
       setToastVariant(ok ? "success" : "error");
       setToast(ok ? "Dishes added" : "Save failed");
       setTimeout(() => setToast(""), 1200);

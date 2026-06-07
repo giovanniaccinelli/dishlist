@@ -27,6 +27,7 @@ import {
   getStoryPushStatsForUser,
   getLeaderboardAnswersForUser,
   getAvatarTone,
+  isValidCustomDishlist,
   normalizeProfilePhotoURL,
   recordFollowActivity,
   deleteFollowActivity,
@@ -313,6 +314,14 @@ function mergeUniqueById(groups = []) {
   );
 }
 
+function sanitizeCustomDishlists(lists = []) {
+  return (Array.isArray(lists) ? lists : []).filter((dishlist) => {
+    if (!dishlist?.id) return false;
+    if (dishlist.type === "tag_system" || isTagDishlistId(dishlist.id)) return Boolean(getTagForDishlistId(dishlist.id));
+    return isValidCustomDishlist(dishlist);
+  });
+}
+
 function mergeStoryStats(groups = []) {
   const merged = {};
   groups.forEach((group) => {
@@ -381,7 +390,7 @@ export default function PublicProfile() {
   const [profileUser, setProfileUser] = useState(() => cachedPublicProfile?.profileUser || null);
   const [savedDishes, setSavedDishes] = useState(() => cachedPublicProfile?.savedDishes || []);
   const [toTryDishes, setToTryDishes] = useState(() => cachedPublicProfile?.toTryDishes || []);
-  const [customDishlists, setCustomDishlists] = useState(() => cachedPublicProfile?.customDishlists || []);
+  const [customDishlists, setCustomDishlists] = useState(() => sanitizeCustomDishlists(cachedPublicProfile?.customDishlists || []));
   const [profileAliasIds, setProfileAliasIds] = useState(() => cachedPublicProfile?.profileAliasIds || []);
   const [dishes, setDishes] = useState(() => cachedPublicProfile?.dishes || []);
   const [activeDishlistId, setActiveDishlistId] = useState("overview");
@@ -445,7 +454,7 @@ export default function PublicProfile() {
       setDishes(cachedProfile.dishes || []);
       setSavedDishes(cachedProfile.savedDishes || []);
       setToTryDishes(cachedProfile.toTryDishes || []);
-      setCustomDishlists(cachedProfile.customDishlists || []);
+      setCustomDishlists(sanitizeCustomDishlists(cachedProfile.customDishlists || []));
       setActiveStories(cachedProfile.activeStories || []);
       setStoryPushStats(cachedProfile.storyPushStats || {});
       setProfileLoadFailed(false);
@@ -509,7 +518,7 @@ export default function PublicProfile() {
       setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById([dishesRes.value]) : []);
       setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
       setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
-      setCustomDishlists(customRes.status === "fulfilled" ? mergeUniqueById(customRes.value) : []);
+      setCustomDishlists(customRes.status === "fulfilled" ? sanitizeCustomDishlists(mergeUniqueById(customRes.value)) : []);
       setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
       setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
     })();

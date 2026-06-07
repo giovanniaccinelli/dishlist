@@ -707,13 +707,14 @@ export default function Feed() {
       setFollowingResolved(false);
       try {
         const feedPagePromise = getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
+        const currentUserPromise = userId ? getDoc(doc(db, "users", userId)) : null;
         const userFeedPromise = userId
           ? Promise.all([
               getFollowingForUser(userId, { force: true }),
               getSavedDishesFromFirestore(userId),
               getToTryDishesFromFirestore(userId),
               getDishesFromFirestore(userId),
-              getDoc(doc(db, "users", userId)),
+              currentUserPromise,
             ])
           : null;
         const { items: allItems } = await feedPagePromise;
@@ -735,6 +736,24 @@ export default function Feed() {
           setForYouDeck(quickForYou);
           setForYouIndex(0);
           setForYouIndexByMode({});
+        } else {
+          currentUserPromise
+            .then((snap) => {
+              if (cancelled) return;
+              const data = snap.exists() ? snap.data() || {} : {};
+              const quickExcludedIds = new Set([
+                ...(Array.isArray(data.savedDishes) ? data.savedDishes : []),
+                ...(Array.isArray(data.toTryDishes) ? data.toTryDishes : []),
+              ].map((id) => String(id || "")).filter(Boolean));
+              const quickDeck = shuffleArray(sortNewest(getLeastSeenItems(publicItems.filter((dish) => !quickExcludedIds.has(String(dish.id))))));
+              setForYouDeck(quickDeck);
+              setForYouIndex(0);
+              setForYouIndexByMode({});
+              setLoadingDishes(false);
+            })
+            .catch((err) => {
+              console.error("Failed to prepare quick feed:", err);
+            });
         }
         if (!userId) {
           setFollowingDeck([]);

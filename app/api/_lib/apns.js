@@ -95,7 +95,7 @@ function buildAttemptHosts() {
   return [APNS_HOST, alternateHost];
 }
 
-function sendToApnsHost(host, token, jwt, payload) {
+function sendToApnsHost(host, token, jwt, payload, { pushType = "alert", priority = "10" } = {}) {
   return new Promise((resolve) => {
     let client;
     try {
@@ -113,8 +113,8 @@ function sendToApnsHost(host, token, jwt, payload) {
         ":path": `/3/device/${token}`,
         authorization: `bearer ${jwt}`,
         "apns-topic": APNS_BUNDLE_ID,
-        "apns-push-type": "alert",
-        "apns-priority": "10",
+        "apns-push-type": pushType,
+        "apns-priority": priority,
         "content-type": "application/json",
       });
 
@@ -165,7 +165,7 @@ function sendToApnsHost(host, token, jwt, payload) {
   });
 }
 
-export async function sendApnsNotifications(tokens = [], { title, body, url = "/", data = {} } = {}) {
+async function sendApnsPayload(tokens = [], payload, { title = "", pushType = "alert", priority = "10" } = {}) {
   if (!Array.isArray(tokens) || !tokens.length) return { sent: 0, failed: 0, skipped: 0 };
   if (!isApnsConfigured()) return { sent: 0, failed: 0, skipped: tokens.length };
 
@@ -175,25 +175,14 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
     sandbox: process.env.APPLE_PUSH_USE_SANDBOX === "1",
     tokenCount: tokens.length,
     title,
+    pushType,
   });
 
   const jwt = getApnsJwt();
   let sent = 0;
   let failed = 0;
 
-  const payload = JSON.stringify({
-    aps: {
-      alert: { title, body },
-      sound: "default",
-      badge: 0,
-    },
-    data: {
-      url,
-      ...data,
-    },
-    url,
-    ...data,
-  });
+  const serializedPayload = typeof payload === "string" ? payload : JSON.stringify(payload);
 
   await Promise.all(
     tokens.map(
@@ -203,7 +192,7 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
             const attemptHosts = buildAttemptHosts();
             let deliveryResult = null;
             for (const host of attemptHosts) {
-              const result = await sendToApnsHost(host, token, jwt, payload);
+              const result = await sendToApnsHost(host, token, jwt, serializedPayload, { pushType, priority });
               if (result.ok) {
                 deliveryResult = result;
                 break;
@@ -235,4 +224,36 @@ export async function sendApnsNotifications(tokens = [], { title, body, url = "/
   );
 
   return { sent, failed, skipped: 0 };
+}
+
+export async function sendApnsNotifications(tokens = [], { title, body, url = "/", data = {} } = {}) {
+  return sendApnsPayload(
+    tokens,
+    {
+      aps: {
+        alert: { title, body },
+        sound: "default",
+        badge: 0,
+      },
+      data: {
+        url,
+        ...data,
+      },
+      url,
+      ...data,
+    },
+    { title, pushType: "alert", priority: "10" }
+  );
+}
+
+export async function sendApnsBadgeReset(tokens = []) {
+  return sendApnsPayload(
+    tokens,
+    {
+      aps: {
+        badge: 0,
+      },
+    },
+    { title: "badge_reset", pushType: "alert", priority: "10" }
+  );
 }

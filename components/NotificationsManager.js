@@ -11,6 +11,7 @@ import { useLanguage } from "./LanguageProvider";
 import {
   addNativePushListeners,
   disableNativePushToken,
+  dispatchPushEvent,
   getNativePushPermissionState,
   getLastNativePushToken,
   isNativePushSupported,
@@ -21,6 +22,7 @@ import {
 
 const ASKED_KEY = "notifications:asked";
 const ENABLED_KEY = "notifications:enabled";
+const BADGE_RESET_KEY = "notifications:lastBadgeResetAt";
 
 function clearAppBadge() {
   if (typeof navigator === "undefined") return;
@@ -88,6 +90,17 @@ export default function NotificationsManager() {
     }
     setEnabled(localStorage.getItem(ENABLED_KEY) === "1" && Notification.permission === "granted");
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid || !enabled || !isNativePushSupported()) return;
+    const now = Date.now();
+    const lastResetAt = Number(localStorage.getItem(BADGE_RESET_KEY) || 0);
+    if (now - lastResetAt < 10 * 60 * 1000) return;
+    localStorage.setItem(BADGE_RESET_KEY, String(now));
+    dispatchPushEvent("clear_badge", {}).catch((error) => {
+      console.warn("Badge reset dispatch failed:", error);
+    });
+  }, [enabled, user?.uid]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "../../_lib/firebaseAdmin";
-import { sendApnsNotifications } from "../../_lib/apns";
+import { sendApnsBadgeReset, sendApnsNotifications } from "../../_lib/apns";
 
 async function verifyRequest(request) {
   const authHeader = request.headers.get("authorization") || "";
@@ -255,6 +255,14 @@ async function dispatchDishReaction({ decoded, actorId, dishId = "", reaction = 
   return result;
 }
 
+async function dispatchClearBadge({ decoded }) {
+  const tokens = await getEnabledTokensForUserIds([decoded.uid]);
+  if (!tokens.length) return { sent: 0, failed: 0, skipped: 0 };
+  const result = await sendApnsBadgeReset(tokens);
+  await recordPushDispatchDebug([decoded.uid], { type: "clear_badge", tokenCount: tokens.length, result });
+  return result;
+}
+
 export async function POST(request) {
   try {
     const decoded = await verifyRequest(request);
@@ -290,6 +298,8 @@ export async function POST(request) {
       result = await dispatchDishReaction({ decoded, ...body, reaction: "save" });
     } else if (type === "dish_liked") {
       result = await dispatchDishReaction({ decoded, ...body, reaction: "like" });
+    } else if (type === "clear_badge") {
+      result = await dispatchClearBadge({ decoded });
     } else {
       return NextResponse.json({ error: "Unsupported notification type." }, { status: 400 });
     }

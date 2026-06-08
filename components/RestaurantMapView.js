@@ -38,6 +38,42 @@ function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
   return unprojectLatLng({ x: point.x, y: point.y + verticalOffsetPx }, zoom);
 }
 
+function easeOutCubic(value) {
+  return 1 - Math.pow(1 - value, 3);
+}
+
+function getMapCenterLiteral(map) {
+  const center = map?.getCenter?.();
+  if (!center) return null;
+  return { lat: center.lat(), lng: center.lng() };
+}
+
+function formatRestaurantPlaceLine(group = {}) {
+  const explicitCity = String(group.city || group.locality || group.town || "").trim();
+  const explicitCountry = String(group.country || group.countryName || "").trim();
+  if (explicitCity && explicitCountry) return `${explicitCity}, ${explicitCountry}`;
+  if (explicitCity) return explicitCity;
+
+  const parts = String(group.address || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "Pinned restaurant";
+
+  const country = explicitCountry || parts[parts.length - 1] || "";
+  let city = parts.length >= 4 && /^[A-Z]{2,3}$/.test(parts[parts.length - 2])
+    ? parts[parts.length - 3]
+    : parts.length >= 3
+      ? parts[parts.length - 2]
+      : parts[0];
+  city = city
+    .replace(/^\d{4,6}\s+/, "")
+    .replace(/\s+[A-Z]{2,3}$/, "")
+    .trim();
+  if (!city) return country || "Pinned restaurant";
+  return country && country !== city ? `${city}, ${country}` : city;
+}
+
 function getMapDistanceMeters(a, b) {
   if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) {
     return Number.POSITIVE_INFINITY;
@@ -237,17 +273,52 @@ export default function RestaurantMapView({
   const carouselPendingGroupRef = useRef(null);
   const carouselSilentResetRef = useRef(false);
   const cardSwipeHandledUntilRef = useRef(0);
+  const cameraAnimationRef = useRef(0);
   const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
   const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
+
+  const animateMapCamera = (center, zoom, { duration = 520 } = {}) => {
+    const map = mapRef.current;
+    if (!map || !center || !Number.isFinite(center.lat) || !Number.isFinite(center.lng) || !Number.isFinite(zoom)) return;
+    const startCenter = getMapCenterLiteral(map) || center;
+    const startZoom = Number(map.getZoom?.() || zoom);
+    const animationId = cameraAnimationRef.current + 1;
+    cameraAnimationRef.current = animationId;
+    const startedAt = performance.now();
+
+    const step = (now) => {
+      if (cameraAnimationRef.current !== animationId) return;
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = easeOutCubic(progress);
+      const nextCenter = {
+        lat: startCenter.lat + (center.lat - startCenter.lat) * eased,
+        lng: startCenter.lng + (center.lng - startCenter.lng) * eased,
+      };
+      const nextZoom = startZoom + (zoom - startZoom) * eased;
+      if (typeof map.moveCamera === "function") {
+        map.moveCamera({ center: nextCenter, zoom: nextZoom });
+      } else {
+        map.setCenter(nextCenter);
+        map.setZoom(nextZoom);
+      }
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        map.setCenter(center);
+        map.setZoom(zoom);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  };
 
   const focusMapOnGroup = (group, { keepAboveSheet = false } = {}) => {
     if (!mapRef.current || !group || !Number.isFinite(group.lat) || !Number.isFinite(group.lng)) return;
     const currentZoom = mapRef.current.getZoom?.() || 0;
     const nextZoom = currentZoom < 14 ? 14 : currentZoom;
-    if (currentZoom < 14) mapRef.current.setZoom(nextZoom);
     if (!keepAboveSheet) {
-      mapRef.current.setCenter({ lat: group.lat, lng: group.lng });
+      animateMapCamera({ lat: group.lat, lng: group.lng }, nextZoom);
       return;
     }
     const adjust = () => {
@@ -261,7 +332,7 @@ export default function RestaurantMapView({
       const desiredPinY = Math.max(embedded ? 34 : 56, sheetTop - (embedded ? 96 : 28));
       const verticalOffsetPx = Math.max(0, mapRect.height / 2 - desiredPinY);
       const center = getOffsetCenter(group, nextZoom, verticalOffsetPx) || { lat: group.lat, lng: group.lng };
-      mapRef.current?.setCenter(center);
+      animateMapCamera(center, nextZoom);
     };
     window.requestAnimationFrame(adjust);
     window.setTimeout(adjust, 260);
@@ -655,11 +726,10 @@ export default function RestaurantMapView({
         setQuery(place.name || query);
         setPredictions([]);
         setSearchFocused(false);
-        mapRef.current.panTo({
+        animateMapCamera({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
-        });
-        mapRef.current.setZoom(14);
+        }, 14);
       }
     );
   };
@@ -867,7 +937,7 @@ export default function RestaurantMapView({
               {cardDishUsers.length} {t(cardDishUsers.length === 1 ? "person count" : "people count")}
             </span>
           </div>
-          <div className="mt-1 text-xs leading-5 text-black/52">{group.address || "Pinned restaurant"}</div>
+          <div className="mt-1 text-[0.82rem] font-semibold leading-5 text-black/66">{formatRestaurantPlaceLine(group)}</div>
         </div>
         <button
           type="button"

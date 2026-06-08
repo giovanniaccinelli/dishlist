@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -536,8 +536,10 @@ export default function Profile() {
   const [dishlistRenameValue, setDishlistRenameValue] = useState("");
   const [dishlistCoverFile, setDishlistCoverFile] = useState(null);
   const [dishlistCoverPreview, setDishlistCoverPreview] = useState("");
+  const [draggedDishlistId, setDraggedDishlistId] = useState("");
   const dishlistCoverInputRef = useRef(null);
   const dishlistOrderSaveTimeoutRef = useRef(null);
+  const activeDishlistDragRef = useRef("");
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -1747,17 +1749,47 @@ export default function Profile() {
     }, 260);
   };
 
-  const handleVisibleDishlistReorder = (orderedDishlists = []) => {
-    if (!dishlistManagementMode) return;
-    const orderedIds = orderedDishlists.map((dishlist) => dishlist?.id).filter(Boolean);
-    if (!orderedIds.length) return;
-    const hiddenIds = allDishlists
-      .map((dishlist) => dishlist.id)
-      .filter((id) => !orderedIds.includes(id));
-    scheduleDishlistOrderSave([...orderedIds, ...hiddenIds]);
+  const reorderDishlistInProfile = (fromId, toId) => {
+    if (!fromId || !toId || fromId === toId) return;
+    const ids = allDishlists.map((dishlist) => dishlist.id);
+    const fromIndex = ids.indexOf(fromId);
+    const toIndex = ids.indexOf(toId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const nextIds = [...ids];
+    const [item] = nextIds.splice(fromIndex, 1);
+    nextIds.splice(toIndex, 0, item);
+    scheduleDishlistOrderSave(nextIds);
+  };
+
+  const beginDishlistManagementDrag = (event, dishlistId) => {
+    if (!dishlistManagementMode || !dishlistId) return;
+    if (event.target?.closest?.("[data-management-action='true']")) return;
+    activeDishlistDragRef.current = dishlistId;
+    setDraggedDishlistId(dishlistId);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  const moveDishlistManagementDrag = (event) => {
+    const fromId = activeDishlistDragRef.current;
+    if (!dishlistManagementMode || !fromId) return;
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest?.("[data-profile-dishlist-id]");
+    const toId = target?.getAttribute?.("data-profile-dishlist-id") || "";
+    if (toId && toId !== fromId) {
+      activeDishlistDragRef.current = toId;
+      setDraggedDishlistId(toId);
+      reorderDishlistInProfile(fromId, toId);
+    }
+  };
+
+  const endDishlistManagementDrag = () => {
+    activeDishlistDragRef.current = "";
+    setDraggedDishlistId("");
   };
 
   const startDishlistLongPress = () => {
+    if (dishlistManagementMode) return;
     dishlistLongPressTriggeredRef.current = false;
     window.clearTimeout(dishlistLongPressRef.current);
     dishlistLongPressRef.current = window.setTimeout(() => {
@@ -2957,13 +2989,7 @@ export default function Profile() {
                   </button>
                 </div>
               ) : null}
-              <Reorder.Group
-                as="div"
-                axis="y"
-                values={visibleProfileDishlists}
-                onReorder={handleVisibleDishlistReorder}
-                className="grid grid-cols-2 gap-3 sm:grid-cols-3"
-              >
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {visibleProfileDishlists.map((dishlist) => {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
@@ -2971,15 +2997,17 @@ export default function Profile() {
                   const preview = getDishlistPreviewDishes(dishlist);
                   const canManageDishlist = dishlist.type === "custom";
                   return (
-                    <Reorder.Item
-                      as="div"
+                    <motion.div
                       key={dishlist.id}
-                      value={dishlist}
-                      className={`relative ${dishlistManagementMode ? "cursor-grab active:cursor-grabbing" : ""}`}
-                      dragListener={dishlistManagementMode}
+                      data-profile-dishlist-id={dishlist.id}
+                      className={`relative ${dishlistManagementMode ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
+                      onPointerDown={(event) => beginDishlistManagementDrag(event, dishlist.id)}
+                      onPointerMove={moveDishlistManagementDrag}
+                      onPointerUp={endDishlistManagementDrag}
+                      onPointerCancel={endDishlistManagementDrag}
                       animate={dishlistManagementMode ? { rotate: [-0.7, 0.7, -0.7] } : { rotate: 0 }}
                       transition={dishlistManagementMode ? { duration: 0.18, repeat: Infinity, ease: "easeInOut" } : { duration: 0.12 }}
-                      layout
+                      style={draggedDishlistId === dishlist.id ? { opacity: 0.72 } : undefined}
                     >
                     <button
                       type="button"
@@ -3033,6 +3061,7 @@ export default function Profile() {
                       <div className="absolute -left-2 -top-2 z-30">
                         <button
                           type="button"
+                          data-management-action="true"
                           onClick={() => setDishlistDeleteTarget(dishlist)}
                           className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#151515] bg-[#E64646] text-white shadow-[0_10px_22px_rgba(230,70,70,0.35)]"
                           aria-label={`Delete ${dishlist.name}`}
@@ -3043,6 +3072,7 @@ export default function Profile() {
                       <div className="absolute -right-2 -top-2 z-30">
                         <button
                           type="button"
+                          data-management-action="true"
                           onClick={() => openDishlistEditModal(dishlist)}
                           className={`grid h-8 w-8 place-items-center rounded-full border-2 shadow-[0_10px_22px_rgba(0,0,0,0.22)] ${
                             darkMode ? "border-[#151515] bg-white text-black" : "border-white bg-black text-white"
@@ -3054,10 +3084,10 @@ export default function Profile() {
                       </div>
                       </>
                     ) : null}
-                    </Reorder.Item>
+                    </motion.div>
                   );
                 })}
-              </Reorder.Group>
+              </div>
               <button
                 type="button"
                 onClick={handleOpenCreateDishlist}

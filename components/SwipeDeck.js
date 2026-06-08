@@ -629,6 +629,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentStoryPushHistory = Array.isArray(currentStoryStats?.history) ? currentStoryStats.history : [];
   const currentRestaurantLabel = getSafeRestaurantLabel(currentCard);
   const currentRestaurantPlaceId = getSafeRestaurantPlaceId(currentCard);
+  const currentMetaLine = [uploadDateLabel, isRestaurantDish(currentCard) ? currentRestaurantLabel : ""]
+    .filter(Boolean)
+    .join(" - ");
   const currentRestaurant = currentCard?.restaurant || null;
   const currentRestaurantLat = Number(currentRestaurant?.lat);
   const currentRestaurantLng = Number(currentRestaurant?.lng);
@@ -1216,6 +1219,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
     const previewPriceLabel = formatDishPrice(dish);
     const previewUploadDate = getRelativeUploadTime(dish.createdAt);
+    const previewMetaLine = [previewUploadDate, isRestaurantDish(dish) ? previewRestaurantLabel : ""]
+      .filter(Boolean)
+      .join(" - ");
     const previewStoryStats = dish?.id ? storyPushStatsByDish?.[dish.id] || null : null;
     const previewStoryPushCount = Number(previewStoryStats?.count || 0);
     const previewIsRestaurant = isRestaurantDish(dish);
@@ -1242,9 +1248,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
             <div className="min-w-0">
               <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
-              {previewUploadDate ? (
+              {previewMetaLine ? (
                 <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">
-                  {previewUploadDate}
+                  {previewMetaLine}
                 </div>
               ) : null}
             </div>
@@ -1258,11 +1264,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </div>
             ) : null}
           </div>
-          {isRestaurantDish(dish) && previewRestaurantLabel ? (
-            <div className="no-accent-border max-w-full truncate rounded-full border border-white/16 bg-black/82 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-md">
-              {previewRestaurantLabel}
-            </div>
-          ) : null}
         </div>
         <div className="no-accent-border pointer-events-none absolute right-4 top-4 z-[13] inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
           <Users size={13} strokeWidth={2.25} />
@@ -1622,11 +1623,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       {currentCard.ownerName || "Unknown"}
                     </p>
                   )}
-                  {uploadDateLabel ? (
+                  {currentMetaLine ? (
                   <div
-                    className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75"
+                    className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75"
                   >
-                      {uploadDateLabel}
+                      {currentMetaLine}
                     </div>
                   ) : null}
                 </div>
@@ -1655,24 +1656,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </button>
               ) : null}
             </div>
-            {isRestaurantDish(currentCard) && currentRestaurantPlaceId && currentRestaurantLabel ? (
-              <button
-                type="button"
-                data-no-drag="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
-                }}
-                className={darkMode
-                  ? "no-accent-border max-w-full truncate rounded-full border border-white/12 bg-black/88 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.34)] backdrop-blur-md"
-                  : "no-accent-border max-w-full truncate rounded-full border border-white/16 bg-black/86 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-md"
-                }
-                aria-label={`Open ${currentRestaurantLabel} on map`}
-              >
-                {currentRestaurantLabel}
-              </button>
-            ) : null}
           </div>
           {!visibleRestaurantMap && tertiaryActionLabel && !hasBottomActionRow ? (
             <button

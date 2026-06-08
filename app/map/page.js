@@ -93,8 +93,12 @@ function MapPageContent() {
     };
   }, []);
 
-  const groups = useMemo(() => getRestaurantDishGroups(dishes, leaderboardRestaurantAnswers), [dishes, leaderboardRestaurantAnswers]);
   const selectedPlaceId = searchParams.get("placeId") || "";
+  const groups = useMemo(() => {
+    const allGroups = getRestaurantDishGroups(dishes, leaderboardRestaurantAnswers);
+    if (!selectedPlaceId) return allGroups;
+    return allGroups.filter((group) => group.placeId === selectedPlaceId);
+  }, [dishes, leaderboardRestaurantAnswers, selectedPlaceId]);
   const handleModalDishAction = async (dish) => {
     if (!user?.uid || !dish?.id) return false;
     return saveDishToUserList(user.uid, dish.id, dish);

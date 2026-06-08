@@ -1668,13 +1668,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
                 className={darkMode
-                  ? "restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
-                  : `max-w-full truncate rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 py-1 text-[11px] font-semibold leading-none text-white`
+                  ? "no-accent-border inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-white/12 bg-black/72 px-3 py-1.5 text-[11px] font-semibold leading-none text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                  : "no-accent-border inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-white/22 bg-black/62 px-3 py-1.5 text-[11px] font-semibold leading-none text-white/94 shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md"
                 }
-                style={{ border: "2px solid #E64646", boxShadow: "inset 0 0 0 2px #E64646, 0 8px 22px rgba(0,0,0,0.28)" }}
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >
-                {currentRestaurantLabel}
+                <RestaurantMapIcon className="h-3.5 w-3.5 shrink-0 text-[#FF8A7A]" strokeWidth={2.15} />
+                <span className="truncate">{currentRestaurantLabel}</span>
               </button>
             ) : null}
           </div>

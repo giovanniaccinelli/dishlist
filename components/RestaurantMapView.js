@@ -61,15 +61,29 @@ function formatRestaurantPlaceLine(group = {}) {
   if (!parts.length) return "Pinned restaurant";
 
   const country = explicitCountry || parts[parts.length - 1] || "";
-  let city = parts.length >= 4 && /^[A-Z]{2,3}$/.test(parts[parts.length - 2])
-    ? parts[parts.length - 3]
-    : parts.length >= 3
-      ? parts[parts.length - 2]
-      : parts[0];
-  city = city
-    .replace(/^\d{4,6}\s+/, "")
-    .replace(/\s+[A-Z]{2,3}$/, "")
-    .trim();
+  const cleanedParts = parts
+    .slice(0, -1)
+    .map((part) =>
+      part
+        .replace(/\b\d{3,}(?:[-\s]\d+)?\b/g, "")
+        .replace(/\b[A-Z]{1,3}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi, "")
+        .replace(/\b[A-Z]{2,3}\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter(Boolean);
+  let city =
+    cleanedParts.length >= 2
+      ? cleanedParts[cleanedParts.length - 2]
+      : cleanedParts[0] || "";
+  if (city && /\d/.test(city)) city = "";
+  if (!city && parts.length >= 3) {
+    city = parts[parts.length - 3]
+      .replace(/\b\d{3,}(?:[-\s]\d+)?\b/g, "")
+      .replace(/\b[A-Z]{2,3}\b/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
   if (!city) return country || "Pinned restaurant";
   return country && country !== city ? `${city}, ${country}` : city;
 }

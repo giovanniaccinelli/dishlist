@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -537,6 +537,7 @@ export default function Profile() {
   const [dishlistCoverFile, setDishlistCoverFile] = useState(null);
   const [dishlistCoverPreview, setDishlistCoverPreview] = useState("");
   const dishlistCoverInputRef = useRef(null);
+  const dishlistOrderSaveTimeoutRef = useRef(null);
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -671,6 +672,12 @@ export default function Profile() {
       if (dishlistCoverPreview?.startsWith("blob:")) URL.revokeObjectURL(dishlistCoverPreview);
     };
   }, [dishlistCoverPreview]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(dishlistOrderSaveTimeoutRef.current);
+    };
+  }, []);
 
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
@@ -1725,6 +1732,29 @@ export default function Profile() {
   const openPendingDishlistQueue = () => {
     const nextPending = pendingQueueDishes[0];
     if (nextPending) openPendingDishlistPicker(nextPending);
+  };
+
+  const scheduleDishlistOrderSave = (ids) => {
+    if (!user?.uid || !ids.length) return;
+    setProfileMeta((prev) => ({ ...prev, profileDishlistOrder: ids }));
+    window.clearTimeout(dishlistOrderSaveTimeoutRef.current);
+    dishlistOrderSaveTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        await setDoc(doc(db, "users", user.uid), { profileDishlistOrder: ids }, { merge: true });
+      } catch (err) {
+        console.error("Failed to save dishlist order:", err);
+      }
+    }, 260);
+  };
+
+  const handleVisibleDishlistReorder = (orderedDishlists = []) => {
+    if (!dishlistManagementMode) return;
+    const orderedIds = orderedDishlists.map((dishlist) => dishlist?.id).filter(Boolean);
+    if (!orderedIds.length) return;
+    const hiddenIds = allDishlists
+      .map((dishlist) => dishlist.id)
+      .filter((id) => !orderedIds.includes(id));
+    scheduleDishlistOrderSave([...orderedIds, ...hiddenIds]);
   };
 
   const startDishlistLongPress = () => {
@@ -2927,7 +2957,13 @@ export default function Profile() {
                   </button>
                 </div>
               ) : null}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Reorder.Group
+                as="div"
+                axis="y"
+                values={visibleProfileDishlists}
+                onReorder={handleVisibleDishlistReorder}
+                className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+              >
                 {visibleProfileDishlists.map((dishlist) => {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
@@ -2935,11 +2971,15 @@ export default function Profile() {
                   const preview = getDishlistPreviewDishes(dishlist);
                   const canManageDishlist = dishlist.type === "custom";
                   return (
-                    <motion.div
+                    <Reorder.Item
+                      as="div"
                       key={dishlist.id}
+                      value={dishlist}
                       className={`relative ${dishlistManagementMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+                      dragListener={dishlistManagementMode}
                       animate={dishlistManagementMode ? { rotate: [-0.7, 0.7, -0.7] } : { rotate: 0 }}
                       transition={dishlistManagementMode ? { duration: 0.18, repeat: Infinity, ease: "easeInOut" } : { duration: 0.12 }}
+                      layout
                     >
                     <button
                       type="button"
@@ -3014,10 +3054,10 @@ export default function Profile() {
                       </div>
                       </>
                     ) : null}
-                    </motion.div>
+                    </Reorder.Item>
                   );
                 })}
-              </div>
+              </Reorder.Group>
               <button
                 type="button"
                 onClick={handleOpenCreateDishlist}

@@ -1,10 +1,31 @@
 export function normalizeRestaurant(restaurant) {
   if (!restaurant || typeof restaurant !== "object") return null;
 
+  const addressComponents = Array.isArray(restaurant.addressComponents || restaurant.address_components)
+    ? restaurant.addressComponents || restaurant.address_components
+    : [];
+  const findComponent = (types = []) => {
+    const component = addressComponents.find((item) => {
+      const itemTypes = Array.isArray(item?.types) ? item.types : [];
+      return types.some((type) => itemTypes.includes(type));
+    });
+    return String(component?.long_name || component?.short_name || "").trim();
+  };
+
   const placeId = String(restaurant.placeId || restaurant.place_id || "").trim();
   const name = String(restaurant.name || "").trim();
   const address = String(
     restaurant.address || restaurant.formatted_address || ""
+  ).trim();
+  const city = String(
+    restaurant.city ||
+      restaurant.locality ||
+      findComponent(["locality", "postal_town", "administrative_area_level_3", "sublocality", "sublocality_level_1"])
+  ).trim();
+  const country = String(
+    restaurant.country ||
+      restaurant.countryName ||
+      findComponent(["country"])
   ).trim();
   const lat = Number(restaurant.lat);
   const lng = Number(restaurant.lng);
@@ -23,6 +44,8 @@ export function normalizeRestaurant(restaurant) {
     placeId,
     name,
     address,
+    city,
+    country,
     lat,
     lng,
     googleMapsUrl,

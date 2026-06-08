@@ -223,6 +223,12 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
+    if (isRestaurantUpload && !restaurant?.placeId) {
+      setToastVariant("error");
+      setToast("Restaurant is required");
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
     if ((storyMode || uploadToStory) && !storyMealTag) {
       setDishlistPickerOpen(false);
       setStoryMealTagPickerOpen(true);
@@ -382,6 +388,12 @@ export default function UploadPage() {
       setToastVariant("error");
       setToast("Dish name is required");
       setTimeout(() => setToast(""), 1200);
+      return;
+    }
+    if (uploadStep === 0 && isRestaurantUpload && !restaurant?.placeId) {
+      setToastVariant("error");
+      setToast("Restaurant is required");
+      setTimeout(() => setToast(""), 1400);
       return;
     }
     setUploadStep((prev) => {

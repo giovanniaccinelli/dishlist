@@ -72,10 +72,7 @@ function formatRestaurantPlaceLine(group = {}) {
         .trim()
     )
     .filter(Boolean);
-  let city =
-    cleanedParts.length >= 2
-      ? cleanedParts[cleanedParts.length - 2]
-      : cleanedParts[0] || "";
+  let city = cleanedParts[cleanedParts.length - 1] || "";
   if (city && /\d/.test(city)) city = "";
   if (!city && parts.length >= 3) {
     city = parts[parts.length - 3]
@@ -83,6 +80,9 @@ function formatRestaurantPlaceLine(group = {}) {
       .replace(/\b[A-Z]{2,3}\b/g, "")
       .replace(/\s+/g, " ")
       .trim();
+  }
+  if (/\b(st|street|road|rd|avenue|ave|boulevard|blvd|drive|dr|lane|ln|way|via|viale|piazza|p\.za|corso|rue|calle|av\.?)\b/i.test(city)) {
+    city = "";
   }
   if (!city) return country || "Pinned restaurant";
   return country && country !== city ? `${city}, ${country}` : city;

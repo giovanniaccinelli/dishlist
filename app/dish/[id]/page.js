@@ -617,6 +617,10 @@ export default function DishDetail() {
       alert("Dish name is required.");
       return;
     }
+    if (editDishMode === DISH_MODE_RESTAURANT && !editRestaurant?.placeId) {
+      alert(t("Restaurant is required"));
+      return;
+    }
 
     setSavingEdit(true);
     try {
@@ -827,6 +831,10 @@ export default function DishDetail() {
   const goToNextEditStep = () => {
     if (editStep === 0 && !editName.trim()) {
       alert("Dish name is required.");
+      return;
+    }
+    if (editStep === 0 && editDishMode === DISH_MODE_RESTAURANT && !editRestaurant?.placeId) {
+      alert(t("Restaurant is required"));
       return;
     }
     setEditStep((prev) => {

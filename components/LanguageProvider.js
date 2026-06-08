@@ -447,6 +447,7 @@ const translations = {
     "Ingredients": "Ingredienti",
     "Method": "Procedimento",
     "Dish name is required": "Il nome del piatto \u00e8 obbligatorio",
+    "Restaurant is required": "Il ristorante \u00e8 obbligatorio",
     "Story published": "Storia pubblicata",
     "Dish uploaded": "Piatto caricato",
     "Story failed": "Storia non riuscita",

@@ -10,6 +10,7 @@ function buildRestaurantFromPlace(place) {
     placeId: place.place_id,
     name: place.name,
     address: place.formatted_address,
+    addressComponents: place.address_components,
     lat: place.geometry?.location?.lat?.(),
     lng: place.geometry?.location?.lng?.(),
     googleMapsUrl:
@@ -118,7 +119,7 @@ export default function RestaurantPlacePicker({
     placesServiceRef.current.getDetails(
       {
         placeId: prediction.place_id,
-        fields: ["place_id", "name", "formatted_address", "geometry", "url"],
+        fields: ["place_id", "name", "formatted_address", "address_components", "geometry", "url"],
       },
       (place, status) => {
         setDetailsLoading(false);

@@ -3057,7 +3057,7 @@ export default function Profile() {
                     </button>
                     {dishlistManagementMode && canManageDishlist ? (
                       <>
-                      <div className="absolute -left-2 -top-2 z-30">
+                      <div className="absolute left-2 top-2 z-50">
                         <button
                           type="button"
                           onPointerDown={(event) => event.stopPropagation()}
@@ -3068,7 +3068,7 @@ export default function Profile() {
                           <Minus size={16} strokeWidth={3} />
                         </button>
                       </div>
-                      <div className="absolute -right-2 -top-2 z-30">
+                      <div className="absolute right-2 top-2 z-50">
                         <button
                           type="button"
                           onPointerDown={(event) => event.stopPropagation()}

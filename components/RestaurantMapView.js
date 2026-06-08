@@ -88,6 +88,26 @@ function formatRestaurantPlaceLine(group = {}) {
   return country && country !== city ? `${city}, ${country}` : city;
 }
 
+function getRestaurantGoogleMapsUrl(group = {}) {
+  const explicitUrl = String(group.googleMapsUrl || group.googleMapsURL || "").trim();
+  if (explicitUrl) return explicitUrl;
+  const placeId = String(group.placeId || "").trim();
+  const name = String(group.name || "").trim();
+  const address = String(group.address || "").trim();
+  const lat = Number(group.lat);
+  const lng = Number(group.lng);
+  if (placeId) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name || address || "Restaurant")}&query_place_id=${encodeURIComponent(placeId)}`;
+  }
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+  }
+  if (name || address) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, address].filter(Boolean).join(", "))}`;
+  }
+  return "";
+}
+
 function getMapDistanceMeters(a, b) {
   if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) {
     return Number.POSITIVE_INFINITY;
@@ -888,6 +908,7 @@ export default function RestaurantMapView({
             .filter((rating) => rating > 0);
           return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
         })();
+    const googleMapsUrl = getRestaurantGoogleMapsUrl(group);
 
     return (
     <motion.div
@@ -931,9 +952,9 @@ export default function RestaurantMapView({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <MapPin size={15} className="shrink-0 text-[#E64646]" />
-            {group.googleMapsUrl ? (
+            {googleMapsUrl ? (
               <a
-                href={group.googleMapsUrl}
+                href={googleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="truncate text-[1rem] font-semibold text-black underline decoration-black/30 underline-offset-2"

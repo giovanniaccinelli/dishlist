@@ -1033,6 +1033,9 @@ export async function getCustomDishlistsForUser(userId) {
           name: isTagSystem ? tag : data.name || "Dishlist",
           type: isTagSystem ? "tag_system" : "custom",
           tag: isTagSystem ? tag : undefined,
+          coverURL: data.coverURL || data.coverUrl || "",
+          coverCardURL: data.coverCardURL || data.coverURL || data.coverUrl || "",
+          coverThumbURL: data.coverThumbURL || data.coverCardURL || data.coverURL || data.coverUrl || "",
           createdAt: data.createdAt || null,
           updatedAt: data.updatedAt || null,
           dishIds: enriched.map((dish) => dish.id).filter(Boolean),
@@ -1310,6 +1313,29 @@ export async function updateCustomDishlistName(userId, dishlistId, name) {
     return true;
   } catch (err) {
     console.error("Failed to rename custom dishlist:", err);
+    return false;
+  }
+}
+
+export async function updateCustomDishlistDetails(userId, dishlistId, updates = {}) {
+  if (!userId || !dishlistId) return false;
+  const payload = { updatedAt: serverTimestamp() };
+  if (Object.prototype.hasOwnProperty.call(updates, "name")) {
+    const cleanedName = normalizeDishlistName(updates.name);
+    if (!cleanedName || !isValidCustomDishlist({ id: dishlistId, name: cleanedName })) return false;
+    payload.name = cleanedName;
+  }
+  ["coverURL", "coverCardURL", "coverThumbURL"].forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+      payload[key] = String(updates[key] || "").trim();
+    }
+  });
+  try {
+    await setDoc(customDishlistDoc(userId, dishlistId), payload, { merge: true });
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to update custom dishlist:", err);
     return false;
   }
 }

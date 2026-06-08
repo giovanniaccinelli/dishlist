@@ -1259,10 +1259,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             ) : null}
           </div>
           {isRestaurantDish(dish) && previewRestaurantLabel ? (
-            <div
-              className="restaurant-accent-border max-w-full truncate rounded-full border-2 bg-black/70 px-3 py-1 text-[11px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
-              style={{ border: "2px solid #E64646", boxShadow: "inset 0 0 0 2px #E64646, 0 8px 22px rgba(0,0,0,0.28)" }}
-            >
+            <div className="no-accent-border max-w-full truncate rounded-full border border-white/16 bg-black/82 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-md">
               {previewRestaurantLabel}
             </div>
           ) : null}
@@ -1668,8 +1665,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   router.push(`/map?placeId=${encodeURIComponent(currentRestaurantPlaceId)}`);
                 }}
                 className={darkMode
-                  ? "no-accent-border max-w-full truncate rounded-full border border-white/16 bg-black/82 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-md"
-                  : "no-accent-border max-w-full truncate rounded-full border border-white/24 bg-black/78 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.26)] backdrop-blur-md"
+                  ? "no-accent-border max-w-full truncate rounded-full border border-white/12 bg-black/88 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.34)] backdrop-blur-md"
+                  : "no-accent-border max-w-full truncate rounded-full border border-white/16 bg-black/86 px-3.5 py-1.5 text-[12px] font-bold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-md"
                 }
                 aria-label={`Open ${currentRestaurantLabel} on map`}
               >

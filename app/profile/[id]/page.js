@@ -196,6 +196,24 @@ function TagDishlistPreview({ dishlist }) {
 }
 
 function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value }) {
+  const cover = dishlist?.coverThumbURL || dishlist?.coverCardURL || dishlist?.coverURL || "";
+  if (cover) {
+    return (
+      <div className="relative aspect-square w-full overflow-hidden rounded-[0.95rem]">
+        <img
+          src={cover}
+          alt={dishlist.name || t("Dishlist cover")}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            event.currentTarget.src = DEFAULT_DISH_IMAGE;
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-transparent" />
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-2 gap-1.5">
       {Array.from({ length: 4 }).map((_, index) => {

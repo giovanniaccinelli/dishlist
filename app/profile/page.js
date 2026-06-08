@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { useAuth } from "../lib/auth";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -37,7 +37,7 @@ import {
   createLeaderboardQuestion,
   updateLeaderboardQuestion,
   deleteLeaderboardQuestion,
-  updateCustomDishlistName,
+  updateCustomDishlistDetails,
   publishDishAsStory,
   removePendingDishlistSorting,
   getAvatarTone,
@@ -297,6 +297,24 @@ function TagDishlistPreview({ dishlist }) {
 }
 
 function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value }) {
+  const cover = dishlist?.coverThumbURL || dishlist?.coverCardURL || dishlist?.coverURL || "";
+  if (cover) {
+    return (
+      <div className="relative aspect-square w-full overflow-hidden rounded-[0.95rem]">
+        <img
+          src={cover}
+          alt={dishlist.name || t("Dishlist cover")}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            event.currentTarget.src = DEFAULT_DISH_IMAGE;
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-transparent" />
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-2 gap-1.5">
       {Array.from({ length: 4 }).map((_, index) => {
@@ -516,7 +534,10 @@ export default function Profile() {
   const [dishlistDeleteTarget, setDishlistDeleteTarget] = useState(null);
   const [dishlistRenameTarget, setDishlistRenameTarget] = useState(null);
   const [dishlistRenameValue, setDishlistRenameValue] = useState("");
-  const [draggedDishlistId, setDraggedDishlistId] = useState("");
+  const [dishlistCoverFile, setDishlistCoverFile] = useState(null);
+  const [dishlistCoverPreview, setDishlistCoverPreview] = useState("");
+  const dishlistCoverInputRef = useRef(null);
+  const dishlistOrderSaveTimeoutRef = useRef(null);
   const [createDishlistOpen, setCreateDishlistOpen] = useState(false);
   const [newDishlistName, setNewDishlistName] = useState("");
   const [createDishlistStep, setCreateDishlistStep] = useState(0);
@@ -645,6 +666,18 @@ export default function Profile() {
       window.clearTimeout(timer);
     };
   }, [dishName, dishTags.length, isModalOpen, loadingUpload]);
+
+  useEffect(() => {
+    return () => {
+      if (dishlistCoverPreview?.startsWith("blob:")) URL.revokeObjectURL(dishlistCoverPreview);
+    };
+  }, [dishlistCoverPreview]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(dishlistOrderSaveTimeoutRef.current);
+    };
+  }, []);
 
   const refreshCustomDishlists = async (ownerId = user?.uid) => {
     if (!ownerId) return [];
@@ -1701,37 +1734,27 @@ export default function Profile() {
     if (nextPending) openPendingDishlistPicker(nextPending);
   };
 
-  const persistDishlistOrder = async (ids) => {
-    if (!user?.uid) return;
+  const scheduleDishlistOrderSave = (ids) => {
+    if (!user?.uid || !ids.length) return;
     setProfileMeta((prev) => ({ ...prev, profileDishlistOrder: ids }));
-    try {
-      await setDoc(doc(db, "users", user.uid), { profileDishlistOrder: ids }, { merge: true });
-    } catch (err) {
-      console.error("Failed to save dishlist order:", err);
-    }
+    window.clearTimeout(dishlistOrderSaveTimeoutRef.current);
+    dishlistOrderSaveTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        await setDoc(doc(db, "users", user.uid), { profileDishlistOrder: ids }, { merge: true });
+      } catch (err) {
+        console.error("Failed to save dishlist order:", err);
+      }
+    }, 260);
   };
 
-  const moveDishlistInProfile = (dishlistId, direction) => {
-    const ids = allDishlists.map((dishlist) => dishlist.id);
-    const index = ids.indexOf(dishlistId);
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= ids.length) return;
-    const nextIds = [...ids];
-    const [item] = nextIds.splice(index, 1);
-    nextIds.splice(nextIndex, 0, item);
-    persistDishlistOrder(nextIds);
-  };
-
-  const reorderDishlistInProfile = (fromId, toId) => {
-    if (!fromId || !toId || fromId === toId) return;
-    const ids = allDishlists.map((dishlist) => dishlist.id);
-    const fromIndex = ids.indexOf(fromId);
-    const toIndex = ids.indexOf(toId);
-    if (fromIndex < 0 || toIndex < 0) return;
-    const nextIds = [...ids];
-    const [item] = nextIds.splice(fromIndex, 1);
-    nextIds.splice(toIndex, 0, item);
-    persistDishlistOrder(nextIds);
+  const handleVisibleDishlistReorder = (orderedDishlists = []) => {
+    if (!dishlistManagementMode) return;
+    const orderedIds = orderedDishlists.map((dishlist) => dishlist?.id).filter(Boolean);
+    if (!orderedIds.length) return;
+    const hiddenIds = allDishlists
+      .map((dishlist) => dishlist.id)
+      .filter((id) => !orderedIds.includes(id));
+    scheduleDishlistOrderSave([...orderedIds, ...hiddenIds]);
   };
 
   const startDishlistLongPress = () => {
@@ -1745,6 +1768,22 @@ export default function Profile() {
 
   const clearDishlistLongPress = () => {
     window.clearTimeout(dishlistLongPressRef.current);
+  };
+
+  const openDishlistEditModal = (dishlist) => {
+    if (!dishlist || dishlist.type !== "custom") return;
+    setDishlistRenameTarget(dishlist);
+    setDishlistRenameValue(dishlist.name || "");
+    setDishlistCoverFile(null);
+    setDishlistCoverPreview(dishlist.coverThumbURL || dishlist.coverCardURL || dishlist.coverURL || "");
+  };
+
+  const handleDishlistCoverChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type?.startsWith("image/")) return;
+    if (dishlistCoverPreview?.startsWith("blob:")) URL.revokeObjectURL(dishlistCoverPreview);
+    setDishlistCoverFile(file);
+    setDishlistCoverPreview(URL.createObjectURL(file));
   };
 
   const closeDishlistPicker = () => {
@@ -2481,6 +2520,10 @@ export default function Profile() {
     if (activeDishlistId === dishlistDeleteTarget.id) {
       selectDishlist("overview");
     }
+    setProfileMeta((prev) => ({
+      ...prev,
+      profileDishlistOrder: (prev.profileDishlistOrder || []).filter((id) => id !== dishlistDeleteTarget.id),
+    }));
     setDishlistDeleteTarget(null);
     setDishlistsEditMode(false);
     setToastVariant("success");
@@ -2490,7 +2533,29 @@ export default function Profile() {
 
   const handleRenameDishlist = async () => {
     if (!user?.uid || !dishlistRenameTarget?.id || !dishlistRenameValue.trim()) return;
-    const renamed = await updateCustomDishlistName(user.uid, dishlistRenameTarget.id, dishlistRenameValue);
+    let coverUpdates = {};
+    if (dishlistCoverFile) {
+      const uploaded = await uploadDishImageVariants(dishlistCoverFile, user.uid);
+      coverUpdates = {
+        coverURL: uploaded.imageURL || "",
+        coverCardURL: uploaded.cardURL || uploaded.imageURL || "",
+        coverThumbURL: uploaded.thumbURL || uploaded.cardURL || uploaded.imageURL || "",
+      };
+      const oldCover =
+        dishlistRenameTarget.coverURL ||
+        dishlistRenameTarget.coverCardURL ||
+        dishlistRenameTarget.coverThumbURL ||
+        "";
+      if (oldCover && oldCover !== coverUpdates.coverURL) {
+        deleteImageByUrl(oldCover).catch((err) => {
+          console.warn("Failed to delete old dishlist cover:", err);
+        });
+      }
+    }
+    const renamed = await updateCustomDishlistDetails(user.uid, dishlistRenameTarget.id, {
+      name: dishlistRenameValue,
+      ...coverUpdates,
+    });
     if (!renamed) {
       setToastVariant("error");
       setToast("Dishlist rename failed");
@@ -2500,6 +2565,8 @@ export default function Profile() {
     await refreshCustomDishlists(user.uid);
     setDishlistRenameTarget(null);
     setDishlistRenameValue("");
+    setDishlistCoverFile(null);
+    setDishlistCoverPreview("");
     setToastVariant("success");
     setToast("Dishlist renamed");
     setTimeout(() => setToast(""), 1200);
@@ -2890,40 +2957,29 @@ export default function Profile() {
                   </button>
                 </div>
               ) : null}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Reorder.Group
+                as="div"
+                axis="y"
+                values={visibleProfileDishlists}
+                onReorder={handleVisibleDishlistReorder}
+                className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+              >
                 {visibleProfileDishlists.map((dishlist) => {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
                   const hasPendingBadge = dishlist.id === "all_dishes" && pendingQueueCount > 0;
                   const preview = getDishlistPreviewDishes(dishlist);
-                  const canDeleteManagedDishlist = dishlist.type === "custom";
+                  const canManageDishlist = dishlist.type === "custom";
                   return (
-                    <motion.div
+                    <Reorder.Item
+                      as="div"
                       key={dishlist.id}
+                      value={dishlist}
                       className={`relative ${dishlistManagementMode ? "cursor-grab active:cursor-grabbing" : ""}`}
-                      draggable={dishlistManagementMode}
-                      onDragStart={(event) => {
-                        if (!dishlistManagementMode) return;
-                        setDraggedDishlistId(dishlist.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        event.dataTransfer.setData("text/plain", dishlist.id);
-                      }}
-                      onDragOver={(event) => {
-                        if (!dishlistManagementMode || !draggedDishlistId || draggedDishlistId === dishlist.id) return;
-                        event.preventDefault();
-                        event.dataTransfer.dropEffect = "move";
-                      }}
-                      onDrop={(event) => {
-                        if (!dishlistManagementMode) return;
-                        event.preventDefault();
-                        const fromId = draggedDishlistId || event.dataTransfer.getData("text/plain");
-                        reorderDishlistInProfile(fromId, dishlist.id);
-                        setDraggedDishlistId("");
-                      }}
-                      onDragEnd={() => setDraggedDishlistId("")}
+                      dragListener={dishlistManagementMode}
                       animate={dishlistManagementMode ? { rotate: [-0.7, 0.7, -0.7] } : { rotate: 0 }}
                       transition={dishlistManagementMode ? { duration: 0.18, repeat: Infinity, ease: "easeInOut" } : { duration: 0.12 }}
-                      style={draggedDishlistId === dishlist.id ? { opacity: 0.55 } : undefined}
+                      layout
                     >
                     <button
                       type="button"
@@ -2972,7 +3028,8 @@ export default function Profile() {
                       )}
                       <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                     </button>
-                    {dishlistManagementMode && canDeleteManagedDishlist ? (
+                    {dishlistManagementMode && canManageDishlist ? (
+                      <>
                       <div className="absolute -left-2 -top-2 z-30">
                         <button
                           type="button"
@@ -2983,25 +3040,38 @@ export default function Profile() {
                           <Minus size={16} strokeWidth={3} />
                         </button>
                       </div>
+                      <div className="absolute -right-2 -top-2 z-30">
+                        <button
+                          type="button"
+                          onClick={() => openDishlistEditModal(dishlist)}
+                          className={`grid h-8 w-8 place-items-center rounded-full border-2 shadow-[0_10px_22px_rgba(0,0,0,0.22)] ${
+                            darkMode ? "border-[#151515] bg-white text-black" : "border-white bg-black text-white"
+                          }`}
+                          aria-label={`Edit ${dishlist.name}`}
+                        >
+                          <Pencil size={15} strokeWidth={2.6} />
+                        </button>
+                      </div>
+                      </>
                     ) : null}
-                    </motion.div>
+                    </Reorder.Item>
                   );
                 })}
-                <button
-                  type="button"
-                  onClick={handleOpenCreateDishlist}
-                  className={`min-h-[11.4rem] rounded-[1.5rem] border-2 border-dashed border-[#45C47A]/55 p-3 text-left ${
-                    darkMode ? "bg-[#12351F]" : "bg-[#F3FFF7]"
-                  }`}
-                >
-                  <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#63D892]">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1FA463] text-white">
-                      <Plus size={22} />
-                    </div>
-                    <div className="text-sm font-semibold">{t("Create dishlist")}</div>
+              </Reorder.Group>
+              <button
+                type="button"
+                onClick={handleOpenCreateDishlist}
+                className={`mt-3 min-h-[11.4rem] w-full rounded-[1.5rem] border-2 border-dashed border-[#45C47A]/55 p-3 text-left sm:max-w-[calc((100%-1.5rem)/3)] ${
+                  darkMode ? "bg-[#12351F]" : "bg-[#F3FFF7]"
+                }`}
+              >
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[#63D892]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1FA463] text-white">
+                    <Plus size={22} />
                   </div>
-                </button>
-              </div>
+                  <div className="text-sm font-semibold">{t("Create dishlist")}</div>
+                </div>
+              </button>
               {hasMoreProfileDishlists ? (
                 <div className="mt-6 mb-1 flex justify-center">
                   <button
@@ -3051,10 +3121,7 @@ export default function Profile() {
 	                  {activeDishlist?.type === "custom" ? (
 	                    <button
                       type="button"
-                      onClick={() => {
-                        setDishlistRenameTarget(activeDishlist);
-                        setDishlistRenameValue(activeDishlist.name || "");
-                      }}
+                      onClick={() => openDishlistEditModal(activeDishlist)}
                       className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${
                         darkMode ? "border-white/14 bg-[#161616] text-white" : "border-black/12 bg-white text-black"
                       }`}
@@ -4099,8 +4166,7 @@ export default function Profile() {
                               onClick={(event) => {
                                 event.preventDefault();
                                 event.stopPropagation();
-                                setDishlistRenameTarget(dishlist);
-                                setDishlistRenameValue(dishlist.name || "");
+                                openDishlistEditModal(dishlist);
                               }}
                               className="flex h-8 w-8 items-center justify-center rounded-full border border-[#111111] bg-white text-black shadow-[0_10px_20px_rgba(0,0,0,0.12)]"
                               aria-label={`Rename ${dishlist.name}`}
@@ -4624,6 +4690,8 @@ export default function Profile() {
             onClick={() => {
               setDishlistRenameTarget(null);
               setDishlistRenameValue("");
+              setDishlistCoverFile(null);
+              setDishlistCoverPreview("");
             }}
           >
             <motion.div
@@ -4653,6 +4721,8 @@ export default function Profile() {
                   onClick={() => {
                     setDishlistRenameTarget(null);
                     setDishlistRenameValue("");
+                    setDishlistCoverFile(null);
+                    setDishlistCoverPreview("");
                   }}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black/60"
                   aria-label="Close rename dishlist dialog"
@@ -4669,6 +4739,38 @@ export default function Profile() {
                   darkMode ? "border-white/12 bg-[#1B1B1B] text-white placeholder:text-white/35 focus:ring-white/10" : "border-black/10 bg-[#F7F4ED] text-black focus:ring-black/10"
                 }`}
               />
+              <input
+                ref={dishlistCoverInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleDishlistCoverChange}
+              />
+              <button
+                type="button"
+                onClick={() => dishlistCoverInputRef.current?.click()}
+                className={`mt-3 flex w-full items-center gap-3 rounded-[1.2rem] border p-3 text-left transition active:scale-[0.99] ${
+                  darkMode ? "border-white/12 bg-[#181818] text-white" : "border-black/10 bg-[#F7F4ED] text-black"
+                }`}
+              >
+                <div className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[1rem] border ${
+                  darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/5"
+                }`}>
+                  {dishlistCoverPreview ? (
+                    <img
+                      src={dishlistCoverPreview}
+                      alt={t("Dishlist cover")}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Upload size={19} className={darkMode ? "text-white/55" : "text-black/45"} />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className={`text-sm font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Cover image")}</div>
+                  <div className={`mt-0.5 text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>{t("Choose a dishlist cover")}</div>
+                </div>
+              </button>
               <div className="mt-4 flex items-center justify-between gap-2">
                 <button
                   type="button"
@@ -4676,6 +4778,8 @@ export default function Profile() {
                     setDishlistDeleteTarget(dishlistRenameTarget);
                     setDishlistRenameTarget(null);
                     setDishlistRenameValue("");
+                    setDishlistCoverFile(null);
+                    setDishlistCoverPreview("");
                   }}
                   className={`rounded-full border px-4 py-2 text-sm font-semibold ${
                     darkMode ? "border-[#E64646]/45 bg-[#2A1212] text-[#FFD5D5]" : "border-[#D56A6A] bg-[#FFF1F1] text-[#B34747]"
@@ -4689,6 +4793,8 @@ export default function Profile() {
                   onClick={() => {
                     setDishlistRenameTarget(null);
                     setDishlistRenameValue("");
+                    setDishlistCoverFile(null);
+                    setDishlistCoverPreview("");
                   }}
                   className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70"
                 >

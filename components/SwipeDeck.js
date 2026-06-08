@@ -634,9 +634,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentRestaurantLng = Number(currentRestaurant?.lng);
   const currentDishPriceLabel = formatDishPrice(currentCard);
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
-  const currentMetaLine = [uploadDateLabel, isRestaurantDish(currentCard) ? currentRestaurantLabel : ""]
-    .filter(Boolean)
-    .join(" - ");
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
   const currentCardIsRestaurant = isRestaurantDish(currentCard);
   const hasIngredientsText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeIngredients || "").trim());
@@ -1219,9 +1216,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
     const previewPriceLabel = formatDishPrice(dish);
     const previewUploadDate = getRelativeUploadTime(dish.createdAt);
-    const previewMetaLine = [previewUploadDate, isRestaurantDish(dish) ? previewRestaurantLabel : ""]
-      .filter(Boolean)
-      .join(" - ");
     const previewStoryStats = dish?.id ? storyPushStatsByDish?.[dish.id] || null : null;
     const previewStoryPushCount = Number(previewStoryStats?.count || 0);
     const previewIsRestaurant = isRestaurantDish(dish);
@@ -1247,10 +1241,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
-              {previewMetaLine ? (
-                <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">
-                  {previewMetaLine}
+              <div className="flex min-w-0 items-baseline gap-1.5">
+                <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
+                {previewUploadDate ? (
+                  <span className="shrink-0 text-[0.76rem] font-medium leading-none text-white/68">
+                    - {previewUploadDate}
+                  </span>
+                ) : null}
+              </div>
+              {previewIsRestaurant && previewRestaurantLabel ? (
+                <div className="mt-1 max-w-[12.5rem] truncate text-[0.88rem] font-black leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]">
+                  {previewRestaurantLabel}
                 </div>
               ) : null}
             </div>
@@ -1608,26 +1609,40 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 </div>
                 <div className="min-w-0">
                   {currentCard.owner ? (
-                    <Link
-                      data-no-drag="true"
-                      href={`/profile/${currentCard.owner}`}
-                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {currentCard.ownerName || "Unknown"}
-                    </Link>
+                    <div className="flex min-w-0 items-baseline gap-1.5">
+                      <Link
+                        data-no-drag="true"
+                        href={`/profile/${currentCard.owner}`}
+                        className="min-w-0 truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {currentCard.ownerName || "Unknown"}
+                      </Link>
+                      {uploadDateLabel ? (
+                        <span className="shrink-0 text-[0.76rem] font-medium leading-none text-white/68">
+                          - {uploadDateLabel}
+                        </span>
+                      ) : null}
+                    </div>
                   ) : (
-                    <p
-                      className="truncate text-[0.98rem] font-semibold leading-tight"
-                    >
-                      {currentCard.ownerName || "Unknown"}
-                    </p>
+                    <div className="flex min-w-0 items-baseline gap-1.5">
+                      <p
+                        className="min-w-0 truncate text-[0.98rem] font-semibold leading-tight"
+                      >
+                        {currentCard.ownerName || "Unknown"}
+                      </p>
+                      {uploadDateLabel ? (
+                        <span className="shrink-0 text-[0.76rem] font-medium leading-none text-white/68">
+                          - {uploadDateLabel}
+                        </span>
+                      ) : null}
+                    </div>
                   )}
-                  {currentMetaLine ? (
-                  <div
-                    className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75"
-                  >
-                      {currentMetaLine}
+                  {currentCardIsRestaurant && currentRestaurantLabel ? (
+                    <div
+                      className="mt-1 max-w-[12.5rem] truncate text-[0.88rem] font-black leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)]"
+                    >
+                      {currentRestaurantLabel}
                     </div>
                   ) : null}
                 </div>

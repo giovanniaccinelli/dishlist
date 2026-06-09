@@ -1677,7 +1677,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   event.preventDefault();
                   if (hasRestaurantMapView) setShowRecipe(true);
                 }}
-                className="no-accent-border max-w-[13.5rem] truncate rounded-full border border-white/10 bg-[rgba(10,10,10,0.72)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white/95 shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px] transition active:scale-[0.98]"
+                className="no-accent-border max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white/95 shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px] transition active:scale-[0.98]"
                 aria-label={`Open ${currentRestaurantLabel} on card map`}
               >
                 {currentRestaurantLabel}

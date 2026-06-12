@@ -1277,6 +1277,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               </div>
             ) : null}
           </div>
+          {previewHasRestaurantMap && previewRestaurantLabel ? (
+            <div className="no-accent-border max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]">
+              {previewRestaurantLabel}
+            </div>
+          ) : null}
         </div>
         <div className="no-accent-border pointer-events-none absolute right-4 top-4 z-[13] inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
           <Users size={13} strokeWidth={2.25} />

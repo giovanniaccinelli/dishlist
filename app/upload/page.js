@@ -41,6 +41,8 @@ const UPLOAD_STEP_PREVIEW = [
   { label: "Upload", color: "#111111" },
 ];
 
+const COMPOSER_STEPS = ["Modo", "Card", "Dettagli", "Tags", "Pubblica"];
+
 const PRICE_CURRENCIES = [
   { code: "EUR", symbol: "€" },
   { code: "USD", symbol: "$" },
@@ -73,6 +75,7 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [composerStep, setComposerStep] = useState(0);
   const [uploadStep, setUploadStep] = useState(0);
   const [storyMode, setStoryMode] = useState(false);
   const [directEntryMode, setDirectEntryMode] = useState(false);
@@ -155,7 +158,8 @@ export default function UploadPage() {
   }, [preview]);
 
   useEffect(() => {
-    if (uploadStep !== 2 || loadingUpload) return undefined;
+    const shouldSuggestTags = showUploadForm ? uploadStep === 2 : composerStep === 3;
+    if (!shouldSuggestTags || loadingUpload) return undefined;
     const name = dishName.trim();
     if (!name || dishTags.length > 0) return undefined;
     let active = true;
@@ -167,7 +171,7 @@ export default function UploadPage() {
     return () => {
       active = false;
     };
-  }, [dishMode, dishName, dishTags.length, loadingUpload, uploadStep]);
+  }, [composerStep, dishMode, dishName, dishTags.length, loadingUpload, showUploadForm, uploadStep]);
 
   const toggleTag = (tag) => {
     setDishTags((prev) => {
@@ -378,6 +382,9 @@ export default function UploadPage() {
   const dishPricePayload = isRestaurantUpload && Number.isFinite(normalizedDishPrice) && normalizedDishPrice > 0
     ? normalizedDishPrice
     : null;
+  const composerAccent = isRestaurantUpload ? "#E64646" : "#E4B43F";
+  const composerAccentSoft = isRestaurantUpload ? "rgba(230,70,70,0.24)" : "rgba(228,180,63,0.24)";
+  const composerPriceSymbol = PRICE_CURRENCIES.find((currency) => currency.code === dishPriceCurrency)?.symbol || "€";
 
   useEffect(() => {
     if (!isRestaurantUpload && dishRating !== 0) setDishRating(0);
@@ -428,11 +435,274 @@ export default function UploadPage() {
     });
   };
 
+  const goToNextComposerStep = () => {
+    if (composerStep === 1 && !dishName.trim()) {
+      setToastVariant("error");
+      setToast(language === "it" ? "Il nome del piatto è obbligatorio" : "Dish name is required");
+      setTimeout(() => setToast(""), 1200);
+      return;
+    }
+    if (composerStep === 2 && isRestaurantUpload && !restaurant?.placeId) {
+      setToastVariant("error");
+      setToast(language === "it" ? "Scegli il ristorante" : "Restaurant is required");
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    setComposerStep((prev) => Math.min(prev + 1, COMPOSER_STEPS.length - 1));
+  };
+
+  const goToPreviousComposerStep = () => {
+    setComposerStep((prev) => Math.max(prev - 1, 0));
+  };
+
   const closeUploadFlow = () => {
     setShowUploadForm(false);
     setUploadStep(0);
     setRestaurant(null);
   };
+
+  const openFindDish = () => {
+    const params = new URLSearchParams();
+    if (storyMode) params.set("storyPicker", "1");
+    if (targetDishlistId) params.set("targetList", targetDishlistId);
+    router.push(`/dishes?${params.toString()}`);
+  };
+
+  const renderGuidedComposer = () => (
+    <motion.div
+      className="w-full max-w-md mx-auto"
+      initial={{ scale: 0.96, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className={`text-[11px] font-black uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/42"}`}>
+            {language === "it" ? "Nuovo piatto" : "New dish"}
+          </div>
+          <h2 className={`mt-1 text-[1.65rem] font-black leading-none ${darkMode ? "text-white" : "text-black"}`}>
+            {language === "it" ? "Componi la card" : "Compose the card"}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={openUploadFlow}
+          className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-bold ${darkMode ? "border-white/12 bg-white/8 text-white/72" : "border-black/10 bg-white/78 text-black/62"}`}
+        >
+          {language === "it" ? "Carica classico" : "Classic upload"}
+        </button>
+      </div>
+
+      <div className="mb-3 flex items-center gap-1.5">
+        {COMPOSER_STEPS.map((step, index) => (
+          <button
+            key={step}
+            type="button"
+            onClick={() => setComposerStep(index)}
+            className={`h-1.5 flex-1 rounded-full transition ${index <= composerStep ? "" : darkMode ? "bg-white/12" : "bg-black/12"}`}
+            style={index <= composerStep ? { backgroundColor: index === 0 ? composerAccent : index === 1 ? "#5FA8F2" : index === 2 ? "#23C268" : index === 3 ? "#A855F7" : "#F0A623" } : undefined}
+            aria-label={step}
+          />
+        ))}
+      </div>
+
+      <div
+        className={`relative overflow-hidden rounded-[2rem] border-2 shadow-[0_24px_60px_rgba(0,0,0,0.22)] ${darkMode ? "bg-[#101010] text-white" : "bg-white text-black"}`}
+        style={{ borderColor: composerAccent }}
+      >
+        <div className="relative aspect-[0.72] min-h-[34rem] overflow-hidden bg-[#111111]">
+          {preview ? (
+            dishImage?.type?.startsWith("video/") ? (
+              <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
+            ) : (
+              <img src={preview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
+            )
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_28%),linear-gradient(160deg,#191919_0%,#0A0A0A_100%)]" />
+          )}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/64 via-black/26 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/82 via-black/38 to-transparent" />
+
+          <div className="absolute left-4 right-4 top-4 z-10 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-white">
+                <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-black/35 text-sm font-bold" style={{ borderColor: composerAccent }}>
+                  {user?.photoURL ? <img src={user.photoURL} alt="You" className="h-full w-full object-cover" /> : (user?.displayName?.[0] || "U").toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-[0.98rem] font-semibold leading-tight">{user?.displayName || "You"}</div>
+                  <div className="mt-0.5 text-[0.82rem] font-medium leading-none text-white/75">{language === "it" ? "ora" : "now"}</div>
+                </div>
+              </div>
+              {isRestaurantUpload && restaurant?.name ? (
+                <div className="mt-2 max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]">
+                  {restaurant.name}
+                </div>
+              ) : null}
+            </div>
+            <div className="rounded-full bg-black/58 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-white/82 backdrop-blur-md">
+              {COMPOSER_STEPS[composerStep]}
+            </div>
+          </div>
+
+          <div className="absolute inset-x-4 bottom-4 z-10">
+            {composerStep === 0 ? (
+              <div className="rounded-[1.45rem] border border-white/12 bg-black/58 p-3 text-white shadow-[0_14px_34px_rgba(0,0,0,0.28)] backdrop-blur-md">
+                <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-white/52">
+                  {language === "it" ? "Prima scegli il tipo" : "Choose the type first"}
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDishMode(DISH_MODE_COOKING);
+                      setRestaurant(null);
+                    }}
+                    className={`rounded-[1rem] border px-3 py-3 text-left transition active:scale-[0.98] ${dishMode === DISH_MODE_COOKING ? "border-[#E4B43F] bg-[#E4B43F] text-black" : "border-white/12 bg-white/8 text-white"}`}
+                  >
+                    <CookingHomeIcon className="mb-2 h-5 w-5" strokeWidth={2.35} />
+                    <div className="text-sm font-black leading-none">{language === "it" ? "Casa" : "Home"}</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
+                    className={`rounded-[1rem] border px-3 py-3 text-left transition active:scale-[0.98] ${dishMode === DISH_MODE_RESTAURANT ? "border-[#E64646] bg-[#E64646] text-black" : "border-white/12 bg-white/8 text-white"}`}
+                  >
+                    <RestaurantForkKnifeIcon className="mb-2 h-5 w-5" strokeWidth={2.35} />
+                    <div className="text-sm font-black leading-none">{language === "it" ? "Ristorante" : "Restaurant"}</div>
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {composerStep === 1 ? (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setMediaPickerOpen(true)}
+                  className="flex w-full items-center justify-between rounded-[1.25rem] border border-white/12 bg-black/58 px-4 py-3 text-left text-white shadow-[0_14px_34px_rgba(0,0,0,0.24)] backdrop-blur-md"
+                >
+                  <span>
+                    <span className="block text-sm font-black">{preview ? (language === "it" ? "Cambia media" : "Change media") : (language === "it" ? "Aggiungi foto" : "Add photo")}</span>
+                    <span className="mt-0.5 block text-xs text-white/52">{language === "it" ? "Ritaglio come card feed" : "Cropped like the feed card"}</span>
+                  </span>
+                  <Camera size={20} />
+                </button>
+                <input
+                  type="text"
+                  placeholder={language === "it" ? "Nome del piatto" : "Dish name"}
+                  value={dishName}
+                  onChange={(e) => setDishName(e.target.value)}
+                  enterKeyHint="next"
+                  className="w-full rounded-[1.25rem] border border-white/12 bg-black/62 px-4 py-3 text-[1.5rem] font-black leading-none text-white placeholder:text-white/42 focus:outline-none focus:ring-2"
+                  style={{ "--tw-ring-color": composerAccentSoft }}
+                  disabled={loadingUpload}
+                />
+              </div>
+            ) : null}
+
+            {composerStep === 2 ? (
+              <div className="max-h-[19rem] space-y-3 overflow-y-auto rounded-[1.45rem] border border-white/12 bg-black/62 p-3 text-white shadow-[0_14px_34px_rgba(0,0,0,0.26)] backdrop-blur-md">
+                {isRestaurantUpload ? (
+                  <>
+                    <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
+                    <div className="rounded-[1.1rem] border border-white/10 bg-white/8 px-3 py-3">
+                      <div className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-white/48">{language === "it" ? "Valutazione" : "Rating"}</div>
+                      <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.55rem]" />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <input type="text" inputMode="decimal" placeholder={language === "it" ? "Prezzo" : "Price"} value={dishPrice} onChange={(e) => setDishPrice(e.target.value)} className="min-w-0 rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" disabled={loadingUpload} />
+                      <select value={dishPriceCurrency} onChange={(e) => setDishPriceCurrency(e.target.value)} className="rounded-full border border-white/10 bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none" disabled={loadingUpload}>
+                        {PRICE_CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.symbol}</option>)}
+                      </select>
+                    </div>
+                    {dishPrice ? <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{composerPriceSymbol}{dishPrice}</div> : null}
+                  </>
+                ) : (
+                  <>
+                    <IngredientBulletTextarea placeholder={language === "it" ? "Ingredienti" : "Ingredients"} value={dishRecipeIngredients} onChange={setDishRecipeIngredients} className="w-full rounded-[1.15rem] border border-white/10 bg-white px-4 py-3 text-black focus:outline-none" rows={3} disabled={loadingUpload} />
+                    <textarea placeholder={language === "it" ? "Procedimento" : "Method"} value={dishRecipeMethod} onChange={(e) => setDishRecipeMethod(e.target.value)} className="w-full rounded-[1.15rem] border border-white/10 bg-white px-4 py-3 text-black focus:outline-none" rows={2} disabled={loadingUpload} />
+                  </>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="rounded-full border border-white/12 bg-white/8 px-3 py-2 text-xs font-bold text-white/82">
+                    {showLinkField || dishLink ? "Link" : language === "it" ? "Aggiungi link" : "Add link"}
+                  </button>
+                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="truncate rounded-full border border-white/12 bg-white/8 px-3 py-2 text-xs font-bold text-white/82">
+                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                  </button>
+                </div>
+                {showLinkField || dishLink ? (
+                  <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                ) : null}
+              </div>
+            ) : null}
+
+            {composerStep === 3 ? (
+              <div className="rounded-[1.45rem] border border-white/12 bg-black/62 p-3 text-white shadow-[0_14px_34px_rgba(0,0,0,0.26)] backdrop-blur-md">
+                <textarea placeholder={language === "it" ? "Descrizione" : "Description"} value={dishDescription} onChange={(e) => setDishDescription(e.target.value)} className="mb-3 w-full rounded-[1.1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" rows={2} disabled={loadingUpload} />
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-[0.14em] text-white/48">Tags</span>
+                  <span className="text-xs font-semibold text-white/48">{dishTags.length}/6</span>
+                </div>
+                <div className="max-h-36 overflow-y-auto">
+                  <div className="flex flex-wrap gap-2">
+                    {TAG_OPTIONS.map((tag) => {
+                      const active = dishTags.includes(tag);
+                      return (
+                        <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active)}`}>
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {composerStep === 4 ? (
+              <div className="rounded-[1.45rem] border border-white/12 bg-black/62 p-3 text-white shadow-[0_14px_34px_rgba(0,0,0,0.26)] backdrop-blur-md">
+                {!storyMode ? (
+                  <button type="button" onClick={() => setDishIsPublic((value) => !value)} className={`mb-3 flex w-full items-center justify-between rounded-[1.1rem] border px-3 py-3 text-left ${dishIsPublic ? "border-[#23C268]/35 bg-[#12351F]" : "border-white/12 bg-white/8"}`} aria-pressed={dishIsPublic}>
+                    <span>
+                      <span className="block text-sm font-black">{t("Public dish")}</span>
+                      <span className="text-xs text-white/52">{dishIsPublic ? t("Visible in feed") : t("Hidden from feed")}</span>
+                    </span>
+                    <span className={`h-6 w-11 rounded-full p-1 ${dishIsPublic ? "bg-[#23C268]" : "bg-white/14"}`}>
+                      <span className={`block h-4 w-4 rounded-full bg-white transition ${dishIsPublic ? "translate-x-5" : ""}`} />
+                    </span>
+                  </button>
+                ) : null}
+                <button type="button" onClick={openDishlistPicker} disabled={loadingUpload} className="dish-modal-primary-btn w-full rounded-full py-3 text-sm font-black">
+                  {loadingUpload ? (storyMode ? t("Publishing...") : t("Uploading...")) : (storyMode ? t("Publish story") : language === "it" ? "Scegli dishlist" : "Choose dishlists")}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-[3rem_1fr_3rem] items-center gap-3">
+        <button type="button" onClick={goToPreviousComposerStep} disabled={composerStep === 0 || loadingUpload} className={`grid h-12 w-12 place-items-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"} disabled:opacity-28`} aria-label="Previous">
+          <ArrowLeft size={19} />
+        </button>
+        <button type="button" onClick={openFindDish} className={`h-12 rounded-full border text-sm font-bold ${darkMode ? "border-white/12 bg-white/8 text-white/72" : "border-black/10 bg-white/78 text-black/62"}`}>
+          {t("Find dish")}
+        </button>
+        {composerStep < COMPOSER_STEPS.length - 1 ? (
+          <button type="button" onClick={goToNextComposerStep} disabled={loadingUpload} className="grid h-12 w-12 place-items-center rounded-full text-black shadow-[0_10px_24px_rgba(0,0,0,0.18)]" style={{ backgroundColor: composerAccent }} aria-label="Next">
+            <ArrowRight size={20} />
+          </button>
+        ) : (
+          <button type="button" onClick={openDishlistPicker} disabled={loadingUpload} className="grid h-12 w-12 place-items-center rounded-full bg-[#23C268] text-black shadow-[0_10px_24px_rgba(0,0,0,0.18)]" aria-label="Upload">
+            <Plus size={20} />
+          </button>
+        )}
+      </div>
+
+      <input ref={libraryInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => handleImageChange(e.target.files?.[0])} />
+      <input ref={cameraInputRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={(e) => handleImageChange(e.target.files?.[0])} />
+    </motion.div>
+  );
 
   if (loading) {
     return <FullScreenLoading title="Loading upload" />;
@@ -976,89 +1246,7 @@ export default function UploadPage() {
           </motion.div>
           </div>
         ) : (
-          <motion.div
-            className="w-full max-w-md mx-auto pt-0"
-            initial={{ scale: 0.96, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <div className="mb-4 text-center">
-              <h2 className={`text-[2.05rem] leading-[0.95] font-semibold ${darkMode ? "text-white" : "text-black"}`}>Add a dish</h2>
-            </div>
-            <div className="space-y-4">
-              <button
-                onClick={openUploadFlow}
-                className={`preserve-blue-border w-full min-h-[13rem] rounded-[2rem] px-6 py-6 text-left transition-transform hover:scale-[1.01] border-[3px] border-[#5FA8F2] backdrop-blur-[6px] ${
-                  darkMode ? "bg-[#101B29] text-white shadow-[0_18px_40px_rgba(95,168,242,0.14)]" : "bg-[rgba(255,255,255,0.72)] text-black shadow-[0_18px_40px_rgba(66,143,223,0.12)]"
-                }`}
-              >
-                <div className="flex h-full flex-col justify-between gap-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[1.9rem] font-semibold leading-[0.95]">{t("Upload dish")}</p>
-                      <p className={`mt-4 text-base max-w-[17rem] ${darkMode ? "text-white/68" : "text-black/78"}`}>Post a new dish to your DishList.</p>
-                    </div>
-                    <div className="size-16 rounded-[1.4rem] bg-[#E64646] text-white flex items-center justify-center shadow-md border-[2px] border-[#E64646]/55 shrink-0 aspect-square">
-                      <Plus size={32} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
-                      Steps
-                    </div>
-                    <div className={`grid gap-3 ${isRestaurantUpload ? "grid-cols-3" : "grid-cols-4"}`}>
-                      {visibleUploadSteps.map((step) => (
-                        <div key={step.label}>
-                          <div
-                            className="mb-2 h-1.5 rounded-full"
-                            style={{ backgroundColor: step.color }}
-                          />
-                          <div className={`text-[0.72rem] font-medium ${darkMode ? "text-white/62" : "text-black/72"}`}>{step.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams();
-                  if (storyMode) params.set("storyPicker", "1");
-                  if (targetDishlistId) params.set("targetList", targetDishlistId);
-                  router.push(`/dishes?${params.toString()}`);
-                }}
-                className={`preserve-green-border w-full min-h-[13rem] rounded-[2rem] border-[3px] border-[#1EA956] px-6 py-6 text-left transition-transform hover:scale-[1.01] backdrop-blur-[6px] ${
-                  darkMode ? "bg-[#102016] text-white shadow-[0_18px_40px_rgba(35,194,104,0.13)]" : "bg-[rgba(255,255,255,0.72)] shadow-[0_18px_40px_rgba(23,130,67,0.12)]"
-                }`}
-              >
-                <div className="flex h-full flex-col justify-between gap-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className={`text-[1.9rem] font-semibold leading-none ${darkMode ? "text-white" : "text-black"}`}>{t("Find dish")}</p>
-                      <p className={`mt-4 text-base max-w-[15rem] ${darkMode ? "text-white/64" : "text-black/70"}`}>See if it already exists.</p>
-                    </div>
-                    <div className="size-16 rounded-[1.4rem] bg-[#F0A623] text-white flex items-center justify-center border-[2px] border-[#F0A623]/55 shadow-md shrink-0 aspect-square">
-                      <Search size={30} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/50" : "text-black/55"}`}>
-                      Tags you can explore
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {TAG_OPTIONS.slice(0, 10).map((tag) => (
-                        <span
-                          key={tag}
-                          className={`px-3 py-1 rounded-full text-[11px] border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </motion.div>
+          renderGuidedComposer()
         )}
       </div>
 

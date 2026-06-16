@@ -569,7 +569,7 @@ export default function UploadPage() {
                       setDishMode(DISH_MODE_COOKING);
                       setRestaurant(null);
                     }}
-                    className={`h-[9.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[11.5rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
                         ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                         : darkMode
@@ -578,18 +578,18 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-[3.35rem] w-[3.35rem] shrink-0 items-center justify-center rounded-[1rem] ${
+                      <span className={`inline-flex h-[5.35rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
                         dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
-                        <CookingHomeIcon className="h-7 w-7" strokeWidth={2.1} />
+                        <CookingHomeIcon className="h-9 w-9" strokeWidth={2.05} />
                       </span>
-                      <div className="truncate text-[1.08rem] font-black leading-none">Casa</div>
+                      <div className="truncate text-[1.24rem] font-semibold leading-none">Casa</div>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                    className={`h-[9.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[11.5rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                         : darkMode
@@ -598,12 +598,12 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-[3.35rem] w-[3.35rem] shrink-0 items-center justify-center rounded-[1rem] ${
+                      <span className={`inline-flex h-[5.35rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
                         dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                       }`}>
-                        <RestaurantForkKnifeIcon className="h-7 w-7" strokeWidth={2.1} />
+                        <RestaurantForkKnifeIcon className="h-9 w-9" strokeWidth={2.05} />
                       </span>
-                      <div className="truncate text-[1.08rem] font-black leading-none">Ristorante</div>
+                      <div className="truncate text-[1.24rem] font-semibold leading-none">Ristorante</div>
                     </div>
                   </button>
                 </div>

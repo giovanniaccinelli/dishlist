@@ -1947,6 +1947,55 @@ export default function Profile() {
     }
   };
 
+  const handleDiscardPendingDish = async () => {
+    if (!user?.uid || dishlistPickerSource !== "pending" || !dishlistPickerDish?.id) return;
+    const dish = dishlistPickerDish;
+    const userId = user.uid;
+    const nextPending = pendingDishlistSorting.find(
+      (item) => item?.id && item.id !== dish.id && !dismissedPendingDishIds.includes(item.id)
+    );
+
+    setPendingDishlistSorting((prev) => prev.filter((item) => item.id !== dish.id));
+    setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dish.id));
+
+    if (nextPending) {
+      setDishlistPickerLists([]);
+      setDishlistPickerSelectedIds([]);
+      loadPendingDishlistPicker(nextPending);
+    } else {
+      setDishlistPickerOpen(false);
+      setDishlistPickerDish(null);
+      setDishlistPickerLists([]);
+      setDishlistPickerSelectedIds([]);
+      setDishlistPickerSource("manual");
+    }
+
+    const [removedSaved, removedPending] = await Promise.all([
+      removeSavedDishFromUser(userId, dish.id),
+      removePendingDishlistSorting(userId, dish.id),
+    ]);
+
+    if (!removedSaved || !removedPending) {
+      setToastVariant("error");
+      setToast("Save failed");
+      setTimeout(() => setToast(""), 1200);
+      setPendingDishlistSorting((prev) =>
+        prev.some((item) => item.id === dish.id) ? prev : [dish, ...prev]
+      );
+      return;
+    }
+
+    const [saved, custom] = await Promise.all([
+      getSavedDishesFromFirestore(userId),
+      getCustomDishlistsForUser(userId),
+    ]);
+    setSavedDishes(saved);
+    setCustomDishlists(sanitizeCustomDishlists(custom));
+    setToastVariant("success");
+    setToast("Rimosso");
+    setTimeout(() => setToast(""), 1000);
+  };
+
   const confirmDishPreviewRemove = async (scope) => {
     const target = removePreviewTarget;
     if (!target?.dish) return;
@@ -5257,6 +5306,7 @@ export default function Profile() {
       <DishlistPickerModal
         open={dishlistPickerOpen}
         onClose={closeDishlistPicker}
+        onDiscard={dishlistPickerSource === "pending" ? handleDiscardPendingDish : undefined}
         lists={dishlistPickerLists}
         dishName={dishlistPickerDish?.name || "dish"}
         mode="multiple"

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Lock, Plus, Star } from "lucide-react";
+import { Check, Lock, Plus, Star, Trash2 } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { TAG_DECOR } from "../app/lib/tagDecor";
@@ -77,6 +77,7 @@ export default function DishlistPickerModal({
   onToggleStory,
   publicDish = true,
   onTogglePublicDish,
+  onDiscard,
 }) {
   const { darkMode, t, language } = useLanguage();
   const [sortingSearch, setSortingSearch] = useState("");
@@ -153,13 +154,29 @@ export default function DishlistPickerModal({
                   <p className={`mt-1 text-sm ${darkMode ? "text-white/62" : "text-black/55"}`}>{dishName}</p>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className={`rounded-full px-3 py-1 text-sm ${darkMode ? "text-white/70" : "text-black/55"}`}
-              >
-                {t("Close")}
-              </button>
+              <div className="flex items-center gap-2">
+                {isSortingCard && onDiscard ? (
+                  <button
+                    type="button"
+                    onClick={onDiscard}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${
+                      darkMode
+                        ? "border-[#F25555]/28 bg-[#2A1111] text-[#FF6A6A]"
+                        : "border-[#F25555]/18 bg-[#FFF1F1] text-[#E34C4C]"
+                    }`}
+                    aria-label={t("Remove saved dish")}
+                  >
+                    <Trash2 size={17} strokeWidth={2.15} />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={`rounded-full px-3 py-1 text-sm ${darkMode ? "text-white/70" : "text-black/55"}`}
+                >
+                  {t("Close")}
+                </button>
+              </div>
             </div>
             {isSortingCard ? (
               <div className="mb-3 shrink-0">

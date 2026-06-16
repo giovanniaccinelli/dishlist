@@ -506,12 +506,12 @@ export default function UploadPage() {
     );
 
     return (
-      <motion.div className="w-full max-w-md mx-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="mb-4">
+      <motion.div className="w-full max-w-md mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="mb-3 pt-1">
           <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
             {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
           </h1>
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-3 flex justify-center gap-2">
             {COMPOSER_STEPS.map((step, index) => (
               <span
                 key={step}
@@ -578,7 +578,7 @@ export default function UploadPage() {
             }}
           />
 
-          {!detailPanelOpen && !showTagsStep && !showExtraStep ? cardTopIdentity : null}
+          {cardTopIdentity}
 
           {showGhostModeStep ? (
             <>
@@ -699,7 +699,6 @@ export default function UploadPage() {
               animate={{ rotateY: 0, opacity: 1 }}
               transition={{ duration: 0.34, ease: "easeInOut" }}
             >
-              {cardTopIdentity}
               <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
                 <div className="space-y-3 pt-16">
                     <div className="mb-2">
@@ -731,8 +730,6 @@ export default function UploadPage() {
               </div>
             </motion.div>
           ) : null}
-
-          {showTagsStep || showExtraStep ? cardTopIdentity : null}
 
           {showTagsStep || showExtraStep ? (
             <motion.div

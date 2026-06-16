@@ -558,7 +558,7 @@ export default function UploadPage() {
 
           {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[4.2rem] z-[14] text-center">
+              <div className="absolute left-5 right-5 top-[5.35rem] z-[14] text-center">
                 <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>
@@ -581,7 +581,7 @@ export default function UploadPage() {
                       <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
                         dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
-                        <CookingHomeIcon className="h-[2.85rem] w-[2.85rem]" strokeWidth={2} />
+                        <CookingHomeIcon className="h-[3.15rem] w-[3.15rem]" strokeWidth={2} />
                       </span>
                       <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Casa</div>
                     </div>

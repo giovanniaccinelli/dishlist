@@ -473,6 +473,7 @@ export default function UploadPage() {
     const showExtraStep = composerStep === 4;
     const showReviewStep = composerStep === 5;
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
+    const pillShowsFrontSelected = showExtraStep || showReviewStep;
     const hideBaseText = detailPanelOpen || showTagsStep;
 
     return (
@@ -563,7 +564,7 @@ export default function UploadPage() {
                   setDishMode(DISH_MODE_COOKING);
                   setRestaurant(null);
                 }}
-                className={`min-h-[8.35rem] rounded-[1.4rem] border px-3.5 py-3.5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[7.35rem] rounded-[1.25rem] border px-3 py-3 text-left shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_COOKING
                     ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                     : darkMode
@@ -571,21 +572,21 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                  <span className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[0.95rem] ${
+                <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
+                  <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] ${
                     dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                   }`}>
-                    <CookingHomeIcon className="h-6 w-6" strokeWidth={2.35} />
+                    <CookingHomeIcon className="h-5.5 w-5.5" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.12rem] font-black leading-none">Casa</div>
+                    <div className="truncate text-[1rem] font-black leading-none">Casa</div>
                   </div>
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                className={`min-h-[8.35rem] rounded-[1.4rem] border px-3.5 py-3.5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[7.35rem] rounded-[1.25rem] border px-3 py-3 text-left shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_RESTAURANT
                     ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                     : darkMode
@@ -593,14 +594,14 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                  <span className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[0.95rem] ${
+                <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
+                  <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] ${
                     dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                   }`}>
-                    <RestaurantForkKnifeIcon className="h-6 w-6" strokeWidth={2.35} />
+                    <RestaurantForkKnifeIcon className="h-5.5 w-5.5" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.12rem] font-black leading-none">Ristorante</div>
+                    <div className="truncate text-[1rem] font-black leading-none">Ristorante</div>
                   </div>
                 </div>
               </button>
@@ -611,12 +612,15 @@ export default function UploadPage() {
           {composerStep >= 2 ? (
             <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
               <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
+                <span
+                  className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none"
+                  style={pillShowsFrontSelected ? { backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor } : undefined}
+                >
                   piatto
                 </span>
                 <span
                   className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none"
-                  style={{ backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor }}
+                  style={!pillShowsFrontSelected ? { backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor } : undefined}
                 >
                   {detailLabel}
                 </span>
@@ -728,13 +732,13 @@ export default function UploadPage() {
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
                   enterKeyHint="next"
-                  className="w-full rounded-[0.9rem] border-[2.5px] bg-black/26 px-3 py-2 text-left text-[18px] font-bold leading-tight text-white placeholder:text-white/68 focus:outline-none"
+                  className="w-full rounded-[1rem] border-2 bg-black/30 px-4 py-3 text-left text-[20px] font-bold leading-tight text-white placeholder:text-white/72 focus:outline-none"
                   style={{
-                    fontSize: 18,
+                    fontSize: 20,
                     borderColor: isRestaurantUpload ? "#E64646" : "#E4B43F",
                     boxShadow: isRestaurantUpload
-                      ? "0 0 0 1px rgba(230,70,70,0.22), inset 0 0 0 0.5px rgba(230,70,70,0.38)"
-                      : "0 0 0 1px rgba(228,180,63,0.22), inset 0 0 0 0.5px rgba(228,180,63,0.42)",
+                      ? "0 0 0 1px rgba(230,70,70,0.14)"
+                      : "0 0 0 1px rgba(228,180,63,0.16)",
                   }}
                   disabled={loadingUpload}
                 />
@@ -763,19 +767,25 @@ export default function UploadPage() {
             ) : null}
 
             {showExtraStep ? (
-              <div className="mt-2 space-y-2">
+              <motion.div
+                className="mt-2 space-y-2"
+                initial={{ rotateY: 92, opacity: 0.35 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                transition={{ duration: 0.34, ease: "easeInOut" }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
                 <div className="grid grid-cols-1 gap-2">
-                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/74 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
                     {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
                   </button>
-                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/74 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
                     {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
                   </button>
                 </div>
                 {showLinkField || dishLink ? (
-                  <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-full border border-white/10 bg-black/55 px-3.5 py-2 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                  <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border border-white/18 bg-black/74 px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
                 ) : null}
-              </div>
+              </motion.div>
             ) : null}
 
           </div>

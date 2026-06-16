@@ -272,6 +272,17 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
+function PodiumIcon({ className = "h-5 w-5" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
+      <path d="M4 11.25H8.35V20H4V11.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+      <path d="M9.85 4H14.15V20H9.85V4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+      <path d="M15.65 8.25H20V20H15.65V8.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
+      <path d="M3 20H21" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function getTagDishlistCardClass(dishlist, darkMode = false) {
   const active = Number(dishlist?.count || 0) > 0;
   return darkMode ? getDarkTagChipClass(dishlist?.tag, active) : getTagChipClass(dishlist?.tag, active);
@@ -2804,7 +2815,7 @@ export default function Profile() {
             className="top-action-btn relative"
             aria-label={t("Takes")}
           >
-            <Trophy size={18} strokeWidth={2.2} />
+            <PodiumIcon className="h-[18px] w-[18px] text-white" />
           </button>
         </div>
         <div className="flex items-center justify-center" />

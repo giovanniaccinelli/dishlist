@@ -479,6 +479,31 @@ export default function UploadPage() {
     const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep || showGhostModeStep;
     const classicBottomShade =
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
+    const cardTopIdentity = (
+      <>
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
+        <div className="pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] items-center gap-2 text-white">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${isRestaurantUpload ? "border-[#E64646]" : "border-[#E4B43F]"} bg-black/35 text-sm font-bold`}>
+            {user?.photoURL ? <img src={user.photoURL} alt="You" className="h-full w-full object-cover" /> : (user?.displayName?.[0] || "U").toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[0.98rem] font-semibold leading-tight">{user?.displayName || "You"}</p>
+            <div className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75">{language === "it" ? "ora" : "now"}</div>
+          </div>
+        </div>
+        {composerStep >= 1 && isRestaurantUpload && restaurant?.name ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (composerStep === 2) setComposerDetailsOpen(true);
+            }}
+            className="absolute left-4 top-[4.4rem] z-[14] max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]"
+          >
+            {restaurant.name}
+          </button>
+        ) : null}
+      </>
+    );
 
     return (
       <motion.div className="w-full max-w-md mx-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -553,15 +578,7 @@ export default function UploadPage() {
             }}
           />
 
-          <div className="pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] items-center gap-2 text-white">
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${isRestaurantUpload ? "border-[#E64646]" : "border-[#E4B43F]"} bg-black/35 text-sm font-bold`}>
-              {user?.photoURL ? <img src={user.photoURL} alt="You" className="h-full w-full object-cover" /> : (user?.displayName?.[0] || "U").toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-[0.98rem] font-semibold leading-tight">{user?.displayName || "You"}</p>
-              <div className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75">{language === "it" ? "ora" : "now"}</div>
-            </div>
-          </div>
+          {cardTopIdentity}
 
           {showGhostModeStep ? (
             <>
@@ -674,18 +691,6 @@ export default function UploadPage() {
             </div>
           ) : null}
 
-          {composerStep >= 1 && isRestaurantUpload && restaurant?.name ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (composerStep === 2) setComposerDetailsOpen(true);
-              }}
-              className="absolute left-4 top-[4.4rem] z-[14] max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]"
-            >
-              {restaurant.name}
-            </button>
-          ) : null}
-
           {detailPanelOpen ? (
             <motion.div
               className="absolute inset-0 z-[18]"
@@ -694,6 +699,7 @@ export default function UploadPage() {
               animate={{ rotateY: 0, opacity: 1 }}
               transition={{ duration: 0.34, ease: "easeInOut" }}
             >
+              {cardTopIdentity}
               <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
                 <div className="space-y-3 pt-16">
                     <div className="mb-2">
@@ -734,6 +740,7 @@ export default function UploadPage() {
               animate={{ rotateY: showExtraStep ? 180 : 0 }}
               transition={{ duration: 0.38, ease: [0.22, 0.72, 0.2, 1] }}
             >
+              {cardTopIdentity}
               <div
                 className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.985)_0%,rgba(8,8,10,0.985)_100%)] p-5 pb-24"
                 style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
@@ -789,7 +796,7 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setTagUserPickerOpen(true)}
-                      className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      className="inline-flex min-h-[2.75rem] min-w-[10.5rem] max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
                       style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
                     >
                       {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
@@ -797,7 +804,7 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setShowLinkField((prev) => !prev)}
-                      className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      className="inline-flex min-h-[2.75rem] min-w-[10.5rem] max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
                       style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
                     >
                       {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}

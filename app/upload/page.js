@@ -463,7 +463,7 @@ export default function UploadPage() {
   const renderGuidedComposer = () => {
     const previewName = dishName.trim() || (language === "it" ? "Nome piatto" : "Dish name");
     const previewDescription = dishDescription.trim();
-    const namePlaceholder = language === "it" ? "Scrivi il nome del piatto" : "Write the dish name";
+    const namePlaceholder = language === "it" ? "Nome del piatto" : "Dish name";
     const descriptionPlaceholder = language === "it" ? "Aggiungi una descrizione" : "Add a description";
     const detailLabel = isRestaurantUpload ? "ristorante" : "ricetta";
     const detailAccent = isRestaurantUpload ? "#B93A32" : "#FFC247";
@@ -738,19 +738,19 @@ export default function UploadPage() {
                 <div className="mt-3 space-y-2">
                   <button
                     type="button"
-                    onClick={() => setShowLinkField((prev) => !prev)}
-                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
-                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
-                  >
-                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setTagUserPickerOpen(true)}
                     className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
                     style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
                   >
                     {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkField((prev) => !prev)}
+                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                  >
+                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
                   </button>
                   {showLinkField || dishLink ? (
                     <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border-[2px] px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16, backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
@@ -786,21 +786,29 @@ export default function UploadPage() {
           <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
             {!hideBaseText && showNameInputs ? (
               <>
-                <input
-                  type="text"
-                  placeholder={namePlaceholder}
-                  value={dishName}
-                  onChange={(e) => setDishName(e.target.value)}
-                  enterKeyHint="next"
-                  className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
-                  style={{
-                    fontSize: 21,
-                    borderColor: composerAccent,
-                    backgroundColor: "rgba(8,8,8,0.9)",
-                    boxShadow: `0 0 0 1px ${composerAccent}`,
-                  }}
-                  disabled={loadingUpload}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={namePlaceholder}
+                    value={dishName}
+                    onChange={(e) => setDishName(e.target.value)}
+                    enterKeyHint="next"
+                    className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
+                    style={{
+                      fontSize: 21,
+                      borderColor: composerAccent,
+                      backgroundColor: "rgba(8,8,8,0.9)",
+                      boxShadow: `0 0 0 1px ${composerAccent}`,
+                    }}
+                    disabled={loadingUpload}
+                  />
+                  <div className="pointer-events-none absolute left-4 top-1/2 z-[2] -translate-y-1/2 text-white/76">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 20L8.5 18.9L18.2 9.2C19.3 8.1 19.3 6.3 18.2 5.2V5.2C17.1 4.1 15.3 4.1 14.2 5.2L4.5 14.9L4 20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M13 6.5L17 10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
                 <textarea
                   placeholder={descriptionPlaceholder}
                   value={dishDescription}
@@ -815,6 +823,20 @@ export default function UploadPage() {
               <>
                 <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
                 {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
+                {showReviewStep && (storyTaggedUser || dishLink) ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {storyTaggedUser ? (
+                      <span className="inline-flex max-w-full items-center rounded-full border border-white/16 bg-black/72 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                        @{String(storyTaggedUser).replace(/^@+/, "")}
+                      </span>
+                    ) : null}
+                    {dishLink ? (
+                      <span className="inline-flex max-w-full items-center truncate rounded-full border border-white/16 bg-black/72 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                        {language === "it" ? "Link" : "Link"}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
               </>
             ) : null}
 

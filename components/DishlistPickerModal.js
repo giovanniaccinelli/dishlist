@@ -76,7 +76,7 @@ export default function DishlistPickerModal({
   storySelected = false,
   onToggleStory,
 }) {
-  const { darkMode, t } = useLanguage();
+  const { darkMode, t, language } = useLanguage();
   const [sortingSearch, setSortingSearch] = useState("");
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
@@ -94,6 +94,7 @@ export default function DishlistPickerModal({
   }, [isSortingCard, orderedLists, sortingSearch, t]);
   const hasUnlockedSelection = selectedIds.some((id) => !lockedSet.has(id));
   const resolvedConfirmLabel = isSortingCard ? (hasUnlockedSelection ? "Aggiungi" : "Salta") : confirmLabel;
+  const sortingSearchPlaceholder = t(language === "it" ? "Cerca dishlists" : "Search dishlists");
   const accentPalette = [
     { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" },
     { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" },
@@ -164,7 +165,7 @@ export default function DishlistPickerModal({
                   type="text"
                   value={sortingSearch}
                   onChange={(event) => setSortingSearch(event.target.value)}
-                  placeholder={t("Search dishlists")}
+                  placeholder={sortingSearchPlaceholder}
                   className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] font-medium outline-none ${
                     darkMode ? "border-white/12 bg-[#171717] text-white placeholder:text-white/32" : "border-black/8 bg-white text-black placeholder:text-black/32"
                   }`}

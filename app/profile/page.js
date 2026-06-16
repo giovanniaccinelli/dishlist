@@ -52,7 +52,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { CalendarDays, ChevronDown, ChevronLeft, Flame, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -2804,8 +2804,7 @@ export default function Profile() {
             className="top-action-btn relative"
             aria-label={t("Takes")}
           >
-            <Flame size={18} strokeWidth={2.15} className="text-[#E64646]" />
-            {visibleLeaderboardTakes.length ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+            <Trophy size={18} strokeWidth={2.2} className="text-[#D7B443]" />
           </button>
         </div>
         <div className="flex items-center justify-center" />
@@ -5096,7 +5095,7 @@ export default function Profile() {
                 </button>
               </div>
               {visibleLeaderboardTakes.length ? (
-                <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
+                <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} hideHeader />
               ) : (
                 <div className={`flex h-28 items-center justify-center rounded-[1rem] text-center text-sm ${darkMode ? "bg-black/20 text-white/45" : "bg-[#F7F2E8] text-black/45"}`}>
                   {t("No takes yet.")}

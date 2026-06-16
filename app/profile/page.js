@@ -587,6 +587,7 @@ export default function Profile() {
   const [storyMealTagDish, setStoryMealTagDish] = useState(null);
   const [storyPushStats, setStoryPushStats] = useState(() => cachedOwnProfile?.storyPushStats || {});
   const [profileCalendarOpen, setProfileCalendarOpen] = useState(false);
+  const [profileTakesOpen, setProfileTakesOpen] = useState(false);
   const [profileCalendarSelectedDay, setProfileCalendarSelectedDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [profileCalendarVisibleDay, setProfileCalendarVisibleDay] = useState(() => getStoryCalendarKey(Date.now()));
   const [profileCalendarMonthDate, setProfileCalendarMonthDate] = useState(() => getCalendarMonthDate(new Date()));
@@ -2789,7 +2790,7 @@ export default function Profile() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-y-auto overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[152px_1fr_152px] items-center px-4 pb-1.5 relative">
-        <div className="flex min-w-[152px] items-center justify-start">
+        <div className="flex min-w-[152px] items-center justify-start gap-2">
           <Link
             href="/dishlists"
             className="top-action-btn"
@@ -2797,6 +2798,15 @@ export default function Profile() {
           >
             <Users size={19} strokeWidth={2.35} />
           </Link>
+          <button
+            type="button"
+            onClick={() => setProfileTakesOpen(true)}
+            className="top-action-btn relative"
+            aria-label={t("Takes")}
+          >
+            <Trophy size={18} strokeWidth={2.2} />
+            {visibleLeaderboardTakes.length ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          </button>
         </div>
         <div className="flex items-center justify-center" />
         <div ref={profileOptionsRef} className="relative z-20 flex items-center justify-end gap-2">
@@ -2968,10 +2978,6 @@ export default function Profile() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
               </button>
             </div>
-          ) : null}
-
-          {showingDishlistOverview ? (
-            <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
           ) : null}
 
           {showingDishlistOverview ? (
@@ -5054,6 +5060,51 @@ export default function Profile() {
       </AnimatePresence>
       <AppToast message={toast} variant={toastVariant} />
       <AnimatePresence>
+        {profileTakesOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[92] flex items-end justify-center bg-black/45 px-4 pb-[5.75rem] pt-[5.35rem] backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setProfileTakesOpen(false)}
+          >
+            <motion.div
+              className={`mx-auto flex max-h-full w-full max-w-[30rem] flex-col overflow-y-auto overscroll-contain rounded-[1.35rem] border p-3.5 shadow-2xl ${
+                darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-[#FAF7F0] text-black"
+              }`}
+              initial={{ y: 18, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 18, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-2.5 flex items-center justify-between gap-3">
+                <div>
+                  <div className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${darkMode ? "text-white/42" : "text-black/38"}`}>
+                    {t("Leaderboard")}
+                  </div>
+                  <h3 className={`mt-1.5 text-[1.35rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                    {t("Takes")}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileTakesOpen(false)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border ${darkMode ? "border-white/12 bg-white/8 text-white/70" : "border-black/10 bg-white text-black/55"}`}
+                  aria-label="Close takes"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {visibleLeaderboardTakes.length ? (
+                <ProfileTakesStrip takes={visibleLeaderboardTakes} darkMode={darkMode} t={t} />
+              ) : (
+                <div className={`flex h-28 items-center justify-center rounded-[1rem] text-center text-sm ${darkMode ? "bg-black/20 text-white/45" : "bg-[#F7F2E8] text-black/45"}`}>
+                  {t("No takes yet.")}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        ) : null}
         {storyActionOpen && (
           <motion.div
             className="fixed inset-0 z-[90] overflow-y-auto bg-black/45 backdrop-blur-sm flex items-center justify-center p-2"

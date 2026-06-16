@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Lock, Plus, Star } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
@@ -76,11 +77,21 @@ export default function DishlistPickerModal({
   onToggleStory,
 }) {
   const { darkMode, t } = useLanguage();
+  const [sortingSearch, setSortingSearch] = useState("");
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
   const isSwipeCard = variant === "swipe";
   const isSortingCard = variant === "sorting";
   const orderedLists = isSortingCard ? lists : orderPickerLists(lists, isSwipeCard);
+  useEffect(() => {
+    if (!open) setSortingSearch("");
+  }, [open]);
+  const displayedLists = useMemo(() => {
+    if (!isSortingCard) return orderedLists;
+    const query = sortingSearch.trim().toLowerCase();
+    if (!query) return orderedLists;
+    return orderedLists.filter((dishlist) => getDishlistDisplayName(dishlist, t).toLowerCase().includes(query));
+  }, [isSortingCard, orderedLists, sortingSearch, t]);
   const hasUnlockedSelection = selectedIds.some((id) => !lockedSet.has(id));
   const resolvedConfirmLabel = isSortingCard ? (hasUnlockedSelection ? "Aggiungi" : "Salta") : confirmLabel;
   const accentPalette = [
@@ -198,12 +209,26 @@ export default function DishlistPickerModal({
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
                 {t("Loading dishlists...")}
               </div>
-            ) : orderedLists.length === 0 ? (
+            ) : displayedLists.length === 0 ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
-                {t("No dishlists yet.")}
+                {isSortingCard && sortingSearch.trim() ? t("No results") : t("No dishlists yet.")}
               </div>
             ) : (
               <>
+                {isSortingCard ? (
+                  <div className="mb-3 shrink-0">
+                    <input
+                      type="text"
+                      value={sortingSearch}
+                      onChange={(event) => setSortingSearch(event.target.value)}
+                      placeholder={t("Search dishlists")}
+                      className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] font-medium outline-none ${
+                        darkMode ? "border-white/12 bg-[#171717] text-white placeholder:text-white/32" : "border-black/8 bg-white text-black placeholder:text-black/32"
+                      }`}
+                      style={{ fontSize: 16 }}
+                    />
+                  </div>
+                ) : null}
                 <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto ${isSortingCard ? "px-1 pb-24 pt-1" : "pr-1"}`}>
                   {storyOption ? (
                     <button
@@ -246,7 +271,7 @@ export default function DishlistPickerModal({
                   ) : null}
                   {isSortingCard ? (
                     <div className="grid grid-cols-2 gap-3 pb-1">
-                      {orderedLists.map((dishlist) => {
+                      {displayedLists.map((dishlist) => {
                         const selected = selectedSet.has(dishlist.id);
                         const locked = lockedSet.has(dishlist.id);
                         const preview = Array.isArray(dishlist.dishes) ? dishlist.dishes.slice(0, 4) : [];
@@ -310,7 +335,7 @@ export default function DishlistPickerModal({
                         );
                       })}
                     </div>
-                  ) : orderedLists.map((dishlist, index) => {
+                  ) : displayedLists.map((dishlist, index) => {
                     const selected = selectedSet.has(dishlist.id);
                     const locked = lockedSet.has(dishlist.id);
                     const accent = getAccent(dishlist, index);

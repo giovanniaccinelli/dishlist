@@ -927,7 +927,7 @@ export default function DishDetail() {
           <button
             type="button"
             onClick={closeEditModal}
-            className={`absolute -top-1 right-0 flex h-11 w-11 items-center justify-center rounded-full border ${darkMode ? "border-white/16 bg-white/7 text-white/72" : "border-black/10 bg-white/88 text-black/60"}`}
+            className={`absolute -top-4 right-0 flex h-11 w-11 items-center justify-center rounded-full border ${darkMode ? "border-white/16 bg-white/7 text-white/72" : "border-black/10 bg-white/88 text-black/60"}`}
             aria-label="Close edit modal"
           >
             <X size={17} />
@@ -976,10 +976,7 @@ export default function DishDetail() {
 
           {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[6.1rem] z-[14] text-center">
-                <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
-                  {language === "it" ? "Che piatto vuoi modificare?" : "What dish do you want to edit?"}
-                </div>
+              <div className="absolute left-5 right-5 top-[6.75rem] z-[14] text-center">
                 <div className="mx-auto grid max-w-[21rem] grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -1238,7 +1235,7 @@ export default function DishDetail() {
           </div>
 
           {showReviewStep ? (
-            <button type="button" onClick={handleDeleteEditedDish} className="absolute left-5 bottom-[1.3rem] z-[26] rounded-full border border-[#FF6B6B]/28 bg-[linear-gradient(180deg,#C92F2F_0%,#A61F1F_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,0,0,0.34)]">
+            <button type="button" onClick={handleDeleteEditedDish} className="absolute left-5 z-[26] h-14 rounded-full border border-[#E64646]/20 bg-[rgba(230,70,70,0.14)] px-4 text-sm font-semibold text-[#FFB3AB] shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md" style={{ bottom: "1.25rem" }}>
               {t("Delete")}
             </button>
           ) : null}

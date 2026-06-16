@@ -578,7 +578,7 @@ export default function UploadPage() {
             }}
           />
 
-          {cardTopIdentity}
+          {!detailPanelOpen && !showTagsStep && !showExtraStep ? cardTopIdentity : null}
 
           {showGhostModeStep ? (
             <>
@@ -797,7 +797,7 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setTagUserPickerOpen(true)}
-                      className="inline-flex min-h-[2.75rem] min-w-[10.5rem] max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
                       style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
                     >
                       {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
@@ -805,7 +805,7 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setShowLinkField((prev) => !prev)}
-                      className="inline-flex min-h-[2.75rem] min-w-[10.5rem] max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
                       style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
                     >
                       {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}

@@ -645,12 +645,19 @@ export default function UploadPage() {
                     </div>
                   </div>
                 ) : null}
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center rounded-full border px-3 py-1.5 text-[12px] font-semibold" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
-                    @tag utente
+                <div className="mt-2 flex flex-col items-start gap-1">
+                  <span
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                    style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
+                  >
+                    <span>Link</span>
+                    <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                   </span>
-                  <span className="inline-flex items-center rounded-full border px-3 py-1.5 text-[12px] font-semibold" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
-                    {language === "it" ? "Link" : "Link"}
+                  <span
+                    className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-semibold"
+                    style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
+                  >
+                    @tag utente
                   </span>
                 </div>
               </div>
@@ -885,13 +892,13 @@ export default function UploadPage() {
                 {showReviewStep && (storyTaggedUser || dishLink) ? (
                   <div className="mt-2 flex flex-col items-start gap-1">
                     {dishLink ? (
-                      <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/16 bg-black/72 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                      <div className="no-accent-border inline-flex shrink-0 items-center gap-1 rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
                         <span>Link</span>
                         <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                       </div>
                     ) : null}
                     {storyTaggedUser ? (
-                      <div className="inline-flex max-w-full items-center rounded-full border border-white/16 bg-black/72 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                      <div className="no-accent-border inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
                         @{String(storyTaggedUser).replace(/^@+/, "")}
                       </div>
                     ) : null}

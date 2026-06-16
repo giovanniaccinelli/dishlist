@@ -525,6 +525,7 @@ export default function UploadPage() {
               type="button"
               onClick={() => setMediaPickerOpen(true)}
               className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 text-white"
+              style={{ transform: "translateY(-2.15rem)" }}
             >
               <div
                 className={`flex h-[4.85rem] w-[4.85rem] items-center justify-center rounded-[1.4rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
@@ -539,7 +540,6 @@ export default function UploadPage() {
                 <Camera size={28} />
               </div>
               <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
-              <div className="text-[0.8rem] font-medium text-white/46">{language === "it" ? "Tocca per aggiungere il media" : "Tap to add media"}</div>
             </button>
           ) : null}
 
@@ -822,15 +822,22 @@ export default function UploadPage() {
                 <ArrowLeft size={20} />
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={showReviewStep ? openDishlistPicker : goToNextComposerStep}
-              disabled={loadingUpload}
-              className={`dish-modal-next-btn flex items-center justify-center rounded-full transition ${showReviewStep ? "h-[4.4rem] w-[4.4rem]" : "h-14 w-14"}`}
-              aria-label={showReviewStep ? "Choose dishlists" : "Next"}
-            >
-              {showReviewStep ? <Plus size={33} strokeWidth={2.12} /> : <ArrowRight size={22} />}
-            </button>
+            <div className="flex flex-col items-center">
+              {showReviewStep ? (
+                <div className="mb-1 text-[0.9rem] font-extrabold uppercase tracking-[0.14em] text-[#2BD36B]">
+                  {language === "it" ? "Carica" : "Upload"}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={showReviewStep ? openDishlistPicker : goToNextComposerStep}
+                disabled={loadingUpload}
+                className={`dish-modal-next-btn flex items-center justify-center rounded-full transition ${showReviewStep ? "h-[4.4rem] w-[4.4rem]" : "h-14 w-14"}`}
+                aria-label={showReviewStep ? "Choose dishlists" : "Next"}
+              >
+                {showReviewStep ? <Plus size={33} strokeWidth={2.12} /> : <ArrowRight size={22} />}
+              </button>
+            </div>
           </div>
 
           <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>

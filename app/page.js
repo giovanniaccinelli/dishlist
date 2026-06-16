@@ -1708,7 +1708,7 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
-          className="no-accent-border flex h-10 w-11 items-center justify-center rounded-[1rem] bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+          className="no-accent-border flex h-10 w-11 items-center justify-center rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
           aria-label="Previous dish"
         >
           <ChevronLeft size={21} strokeWidth={2.8} />
@@ -1745,7 +1745,7 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.next?.()}
-          className="no-accent-border flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] bg-white/94 text-black shadow-[0_12px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
+          className="no-accent-border flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
           aria-label="Next dish"
         >
           <ChevronRight size={21} strokeWidth={2.8} />

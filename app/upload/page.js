@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Camera, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, CornerUpRight, Plus, X } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -883,16 +883,17 @@ export default function UploadPage() {
                 <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
                 {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
                 {showReviewStep && (storyTaggedUser || dishLink) ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {storyTaggedUser ? (
-                      <span className="inline-flex max-w-full items-center rounded-full border border-white/16 bg-black/72 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                        @{String(storyTaggedUser).replace(/^@+/, "")}
-                      </span>
-                    ) : null}
+                  <div className="mt-2 flex flex-col items-start gap-1">
                     {dishLink ? (
-                      <span className="inline-flex max-w-full items-center truncate rounded-full border border-white/16 bg-black/72 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                        {language === "it" ? "Link" : "Link"}
-                      </span>
+                      <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/16 bg-black/72 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                        <span>Link</span>
+                        <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      </div>
+                    ) : null}
+                    {storyTaggedUser ? (
+                      <div className="inline-flex max-w-full items-center rounded-full border border-white/16 bg-black/72 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                        @{String(storyTaggedUser).replace(/^@+/, "")}
+                      </div>
                     ) : null}
                   </div>
                 ) : null}

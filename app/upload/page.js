@@ -88,6 +88,7 @@ export default function UploadPage() {
   const [taggableUsers, setTaggableUsers] = useState([]);
   const [tagUserSearch, setTagUserSearch] = useState("");
   const [tagUsersLoading, setTagUsersLoading] = useState(false);
+  const showLegacyUploadFlow = false;
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -150,7 +151,7 @@ export default function UploadPage() {
   }, [preview]);
 
   useEffect(() => {
-    const shouldSuggestTags = showUploadForm ? uploadStep === 2 : composerStep === 3;
+    const shouldSuggestTags = showLegacyUploadFlow ? uploadStep === 2 : composerStep === 3;
     if (!shouldSuggestTags || loadingUpload) return undefined;
     const name = dishName.trim();
     if (!name || dishTags.length > 0) return undefined;
@@ -810,7 +811,7 @@ export default function UploadPage() {
             </motion.div>
           ) : null}
 
-          <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
+          <div className="absolute right-6 z-[26] flex items-end gap-2" style={{ bottom: "1.25rem" }}>
             {composerStep >= 1 ? (
               <button
                 type="button"
@@ -822,9 +823,9 @@ export default function UploadPage() {
                 <ArrowLeft size={20} />
               </button>
             ) : null}
-            <div className="flex flex-col items-center">
+            <div className="relative flex items-center">
               {showReviewStep ? (
-                <div className="mb-1 text-[0.9rem] font-extrabold uppercase tracking-[0.14em] text-[#2BD36B]">
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[1.55rem] text-[0.9rem] font-extrabold uppercase tracking-[0.14em] text-[#2BD36B]">
                   {language === "it" ? "Carica" : "Upload"}
                 </div>
               ) : null}
@@ -918,11 +919,11 @@ export default function UploadPage() {
   }
 
   return (
-    <div className={`${showUploadForm ? "h-[100dvh] overflow-y-auto" : "bottom-nav-spacer h-[100dvh] overflow-hidden"} bg-transparent text-black flex flex-col`}>
-      {!showUploadForm ? <div className="h-[calc(var(--app-top-nav-offset)-0.75rem)]" /> : null}
+    <div className={`${showLegacyUploadFlow ? "h-[100dvh] overflow-y-auto" : "bottom-nav-spacer h-[100dvh] overflow-hidden"} bg-transparent text-black flex flex-col`}>
+      {!showLegacyUploadFlow ? <div className="h-[calc(var(--app-top-nav-offset)-0.75rem)]" /> : null}
 
-      <div className={showUploadForm ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-4"}>
-        {showUploadForm ? (
+      <div className={showLegacyUploadFlow ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-4"}>
+        {showLegacyUploadFlow ? (
           <div className="w-full max-w-md mx-auto">
             <div className="mb-4 flex items-center justify-between">
               {directEntryMode ? (
@@ -1637,7 +1638,7 @@ export default function UploadPage() {
         darkMode={darkMode}
       />
       <AppToast message={toast} variant={toastVariant} />
-      {!showUploadForm ? <BottomNav /> : null}
+      {!showLegacyUploadFlow ? <BottomNav /> : null}
     </div>
   );
 }

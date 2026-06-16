@@ -476,6 +476,8 @@ export default function UploadPage() {
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
     const pillShowsFrontSelected = showExtraStep || showReviewStep;
     const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep || showGhostModeStep;
+    const classicBottomShade =
+      "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
 
     return (
       <motion.div className="w-full max-w-md mx-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -545,9 +547,8 @@ export default function UploadPage() {
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
             style={{
-              height: "42%",
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
+              height: "48%",
+              background: classicBottomShade,
             }}
           />
 
@@ -724,14 +725,24 @@ export default function UploadPage() {
             </motion.div>
           ) : null}
 
-          {showTagsStep ? (
-            <div className="absolute inset-0 z-[18] overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.98)_0%,rgba(8,8,10,0.98)_100%)] p-5 pb-24">
-              <div className="mb-4 pt-16">
-                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
-                  {language === "it" ? "Tag" : "Tags"}
+          {showTagsStep || showExtraStep ? (
+            <motion.div
+              className="absolute inset-0 z-[19]"
+              style={{ transformStyle: "preserve-3d", perspective: 1600 }}
+              initial={showTagsStep ? false : { rotateY: 0 }}
+              animate={{ rotateY: showExtraStep ? 180 : 0 }}
+              transition={{ duration: 0.38, ease: [0.22, 0.72, 0.2, 1] }}
+            >
+              <div
+                className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.985)_0%,rgba(8,8,10,0.985)_100%)] p-5 pb-24"
+                style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+              >
+                <div className="mb-4 pt-16">
+                  <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                    {language === "it" ? "Tag" : "Tags"}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-wrap content-start gap-2">
+                <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
                     return (
@@ -740,65 +751,60 @@ export default function UploadPage() {
                       </button>
                     );
                   })}
+                </div>
               </div>
-            </div>
-          ) : null}
 
-          {showExtraStep ? (
-            <motion.div
-              className="absolute inset-0 z-[19]"
-              style={{ transformStyle: "preserve-3d" }}
-              initial={{ rotateY: -92, opacity: 0.35 }}
-              animate={{ rotateY: 0, opacity: 1 }}
-              transition={{ duration: 0.34, ease: "easeInOut" }}
-            >
-              {preview ? (
-                dishImage?.type?.startsWith("video/") ? (
-                  <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
-                ) : (
-                  <img src={preview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
-                )
-              ) : (
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
-              )}
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
               <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
-                style={{
-                  height: "42%",
-                  background:
-                    "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
-                }}
-              />
-              <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
-                <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
-                {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
-                {isRestaurantUpload ? (
-                  <div className="mt-1 flex items-center gap-2">
-                    <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
-                    {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
-                  </div>
-                ) : null}
-                <div className="mt-3 space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setTagUserPickerOpen(true)}
-                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
-                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
-                  >
-                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowLinkField((prev) => !prev)}
-                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
-                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
-                  >
-                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
-                  </button>
-                  {showLinkField || dishLink ? (
-                    <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border-[2px] px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16, backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                className="absolute inset-0"
+                style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+              >
+                {preview ? (
+                  dishImage?.type?.startsWith("video/") ? (
+                    <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
+                  ) : (
+                    <img src={preview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
+                  )
+                ) : (
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
+                )}
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
+                  style={{
+                    height: "48%",
+                    background: classicBottomShade,
+                  }}
+                />
+                <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
+                  <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
+                  {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
+                  {isRestaurantUpload ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
+                      {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
+                    </div>
                   ) : null}
+                  <div className="mt-3 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setTagUserPickerOpen(true)}
+                      className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                    >
+                      {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowLinkField((prev) => !prev)}
+                      className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                      style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                    >
+                      {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
+                    </button>
+                    {showLinkField || dishLink ? (
+                      <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border-[2px] px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16, backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </motion.div>

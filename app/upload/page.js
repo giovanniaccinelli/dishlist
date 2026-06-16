@@ -740,11 +740,11 @@ export default function UploadPage() {
               animate={{ rotateY: showExtraStep ? 180 : 0 }}
               transition={{ duration: 0.38, ease: [0.22, 0.72, 0.2, 1] }}
             >
-              {cardTopIdentity}
               <div
                 className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.985)_0%,rgba(8,8,10,0.985)_100%)] p-5 pb-24"
                 style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
+                {cardTopIdentity}
                 <div className="mb-4 pt-16">
                   <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
                     {language === "it" ? "Tag" : "Tags"}
@@ -766,6 +766,7 @@ export default function UploadPage() {
                 className="absolute inset-0"
                 style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
+                {cardTopIdentity}
                 {preview ? (
                   dishImage?.type?.startsWith("video/") ? (
                     <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />

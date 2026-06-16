@@ -524,15 +524,20 @@ export default function UploadPage() {
               onClick={() => setMediaPickerOpen(true)}
               className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 text-white"
             >
-              <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-white shadow-lg ${
-                isRestaurantUpload
-                  ? "restaurant-accent-border bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
-                  : "border-transparent bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
-              }`}>
+              <div
+                className={`flex h-[4.85rem] w-[4.85rem] items-center justify-center rounded-[1.4rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
+                  isRestaurantUpload ? "restaurant-accent-border" : "default-accent-border"
+                }`}
+                style={{
+                  background: isRestaurantUpload
+                    ? "linear-gradient(135deg,rgba(230,70,70,0.98)_0%,rgba(120,24,24,0.98)_100%)"
+                    : "linear-gradient(135deg,rgba(228,180,63,0.98)_0%,rgba(122,88,14,0.98)_100%)",
+                }}
+              >
                 <Camera size={28} />
               </div>
-              <div className="text-sm font-black">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
-              <div className="text-xs font-medium text-white/55">{language === "it" ? "Opzionale" : "Optional"}</div>
+              <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
+              <div className="text-[0.8rem] font-medium text-white/46">{language === "it" ? "Tocca per aggiungere il media" : "Tap to add media"}</div>
             </button>
           ) : null}
 
@@ -558,7 +563,7 @@ export default function UploadPage() {
 
           {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[5.35rem] z-[14] text-center">
+              <div className="absolute left-5 right-5 top-[6.35rem] z-[14] text-center">
                 <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>

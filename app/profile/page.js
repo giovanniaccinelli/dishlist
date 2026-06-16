@@ -2804,7 +2804,7 @@ export default function Profile() {
             className="top-action-btn relative"
             aria-label={t("Takes")}
           >
-            <Trophy size={18} strokeWidth={2.2} className="text-[#D7B443]" />
+            <Trophy size={18} strokeWidth={2.2} />
           </button>
         </div>
         <div className="flex items-center justify-center" />

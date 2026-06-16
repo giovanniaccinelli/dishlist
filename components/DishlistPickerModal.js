@@ -94,7 +94,7 @@ export default function DishlistPickerModal({
   }, [isSortingCard, orderedLists, sortingSearch, t]);
   const hasUnlockedSelection = selectedIds.some((id) => !lockedSet.has(id));
   const resolvedConfirmLabel = isSortingCard ? (hasUnlockedSelection ? "Aggiungi" : "Salta") : confirmLabel;
-  const sortingSearchPlaceholder = t(language === "it" ? "Cerca dishlists" : "Search dishlists");
+  const sortingSearchPlaceholder = t(language === "it" ? "Cerca dishlist" : "Search dishlist");
   const accentPalette = [
     { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" },
     { border: "#D7B443", bg: "#FFF8D9", darkBg: "#332B10", soft: "rgba(215,180,67,0.18)" },

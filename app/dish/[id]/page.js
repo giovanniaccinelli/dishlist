@@ -877,7 +877,6 @@ export default function DishDetail() {
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
     const ghostTextColor = "rgba(141,141,148,0.58)";
     const ghostSoftTextColor = "rgba(141,141,148,0.48)";
-    const tagPreview = editTags.slice(0, 3);
     const showTopRestaurant = isRestaurantEdit && editRestaurant?.name;
     const actualTopIdentity = (
       <>
@@ -901,9 +900,8 @@ export default function DishDetail() {
 
     return (
       <motion.div className="w-full max-w-md mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="mb-3 pt-1 flex items-center justify-between gap-4">
-          <div className="h-11 w-11 shrink-0" />
-          <div className="mt-3 flex flex-1 justify-center gap-2">
+        <div className="relative mb-3 pt-1">
+          <div className="mt-3 flex justify-center gap-2">
             {EDIT_COMPOSER_STEPS.map((step, index) => (
               <span
                 key={step}
@@ -929,7 +927,7 @@ export default function DishDetail() {
           <button
             type="button"
             onClick={closeEditModal}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${darkMode ? "border-white/16 bg-white/7 text-white/72" : "border-black/10 bg-white/88 text-black/60"}`}
+            className={`absolute -top-1 right-0 flex h-11 w-11 items-center justify-center rounded-full border ${darkMode ? "border-white/16 bg-white/7 text-white/72" : "border-black/10 bg-white/88 text-black/60"}`}
             aria-label="Close edit modal"
           >
             <X size={17} />
@@ -971,6 +969,9 @@ export default function DishDetail() {
           ) : null}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]" style={{ height: "48%", background: classicBottomShade }} />
+          {showGhostModeStep ? (
+            <div className="pointer-events-none absolute inset-0 z-[11] bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.22)_28%,rgba(0,0,0,0.1)_48%,rgba(0,0,0,0.32)_100%)]" />
+          ) : null}
           {actualTopIdentity}
 
           {showGhostModeStep ? (
@@ -1035,7 +1036,7 @@ export default function DishDetail() {
                     {editPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{editPriceSymbol}{editPrice}</span> : null}
                   </button>
                 ) : null}
-                <div className="mt-2 flex flex-col items-start gap-1">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setEditStep(4)}
@@ -1048,23 +1049,12 @@ export default function DishDetail() {
                   <button
                     type="button"
                     onClick={() => setEditStep(4)}
-                    className="mt-1 inline-flex max-w-full items-center rounded-full bg-black/18 px-3 py-1 text-[11px] font-semibold backdrop-blur-[6px]"
+                    className="inline-flex max-w-full items-center rounded-full bg-black/18 px-3 py-1 text-[11px] font-semibold backdrop-blur-[6px]"
                     style={{ color: editTaggedUser.trim() ? "rgba(255,255,255,0.92)" : "rgba(141,141,148,0.7)" }}
                   >
                     {editTaggedUser.trim() ? `@${editTaggedUser.replace(/^@+/, "")}` : "@tag utente"}
                   </button>
                 </div>
-                <button type="button" onClick={() => setEditStep(3)} className="mt-2 flex flex-wrap gap-1.5 text-left">
-                  {tagPreview.length ? tagPreview.map((tag) => (
-                    <span key={tag} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold border-2 ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}>
-                      {tag}
-                    </span>
-                  )) : (
-                    <span className="rounded-full bg-black/18 px-3 py-1 text-[11px] font-semibold backdrop-blur-[6px]" style={{ color: "rgba(141,141,148,0.7)" }}>
-                      {language === "it" ? "Tag" : "Tags"}
-                    </span>
-                  )}
-                </button>
               </div>
 
               <button type="button" onClick={() => setEditStep(2)} className="absolute left-5 z-[24] inline-flex h-8 items-center gap-1" style={{ bottom: "2.25rem" }}>
@@ -1078,7 +1068,7 @@ export default function DishDetail() {
             </>
           ) : null}
 
-          {editStep >= 2 ? (
+          {editStep >= 2 && !showReviewStep ? (
             <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
               <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
                 <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none" style={pillShowsFrontSelected ? { backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor } : undefined}>
@@ -1198,13 +1188,13 @@ export default function DishDetail() {
             {!hideBaseText && showNameInputs ? (
               <>
                 <div className="relative">
-                  <input
-                    type="text"
+                  <textarea
                     placeholder={language === "it" ? "Nome del piatto" : "Dish name"}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     enterKeyHint="next"
-                    className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
+                    rows={editName.trim().length > 24 ? 2 : 1}
+                    className="w-full resize-none overflow-hidden rounded-[1.15rem] border-[3px] px-5 py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
                     style={{ fontSize: 21, borderColor: composerAccent, backgroundColor: "rgba(8,8,8,0.9)", boxShadow: `0 0 0 1px ${composerAccent}` }}
                     disabled={savingEdit}
                   />
@@ -1248,7 +1238,7 @@ export default function DishDetail() {
           </div>
 
           {showReviewStep ? (
-            <button type="button" onClick={handleDeleteEditedDish} className="absolute left-5 bottom-[1.3rem] z-[26] rounded-full border border-[#E25555]/22 bg-[#2A1010]/92 px-4 py-3 text-sm font-semibold text-[#FF9B9B] shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-md">
+            <button type="button" onClick={handleDeleteEditedDish} className="absolute left-5 bottom-[1.3rem] z-[26] rounded-full border border-[#FF6B6B]/28 bg-[linear-gradient(180deg,#C92F2F_0%,#A61F1F_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(120,0,0,0.34)]">
               {t("Delete")}
             </button>
           ) : null}

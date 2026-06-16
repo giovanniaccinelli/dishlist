@@ -473,7 +473,6 @@ export default function UploadPage() {
     const showExtraStep = composerStep === 4;
     const showReviewStep = composerStep === 5;
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
-    const extraPanelOpen = composerStep === 4;
     const hideBaseText = detailPanelOpen || showTagsStep;
 
     return (
@@ -556,15 +555,15 @@ export default function UploadPage() {
           </div>
 
           {composerStep === 0 ? (
-            <div className="absolute inset-0 z-[14] px-4 py-5">
-              <div className="grid h-full grid-cols-2 gap-3">
+            <div className="absolute inset-x-4 top-1/2 z-[14] -translate-y-1/2">
+              <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => {
                   setDishMode(DISH_MODE_COOKING);
                   setRestaurant(null);
                 }}
-                className={`rounded-[1.5rem] border px-5 py-5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[9.75rem] rounded-[1.5rem] border px-4 py-4 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_COOKING
                     ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                     : darkMode
@@ -586,7 +585,7 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                className={`rounded-[1.5rem] border px-5 py-5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[9.75rem] rounded-[1.5rem] border px-4 py-4 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_RESTAURANT
                     ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                     : darkMode
@@ -610,7 +609,7 @@ export default function UploadPage() {
           ) : null}
 
           {composerStep >= 2 ? (
-            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "3.55rem" }}>
+            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
               <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
                 <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
                   piatto
@@ -699,34 +698,18 @@ export default function UploadPage() {
             </div>
           ) : null}
 
-          {extraPanelOpen ? (
-            <motion.div
-              className="absolute inset-0 z-[18]"
-              style={{ transformStyle: "preserve-3d" }}
-              initial={{ rotateY: 92, opacity: 0.35 }}
-              animate={{ rotateY: 0, opacity: 1 }}
-              transition={{ duration: 0.34, ease: "easeInOut" }}
-            >
-              <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(10,10,12,0.98)_0%,rgba(6,6,8,0.98)_100%)] p-5 pb-24 text-white">
-                <div className="space-y-3 pt-16">
-                  <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
-                    {language === "it" ? "Dettagli finali" : "Final details"}
-                  </div>
-                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/72 px-4 py-3 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
-                  </button>
-                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/72 px-4 py-3 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
-                  </button>
-                  {showLinkField || dishLink ? (
-                    <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border border-white/10 bg-black/55 px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
-                  ) : null}
-                </div>
-              </div>
-            </motion.div>
-          ) : null}
-
-          <div className="absolute right-6 z-[26] flex items-center gap-1.5" style={{ bottom: "1.25rem" }}>
+          <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
+            {composerStep >= 2 ? (
+              <button
+                type="button"
+                onClick={goToPreviousComposerStep}
+                disabled={loadingUpload}
+                className="dish-modal-back-btn flex h-14 w-14 items-center justify-center rounded-full transition"
+                aria-label="Back"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={showReviewStep ? openDishlistPicker : goToNextComposerStep}
@@ -738,7 +721,7 @@ export default function UploadPage() {
             </button>
           </div>
 
-          <div className="absolute left-5 right-24 z-[13] text-white" style={{ bottom: "1.45rem" }}>
+          <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
             {!hideBaseText && showNameInputs ? (
               <>
                 <input
@@ -772,6 +755,22 @@ export default function UploadPage() {
               <div className="mt-1 flex items-center gap-2">
                 <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
                 {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
+              </div>
+            ) : null}
+
+            {showExtraStep ? (
+              <div className="mt-2 space-y-2">
+                <div className="grid grid-cols-1 gap-2">
+                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
+                  </button>
+                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[2.85rem] w-full items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                  </button>
+                </div>
+                {showLinkField || dishLink ? (
+                  <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-full border border-white/10 bg-black/55 px-3.5 py-2 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                ) : null}
               </div>
             ) : null}
 

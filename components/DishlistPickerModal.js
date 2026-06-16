@@ -75,6 +75,8 @@ export default function DishlistPickerModal({
   storyOption = false,
   storySelected = false,
   onToggleStory,
+  publicDish = true,
+  onTogglePublicDish,
 }) {
   const { darkMode, t, language } = useLanguage();
   const [sortingSearch, setSortingSearch] = useState("");
@@ -408,9 +410,41 @@ export default function DishlistPickerModal({
                     {isSwipeCard || isSortingCard ? (
                       isSortingCard ? null : <div className="h-2 w-2 rounded-full bg-[#2BD36B]" />
                     ) : (
-                      <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
-                        {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
-                      </div>
+                      onTogglePublicDish ? (
+                        <button
+                          type="button"
+                          onClick={onTogglePublicDish}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[12px] font-semibold transition ${
+                            darkMode
+                              ? publicDish
+                                ? "border-white/14 bg-[#171717] text-white"
+                                : "border-white/10 bg-[#121212] text-white/66"
+                              : publicDish
+                                ? "border-black/10 bg-white text-black/72"
+                                : "border-black/8 bg-[#F2EFE8] text-black/48"
+                          }`}
+                          aria-pressed={publicDish}
+                        >
+                          <span
+                            className={`flex h-5 w-9 items-center rounded-full border p-[2px] transition ${
+                              darkMode
+                                ? publicDish
+                                  ? "border-white/18 bg-white/12 justify-end"
+                                  : "border-white/10 bg-white/6 justify-start"
+                                : publicDish
+                                  ? "border-black/10 bg-black/10 justify-end"
+                                  : "border-black/8 bg-black/[0.04] justify-start"
+                            }`}
+                          >
+                            <span className={`h-4 w-4 rounded-full ${darkMode ? "bg-white" : "bg-black/80"}`} />
+                          </span>
+                          <span>{t("Public dish")}</span>
+                        </button>
+                      ) : (
+                        <div className={`text-xs ${darkMode ? "text-white/55" : "text-black/50"}`}>
+                          {selectedIds.length} {t(selectedIds.length === 1 ? "selected singular" : "selected plural")}
+                        </div>
+                      )
                     )}
                     <button
                       type="button"

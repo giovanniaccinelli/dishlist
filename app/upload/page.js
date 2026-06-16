@@ -481,8 +481,8 @@ export default function UploadPage() {
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
     const cardTopIdentity = (
       <>
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
-        <div className="pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] items-center gap-2 text-white">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[30] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
+        <div className="pointer-events-none absolute left-4 top-4 z-[31] flex max-w-[14.5rem] items-center gap-2 text-white">
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${isRestaurantUpload ? "border-[#E64646]" : "border-[#E4B43F]"} bg-black/35 text-sm font-bold`}>
             {user?.photoURL ? <img src={user.photoURL} alt="You" className="h-full w-full object-cover" /> : (user?.displayName?.[0] || "U").toUpperCase()}
           </div>
@@ -492,15 +492,11 @@ export default function UploadPage() {
           </div>
         </div>
         {composerStep >= 1 && isRestaurantUpload && restaurant?.name ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (composerStep === 2) setComposerDetailsOpen(true);
-            }}
-            className="absolute left-4 top-[4.4rem] z-[14] max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]"
+          <div
+            className="pointer-events-none absolute left-4 top-[4.4rem] z-[32] max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]"
           >
             {restaurant.name}
-          </button>
+          </div>
         ) : null}
       </>
     );
@@ -1622,6 +1618,8 @@ export default function UploadPage() {
         storyOption
         storySelected={uploadToStory}
         onToggleStory={() => setUploadToStory((value) => !value)}
+        publicDish={dishIsPublic}
+        onTogglePublicDish={() => setDishIsPublic((value) => !value)}
         onToggle={(dishlist) =>
           setSelectedDishlistIds((prev) =>
             prev.includes(dishlist.id)

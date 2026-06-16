@@ -554,7 +554,7 @@ export default function UploadPage() {
           </div>
 
           {composerStep === 0 ? (
-            <div className="absolute inset-0 z-[14] grid grid-rows-2 gap-3 p-4">
+            <div className="absolute inset-0 z-[14] grid grid-cols-2 gap-3 p-4">
               <button
                 type="button"
                 onClick={() => {
@@ -569,14 +569,14 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full items-center gap-4">
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
                   <span className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] ${
                     dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                   }`}>
                     <CookingHomeIcon className="h-7 w-7" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.35rem] font-black leading-none">Casa</div>
+                    <div className="truncate text-[1.3rem] font-black leading-none">Casa</div>
                   </div>
                 </div>
               </button>
@@ -591,14 +591,14 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full items-center gap-4">
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
                   <span className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] ${
                     dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                   }`}>
                     <RestaurantForkKnifeIcon className="h-7 w-7" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.35rem] font-black leading-none">Ristorante</div>
+                    <div className="truncate text-[1.3rem] font-black leading-none">Ristorante</div>
                   </div>
                 </div>
               </button>
@@ -606,7 +606,7 @@ export default function UploadPage() {
           ) : null}
 
           {composerStep >= 2 ? (
-            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "5.35rem" }}>
+            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
               <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
                 <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
                   piatto
@@ -634,10 +634,15 @@ export default function UploadPage() {
           ) : null}
 
           {detailPanelOpen ? (
-            <div className="absolute inset-0 z-[18] bg-black/62 backdrop-blur-[6px]">
-              <div className="absolute inset-0 overflow-y-auto p-4 pb-24 text-white">
-                <div className="h-full rounded-[1.45rem] border border-white/12 bg-[rgba(11,11,11,0.92)] p-4 shadow-[0_20px_42px_rgba(0,0,0,0.35)]">
-                  <div className="space-y-3 pt-4">
+            <motion.div
+              className="absolute inset-0 z-[18]"
+              style={{ transformStyle: "preserve-3d" }}
+              initial={{ rotateY: 92, opacity: 0.35 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              transition={{ duration: 0.34, ease: "easeInOut" }}
+            >
+              <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
+                <div className="space-y-3 pt-4">
                     {isRestaurantUpload ? (
                       <>
                         <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
@@ -658,16 +663,21 @@ export default function UploadPage() {
                         <textarea placeholder={language === "it" ? "Procedimento" : "Method"} value={dishRecipeMethod} onChange={(e) => setDishRecipeMethod(e.target.value)} className="w-full resize-none rounded-[1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} rows={6} disabled={loadingUpload} />
                       </>
                     )}
-                  </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ) : null}
 
           {showTagsStep ? (
-            <div className="absolute inset-0 z-[18] bg-black/54 backdrop-blur-[4px]">
-              <div className="absolute inset-0 overflow-y-auto p-4 pb-24">
-                <div className="flex min-h-full flex-wrap content-start gap-2 rounded-[1.45rem] border border-white/12 bg-[rgba(11,11,11,0.82)] p-4">
+            <motion.div
+              className="absolute inset-0 z-[18]"
+              style={{ transformStyle: "preserve-3d" }}
+              initial={{ rotateY: 92, opacity: 0.35 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              transition={{ duration: 0.34, ease: "easeInOut" }}
+            >
+              <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.98)_0%,rgba(8,8,10,0.98)_100%)] p-5 pb-24">
+                <div className="flex min-h-full flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
                     return (
@@ -678,7 +688,7 @@ export default function UploadPage() {
                   })}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ) : null}
 
           <div className="absolute right-6 z-[26] flex items-center gap-1.5" style={{ bottom: "1.25rem" }}>
@@ -725,11 +735,11 @@ export default function UploadPage() {
 
             {showExtraStep ? (
               <div className="mt-2 space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="rounded-full bg-black/62 px-3 py-1 text-[11px] font-semibold text-white/92">
+                <div className="grid grid-cols-1 gap-2">
+                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[2.7rem] items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
                     {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
                   </button>
-                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="rounded-full bg-black/62 px-3 py-1 text-[11px] font-semibold text-white/92">
+                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[2.7rem] items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
                     {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
                   </button>
                 </div>
@@ -746,7 +756,7 @@ export default function UploadPage() {
               </div>
             ) : null}
 
-            {composerStep >= 4 && dishTags.length > 0 ? (
+            {showExtraStep && dishTags.length > 0 ? (
               <div className="mt-1 flex max-w-full gap-1 overflow-hidden">
                 {dishTags.slice(0, 3).map((tag) => <span key={tag} className="shrink-0 rounded-full bg-black/62 px-2.5 py-1 text-[10px] font-bold text-white/88">{tag}</span>)}
               </div>

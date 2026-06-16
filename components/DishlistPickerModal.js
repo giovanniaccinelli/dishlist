@@ -158,6 +158,20 @@ export default function DishlistPickerModal({
                 {t("Close")}
               </button>
             </div>
+            {isSortingCard ? (
+              <div className="mb-3 shrink-0">
+                <input
+                  type="text"
+                  value={sortingSearch}
+                  onChange={(event) => setSortingSearch(event.target.value)}
+                  placeholder={t("Search dishlists")}
+                  className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] font-medium outline-none ${
+                    darkMode ? "border-white/12 bg-[#171717] text-white placeholder:text-white/32" : "border-black/8 bg-white text-black placeholder:text-black/32"
+                  }`}
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            ) : null}
             {dishPreview && (isSwipeCard || isSortingCard) ? (
               <div className={`mb-4 shrink-0 overflow-hidden rounded-[1.55rem] border ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
@@ -215,20 +229,6 @@ export default function DishlistPickerModal({
               </div>
             ) : (
               <>
-                {isSortingCard ? (
-                  <div className="mb-3 shrink-0">
-                    <input
-                      type="text"
-                      value={sortingSearch}
-                      onChange={(event) => setSortingSearch(event.target.value)}
-                      placeholder={t("Search dishlists")}
-                      className={`w-full rounded-[1rem] border px-4 py-3 text-[16px] font-medium outline-none ${
-                        darkMode ? "border-white/12 bg-[#171717] text-white placeholder:text-white/32" : "border-black/8 bg-white text-black placeholder:text-black/32"
-                      }`}
-                      style={{ fontSize: 16 }}
-                    />
-                  </div>
-                ) : null}
                 <div className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto ${isSortingCard ? "px-1 pb-24 pt-1" : "pr-1"}`}>
                   {storyOption ? (
                     <button

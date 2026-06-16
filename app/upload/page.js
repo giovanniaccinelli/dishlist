@@ -736,14 +736,24 @@ export default function UploadPage() {
                   </div>
                 ) : null}
                 <div className="mt-3 space-y-2">
-                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/16 bg-black/78 px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkField((prev) => !prev)}
+                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                  >
                     {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
                   </button>
-                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/16 bg-black/78 px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                  <button
+                    type="button"
+                    onClick={() => setTagUserPickerOpen(true)}
+                    className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border-[2px] px-4 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
+                    style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                  >
                     {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
                   </button>
                   {showLinkField || dishLink ? (
-                    <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border border-white/16 bg-black/78 px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                    <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border-[2px] px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16, backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
                   ) : null}
                 </div>
               </div>
@@ -766,10 +776,10 @@ export default function UploadPage() {
               type="button"
               onClick={showReviewStep ? openDishlistPicker : goToNextComposerStep}
               disabled={loadingUpload}
-              className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition"
+              className={`dish-modal-next-btn flex items-center justify-center rounded-full transition ${showReviewStep ? "h-[4.4rem] w-[4.4rem]" : "h-14 w-14"}`}
               aria-label={showReviewStep ? "Choose dishlists" : "Next"}
             >
-              {showReviewStep ? <Plus size={26} strokeWidth={2.1} /> : <ArrowRight size={22} />}
+              {showReviewStep ? <Plus size={33} strokeWidth={2.12} /> : <ArrowRight size={22} />}
             </button>
           </div>
 
@@ -782,11 +792,12 @@ export default function UploadPage() {
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
                   enterKeyHint="next"
-                  className="w-full rounded-[1.15rem] border-2 bg-black/62 px-5 py-3.5 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/72 focus:outline-none backdrop-blur-[8px]"
+                  className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
                   style={{
                     fontSize: 21,
                     borderColor: composerAccent,
-                    boxShadow: "none",
+                    backgroundColor: "rgba(8,8,8,0.9)",
+                    boxShadow: `0 0 0 1px ${composerAccent}`,
                   }}
                   disabled={loadingUpload}
                 />

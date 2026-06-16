@@ -481,7 +481,7 @@ export default function UploadPage() {
           <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
             {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
           </h1>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex justify-center gap-2">
             {COMPOSER_STEPS.map((step, index) => (
               <span
                 key={step}
@@ -653,9 +653,7 @@ export default function UploadPage() {
                     </div>
                     {isRestaurantUpload ? (
                       <>
-                        <div className="rounded-[1rem] border border-[#E64646]/50 bg-black/20 p-1.5">
-                          <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
-                        </div>
+                        <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
                         <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
                           <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
                           <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
@@ -730,7 +728,7 @@ export default function UploadPage() {
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
                   enterKeyHint="next"
-                  className={`w-full rounded-[0.9rem] border-2 bg-black/26 px-3 py-2 text-left text-[18px] font-bold leading-tight text-white placeholder:text-white/68 focus:outline-none ${isRestaurantUpload ? "border-[#E64646]/75" : "border-[#E4B43F]/78"}`}
+                  className={`w-full rounded-[0.9rem] border-[2.5px] bg-black/26 px-3 py-2 text-left text-[18px] font-bold leading-tight text-white placeholder:text-white/68 focus:outline-none ${isRestaurantUpload ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.22)]" : "border-[#E4B43F] shadow-[0_0_0_1px_rgba(228,180,63,0.22)]"}`}
                   style={{ fontSize: 18 }}
                   disabled={loadingUpload}
                 />

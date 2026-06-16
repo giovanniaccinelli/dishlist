@@ -472,9 +472,10 @@ export default function UploadPage() {
     const showTagsStep = composerStep === 3;
     const showExtraStep = composerStep === 4;
     const showReviewStep = composerStep === 5;
+    const showGhostModeStep = composerStep === 0;
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
     const pillShowsFrontSelected = showExtraStep || showReviewStep;
-    const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep;
+    const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep || showGhostModeStep;
 
     return (
       <motion.div className="w-full max-w-md mx-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -555,20 +556,20 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {composerStep === 0 ? (
+          {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[4.5rem] z-[14]">
-                <div className="mb-4 text-[1.12rem] font-semibold leading-tight text-white/90">
+              <div className="absolute left-5 right-5 top-[4.4rem] z-[14]">
+                <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>
-                <div className="mx-auto grid max-w-[18.75rem] grid-cols-2 gap-3">
+                <div className="mx-auto grid max-w-[21rem] grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setDishMode(DISH_MODE_COOKING);
                       setRestaurant(null);
                     }}
-                    className={`h-[7.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[9.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
                         ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                         : darkMode
@@ -577,18 +578,18 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] ${
+                      <span className={`inline-flex h-[3.35rem] w-[3.35rem] shrink-0 items-center justify-center rounded-[1rem] ${
                         dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
-                        <CookingHomeIcon className="h-5.5 w-5.5" strokeWidth={2.15} />
+                        <CookingHomeIcon className="h-7 w-7" strokeWidth={2.1} />
                       </span>
-                      <div className="truncate text-[1.04rem] font-black leading-none">Casa</div>
+                      <div className="truncate text-[1.08rem] font-black leading-none">Casa</div>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                    className={`h-[7.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[9.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                         : darkMode
@@ -597,49 +598,49 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] ${
+                      <span className={`inline-flex h-[3.35rem] w-[3.35rem] shrink-0 items-center justify-center rounded-[1rem] ${
                         dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                       }`}>
-                        <RestaurantForkKnifeIcon className="h-5.5 w-5.5" strokeWidth={2.15} />
+                        <RestaurantForkKnifeIcon className="h-7 w-7" strokeWidth={2.1} />
                       </span>
-                      <div className="truncate text-[1.04rem] font-black leading-none">Ristorante</div>
+                      <div className="truncate text-[1.08rem] font-black leading-none">Ristorante</div>
                     </div>
                   </button>
                 </div>
               </div>
 
-              <div className="absolute left-5 right-5 z-[13] text-white/24" style={{ bottom: "5.8rem" }}>
-                <div className="text-left text-2xl font-bold leading-tight text-white/24">
+              <div className="absolute left-5 right-5 z-[13]" style={{ bottom: "5.8rem", color: "rgba(141,141,148,0.56)" }}>
+                <div className="text-left text-2xl font-bold leading-tight" style={{ color: "rgba(141,141,148,0.56)" }}>
                   {language === "it" ? "Nome piatto" : "Dish name"}
                 </div>
-                <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/20">
+                <p className="mt-0.5 line-clamp-2 text-sm font-medium" style={{ color: "rgba(141,141,148,0.48)" }}>
                   {language === "it" ? "Descrizione" : "Description"}
                 </p>
                 {isRestaurantUpload ? (
-                  <div className="mt-1 flex items-center gap-2 text-white/22">
-                    <div className="inline-flex items-center gap-1 text-white/24">
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="inline-flex items-center gap-1" style={{ color: "rgba(141,141,148,0.5)" }}>
                       {Array.from({ length: 5 }).map((_, index) => (
-                        <span key={index} className="text-[1.05rem] leading-none text-white/24">☆</span>
+                        <span key={index} className="text-[1.05rem] leading-none">☆</span>
                       ))}
                     </div>
                   </div>
                 ) : null}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center rounded-full border border-white/8 bg-black/18 px-3 py-1.5 text-[12px] font-semibold text-white/24">
+                  <span className="inline-flex items-center rounded-full border px-3 py-1.5 text-[12px] font-semibold" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
                     @tag utente
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-white/8 bg-black/18 px-3 py-1.5 text-[12px] font-semibold text-white/24">
+                  <span className="inline-flex items-center rounded-full border px-3 py-1.5 text-[12px] font-semibold" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
                     {language === "it" ? "Link" : "Link"}
                   </span>
                 </div>
               </div>
 
               <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
-                <div className="inline-flex h-8 items-center gap-0.5 text-white/24">
-                  <span className="inline-flex h-7 items-center rounded-full border border-white/8 bg-black/18 px-2.5 text-[13px] font-semibold leading-none text-white/24">
+                <div className="inline-flex h-8 items-center gap-1">
+                  <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
                     piatto
                   </span>
-                  <span className="inline-flex h-7 items-center rounded-full border border-white/8 bg-black/18 px-2.5 text-[13px] font-semibold leading-none text-white/24">
+                  <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
                     {isRestaurantUpload ? "ristorante" : "ricetta"}
                   </span>
                 </div>

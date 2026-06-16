@@ -558,7 +558,7 @@ export default function UploadPage() {
 
           {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[4.4rem] z-[14]">
+              <div className="absolute left-5 right-5 top-[4.2rem] z-[14] text-center">
                 <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>
@@ -569,7 +569,7 @@ export default function UploadPage() {
                       setDishMode(DISH_MODE_COOKING);
                       setRestaurant(null);
                     }}
-                    className={`h-[11.5rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
                         ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                         : darkMode
@@ -578,18 +578,18 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-[5.35rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
+                      <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
                         dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
-                        <CookingHomeIcon className="h-9 w-9" strokeWidth={2.05} />
+                        <CookingHomeIcon className="h-[2.85rem] w-[2.85rem]" strokeWidth={2} />
                       </span>
-                      <div className="truncate text-[1.24rem] font-semibold leading-none">Casa</div>
+                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Casa</div>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                    className={`h-[11.5rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                         : darkMode
@@ -598,12 +598,12 @@ export default function UploadPage() {
                     }`}
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
-                      <span className={`inline-flex h-[5.35rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
+                      <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
                         dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                       }`}>
-                        <RestaurantForkKnifeIcon className="h-9 w-9" strokeWidth={2.05} />
+                        <RestaurantForkKnifeIcon className="h-[2.65rem] w-[2.65rem]" strokeWidth={2} />
                       </span>
-                      <div className="truncate text-[1.24rem] font-semibold leading-none">Ristorante</div>
+                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Ristorante</div>
                     </div>
                   </button>
                 </div>

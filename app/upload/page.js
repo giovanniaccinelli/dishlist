@@ -557,18 +557,18 @@ export default function UploadPage() {
 
           {composerStep === 0 ? (
             <>
-              <div className="absolute left-5 right-5 top-[4.9rem] z-[14]">
-                <div className="mb-3 text-[1rem] font-semibold leading-tight text-white/92">
+              <div className="absolute left-5 right-5 top-[4.5rem] z-[14]">
+                <div className="mb-4 text-[1.12rem] font-semibold leading-tight text-white/90">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="mx-auto grid max-w-[18.75rem] grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setDishMode(DISH_MODE_COOKING);
                       setRestaurant(null);
                     }}
-                    className={`h-[6.75rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[7.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
                         ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                         : darkMode
@@ -580,7 +580,7 @@ export default function UploadPage() {
                       <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] ${
                         dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
-                        <CookingHomeIcon className="h-5.5 w-5.5" strokeWidth={2.35} />
+                        <CookingHomeIcon className="h-5.5 w-5.5" strokeWidth={2.15} />
                       </span>
                       <div className="truncate text-[1.04rem] font-black leading-none">Casa</div>
                     </div>
@@ -588,7 +588,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                    className={`h-[6.75rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                    className={`h-[7.4rem] rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_RESTAURANT
                         ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                         : darkMode
@@ -600,7 +600,7 @@ export default function UploadPage() {
                       <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] ${
                         dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                       }`}>
-                        <RestaurantForkKnifeIcon className="h-5.5 w-5.5" strokeWidth={2.35} />
+                        <RestaurantForkKnifeIcon className="h-5.5 w-5.5" strokeWidth={2.15} />
                       </span>
                       <div className="truncate text-[1.04rem] font-black leading-none">Ristorante</div>
                     </div>
@@ -608,35 +608,39 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              <div className="absolute left-5 right-5 z-[13] text-white/26" style={{ bottom: "5.8rem" }}>
-                <div className="text-left text-2xl font-bold leading-tight">
+              <div className="absolute left-5 right-5 z-[13] text-white/24" style={{ bottom: "5.8rem" }}>
+                <div className="text-left text-2xl font-bold leading-tight text-white/24">
                   {language === "it" ? "Nome piatto" : "Dish name"}
                 </div>
-                <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/22">
+                <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/20">
                   {language === "it" ? "Descrizione" : "Description"}
                 </p>
                 {isRestaurantUpload ? (
-                  <div className="mt-1 flex items-center gap-2 text-white/24">
-                    <RatingStars value={4} size="text-[1.05rem]" readOnly />
+                  <div className="mt-1 flex items-center gap-2 text-white/22">
+                    <div className="inline-flex items-center gap-1 text-white/24">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <span key={index} className="text-[1.05rem] leading-none text-white/24">☆</span>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center rounded-full border border-white/10 bg-black/22 px-3 py-1.5 text-[12px] font-semibold">
+                  <span className="inline-flex items-center rounded-full border border-white/8 bg-black/18 px-3 py-1.5 text-[12px] font-semibold text-white/24">
                     @tag utente
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-white/10 bg-black/22 px-3 py-1.5 text-[12px] font-semibold">
+                  <span className="inline-flex items-center rounded-full border border-white/8 bg-black/18 px-3 py-1.5 text-[12px] font-semibold text-white/24">
                     {language === "it" ? "Link" : "Link"}
                   </span>
                 </div>
               </div>
 
               <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
-                <div className="inline-flex h-8 items-center gap-0.5 rounded-full bg-black/28 p-0.5 text-white/26">
-                  <span className="inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none border border-white/8">
+                <div className="inline-flex h-8 items-center gap-0.5 text-white/24">
+                  <span className="inline-flex h-7 items-center rounded-full border border-white/8 bg-black/18 px-2.5 text-[13px] font-semibold leading-none text-white/24">
                     piatto
                   </span>
-                  <span className="inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none border border-white/8">
-                    {isRestaurantUpload ? "ristorante" : "casa"}
+                  <span className="inline-flex h-7 items-center rounded-full border border-white/8 bg-black/18 px-2.5 text-[13px] font-semibold leading-none text-white/24">
+                    {isRestaurantUpload ? "ristorante" : "ricetta"}
                   </span>
                 </div>
               </div>
@@ -795,7 +799,7 @@ export default function UploadPage() {
           ) : null}
 
           <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
-            {composerStep >= 2 ? (
+            {composerStep >= 1 ? (
               <button
                 type="button"
                 onClick={goToPreviousComposerStep}

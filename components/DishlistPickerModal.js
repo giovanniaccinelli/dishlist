@@ -417,10 +417,10 @@ export default function DishlistPickerModal({
                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[12px] font-semibold transition ${
                             darkMode
                               ? publicDish
-                                ? "border-white/14 bg-[#171717] text-white"
+                                ? "border-white/14 bg-white/6 text-white"
                                 : "border-white/10 bg-[#121212] text-white/66"
                               : publicDish
-                                ? "border-black/10 bg-white text-black/72"
+                                ? "border-black/10 bg-white/70 text-black/68"
                                 : "border-black/8 bg-[#F2EFE8] text-black/48"
                           }`}
                           aria-pressed={publicDish}
@@ -429,10 +429,10 @@ export default function DishlistPickerModal({
                             className={`flex h-5 w-9 items-center rounded-full border p-[2px] transition ${
                               darkMode
                                 ? publicDish
-                                  ? "border-white/18 bg-white/12 justify-end"
+                                  ? "border-white/18 bg-white/7 justify-end"
                                   : "border-white/10 bg-white/6 justify-start"
                                 : publicDish
-                                  ? "border-black/10 bg-black/10 justify-end"
+                                  ? "border-black/10 bg-black/[0.05] justify-end"
                                   : "border-black/8 bg-black/[0.04] justify-start"
                             }`}
                           >

@@ -791,7 +791,7 @@ export default function UploadPage() {
                       type="button"
                       onClick={() => setTagUserPickerOpen(true)}
                       className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
-                      style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                      style={{ backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
                     >
                       {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
                     </button>
@@ -799,7 +799,7 @@ export default function UploadPage() {
                       type="button"
                       onClick={() => setShowLinkField((prev) => !prev)}
                       className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]"
-                      style={{ backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }}
+                      style={{ backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
                     >
                       {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
                     </button>

@@ -149,19 +149,21 @@ export default function RestaurantPlacePicker({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-sm font-medium text-black/72">{label}</label>
-        {value?.googleMapsUrl ? (
-          <a
-            href={value.googleMapsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs font-semibold text-[#E64646]"
-          >
-            Open in Maps
-          </a>
-        ) : null}
-      </div>
+      {label || value?.googleMapsUrl ? (
+        <div className="flex items-center justify-between gap-3">
+          {label ? <label className="text-sm font-medium text-black/72">{label}</label> : <div />}
+          {value?.googleMapsUrl ? (
+            <a
+              href={value.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-[#E64646]"
+            >
+              Open in Maps
+            </a>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={`rounded-[1.35rem] border-2 ${borderClass} bg-white/90 p-3 shadow-[0_10px_24px_rgba(0,0,0,0.04)]`}>
         <div className="flex items-center gap-2">

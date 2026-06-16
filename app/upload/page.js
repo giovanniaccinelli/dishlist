@@ -563,7 +563,7 @@ export default function UploadPage() {
                   setDishMode(DISH_MODE_COOKING);
                   setRestaurant(null);
                 }}
-                className={`min-h-[9.75rem] rounded-[1.5rem] border px-4 py-4 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[8.35rem] rounded-[1.4rem] border px-3.5 py-3.5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_COOKING
                     ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
                     : darkMode
@@ -571,21 +571,21 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                  <span className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] ${
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+                  <span className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[0.95rem] ${
                     dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                   }`}>
-                    <CookingHomeIcon className="h-7 w-7" strokeWidth={2.35} />
+                    <CookingHomeIcon className="h-6 w-6" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.3rem] font-black leading-none">Casa</div>
+                    <div className="truncate text-[1.12rem] font-black leading-none">Casa</div>
                   </div>
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-                className={`min-h-[9.75rem] rounded-[1.5rem] border px-4 py-4 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
+                className={`min-h-[8.35rem] rounded-[1.4rem] border px-3.5 py-3.5 text-left shadow-[0_16px_34px_rgba(0,0,0,0.16)] transition active:scale-[0.985] ${
                   dishMode === DISH_MODE_RESTAURANT
                     ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
                     : darkMode
@@ -593,14 +593,14 @@ export default function UploadPage() {
                       : "border-black/10 bg-[#FFFDFC] text-black/70"
                 }`}
               >
-                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                  <span className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] ${
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+                  <span className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[0.95rem] ${
                     dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                   }`}>
-                    <RestaurantForkKnifeIcon className="h-7 w-7" strokeWidth={2.35} />
+                    <RestaurantForkKnifeIcon className="h-6 w-6" strokeWidth={2.35} />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-[1.3rem] font-black leading-none">Ristorante</div>
+                    <div className="truncate text-[1.12rem] font-black leading-none">Ristorante</div>
                   </div>
                 </div>
               </button>
@@ -653,7 +653,7 @@ export default function UploadPage() {
                     </div>
                     {isRestaurantUpload ? (
                       <>
-                        <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
+                        <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
                         <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
                           <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
                           <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
@@ -728,8 +728,14 @@ export default function UploadPage() {
                   value={dishName}
                   onChange={(e) => setDishName(e.target.value)}
                   enterKeyHint="next"
-                  className={`w-full rounded-[0.9rem] border-[2.5px] bg-black/26 px-3 py-2 text-left text-[18px] font-bold leading-tight text-white placeholder:text-white/68 focus:outline-none ${isRestaurantUpload ? "border-[#E64646] shadow-[0_0_0_1px_rgba(230,70,70,0.22)]" : "border-[#E4B43F] shadow-[0_0_0_1px_rgba(228,180,63,0.22)]"}`}
-                  style={{ fontSize: 18 }}
+                  className="w-full rounded-[0.9rem] border-[2.5px] bg-black/26 px-3 py-2 text-left text-[18px] font-bold leading-tight text-white placeholder:text-white/68 focus:outline-none"
+                  style={{
+                    fontSize: 18,
+                    borderColor: isRestaurantUpload ? "#E64646" : "#E4B43F",
+                    boxShadow: isRestaurantUpload
+                      ? "0 0 0 1px rgba(230,70,70,0.22), inset 0 0 0 0.5px rgba(230,70,70,0.38)"
+                      : "0 0 0 1px rgba(228,180,63,0.22), inset 0 0 0 0.5px rgba(228,180,63,0.42)",
+                  }}
                   disabled={loadingUpload}
                 />
                 <textarea

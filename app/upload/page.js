@@ -473,6 +473,8 @@ export default function UploadPage() {
     const showExtraStep = composerStep === 4;
     const showReviewStep = composerStep === 5;
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
+    const extraPanelOpen = composerStep === 4;
+    const hideBaseText = detailPanelOpen || showTagsStep;
 
     return (
       <motion.div className="w-full max-w-md mx-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -554,7 +556,8 @@ export default function UploadPage() {
           </div>
 
           {composerStep === 0 ? (
-            <div className="absolute inset-0 z-[14] grid grid-cols-2 gap-3 p-4">
+            <div className="absolute inset-0 z-[14] px-4 py-5">
+              <div className="grid h-full grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -602,11 +605,12 @@ export default function UploadPage() {
                   </div>
                 </div>
               </button>
+              </div>
             </div>
           ) : null}
 
           {composerStep >= 2 ? (
-            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
+            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "3.55rem" }}>
               <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
                 <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
                   piatto
@@ -642,10 +646,17 @@ export default function UploadPage() {
               transition={{ duration: 0.34, ease: "easeInOut" }}
             >
               <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
-                <div className="space-y-3 pt-4">
+                <div className="space-y-3 pt-16">
+                    <div className="mb-2">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                        {isRestaurantUpload ? (language === "it" ? "Luogo" : "Place") : (language === "it" ? "Ricetta" : "Recipe")}
+                      </div>
+                    </div>
                     {isRestaurantUpload ? (
                       <>
-                        <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
+                        <div className="rounded-[1rem] border border-[#E64646]/50 bg-black/20 p-1.5">
+                          <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} accent="restaurant" />
+                        </div>
                         <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
                           <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
                           <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
@@ -659,7 +670,7 @@ export default function UploadPage() {
                       </>
                     ) : (
                       <>
-                        <IngredientBulletTextarea placeholder={language === "it" ? "Ingredienti" : "Ingredients"} value={dishRecipeIngredients} onChange={setDishRecipeIngredients} className="w-full rounded-[1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" rows={5} disabled={loadingUpload} />
+                        <IngredientBulletTextarea placeholder={language === "it" ? "Ingredienti" : "Ingredients"} value={dishRecipeIngredients} onChange={setDishRecipeIngredients} className="w-full rounded-[1rem] border border-[#E4B43F]/55 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" rows={5} disabled={loadingUpload} />
                         <textarea placeholder={language === "it" ? "Procedimento" : "Method"} value={dishRecipeMethod} onChange={(e) => setDishRecipeMethod(e.target.value)} className="w-full resize-none rounded-[1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} rows={6} disabled={loadingUpload} />
                       </>
                     )}
@@ -669,15 +680,13 @@ export default function UploadPage() {
           ) : null}
 
           {showTagsStep ? (
-            <motion.div
-              className="absolute inset-0 z-[18]"
-              style={{ transformStyle: "preserve-3d" }}
-              initial={{ rotateY: 92, opacity: 0.35 }}
-              animate={{ rotateY: 0, opacity: 1 }}
-              transition={{ duration: 0.34, ease: "easeInOut" }}
-            >
-              <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.98)_0%,rgba(8,8,10,0.98)_100%)] p-5 pb-24">
-                <div className="flex min-h-full flex-wrap content-start gap-2">
+            <div className="absolute inset-0 z-[18] overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.98)_0%,rgba(8,8,10,0.98)_100%)] p-5 pb-24">
+              <div className="mb-4 pt-16">
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                  {language === "it" ? "Tag" : "Tags"}
+                </div>
+              </div>
+              <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
                     return (
@@ -686,6 +695,32 @@ export default function UploadPage() {
                       </button>
                     );
                   })}
+              </div>
+            </div>
+          ) : null}
+
+          {extraPanelOpen ? (
+            <motion.div
+              className="absolute inset-0 z-[18]"
+              style={{ transformStyle: "preserve-3d" }}
+              initial={{ rotateY: 92, opacity: 0.35 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              transition={{ duration: 0.34, ease: "easeInOut" }}
+            >
+              <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(10,10,12,0.98)_0%,rgba(6,6,8,0.98)_100%)] p-5 pb-24 text-white">
+                <div className="space-y-3 pt-16">
+                  <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                    {language === "it" ? "Dettagli finali" : "Final details"}
+                  </div>
+                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/72 px-4 py-3 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
+                  </button>
+                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[3rem] w-full items-center rounded-[1rem] border border-white/18 bg-black/72 px-4 py-3 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                  </button>
+                  {showLinkField || dishLink ? (
+                    <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border border-white/10 bg-black/55 px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                  ) : null}
                 </div>
               </div>
             </motion.div>
@@ -704,7 +739,7 @@ export default function UploadPage() {
           </div>
 
           <div className="absolute left-5 right-24 z-[13] text-white" style={{ bottom: "1.45rem" }}>
-            {showNameInputs ? (
+            {!hideBaseText && showNameInputs ? (
               <>
                 <input
                   type="text"
@@ -726,41 +761,20 @@ export default function UploadPage() {
                   disabled={loadingUpload}
                 />
               </>
-            ) : (
+            ) : !hideBaseText ? (
               <>
                 <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
                 {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
               </>
-            )}
-
-            {showExtraStep ? (
-              <div className="mt-2 space-y-2">
-                <div className="grid grid-cols-1 gap-2">
-                  <button type="button" onClick={() => setShowLinkField((prev) => !prev)} className="inline-flex min-h-[2.7rem] items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                    {dishLink ? dishLink : language === "it" ? "Aggiungi link" : "Add link"}
-                  </button>
-                  <button type="button" onClick={() => setTagUserPickerOpen(true)} className="inline-flex min-h-[2.7rem] items-center rounded-full border border-white/18 bg-black/72 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
-                    {storyTaggedUser ? `@${storyTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
-                  </button>
-                </div>
-                {showLinkField || dishLink ? (
-                  <input type="text" placeholder="https://..." value={dishLink} onChange={(e) => setDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-full border border-white/10 bg-black/55 px-3.5 py-2 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
-                ) : null}
-              </div>
             ) : null}
 
-            {composerStep >= 1 && isRestaurantUpload ? (
+            {!hideBaseText && composerStep >= 1 && isRestaurantUpload ? (
               <div className="mt-1 flex items-center gap-2">
                 <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
                 {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
               </div>
             ) : null}
 
-            {showExtraStep && dishTags.length > 0 ? (
-              <div className="mt-1 flex max-w-full gap-1 overflow-hidden">
-                {dishTags.slice(0, 3).map((tag) => <span key={tag} className="shrink-0 rounded-full bg-black/62 px-2.5 py-1 text-[10px] font-bold text-white/88">{tag}</span>)}
-              </div>
-            ) : null}
           </div>
         </div>
         

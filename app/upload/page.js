@@ -524,8 +524,9 @@ export default function UploadPage() {
                             : index === 4
                               ? "w-10 bg-[#8B5CF6]"
                               : "w-10 bg-[#2BD36B]"
-                    : "w-7 bg-white/16"
+                    : "w-7 bg-transparent"
                 }`}
+                style={index > composerStep ? { boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.92)" } : undefined}
               />
             ))}
           </div>

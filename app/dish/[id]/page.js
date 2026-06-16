@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera, Crop, ListChecks, MoreHorizontal, Pencil, Plus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, CornerUpRight, Crop, ListChecks, MoreHorizontal, Pencil, Plus, X } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/auth";
 import SwipeDeck from "../../../components/SwipeDeck";
@@ -42,7 +42,7 @@ import SaversModal from "../../../components/SaversModal";
 import ShareModal from "../../../components/ShareModal";
 import DishlistPickerModal from "../../../components/DishlistPickerModal";
 import IngredientBulletTextarea from "../../../components/IngredientBulletTextarea";
-import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantMapIcon } from "../../../components/DishModeControls";
+import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon, RestaurantMapIcon } from "../../../components/DishModeControls";
 import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import StoryMealTagModal from "../../../components/StoryMealTagModal";
@@ -71,6 +71,8 @@ const PRICE_CURRENCIES = [
   { code: "CHF", symbol: "Fr." },
   { code: "JPY", symbol: "¥" },
 ];
+
+const EDIT_COMPOSER_STEPS = ["Modo", "Media", "Dettagli", "Tags", "Extra", "Review"];
 
 export default function DishDetail() {
   const { id } = useParams();
@@ -118,6 +120,7 @@ export default function DishDetail() {
   const [editTagUserSearch, setEditTagUserSearch] = useState("");
   const [editTagUsersLoading, setEditTagUsersLoading] = useState(false);
   const [editStep, setEditStep] = useState(0);
+  const [editComposerDetailsOpen, setEditComposerDetailsOpen] = useState(true);
   const [savingEdit, setSavingEdit] = useState(false);
   const [pageToast, setPageToast] = useState("");
   const [pageToastVariant, setPageToastVariant] = useState("success");
@@ -555,6 +558,7 @@ export default function DishDetail() {
     setEditMediaPickerOpen(false);
     setEditTagUserPickerOpen(false);
     setEditTagUserSearch("");
+    setEditComposerDetailsOpen(true);
     setEditPreview(
       dishToEdit?.imageURL || dishToEdit?.imageUrl || dishToEdit?.image_url || dishToEdit?.image || ""
     );
@@ -593,7 +597,7 @@ export default function DishDetail() {
   }, [editDishMode, editOpen, editRating]);
 
   useEffect(() => {
-    if (!editOpen || editStep !== 2 || savingEdit) return undefined;
+    if (!editOpen || editStep !== 3 || savingEdit) return undefined;
     const name = editName.trim();
     if (!name || editTags.length > 0) return undefined;
     let active = true;
@@ -829,23 +833,428 @@ export default function DishDetail() {
   };
 
   const goToNextEditStep = () => {
-    if (editStep === 0 && !editName.trim()) {
+    if (editStep === 1 && !editName.trim()) {
       alert("Dish name is required.");
       return;
     }
-    if (editStep === 0 && editDishMode === DISH_MODE_RESTAURANT && !editRestaurant?.placeId) {
+    if (editStep === 2 && editDishMode === DISH_MODE_RESTAURANT && !editRestaurant?.placeId) {
       alert(t("Restaurant is required"));
       return;
     }
     setEditStep((prev) => {
-      return Math.min(prev + 1, 3);
+      const nextStep = Math.min(prev + 1, EDIT_COMPOSER_STEPS.length - 1);
+      if (nextStep === 2) setEditComposerDetailsOpen(true);
+      return nextStep;
     });
   };
 
   const goToPreviousEditStep = () => {
     setEditStep((prev) => {
-      return Math.max(prev - 1, 0);
+      const nextStep = Math.max(prev - 1, 0);
+      if (nextStep !== 2) setEditComposerDetailsOpen(true);
+      return nextStep;
     });
+  };
+
+  const renderEditGuidedComposer = () => {
+    const isRestaurantEdit = editDishMode === DISH_MODE_RESTAURANT;
+    const previewName = editName.trim() || (language === "it" ? "Nome piatto" : "Dish name");
+    const previewDescription = editDescription.trim();
+    const editPriceSymbol = PRICE_CURRENCIES.find((currency) => currency.code === editPriceCurrency)?.symbol || "€";
+    const detailLabel = isRestaurantEdit ? "ristorante" : "ricetta";
+    const detailAccent = isRestaurantEdit ? "#B93A32" : "#FFC247";
+    const detailTextColor = isRestaurantEdit ? "#FFE7C7" : "#050505";
+    const composerAccent = isRestaurantEdit ? "#E64646" : "#E4B43F";
+    const showGhostModeStep = editStep === 0;
+    const showNameInputs = editStep === 1;
+    const showDetailsStep = editStep === 2 && editComposerDetailsOpen;
+    const showTagsStep = editStep === 3;
+    const showExtraStep = editStep === 4;
+    const showReviewStep = editStep === 5;
+    const hideBaseText = showGhostModeStep || showDetailsStep || showTagsStep || showExtraStep;
+    const pillShowsFrontSelected = showExtraStep || showReviewStep;
+    const classicBottomShade =
+      "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
+    const ghostTextColor = "rgba(141,141,148,0.58)";
+    const ghostSoftTextColor = "rgba(141,141,148,0.48)";
+    const tagPreview = editTags.slice(0, 3);
+    const showTopRestaurant = isRestaurantEdit && editRestaurant?.name;
+    const actualTopIdentity = (
+      <>
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[30] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
+        <div className="pointer-events-none absolute left-4 top-4 z-[31] flex max-w-[14.5rem] items-center gap-2 text-white">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${isRestaurantEdit ? "border-[#E64646]" : "border-[#E4B43F]"} bg-black/35 text-sm font-bold`}>
+            {user?.photoURL ? <img src={user.photoURL} alt="You" className="h-full w-full object-cover" /> : (user?.displayName?.[0] || "U").toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[0.98rem] font-semibold leading-tight">{user?.displayName || "You"}</p>
+            <div className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75">{language === "it" ? "ora" : "now"}</div>
+          </div>
+        </div>
+        {showTopRestaurant ? (
+          <div className="pointer-events-none absolute left-4 top-[4.4rem] z-[32] max-w-[13.5rem] truncate rounded-full border border-[#E64646]/18 bg-[rgba(35,12,12,0.76)] px-3.5 py-[0.42rem] text-[12px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[10px]">
+            {editRestaurant.name}
+          </div>
+        ) : null}
+      </>
+    );
+
+    return (
+      <motion.div className="w-full max-w-md mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="mb-3 pt-1 flex items-center justify-between gap-4">
+          <div className="h-11 w-11 shrink-0" />
+          <div className="mt-3 flex flex-1 justify-center gap-2">
+            {EDIT_COMPOSER_STEPS.map((step, index) => (
+              <span
+                key={step}
+                className={`no-accent-border h-1.5 rounded-full transition-all ${
+                  index <= editStep
+                    ? index === 0
+                      ? "w-10 bg-[#E64646]"
+                      : index === 1
+                        ? "w-10 bg-[#F59E0B]"
+                        : index === 2
+                          ? "w-10 bg-[#23C268]"
+                          : index === 3
+                            ? "w-10 bg-[#38BDF8]"
+                            : index === 4
+                              ? "w-10 bg-[#8B5CF6]"
+                              : "w-10 bg-[#2BD36B]"
+                    : "w-7 bg-transparent"
+                }`}
+                style={index > editStep ? { boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.92)" } : undefined}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={closeEditModal}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${darkMode ? "border-white/16 bg-white/7 text-white/72" : "border-black/10 bg-white/88 text-black/60"}`}
+            aria-label="Close edit modal"
+          >
+            <X size={17} />
+          </button>
+        </div>
+
+        <div className={`dish-card-shell relative h-[74vh] max-h-[39rem] min-h-[32rem] overflow-hidden rounded-[28px] bg-white ${isRestaurantEdit ? "dish-card-shell--restaurant" : "dish-card-shell--default"}`}>
+          {editPreview ? (
+            editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish) ? (
+              <video src={editPreview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
+            ) : (
+              <img src={editPreview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
+            )
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
+          )}
+
+          {showNameInputs && !editPreview ? (
+            <button
+              type="button"
+              onClick={() => setEditMediaPickerOpen(true)}
+              className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 text-white"
+              style={{ transform: "translateY(-2.15rem)" }}
+            >
+              <div
+                className={`flex h-[4.85rem] w-[4.85rem] items-center justify-center rounded-[1.4rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
+                  isRestaurantEdit ? "restaurant-accent-border" : "default-accent-border"
+                }`}
+                style={{
+                  background: isRestaurantEdit
+                    ? "linear-gradient(135deg,rgba(230,70,70,0.98)_0%,rgba(120,24,24,0.98)_100%)"
+                    : "linear-gradient(135deg,rgba(228,180,63,0.98)_0%,rgba(122,88,14,0.98)_100%)",
+                }}
+              >
+                <Camera size={28} />
+              </div>
+              <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
+            </button>
+          ) : null}
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]" style={{ height: "48%", background: classicBottomShade }} />
+          {actualTopIdentity}
+
+          {showGhostModeStep ? (
+            <>
+              <div className="absolute left-5 right-5 top-[6.1rem] z-[14] text-center">
+                <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
+                  {language === "it" ? "Che piatto vuoi modificare?" : "What dish do you want to edit?"}
+                </div>
+                <div className="mx-auto grid max-w-[21rem] grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditDishMode(DISH_MODE_COOKING);
+                      setEditRestaurant(null);
+                    }}
+                    className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                      editDishMode === DISH_MODE_COOKING
+                        ? "border-[#FFBF3C] bg-[#4A340B] text-[#FFF0BC]"
+                        : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"
+                    }`}
+                  >
+                    <div className="flex h-full flex-col items-start justify-between text-left">
+                      <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${editDishMode === DISH_MODE_COOKING ? "border-2 border-[#FFBF3C] bg-[#FFF3BE] text-[#E8A900]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"}`}>
+                        <CookingHomeIcon className="h-[3.15rem] w-[3.15rem]" strokeWidth={2} />
+                      </span>
+                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Casa</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
+                    className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
+                      editDishMode === DISH_MODE_RESTAURANT
+                        ? "border-[#FF6B5F] bg-[#4A1414] text-[#FFE2DE]"
+                        : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"
+                    }`}
+                  >
+                    <div className="flex h-full flex-col items-start justify-between text-left">
+                      <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${editDishMode === DISH_MODE_RESTAURANT ? "border-2 border-[#FF6B5F] bg-[#2A0A0A] text-[#FF7D72]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
+                        <RestaurantForkKnifeIcon className="h-[2.65rem] w-[2.65rem]" strokeWidth={2} />
+                      </span>
+                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Ristorante</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute left-5 right-5 z-[13]" style={{ bottom: "5.8rem" }}>
+                <button type="button" onClick={() => setEditStep(1)} className="block text-left text-2xl font-bold leading-tight" style={{ color: editName.trim() ? "rgba(255,255,255,0.98)" : ghostTextColor }}>
+                  {editName.trim() || (language === "it" ? "Nome piatto" : "Dish name")}
+                </button>
+                <button type="button" onClick={() => setEditStep(1)} className="mt-0.5 block line-clamp-2 text-left text-sm font-medium" style={{ color: editDescription.trim() ? "rgba(255,255,255,0.8)" : ghostSoftTextColor }}>
+                  {editDescription.trim() || (language === "it" ? "Descrizione" : "Description")}
+                </button>
+                {isRestaurantEdit ? (
+                  <button type="button" onClick={() => setEditStep(2)} className="mt-1 flex items-center gap-2" style={{ color: editRating || editPrice ? "rgba(255,255,255,0.8)" : ghostSoftTextColor }}>
+                    <div className="inline-flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <span key={index} className="text-[1.05rem] leading-none">{index < Number(editRating || 0) ? "★" : "☆"}</span>
+                      ))}
+                    </div>
+                    {editPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{editPriceSymbol}{editPrice}</span> : null}
+                  </button>
+                ) : null}
+                <div className="mt-2 flex flex-col items-start gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditStep(4)}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-[6px]"
+                    style={{ color: editDishLink.trim() ? "rgba(255,255,255,0.92)" : "rgba(141,141,148,0.7)" }}
+                  >
+                    <span>{editDishLink.trim() ? "Link" : "Link"}</span>
+                    <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditStep(4)}
+                    className="mt-1 inline-flex max-w-full items-center rounded-full bg-black/18 px-3 py-1 text-[11px] font-semibold backdrop-blur-[6px]"
+                    style={{ color: editTaggedUser.trim() ? "rgba(255,255,255,0.92)" : "rgba(141,141,148,0.7)" }}
+                  >
+                    {editTaggedUser.trim() ? `@${editTaggedUser.replace(/^@+/, "")}` : "@tag utente"}
+                  </button>
+                </div>
+                <button type="button" onClick={() => setEditStep(3)} className="mt-2 flex flex-wrap gap-1.5 text-left">
+                  {tagPreview.length ? tagPreview.map((tag) => (
+                    <span key={tag} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold border-2 ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}>
+                      {tag}
+                    </span>
+                  )) : (
+                    <span className="rounded-full bg-black/18 px-3 py-1 text-[11px] font-semibold backdrop-blur-[6px]" style={{ color: "rgba(141,141,148,0.7)" }}>
+                      {language === "it" ? "Tag" : "Tags"}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              <button type="button" onClick={() => setEditStep(2)} className="absolute left-5 z-[24] inline-flex h-8 items-center gap-1" style={{ bottom: "2.25rem" }}>
+                <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
+                  piatto
+                </span>
+                <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
+                  {isRestaurantEdit ? "ristorante" : "ricetta"}
+                </span>
+              </button>
+            </>
+          ) : null}
+
+          {editStep >= 2 ? (
+            <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
+              <div className="pointer-events-auto no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/72 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none" style={pillShowsFrontSelected ? { backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor } : undefined}>
+                  piatto
+                </span>
+                <span className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none" style={!pillShowsFrontSelected ? { backgroundColor: detailAccent, color: detailTextColor, WebkitTextFillColor: detailTextColor } : undefined}>
+                  {detailLabel}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {showDetailsStep ? (
+            <motion.div className="absolute inset-0 z-[18]" style={{ transformStyle: "preserve-3d" }} initial={{ rotateY: 92, opacity: 0.35 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ duration: 0.34, ease: "easeInOut" }}>
+              <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantEdit ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
+                <div className="space-y-3 pt-16">
+                  <div className="mb-2">
+                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+                      {isRestaurantEdit ? (language === "it" ? "Luogo" : "Place") : (language === "it" ? "Ricetta" : "Recipe")}
+                    </div>
+                  </div>
+                  {isRestaurantEdit ? (
+                    <>
+                      <RestaurantPlacePicker value={editRestaurant} onChange={setEditRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
+                      <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
+                        <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
+                        <RatingStars value={editRating} onChange={setEditRating} size="text-[1.45rem]" />
+                      </div>
+                      <div className="grid grid-cols-[1fr_auto] gap-2">
+                        <input type="text" inputMode="decimal" placeholder={language === "it" ? "Prezzo" : "Price"} value={editPrice} onChange={(e) => setEditPrice(e.target.value)} className="min-w-0 rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} disabled={savingEdit} />
+                        <select value={editPriceCurrency} onChange={(e) => setEditPriceCurrency(e.target.value)} className="rounded-full border border-white/10 bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none" style={{ fontSize: 16 }} disabled={savingEdit}>
+                          {PRICE_CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.symbol}</option>)}
+                        </select>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <IngredientBulletTextarea placeholder={language === "it" ? "Ingredienti" : "Ingredients"} value={editRecipeIngredients} onChange={setEditRecipeIngredients} className="w-full rounded-[1rem] border border-[#E4B43F]/55 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" rows={5} disabled={savingEdit} />
+                      <textarea placeholder={language === "it" ? "Procedimento" : "Method"} value={editRecipeMethod} onChange={(e) => setEditRecipeMethod(e.target.value)} className="w-full resize-none rounded-[1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} rows={6} disabled={savingEdit} />
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
+
+          {showTagsStep || showExtraStep ? (
+            <motion.div className="absolute inset-0 z-[19]" style={{ transformStyle: "preserve-3d", perspective: 1600 }} initial={showTagsStep ? false : { rotateY: 0 }} animate={{ rotateY: showExtraStep ? 180 : 0 }} transition={{ duration: 0.38, ease: [0.22, 0.72, 0.2, 1] }}>
+              <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.985)_0%,rgba(8,8,10,0.985)_100%)] p-5 pb-24" style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
+                <div className="mb-4 pt-16">
+                  <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">{language === "it" ? "Tag" : "Tags"}</div>
+                </div>
+                <div className="flex flex-wrap content-start gap-2">
+                  {TAG_OPTIONS.map((tag) => {
+                    const active = editTags.includes(tag);
+                    return (
+                      <button key={tag} type="button" onClick={() => toggleEditTag(tag)} className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? getDarkTagChipClass(tag, active) : getTagChipClass(tag, active)}`}>
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="absolute inset-0" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
+                {editPreview ? (
+                  editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish) ? (
+                    <video src={editPreview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
+                  ) : (
+                    <img src={editPreview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
+                  )
+                ) : (
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
+                )}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]" style={{ height: "48%", background: classicBottomShade }} />
+                <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
+                  <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
+                  {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
+                  {isRestaurantEdit ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <RatingStars value={editRating} size="text-[1.05rem]" readOnly />
+                      {editPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{editPriceSymbol}{editPrice}</span> : null}
+                    </div>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => setEditTagUserPickerOpen(true)} className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]" style={{ backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+                      {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : language === "it" ? "Tagga utente" : "Tag user"}
+                    </button>
+                    <button type="button" className="inline-flex h-10 w-fit max-w-full items-center rounded-[1rem] border-[2px] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_8px_22px_rgba(0,0,0,0.22)]" style={{ backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+                      {editDishLink ? "Link" : language === "it" ? "Aggiungi link" : "Add link"}
+                    </button>
+                    <input type="text" placeholder="https://..." value={editDishLink} onChange={(e) => setEditDishLink(e.target.value)} inputMode="url" enterKeyHint="done" className="w-full rounded-[1rem] border-[2px] px-4 py-3 text-[16px] text-white placeholder:text-white/55 focus:outline-none" style={{ fontSize: 16, backgroundColor: "rgba(7,7,7,0.88)", borderColor: "rgba(255,255,255,0.18)" }} disabled={savingEdit} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
+
+          <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
+            {editStep >= 1 ? (
+              <button type="button" onClick={goToPreviousEditStep} disabled={savingEdit} className="dish-modal-back-btn flex h-14 w-14 items-center justify-center rounded-full transition" aria-label="Back">
+                <ArrowLeft size={20} />
+              </button>
+            ) : null}
+            {showReviewStep ? (
+              <button type="button" onClick={handleSaveEdit} className="dish-modal-primary-btn flex h-14 items-center justify-center rounded-full px-5 text-sm font-bold transition" disabled={savingEdit}>
+                {savingEdit ? t("Saving...") : t("Save")}
+              </button>
+            ) : (
+              <button type="button" onClick={goToNextEditStep} disabled={savingEdit} className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition" aria-label="Next">
+                <ArrowRight size={22} />
+              </button>
+            )}
+          </div>
+
+          <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
+            {!hideBaseText && showNameInputs ? (
+              <>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={language === "it" ? "Nome del piatto" : "Dish name"}
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    enterKeyHint="next"
+                    className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
+                    style={{ fontSize: 21, borderColor: composerAccent, backgroundColor: "rgba(8,8,8,0.9)", boxShadow: `0 0 0 1px ${composerAccent}` }}
+                    disabled={savingEdit}
+                  />
+                  <div className="pointer-events-none absolute left-4 top-1/2 z-[2] -translate-y-1/2 text-white/76">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 20L8.5 18.9L18.2 9.2C19.3 8.1 19.3 6.3 18.2 5.2V5.2C17.1 4.1 15.3 4.1 14.2 5.2L4.5 14.9L4 20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M13 6.5L17 10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+                <textarea placeholder={language === "it" ? "Aggiungi una descrizione" : "Add a description"} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className={`mt-1 w-full resize-none rounded-[0.9rem] border bg-black/22 px-3 py-2 text-[16px] font-medium leading-snug text-white/82 placeholder:text-white/62 focus:outline-none ${isRestaurantEdit ? "border-[#E64646]/45" : "border-[#E4B43F]/45"}`} style={{ fontSize: 16 }} rows={2} disabled={savingEdit} />
+              </>
+            ) : !hideBaseText ? (
+              <>
+                <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
+                {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
+                {showReviewStep && (editTaggedUser || editDishLink) ? (
+                  <div className="mt-2 flex flex-col items-start gap-1">
+                    {editDishLink ? (
+                      <div className="no-accent-border inline-flex shrink-0 items-center gap-1 rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                        <span>Link</span>
+                        <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      </div>
+                    ) : null}
+                    {editTaggedUser ? (
+                      <div className="no-accent-border inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                        @{String(editTaggedUser).replace(/^@+/, "")}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+
+            {!hideBaseText && editStep >= 1 && isRestaurantEdit ? (
+              <div className="mt-1 flex items-center gap-2">
+                <RatingStars value={editRating} size="text-[1.05rem]" readOnly />
+                {editPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{editPriceSymbol}{editPrice}</span> : null}
+              </div>
+            ) : null}
+          </div>
+
+          {showReviewStep ? (
+            <button type="button" onClick={handleDeleteEditedDish} className="absolute left-5 bottom-[1.3rem] z-[26] rounded-full border border-[#E25555]/22 bg-[#2A1010]/92 px-4 py-3 text-sm font-semibold text-[#FF9B9B] shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-md">
+              {t("Delete")}
+            </button>
+          ) : null}
+        </div>
+      </motion.div>
+    );
   };
 
   if (loading || loadingDish) {
@@ -1071,429 +1480,8 @@ export default function DishDetail() {
           onPointerMove={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <div className={`edit-dish-modal ${darkMode ? "bg-[#101010] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF7F7_0%,#FFF1E9_56%,#FFF9F4_100%)]" : "bg-[linear-gradient(180deg,#FFF9F1_0%,#FFF3DE_56%,#FFFBEF_100%)]"} ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} rounded-[2rem] p-4 w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl border-2 my-auto`}>
-            <div className="flex items-center justify-between mb-5 gap-4">
-              <div className="flex gap-2">
-                {[0, 1, 2, 3].map((step) => (
-                  <span
-                    key={step}
-                    className={`no-accent-border h-1.5 rounded-full transition-all ${
-                    step <= editStep
-                      ? step === 0
-                        ? "w-10 bg-[#E64646]"
-                        : step === 1
-                          ? "w-10 bg-[#F59E0B]"
-                          : step === 2
-                            ? "w-10 bg-[#23C268]"
-                            : "w-10 bg-[#38BDF8]"
-                      : darkMode
-                        ? "w-7 bg-white/16"
-                        : "w-7 bg-[#C9C9C2]"
-                  }`}
-                  style={step > editStep ? { boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.92)" } : undefined}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={closeEditModal}
-                className={`w-10 h-10 shrink-0 rounded-[1rem] border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-white/90 text-black/60 hover:text-black`}
-                aria-label="Close edit modal"
-              >
-                ×
-              </button>
-            </div>
-
-            {editStep === 0 ? (
-              <>
-                <div className="mb-4">
-                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                    {language === "it" ? "Nome e foto" : "Name and photo"}
-                  </h2>
-                </div>
-                <div className="mb-4 grid grid-cols-2 gap-2.5">
-  <button
-    type="button"
-    onClick={() => {
-      setEditDishMode(DISH_MODE_COOKING);
-      setEditRestaurant(null);
-    }}
-	    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${editDishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
-  >
-    <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
-      <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${editDishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"}`}>
-        <CookingHomeIcon className="h-5 w-5" strokeWidth={2.35} />
-      </span>
-      <div className="min-w-0">
-        <div className="truncate text-[14px] font-black leading-none">{language === "it" ? "Casa" : t("Home")}</div>
-      </div>
-    </div>
-  </button>
-
-  <button
-    type="button"
-    onClick={() => setEditDishMode(DISH_MODE_RESTAURANT)}
-	    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
-  >
-    <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
-      <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
-        <RestaurantMapIcon className="h-5 w-5" strokeWidth={2.35} />
-      </span>
-      <div className="min-w-0">
-        <div className="truncate text-[14px] font-black leading-none">{language === "it" ? "Ristorante" : t("Restaurant")}</div>
-      </div>
-    </div>
-  </button>
-</div>
-                {editDishMode === DISH_MODE_RESTAURANT ? (
-                  <div className="mb-4">
-                    <RestaurantPlacePicker
-                      value={editRestaurant}
-                      onChange={setEditRestaurant}
-                      placeholder={t("Search where you ate it")}
-                      accent="restaurant"
-                    />
-                  </div>
-                ) : null}
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder={t("Dish name")}
-                  enterKeyHint="next"
-                  className={`w-full p-4 rounded-full bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/25" : "border-[#D8C090] focus:ring-[#FF7A59]/25"} focus:outline-none focus:ring-2 text-base`}
-                  disabled={savingEdit}
-                />
-                <button
-                  type="button"
-                  onClick={() => setEditMediaPickerOpen(true)}
-                  className={`w-full h-40 rounded-[2rem] border-2 border-dashed ${darkMode ? editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#241313] text-white/75" : "border-[#F0A623] bg-[#211806] text-white/75" : editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[linear-gradient(180deg,#FFF1F1_0%,#FFF8F2_100%)] text-black/50" : "border-[#D9CCB6] bg-[linear-gradient(180deg,#FFF7E2_0%,#F5FFE7_100%)] text-black/50"} flex items-center justify-center mb-5 cursor-pointer relative overflow-hidden`}
-                  disabled={savingEdit}
-                >
-                  <input
-                    ref={editLibraryInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      handleEditImageChange(file);
-                      e.target.value = "";
-                    }}
-                    className="hidden"
-                    disabled={savingEdit}
-                  />
-                  <input
-                    ref={editCameraInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    capture="environment"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      handleEditImageChange(file);
-                      e.target.value = "";
-                    }}
-                    className="hidden"
-                    disabled={savingEdit}
-                  />
-                  {editPreview ? (
-                    editImageFile?.type?.startsWith("video/") ? (
-                      <video
-                        src={editPreview}
-                        className="w-full h-full object-cover rounded-[2rem]"
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                      />
-                    ) : (
-                      <img src={editPreview} alt="Edit preview" className="w-full h-full object-cover rounded-[2rem]" />
-                    )
-                  ) : (
-                    <div className="flex flex-col items-center gap-3">
-                      <div className={`w-16 h-16 rounded-full border-2 text-white flex items-center justify-center shadow-lg ${
-                        editDishMode === DISH_MODE_RESTAURANT
-                          ? "restaurant-accent-border bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
-                          : "border-transparent bg-[linear-gradient(135deg,#4AB7D8_0%,#6B8BFF_100%)]"
-                      }`}>
-                        <Camera size={28} />
-                      </div>
-                      <div className="text-sm font-medium">{t("Change photo")}</div>
-                    </div>
-                  )}
-                </button>
-              </>
-            ) : null}
-
-            {editStep === 1 ? (
-              <>
-                {editDishMode === DISH_MODE_RESTAURANT ? (
-                  <>
-                    <div className="mb-4">
-                      <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                        {language === "it" ? "Dettagli ristorante" : "Restaurant details"}
-                      </h2>
-                    </div>
-                    <div className={`mb-4 rounded-[1.35rem] border-2 px-4 py-3 restaurant-accent-border ${darkMode ? "bg-[#181818]" : "bg-white/85"}`}>
-                      <div className={`mb-2 text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Rating")}</div>
-                      <RatingStars value={editRating} onChange={setEditRating} size="text-[1.55rem]" />
-                    </div>
-                    <div className="mb-4 grid grid-cols-[1fr_auto] gap-2">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        enterKeyHint="done"
-                        placeholder={language === "it" ? "Prezzo" : "Price"}
-                        value={editPrice}
-                        onChange={(e) => setEditPrice(e.target.value)}
-                        className="min-w-0 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-[16px] text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
-                        disabled={savingEdit}
-                      />
-                      <select
-                        value={editPriceCurrency}
-                        onChange={(e) => setEditPriceCurrency(e.target.value)}
-                        inputMode="none"
-                        className="rounded-full border-2 restaurant-accent-border bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
-                        disabled={savingEdit}
-                      >
-                        {PRICE_CURRENCIES.map((currency) => (
-                          <option key={currency.code} value={currency.code}>{currency.symbol}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-5">
-                      <div className="inline-flex items-center rounded-full border-2 restaurant-accent-border bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/55">
-                        {editDishLink.trim() ? t("Dish link") : t("Add link")}
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="https://..."
-                        value={editDishLink}
-                        onChange={(e) => setEditDishLink(e.target.value)}
-                        inputMode="url"
-                        enterKeyHint="done"
-                        className="mt-3 w-full rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
-                        disabled={savingEdit}
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck={false}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <p className={`mb-2 text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tag a user")}</p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditTagUserPickerOpen(true)}
-                          className="flex-1 rounded-full border-2 restaurant-accent-border bg-white px-4 py-3 text-left text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#E64646]/20"
-                          disabled={savingEdit}
-                        >
-                          {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user (optional)")}
-                        </button>
-                        {editTaggedUser ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditTaggedUser("");
-                              setEditTaggedUserId("");
-                            }}
-                            className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-black/55"
-                            aria-label="Clear tagged user"
-                          >
-                            <X size={16} />
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                <div className="mb-4 text-center">
-                  <div className={`text-[11px] font-semibold tracking-[0.22em] uppercase ${darkMode ? "text-white/40" : "text-black/35"}`}>{t("Optional")}</div>
-                </div>
-                <h2 className={`text-[1.75rem] leading-none font-semibold mb-4 text-center ${darkMode ? "text-white" : "text-black"}`}>{t("Ingredients and recipe")}</h2>
-	                <IngredientBulletTextarea
-	                  value={editRecipeIngredients}
-	                  onChange={setEditRecipeIngredients}
-	                  placeholder={t("Ingredients")}
-	                  rows={3}
-	                  className="w-full p-4 rounded-[1.5rem] bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FFF7_100%)] text-black mb-3 border-2 default-accent-border shadow-[0_12px_26px_rgba(43,211,107,0.12)] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
-	                  disabled={savingEdit}
-	                />
-	                <textarea
-	                  value={editRecipeMethod}
-	                  onChange={(e) => setEditRecipeMethod(e.target.value)}
-	                  placeholder={t("Method")}
-	                  rows={2}
-	                  className="w-full p-4 rounded-[1.5rem] bg-white/80 text-black mb-3 border-2 border-black/10 focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
-	                  disabled={savingEdit}
-	                />
-	                <div className="mb-3 grid grid-cols-2 gap-2">
-	                  <div className="rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65">
-	                    {editDishLink.trim() ? t("Dish link") : t("Add link")}
-	                  </div>
-	                  <button
-	                    type="button"
-	                    onClick={() => setEditTagUserPickerOpen(true)}
-	                    className="truncate rounded-full border-2 default-accent-border bg-white/85 px-3 py-2 text-[12px] font-semibold text-black/65"
-	                    disabled={savingEdit}
-	                  >
-	                    {editTaggedUser ? `@${editTaggedUser.replace(/^@+/, "")}` : t("Tag a user")}
-	                  </button>
-	                </div>
-	                <input
-	                  type="text"
-	                  placeholder="https://..."
-	                  value={editDishLink}
-	                  onChange={(e) => setEditDishLink(e.target.value)}
-	                  inputMode="url"
-	                  enterKeyHint="done"
-	                  className="mb-4 w-full rounded-full border-2 default-accent-border bg-white px-4 py-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
-	                  disabled={savingEdit}
-	                  autoCapitalize="none"
-	                  autoCorrect="off"
-	                  spellCheck={false}
-	                />
-                  </>
-                )}
-	              </>
-	            ) : null}
-
-            {editStep === 2 ? (
-              <>
-                <div className="mb-4">
-                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Description and tags")}</h2>
-                </div>
-                <textarea
-                  value={editDescription}
-	                  onChange={(e) => setEditDescription(e.target.value)}
-	                  placeholder={t("Description")}
-	                  rows={1}
-	                  className={`w-full p-4 rounded-[1.5rem] bg-white/90 text-black mb-4 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border focus:ring-[#E64646]/20" : "default-accent-border focus:ring-[#FF7A59]/20"} focus:outline-none focus:ring-2`}
-	                  disabled={savingEdit}
-	                />
-                <div className="mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className={`text-sm font-medium ${darkMode ? "text-white" : "text-black"}`}>{t("Tags")}</p>
-                    <p className="text-xs text-black/60">{editTags.length}/6</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {TAG_OPTIONS.map((tag) => {
-                      const active = editTags.includes(tag);
-                      return (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => toggleEditTag(tag)}
-                          className={`px-3 py-1 rounded-full text-xs border-2 transition ${darkMode ? getDarkTagChipClass(tag, active) : `${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : ""} ${getTagChipClass(tag, active)}`}`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            ) : null}
-
-            {editStep === 3 ? (
-              <>
-                <div className="mb-4">
-                  <h2 className={`text-[1.75rem] leading-none font-semibold ${darkMode ? "text-white" : "text-black"}`}>{t("Review and upload")}</h2>
-                </div>
-                <div className={`${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : editDishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} rounded-[2rem] border-2 p-4 mb-5`}>
-                  <div className="flex items-start gap-4">
-                    <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0 border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}>
-                      {editImageFile?.type?.startsWith("video/") || isDishVideo(editingDish) ? (
-                        <video
-                          src={editPreview || getDishImageUrl(editingDish)}
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                        />
-                      ) : (
-                        <img
-                          src={editPreview || getDishImageUrl(editingDish)}
-                          alt={editName || t("Dish preview")}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold leading-tight">{editName || t("Untitled dish")}</h3>
-                      <p className={`text-sm mt-1 line-clamp-3 ${darkMode ? "text-white/65" : "text-black/65"}`}>
-                        {editDescription || t("No description")}
-                      </p>
-                      {editTaggedUser.trim() ? (
-                        <div className={`mt-2 inline-flex max-w-full items-center rounded-full border-2 ${editDishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} bg-[#FFF8EE] px-3 py-1 text-[11px] font-semibold text-[#8A5414]`}>
-                          @{editTaggedUser.trim().replace(/^@+/, "")}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setEditIsPublic((value) => !value)}
-                  disabled={savingEdit}
-                  className={`dish-public-toggle ${editIsPublic ? "dish-public-toggle--active" : ""} mb-5 flex w-full items-center justify-between gap-4 px-4 py-3 text-left`}
-                  aria-pressed={editIsPublic}
-                >
-                  <span>
-                    <span className={`block text-sm font-black ${darkMode ? "text-white" : "text-black"}`}>{t("Public dish")}</span>
-                    <span className={`mt-0.5 block text-xs font-semibold ${darkMode ? "text-white/58" : "text-black/54"}`}>
-                      {editIsPublic ? t("Visible in feed") : t("Hidden from feed")}
-                    </span>
-                  </span>
-                  <span className="dish-public-toggle__switch no-accent-border shrink-0">
-                    <span className="dish-public-toggle__knob no-accent-border" />
-                  </span>
-                </button>
-                <div className="dish-edit-action-bar grid grid-cols-[0.9fr_1.35fr] gap-2">
-                  <button
-                    type="button"
-                    onClick={handleDeleteEditedDish}
-                    className={`dish-edit-action-btn dish-edit-action-btn--delete px-4 ${darkMode ? "bg-[#2A1010] text-[#FF9B9B]" : "bg-[#FFF0F0] text-[#B72E2E]"}`}
-                    disabled={savingEdit}
-                  >
-                    {t("Delete")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveEdit}
-                    className="dish-edit-action-btn dish-edit-action-btn--save dish-modal-primary-btn px-4 transition"
-                    disabled={savingEdit}
-                  >
-                    {savingEdit ? t("Saving...") : t("Save")}
-                  </button>
-                </div>
-              </>
-            ) : null}
-
-            {editStep < 3 ? (
-              <div className="mt-2 flex items-center justify-between">
-                {editStep > 0 ? (
-                  <button
-                    type="button"
-                    onClick={goToPreviousEditStep}
-                    className="dish-modal-back-btn flex h-12 w-12 items-center justify-center rounded-full border-2"
-                    disabled={savingEdit}
-                  >
-                    <ArrowLeft size={18} />
-                  </button>
-                ) : (
-                  <div />
-                )}
-                <button
-                  type="button"
-                  onClick={goToNextEditStep}
-                  className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition"
-                >
-                  <ArrowRight size={20} />
-                </button>
-              </div>
-            ) : null}
+          <div className="w-full max-w-md my-auto">
+            {renderEditGuidedComposer()}
           </div>
         </div>
       )}

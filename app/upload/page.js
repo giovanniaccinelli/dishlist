@@ -647,14 +647,14 @@ export default function UploadPage() {
                 ) : null}
                 <div className="mt-2 flex flex-col items-start gap-1">
                   <span
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md"
                     style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
                   >
                     <span>Link</span>
                     <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                   </span>
                   <span
-                    className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-semibold"
+                    className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-semibold backdrop-blur-md"
                     style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
                   >
                     @tag utente

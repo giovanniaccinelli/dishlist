@@ -578,7 +578,7 @@ export default function UploadPage() {
                     }}
                     className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
-                        ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]"
+                        ? "border-[#FFBF3C] bg-[#4A340B] text-[#FFF0BC]"
                         : darkMode
                           ? "border-white/12 bg-[#181818] text-white/70"
                           : "border-black/10 bg-[#FFFDFC] text-black/70"
@@ -586,7 +586,7 @@ export default function UploadPage() {
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
                       <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
-                        dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
+                        dishMode === DISH_MODE_COOKING ? "border-2 border-[#FFBF3C] bg-[#FFF3BE] text-[#E8A900]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"
                       }`}>
                         <CookingHomeIcon className="h-[3.15rem] w-[3.15rem]" strokeWidth={2} />
                       </span>
@@ -598,7 +598,7 @@ export default function UploadPage() {
                     onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
                     className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_RESTAURANT
-                        ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]"
+                        ? "border-[#FF6B5F] bg-[#4A1414] text-[#FFE2DE]"
                         : darkMode
                           ? "border-white/12 bg-[#181818] text-white/70"
                           : "border-black/10 bg-[#FFFDFC] text-black/70"
@@ -606,7 +606,7 @@ export default function UploadPage() {
                   >
                     <div className="flex h-full flex-col items-start justify-between text-left">
                       <span className={`inline-flex h-[6.1rem] w-full shrink-0 items-center justify-center rounded-[1.05rem] ${
-                        dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
+                        dishMode === DISH_MODE_RESTAURANT ? "border-2 border-[#FF6B5F] bg-[#2A0A0A] text-[#FF7D72]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"
                       }`}>
                         <RestaurantForkKnifeIcon className="h-[2.65rem] w-[2.65rem]" strokeWidth={2} />
                       </span>
@@ -1005,10 +1005,10 @@ export default function UploadPage() {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
                       }}
-                    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_COOKING ? "border-[#F0A623] bg-[#3A2A09] text-[#FFE2A0]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
+                    className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_COOKING ? "border-[#FFBF3C] bg-[#4A340B] text-[#FFF0BC]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
                   >
                       <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
-                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_COOKING ? "border-2 border-[#F0A623] bg-[#FFF1C9] text-[#F0A623]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"}`}>
+                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_COOKING ? "border-2 border-[#FFBF3C] bg-[#FFF3BE] text-[#E8A900]" : "border border-[#F0A623]/45 bg-[#2A210A] text-[#F0A623]"}`}>
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.35} />
                         </span>
                         <div className="min-w-0">
@@ -1019,10 +1019,10 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={() => setDishMode(DISH_MODE_RESTAURANT)}
-	                      className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border bg-[#3A1010] text-[#FFD1D1]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
+	                      className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_RESTAURANT ? "border-[#FF6B5F] bg-[#4A1414] text-[#FFE2DE]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
                     >
                       <div className="grid min-h-[2.6rem] grid-cols-[2.25rem,1fr] items-center gap-2.5">
-                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border border-2 bg-[#1E0808] text-[#FF6B5F]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
+                        <span className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[0.8rem] ${dishMode === DISH_MODE_RESTAURANT ? "border-2 border-[#FF6B5F] bg-[#2A0A0A] text-[#FF7D72]" : "border border-[#E64646]/45 bg-[#2A1111] text-[#E64646]"}`}>
                           <RestaurantForkKnifeIcon className="h-5 w-5" strokeWidth={2.35} />
                         </span>
                         <div className="min-w-0">

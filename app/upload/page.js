@@ -811,7 +811,7 @@ export default function UploadPage() {
             </motion.div>
           ) : null}
 
-          <div className="absolute right-6 z-[26] flex items-end gap-2" style={{ bottom: "1.25rem" }}>
+          <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
             {composerStep >= 1 ? (
               <button
                 type="button"
@@ -825,18 +825,18 @@ export default function UploadPage() {
             ) : null}
             <div className="relative flex items-center">
               {showReviewStep ? (
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[1.55rem] text-[0.9rem] font-extrabold uppercase tracking-[0.14em] text-[#2BD36B]">
-                  {language === "it" ? "Carica" : "Upload"}
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[1.35rem] text-[0.82rem] font-semibold tracking-[0.02em] text-[#2BD36B]">
+                  {language === "it" ? "carica" : "upload"}
                 </div>
               ) : null}
               <button
                 type="button"
                 onClick={showReviewStep ? openDishlistPicker : goToNextComposerStep}
                 disabled={loadingUpload}
-                className={`dish-modal-next-btn flex items-center justify-center rounded-full transition ${showReviewStep ? "h-[4.4rem] w-[4.4rem]" : "h-14 w-14"}`}
+                className="dish-modal-next-btn flex h-14 w-14 items-center justify-center rounded-full transition"
                 aria-label={showReviewStep ? "Choose dishlists" : "Next"}
               >
-                {showReviewStep ? <Plus size={33} strokeWidth={2.12} /> : <ArrowRight size={22} />}
+                {showReviewStep ? <Plus size={24} strokeWidth={2.15} /> : <ArrowRight size={22} />}
               </button>
             </div>
           </div>

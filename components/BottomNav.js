@@ -60,16 +60,18 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div
-                  className={
-                    item.prominent
-                      ? "bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                      : "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
-                  }
-                >
-                  <Icon size={item.prominent ? 26 : 22} />
+                <div className="flex flex-col items-center gap-1">
+                  <div
+                    className={
+                      item.prominent
+                        ? "bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                        : "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                    }
+                  >
+                    <Icon size={item.prominent ? 26 : 22} />
+                  </div>
+                  {item.prominent ? <span className="invisible h-[6px] w-5" /> : <div className="h-[6px] w-5" />}
                 </div>
-                {item.prominent ? <span className="mt-1 invisible">upload</span> : <div className="mt-[-6px] h-[2px]" />}
               </button>
             );
           }
@@ -80,24 +82,26 @@ export default function BottomNav() {
               href={item.href}
               className={wrapperClass}
             >
-              <div className={iconClass}>
-                {item.label === "profile" && user?.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName || "Profile"}
-                    className="h-7 w-7 rounded-full object-cover"
-                  />
+              <div className="flex flex-col items-center gap-1">
+                <div className={iconClass}>
+                  {item.label === "profile" && user?.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || "Profile"}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <Icon size={item.prominent ? 26 : 22} />
+                  )}
+                </div>
+                {item.prominent ? (
+                  <span className="invisible h-[6px] w-5" />
                 ) : (
-                  <Icon size={item.prominent ? 26 : 22} />
+                  <div className="flex h-[6px] w-5 items-start justify-center">
+                    <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
+                  </div>
                 )}
               </div>
-              {item.prominent ? (
-                <span className="mt-1 invisible">upload</span>
-              ) : (
-                <div className="mt-[-6px] flex h-[2px] items-start justify-center">
-                  <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
-                </div>
-              )}
             </Link>
           );
         })}

@@ -60,7 +60,7 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-0">
                   <div
                     className={
                       item.prominent
@@ -70,7 +70,7 @@ export default function BottomNav() {
                   >
                     <Icon size={item.prominent ? 26 : 22} />
                   </div>
-                  {item.prominent ? <span className="invisible h-[6px] w-5" /> : <div className="h-[6px] w-5" />}
+                  {item.prominent ? <span className="invisible h-[3px] w-5" /> : <div className="h-[3px] w-5 -translate-y-1" />}
                 </div>
               </button>
             );
@@ -82,7 +82,7 @@ export default function BottomNav() {
               href={item.href}
               className={wrapperClass}
             >
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-0">
                 <div className={iconClass}>
                   {item.label === "profile" && user?.photoURL ? (
                     <img
@@ -95,9 +95,9 @@ export default function BottomNav() {
                   )}
                 </div>
                 {item.prominent ? (
-                  <span className="invisible h-[6px] w-5" />
+                  <span className="invisible h-[3px] w-5" />
                 ) : (
-                  <div className="flex h-[6px] w-5 items-start justify-center">
+                  <div className="flex h-[3px] w-5 -translate-y-1 items-start justify-center">
                     <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
                   </div>
                 )}

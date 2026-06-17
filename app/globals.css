@@ -280,10 +280,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-size: 0.75rem;
   font-weight: 600;
-  padding-top: 0;
+  padding-top: 0.2rem;
 }
 
 :where(

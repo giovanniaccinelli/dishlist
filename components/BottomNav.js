@@ -69,7 +69,7 @@ export default function BottomNav() {
                 >
                   <Icon size={item.prominent ? 26 : 22} />
                 </div>
-                {item.prominent ? <span className="mt-1 invisible">upload</span> : <div className="mt-[-1px] h-[2px]" />}
+                {item.prominent ? <span className="mt-1 invisible">upload</span> : <div className="mt-[-6px] h-[2px]" />}
               </button>
             );
           }
@@ -94,7 +94,7 @@ export default function BottomNav() {
               {item.prominent ? (
                 <span className="mt-1 invisible">upload</span>
               ) : (
-                <div className="mt-[-1px] flex h-[2px] items-start justify-center">
+                <div className="mt-[-6px] flex h-[2px] items-start justify-center">
                   <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
                 </div>
               )}

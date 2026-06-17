@@ -52,8 +52,6 @@ export default function BottomNav() {
             : `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/45"
               }`;
-          const labelClass = `${active ? "text-[#E64646]" : "text-black/45"}`;
-
           if (item.requiresAuth && !user) {
             return (
               <button
@@ -71,14 +69,7 @@ export default function BottomNav() {
                 >
                   <Icon size={item.prominent ? 26 : 22} />
                 </div>
-                {item.prominent ? (
-                  <span className="mt-1 invisible">upload</span>
-                ) : (
-                  <div className="mt-1 flex flex-col items-center">
-                    <span className="text-black/45">{t(item.label)}</span>
-                    <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-transparent" />
-                  </div>
-                )}
+                {item.prominent ? <span className="mt-1 invisible">upload</span> : <div className="mt-1 h-[10px]" />}
               </button>
             );
           }
@@ -103,9 +94,8 @@ export default function BottomNav() {
               {item.prominent ? (
                 <span className="mt-1 invisible">upload</span>
               ) : (
-                <div className="mt-1 flex flex-col items-center">
-                  <span className={labelClass}>{t(item.label)}</span>
-                  <span className={`no-accent-border mt-0.5 h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
+                <div className="mt-1 flex h-[10px] items-center justify-center">
+                  <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
                 </div>
               )}
             </Link>

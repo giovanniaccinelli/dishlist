@@ -351,20 +351,21 @@ function createRestaurantPinOverlay({
     pin.style.pointerEvents = "none";
 
     if (tagMarkup) {
+      const iconSize = selected ? 20 : 18;
       const iconWrap = document.createElement("div");
       iconWrap.style.position = "absolute";
       iconWrap.style.left = "50%";
-      iconWrap.style.top = selected ? "5px" : "4px";
-      iconWrap.style.width = selected ? "24px" : "22px";
-      iconWrap.style.height = selected ? "24px" : "22px";
-      iconWrap.style.transform = "translateX(-50%)";
+      iconWrap.style.top = selected ? "8px" : "7px";
+      iconWrap.style.width = `${iconSize}px`;
+      iconWrap.style.height = `${iconSize}px`;
+      iconWrap.style.transform = "translate(-50%, 0)";
       iconWrap.style.display = "flex";
       iconWrap.style.alignItems = "center";
       iconWrap.style.justifyContent = "center";
       iconWrap.style.pointerEvents = "none";
       iconWrap.innerHTML = tagMarkup
-        .replace('width="23"', `width="${selected ? 24 : 22}"`)
-        .replace('height="23"', `height="${selected ? 24 : 22}"`);
+        .replace('width="23"', `width="${iconSize}"`)
+        .replace('height="23"', `height="${iconSize}"`);
       pin.appendChild(iconWrap);
     }
 

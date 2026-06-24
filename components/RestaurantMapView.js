@@ -295,26 +295,83 @@ function createFollowedAvatarOverlay({ map, position, users, onClick }) {
   return overlay;
 }
 
-function createTagIconOverlay({ map, position, markup, zIndex = 1 }) {
-  if (typeof window === "undefined" || !window.google?.maps || !markup) return null;
+function createRestaurantPinOverlay({
+  map,
+  position,
+  markerTone = "default",
+  tagMarkup = null,
+  title = "",
+  selected = false,
+  onClick,
+}) {
+  if (typeof window === "undefined" || !window.google?.maps) return null;
   const overlay = new window.google.maps.OverlayView();
   let node = null;
+  let clickHandler = null;
 
   overlay.onAdd = function onAdd() {
-    node = document.createElement("div");
+    const width = selected ? 40 : 36;
+    const height = selected ? 47 : 42;
+    const strokeColor =
+      markerTone === "selected"
+        ? "#D9A500"
+        : markerTone === "own"
+          ? "#2BD36B"
+          : markerTone === "followed"
+            ? "#F2C94C"
+            : "white";
+    const fillColor = markerTone === "selected" ? "#F2C94C" : "#3B3B3F";
+    const showDefaultSymbol = !tagMarkup;
+
+    node = document.createElement("button");
+    node.type = "button";
+    node.setAttribute("aria-label", title || "Open restaurant");
+    if (title) node.title = title;
     node.style.position = "absolute";
-    node.style.width = "18px";
-    node.style.height = "18px";
+    node.style.width = `${width}px`;
+    node.style.height = `${height}px`;
     node.style.display = "flex";
     node.style.alignItems = "center";
     node.style.justifyContent = "center";
-    node.style.pointerEvents = "none";
-    node.style.transform = "translate(-50%, -50%) translateY(-24px)";
-    node.style.zIndex = String(zIndex);
-    node.innerHTML = markup
-      .replace('width="23"', 'width="18"')
-      .replace('height="23"', 'height="18"');
-    this.getPanes()?.markerLayer.appendChild(node);
+    node.style.padding = "0";
+    node.style.border = "0";
+    node.style.background = "transparent";
+    node.style.cursor = "pointer";
+    node.style.transform = "translate(-50%, -100%)";
+    node.style.zIndex = String(selected ? 30 : 12);
+
+    const pin = document.createElement("div");
+    pin.style.position = "relative";
+    pin.style.width = `${width}px`;
+    pin.style.height = `${height}px`;
+    pin.style.backgroundImage = `url("data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, showDefaultSymbol)}")`;
+    pin.style.backgroundSize = "100% 100%";
+    pin.style.backgroundRepeat = "no-repeat";
+    pin.style.backgroundPosition = "center";
+    pin.style.pointerEvents = "none";
+
+    if (tagMarkup) {
+      const iconWrap = document.createElement("div");
+      iconWrap.style.position = "absolute";
+      iconWrap.style.left = "50%";
+      iconWrap.style.top = selected ? "5px" : "4px";
+      iconWrap.style.width = selected ? "24px" : "22px";
+      iconWrap.style.height = selected ? "24px" : "22px";
+      iconWrap.style.transform = "translateX(-50%)";
+      iconWrap.style.display = "flex";
+      iconWrap.style.alignItems = "center";
+      iconWrap.style.justifyContent = "center";
+      iconWrap.style.pointerEvents = "none";
+      iconWrap.innerHTML = tagMarkup
+        .replace('width="23"', `width="${selected ? 24 : 22}"`)
+        .replace('height="23"', `height="${selected ? 24 : 22}"`);
+      pin.appendChild(iconWrap);
+    }
+
+    node.appendChild(pin);
+    clickHandler = () => onClick?.();
+    node.addEventListener("click", clickHandler);
+    this.getPanes()?.overlayMouseTarget.appendChild(node);
   };
 
   overlay.draw = function draw() {
@@ -329,8 +386,10 @@ function createTagIconOverlay({ map, position, markup, zIndex = 1 }) {
 
   overlay.onRemove = function onRemove() {
     if (node) {
+      if (clickHandler) node.removeEventListener("click", clickHandler);
       node.remove();
       node = null;
+      clickHandler = null;
     }
   };
 
@@ -707,32 +766,21 @@ export default function RestaurantMapView({
       const selected = selectedPlaceId === group.placeId;
       const dominantTag = getDominantRestaurantTag(group);
       const tagMarkup = dominantTag ? getRestaurantTagIconMarkup(dominantTag) : null;
-      const marker = new window.google.maps.Marker({
+      const marker = createRestaurantPinOverlay({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(
-          selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default",
-          { showDefaultSymbol: !tagMarkup }
-        ),
-        zIndex: selected ? 20 : undefined,
+        markerTone: selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default",
+        tagMarkup,
+        selected,
+        onClick: () => {
+          if (Date.now() < mapGestureUntilRef.current) return;
+          mapGestureUntilRef.current = Date.now() + 120;
+          if (useRestaurantCarousel) setCarouselAnchorPlaceId(group.placeId);
+          setSelectedPlaceId(group.placeId);
+        },
       });
-      marker.addListener("click", () => {
-        if (Date.now() < mapGestureUntilRef.current) return;
-        mapGestureUntilRef.current = Date.now() + 120;
-        if (useRestaurantCarousel) setCarouselAnchorPlaceId(group.placeId);
-        setSelectedPlaceId(group.placeId);
-      });
-      markersRef.current.push(marker);
-      if (tagMarkup) {
-        const overlay = createTagIconOverlay({
-          map: mapRef.current,
-          position,
-          markup: tagMarkup,
-          zIndex: selected ? 21 : 11,
-        });
-        if (overlay) markersRef.current.push(overlay);
-      }
+      if (marker) markersRef.current.push(marker);
       if (markerUsers.length) {
         const overlay = createFollowedAvatarOverlay({
           map: mapRef.current,

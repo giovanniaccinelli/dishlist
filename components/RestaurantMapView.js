@@ -124,7 +124,10 @@ function extractDecorColor(className = "") {
 
 function extractTagPinFillColor(tag = "") {
   const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
-  const bgMatch = String(decor?.pillClass || "").match(/bg-\[(#[0-9A-Fa-f]{3,8})\]/);
+  const pillClass = String(decor?.pillClass || "");
+  const borderMatch = pillClass.match(/border-\[(#[0-9A-Fa-f]{3,8})\]/);
+  if (borderMatch?.[1]) return borderMatch[1];
+  const bgMatch = pillClass.match(/bg-\[(#[0-9A-Fa-f]{3,8})\]/);
   if (bgMatch?.[1]) return bgMatch[1];
   return "";
 }

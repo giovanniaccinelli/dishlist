@@ -162,21 +162,14 @@ function getRestaurantTagIconMarkup(tag = "") {
   return iconMarkup.replace(`style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `, `style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `);
 }
 
-const getRestaurantPinSvg = (
+const getRestaurantPinSvgMarkup = (
   strokeColor = "white",
   fillColor = "#E64646",
   showDefaultSymbol = true
-) => encodeURIComponent(`
+) => `
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="pinShadow" x="0" y="0" width="46" height="54" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" flood-color="#000000" flood-opacity="0.26"/>
-    </filter>
-  </defs>
-  <g filter="url(#pinShadow)">
-    <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
-    <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
-  </g>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
   ${showDefaultSymbol ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
   ${showDefaultSymbol ? `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
@@ -187,7 +180,13 @@ const getRestaurantPinSvg = (
     <path d="M19 2c-2.8 1.6-4 4.1-4 7.5V13h4"/>
     <path d="M19 2v20"/>
   </g>` : ""}
-</svg>`);
+</svg>`;
+
+const getRestaurantPinSvg = (
+  strokeColor = "white",
+  fillColor = "#E64646",
+  showDefaultSymbol = true
+) => encodeURIComponent(getRestaurantPinSvgMarkup(strokeColor, fillColor, showDefaultSymbol));
 
 function getRestaurantMarkerIcon(markerTone = "default", { showDefaultSymbol = true } = {}) {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
@@ -344,11 +343,10 @@ function createRestaurantPinOverlay({
     pin.style.position = "relative";
     pin.style.width = `${width}px`;
     pin.style.height = `${height}px`;
-    pin.style.backgroundImage = `url("data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, showDefaultSymbol)}")`;
-    pin.style.backgroundSize = "100% 100%";
-    pin.style.backgroundRepeat = "no-repeat";
-    pin.style.backgroundPosition = "center";
+    pin.style.filter = "drop-shadow(0 2px 2px rgba(0,0,0,0.24))";
     pin.style.pointerEvents = "none";
+    pin.innerHTML = getRestaurantPinSvgMarkup(strokeColor, fillColor, showDefaultSymbol)
+      .replace("<svg ", `<svg width="${width}" height="${height}" style="display:block" `);
 
     if (tagMarkup) {
       const iconSize = selected ? 20 : 18;

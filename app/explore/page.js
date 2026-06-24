@@ -34,6 +34,8 @@ import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes } from "
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
+import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "../lib/restaurants";
+import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 import DishRatingBadge from "../../components/DishRatingBadge";
 import { RatingStars } from "../../components/RatingStars";
 import {
@@ -722,6 +724,9 @@ export default function Explore() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:explore", DISH_MODE_ALL);
+  const { location: currentLocation } = usePrivateGeolocation({
+    enabled: selectedDishMode === DISH_MODE_RESTAURANT,
+  });
 
   const buildExploreUrl = (overrides = {}) => {
     const params = new URLSearchParams();
@@ -800,6 +805,31 @@ export default function Explore() {
   };
 
   const categoryRows = useMemo(() => {
+    const sortExploreDishes = (items, mode = selectedDishMode) => {
+      if (mode !== DISH_MODE_RESTAURANT) {
+        return [...items].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0));
+      }
+      if (!Number.isFinite(currentLocation?.lat) || !Number.isFinite(currentLocation?.lng)) {
+        return [...items].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0));
+      }
+      return items
+        .map((dish, index) => {
+          const restaurantLocation = getDishRestaurantLocation(dish);
+          return {
+            dish,
+            index,
+            distance: restaurantLocation
+              ? getRestaurantDistanceMeters(currentLocation, restaurantLocation)
+              : Number.POSITIVE_INFINITY,
+          };
+        })
+        .sort((a, b) => {
+          if (a.distance !== b.distance) return a.distance - b.distance;
+          return a.index - b.index;
+        })
+        .map(({ dish }) => dish);
+    };
+
     const term = search.trim().toLowerCase();
     const normalizedSelectedTags = selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
     const textFiltered = term
@@ -824,7 +854,7 @@ export default function Explore() {
     rows.push({
       key: "most-saved",
       title: "Most Saved",
-      dishes: [...modePool].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
+      dishes: sortExploreDishes(modePool).slice(0, BASE_LIMIT),
     });
 
     const trendingPool = term
@@ -851,7 +881,7 @@ export default function Explore() {
         key: `tag-${tag}`,
         rawTag: tag,
         title: String(tag),
-        dishes: [...tagged].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0)).slice(0, BASE_LIMIT),
+        dishes: sortExploreDishes(tagged).slice(0, BASE_LIMIT),
         totalCount: tagged.length,
       };
     })
@@ -861,7 +891,7 @@ export default function Explore() {
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
+  }, [allDishes, currentLocation?.lat, currentLocation?.lng, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

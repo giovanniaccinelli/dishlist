@@ -122,53 +122,6 @@ function extractDecorColor(className = "") {
   return "#111111";
 }
 
-const TAG_PIN_THEMES = {
-  "high protein": { fill: "#A34723" },
-  comfort: { fill: "#C96A1B" },
-  "carb heavy": { fill: "#B38717" },
-  quick: { fill: "#1D7FA6" },
-  cheat: { fill: "#F39B7A" },
-  easy: { fill: "#C7D2FE" },
-  fit: { fill: "#9FDEB8" },
-  premium: { fill: "#E8C95B" },
-  veg: { fill: "#A9E08D" },
-  fancy: { fill: "#CEB5F6" },
-  budget: { fill: "#D6B6A6" },
-  winter: { fill: "#A9D2F5" },
-  "late night": { fill: "#B8B2F3" },
-  light: { fill: "#D5DBE3" },
-  vegan: { fill: "#A7E2BE" },
-  "low carb": { fill: "#F3A0A9" },
-  spicy: { fill: "#F28A7B" },
-  gourmet: { fill: "#D6C0A8" },
-  summer: { fill: "#F0CB68" },
-  "date night": { fill: "#F2A7B8" },
-  pasta: { fill: "#F59E0B" },
-  italian: { fill: "#EF4444" },
-  ethnic: { fill: "#60A5FA" },
-  seafood: { fill: "#22D3EE" },
-  aesthetic: { fill: "#F472B6" },
-  fresh: { fill: "#34D399" },
-  asian: { fill: "#F87171" },
-  fried: { fill: "#FB923C" },
-  delivery: { fill: "#38BDF8" },
-  dessert: { fill: "#F9A8D4" },
-  american: { fill: "#EF4444" },
-  rice: { fill: "#FDE047" },
-  "fast food": { fill: "#FB7185" },
-};
-
-function getTagPinTheme(tag = "") {
-  const normalizedTag = String(tag || "").trim().toLowerCase();
-  const preset = TAG_PIN_THEMES[normalizedTag];
-  const decor = TAG_DECOR[normalizedTag];
-  const iconColor = extractDecorColor(decor?.iconClass);
-  if (preset) return preset;
-  return {
-    fill: iconColor || "#E64646",
-  };
-}
-
 function getDominantRestaurantTag(group = {}) {
   const counts = new Map();
   for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
@@ -241,8 +194,7 @@ function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
   const normalizedTag = String(dominantTag || "").trim().toLowerCase();
-  const tagTheme = normalizedTag ? getTagPinTheme(normalizedTag) : null;
-  const fillColor = selected ? "#F2C94C" : tagTheme?.fill || "#E64646";
+  const fillColor = selected ? "#F2C94C" : "#3B3B3F";
   const tagSymbolMarkup = normalizedTag ? getRestaurantTagIconSvg(normalizedTag) : null;
   const hasTagSymbol =
     typeof tagSymbolMarkup === "string" &&

@@ -123,50 +123,49 @@ function extractDecorColor(className = "") {
 }
 
 const TAG_PIN_THEMES = {
-  "high protein": { fill: "#A34723", icon: "#FFF6EE" },
-  comfort: { fill: "#C96A1B", icon: "#FFF7E8" },
-  "carb heavy": { fill: "#B38717", icon: "#FFF8E1" },
-  quick: { fill: "#1D7FA6", icon: "#F2FBFF" },
-  cheat: { fill: "#C6582C", icon: "#FFF3EC" },
-  easy: { fill: "#6366F1", icon: "#F6F7FF" },
-  fit: { fill: "#1F8A4D", icon: "#F1FFF7" },
-  premium: { fill: "#C69A00", icon: "#FFF9DF" },
-  veg: { fill: "#2F9A43", icon: "#F2FFF1" },
-  fancy: { fill: "#7C4CC2", icon: "#F8F1FF" },
-  budget: { fill: "#9B6A4A", icon: "#FFF6F0" },
-  winter: { fill: "#3C89C9", icon: "#F2FAFF" },
-  "late night": { fill: "#5E54C7", icon: "#F5F3FF" },
-  light: { fill: "#6E7888", icon: "#FFFFFF" },
-  vegan: { fill: "#2E9E57", icon: "#F0FFF5" },
-  "low carb": { fill: "#C53A4A", icon: "#FFF4F5" },
-  spicy: { fill: "#D94A2E", icon: "#FFF4F1" },
-  gourmet: { fill: "#8A6A46", icon: "#FFF8F0" },
-  summer: { fill: "#D9A400", icon: "#FFF9E5" },
-  "date night": { fill: "#B13D56", icon: "#FFF3F6" },
-  pasta: { fill: "#D99116", icon: "#FFF8E8" },
-  italian: { fill: "#1FA463", icon: "#F7FFF9" },
-  ethnic: { fill: "#3B82F6", icon: "#F3F8FF" },
-  seafood: { fill: "#0891B2", icon: "#F1FDFF" },
-  aesthetic: { fill: "#DB2777", icon: "#FFF3F9" },
-  fresh: { fill: "#10B981", icon: "#F1FFF9" },
-  asian: { fill: "#DC2626", icon: "#FFF5F5" },
-  fried: { fill: "#C46A1A", icon: "#FFF7EC" },
-  delivery: { fill: "#0EA5E9", icon: "#F1FBFF" },
-  dessert: { fill: "#DB2777", icon: "#FFF3F9" },
-  american: { fill: "#2563EB", icon: "#F4F8FF" },
-  rice: { fill: "#C8A31B", icon: "#FFFBEA" },
-  "fast food": { fill: "#E11D48", icon: "#FFF3F6" },
+  "high protein": { fill: "#7F341B" },
+  comfort: { fill: "#A85614" },
+  "carb heavy": { fill: "#8D6B12" },
+  quick: { fill: "#176C8D" },
+  cheat: { fill: "#A94822" },
+  easy: { fill: "#5358D5" },
+  fit: { fill: "#187840" },
+  premium: { fill: "#9F7C00" },
+  veg: { fill: "#237C35" },
+  fancy: { fill: "#643BA1" },
+  budget: { fill: "#7D553B" },
+  winter: { fill: "#2F6FA5" },
+  "late night": { fill: "#4D46A6" },
+  light: { fill: "#596372" },
+  vegan: { fill: "#267F46" },
+  "low carb": { fill: "#A8313F" },
+  spicy: { fill: "#B93E26" },
+  gourmet: { fill: "#70563A" },
+  summer: { fill: "#B28700" },
+  "date night": { fill: "#933148" },
+  pasta: { fill: "#B97A10" },
+  italian: { fill: "#1A8A55" },
+  ethnic: { fill: "#2D68C8" },
+  seafood: { fill: "#06758E" },
+  aesthetic: { fill: "#B61F66" },
+  fresh: { fill: "#0C9369" },
+  asian: { fill: "#B91F1F" },
+  fried: { fill: "#A95B16" },
+  delivery: { fill: "#0988BF" },
+  dessert: { fill: "#B61F66" },
+  american: { fill: "#1F56C2" },
+  rice: { fill: "#A88A16" },
+  "fast food": { fill: "#BE183D" },
 };
 
 function getTagPinTheme(tag = "") {
   const normalizedTag = String(tag || "").trim().toLowerCase();
   const preset = TAG_PIN_THEMES[normalizedTag];
-  if (preset) return preset;
   const decor = TAG_DECOR[normalizedTag];
-  const fallbackColor = extractDecorColor(decor?.iconClass);
+  const iconColor = extractDecorColor(decor?.iconClass);
+  if (preset) return preset;
   return {
-    fill: fallbackColor || "#E64646",
-    icon: "#FFFFFF",
+    fill: iconColor || "#E64646",
   };
 }
 
@@ -206,7 +205,7 @@ function getRestaurantTagIconSvg(tag = "") {
       strokeWidth: 1.95,
     })
   ).replace("<svg ", `<svg width="23" height="23" `);
-  const iconColor = theme?.icon || extractDecorColor(decor?.iconClass);
+  const iconColor = extractDecorColor(decor?.iconClass);
   return `<g transform="translate(11.5,9.25)" style="color:${iconColor}">${iconMarkup}</g>`;
 }
 

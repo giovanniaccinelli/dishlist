@@ -127,35 +127,35 @@ const TAG_PIN_THEMES = {
   comfort: { fill: "#A85614" },
   "carb heavy": { fill: "#8D6B12" },
   quick: { fill: "#176C8D" },
-  cheat: { fill: "#A94822" },
-  easy: { fill: "#5358D5" },
-  fit: { fill: "#187840" },
-  premium: { fill: "#9F7C00" },
-  veg: { fill: "#237C35" },
-  fancy: { fill: "#643BA1" },
-  budget: { fill: "#7D553B" },
-  winter: { fill: "#2F6FA5" },
-  "late night": { fill: "#4D46A6" },
-  light: { fill: "#596372" },
-  vegan: { fill: "#267F46" },
-  "low carb": { fill: "#A8313F" },
-  spicy: { fill: "#B93E26" },
-  gourmet: { fill: "#70563A" },
-  summer: { fill: "#B28700" },
-  "date night": { fill: "#933148" },
-  pasta: { fill: "#B97A10" },
-  italian: { fill: "#1A8A55" },
-  ethnic: { fill: "#2D68C8" },
-  seafood: { fill: "#06758E" },
-  aesthetic: { fill: "#B61F66" },
-  fresh: { fill: "#0C9369" },
-  asian: { fill: "#B91F1F" },
-  fried: { fill: "#A95B16" },
-  delivery: { fill: "#0988BF" },
-  dessert: { fill: "#B61F66" },
-  american: { fill: "#1F56C2" },
-  rice: { fill: "#A88A16" },
-  "fast food": { fill: "#BE183D" },
+  cheat: { fill: "#F39B7A" },
+  easy: { fill: "#C7D2FE" },
+  fit: { fill: "#9FDEB8" },
+  premium: { fill: "#E8C95B" },
+  veg: { fill: "#A9E08D" },
+  fancy: { fill: "#CEB5F6" },
+  budget: { fill: "#D6B6A6" },
+  winter: { fill: "#A9D2F5" },
+  "late night": { fill: "#B8B2F3" },
+  light: { fill: "#D5DBE3" },
+  vegan: { fill: "#A7E2BE" },
+  "low carb": { fill: "#F3A0A9" },
+  spicy: { fill: "#F28A7B" },
+  gourmet: { fill: "#D6C0A8" },
+  summer: { fill: "#F0CB68" },
+  "date night": { fill: "#F2A7B8" },
+  pasta: { fill: "#F59E0B" },
+  italian: { fill: "#EF4444" },
+  ethnic: { fill: "#60A5FA" },
+  seafood: { fill: "#22D3EE" },
+  aesthetic: { fill: "#F472B6" },
+  fresh: { fill: "#34D399" },
+  asian: { fill: "#F87171" },
+  fried: { fill: "#FB923C" },
+  delivery: { fill: "#38BDF8" },
+  dessert: { fill: "#F9A8D4" },
+  american: { fill: "#EF4444" },
+  rice: { fill: "#FDE047" },
+  "fast food": { fill: "#FB7185" },
 };
 
 function getTagPinTheme(tag = "") {
@@ -198,7 +198,6 @@ function getRestaurantTagIconSvg(tag = "") {
   const decor = TAG_DECOR[normalizedTag];
   const Icon = decor?.icon;
   if (!Icon) return null;
-  const theme = getTagPinTheme(normalizedTag);
   const iconMarkup = renderToStaticMarkup(
     createElement(Icon, {
       className: "",
@@ -206,7 +205,7 @@ function getRestaurantTagIconSvg(tag = "") {
     })
   ).replace("<svg ", `<svg width="23" height="23" `);
   const iconColor = extractDecorColor(decor?.iconClass);
-  return `<g transform="translate(11.5,9.25)" style="color:${iconColor}">${iconMarkup}</g>`;
+  return `<g transform="translate(11.5,9.25)" style="color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))">${iconMarkup}</g>`;
 }
 
 const getRestaurantPinSvg = (
@@ -216,8 +215,15 @@ const getRestaurantPinSvg = (
   showInnerBadge = true
 ) => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.1"/>
+  <defs>
+    <filter id="pinShadow" x="0" y="0" width="46" height="54" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" flood-color="#000000" flood-opacity="0.26"/>
+    </filter>
+  </defs>
+  <g filter="url(#pinShadow)">
+    <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
+    <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
+  </g>
   ${showInnerBadge ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
   ${symbolMarkup || `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>

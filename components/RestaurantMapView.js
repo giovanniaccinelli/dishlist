@@ -303,15 +303,17 @@ function createTagIconOverlay({ map, position, markup }) {
   overlay.onAdd = function onAdd() {
     node = document.createElement("div");
     node.style.position = "absolute";
-    node.style.width = "23px";
-    node.style.height = "23px";
+    node.style.width = "18px";
+    node.style.height = "18px";
     node.style.display = "flex";
     node.style.alignItems = "center";
     node.style.justifyContent = "center";
     node.style.pointerEvents = "none";
-    node.style.transform = "translate(-50%, -50%) translateY(-21px)";
-    node.style.zIndex = "3";
-    node.innerHTML = markup;
+    node.style.transform = "translate(-50%, -50%) translateY(-22px)";
+    node.style.zIndex = "2";
+    node.innerHTML = markup
+      .replace('width="23"', 'width="18"')
+      .replace('height="23"', 'height="18"');
     this.getPanes()?.overlayMouseTarget.appendChild(node);
   };
 

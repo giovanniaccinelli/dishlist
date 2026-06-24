@@ -67,60 +67,6 @@ workflows:
             echo "Regenerate the App Store provisioning profile after enabling Sign in with Apple on the App ID."
             exit 1
           fi
-      - name: Normalize App Store Connect private key
-        script: |
-          python3 - <<'PY'
-          import os, re, sys
-
-          raw = os.environ.get("APP_STORE_CONNECT_PRIVATE_KEY", "")
-          if not raw.strip():
-            print("ERROR: APP_STORE_CONNECT_PRIVATE_KEY is empty or missing.")
-            sys.exit(1)
-
-          normalized = raw.strip()
-          normalized = normalized.replace("\\r\\n", "\n").replace("\\n", "\n")
-          normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
-          normalized = re.sub(r"\s+", " ", normalized).strip()
-          normalized = normalized.replace("-----BEGIN PRIVATE KEY----- ", "-----BEGIN PRIVATE KEY-----\n")
-          normalized = normalized.replace(" -----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----")
-          normalized = normalized.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n", 1)
-          normalized = normalized[::-1].replace("-----YEK ETAVIRP DNE-----"[::-1], "\n-----END PRIVATE KEY-----"[::-1], 1)[::-1]
-
-          lines = [line.strip() for line in normalized.split("\n") if line.strip()]
-          if len(lines) < 3 and "-----BEGIN PRIVATE KEY-----" in normalized and "-----END PRIVATE KEY-----" in normalized:
-            begin = "-----BEGIN PRIVATE KEY-----"
-            end = "-----END PRIVATE KEY-----"
-            start = normalized.index(begin) + len(begin)
-            finish = normalized.index(end)
-            body = normalized[start:finish]
-            body = re.sub(r"\s+", "", body)
-            chunks = [body[i:i+64] for i in range(0, len(body), 64) if body[i:i+64]]
-            lines = [begin, *chunks, end]
-          if len(lines) < 3:
-            print("ERROR: APP_STORE_CONNECT_PRIVATE_KEY still does not contain a valid PEM structure after normalization.")
-            sys.exit(1)
-
-          if not lines[0].startswith("-----BEGIN ") or "PRIVATE KEY-----" not in lines[0]:
-            print("ERROR: APP_STORE_CONNECT_PRIVATE_KEY is missing a valid BEGIN PRIVATE KEY header.")
-            sys.exit(1)
-
-          if not lines[-1].startswith("-----END ") or "PRIVATE KEY-----" not in lines[-1]:
-            print("ERROR: APP_STORE_CONNECT_PRIVATE_KEY is missing a valid END PRIVATE KEY footer.")
-            sys.exit(1)
-
-          pem = "\n".join([lines[0], *lines[1:-1], lines[-1]]) + "\n"
-          cm_env = os.environ.get("CM_ENV")
-          if not cm_env:
-            print("ERROR: CM_ENV is not available.")
-            sys.exit(1)
-
-          with open(cm_env, "a", encoding="utf-8") as handle:
-            handle.write("APP_STORE_CONNECT_PRIVATE_KEY_PEM<<__CM_PEM__\n")
-            handle.write(pem)
-            handle.write("__CM_PEM__\n")
-
-          print("Normalized App Store Connect private key for publishing.")
-          PY
       - name: Build signed IPA
         script: |
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {
@@ -134,7 +80,7 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY_PEM
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: VVLCZK238Q
         issuer_id: 75bff3d7-7609-4a92-9b66-212cfb0d4861
         submit_to_testflight: true

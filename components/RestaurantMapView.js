@@ -149,22 +149,27 @@ function getDominantRestaurantTag(group = {}) {
 function getRestaurantTagIconSvg(tag = "") {
   const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
   const Icon = decor?.icon;
-  if (!Icon) return "";
+  if (!Icon) return null;
   const iconMarkup = renderToStaticMarkup(
     createElement(Icon, {
       className: "",
-      strokeWidth: 2.05,
+      strokeWidth: 1.95,
     })
-  ).replace("<svg ", `<svg width="18" height="18" `);
+  ).replace("<svg ", `<svg width="23" height="23" `);
   const iconColor = extractDecorColor(decor?.iconClass);
-  return `<g transform="translate(14,11.5)" style="color:${iconColor}">${iconMarkup}</g>`;
+  return `<g transform="translate(11.5,9.25)" style="color:${iconColor}">${iconMarkup}</g>`;
 }
 
-const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646", symbolMarkup = "") => encodeURIComponent(`
+const getRestaurantPinSvg = (
+  strokeColor = "white",
+  fillColor = "#E64646",
+  symbolMarkup = "",
+  showInnerBadge = true
+) => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.1"/>
-  <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
+  ${showInnerBadge ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
   ${symbolMarkup || `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
     <path d="M5 2v6"/>
@@ -181,9 +186,15 @@ function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
   const fillColor = selected ? "#F2C94C" : "#E64646";
-  const symbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : "";
+  const tagSymbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : null;
+  const hasTagSymbol = Boolean(tagSymbolMarkup);
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, symbolMarkup)}`,
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(
+      strokeColor,
+      fillColor,
+      hasTagSymbol ? tagSymbolMarkup : "",
+      !hasTagSymbol
+    )}`,
     scaledSize: new window.google.maps.Size(selected ? 40 : 36, selected ? 47 : 42),
     anchor: new window.google.maps.Point(selected ? 20 : 18, selected ? 47 : 42),
   };

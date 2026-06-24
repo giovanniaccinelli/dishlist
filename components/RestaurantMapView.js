@@ -123,10 +123,10 @@ function extractDecorColor(className = "") {
 }
 
 const TAG_PIN_THEMES = {
-  "high protein": { fill: "#7F341B" },
-  comfort: { fill: "#A85614" },
-  "carb heavy": { fill: "#8D6B12" },
-  quick: { fill: "#176C8D" },
+  "high protein": { fill: "#A34723" },
+  comfort: { fill: "#C96A1B" },
+  "carb heavy": { fill: "#B38717" },
+  quick: { fill: "#1D7FA6" },
   cheat: { fill: "#F39B7A" },
   easy: { fill: "#C7D2FE" },
   fit: { fill: "#9FDEB8" },
@@ -240,10 +240,15 @@ function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  const tagTheme = dominantTag ? getTagPinTheme(dominantTag) : null;
+  const normalizedTag = String(dominantTag || "").trim().toLowerCase();
+  const tagTheme = normalizedTag ? getTagPinTheme(normalizedTag) : null;
   const fillColor = selected ? "#F2C94C" : tagTheme?.fill || "#E64646";
-  const tagSymbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : null;
-  const hasTagSymbol = Boolean(tagSymbolMarkup);
+  const tagSymbolMarkup = normalizedTag ? getRestaurantTagIconSvg(normalizedTag) : null;
+  const hasTagSymbol =
+    typeof tagSymbolMarkup === "string" &&
+    tagSymbolMarkup.length > 0 &&
+    !tagSymbolMarkup.includes("undefined") &&
+    !tagSymbolMarkup.includes("NaN");
   return {
     url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(
       strokeColor,

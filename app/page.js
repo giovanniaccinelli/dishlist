@@ -290,7 +290,7 @@ export default function Feed() {
   const [feedHasRendered, setFeedHasRendered] = useState(false);
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
-  const { location: currentLocation } = usePrivateGeolocation({
+  const { location: currentLocation, status: currentLocationStatus } = usePrivateGeolocation({
     enabled: selectedDishMode === DISH_MODE_RESTAURANT,
   });
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
@@ -1044,6 +1044,15 @@ export default function Feed() {
     return selectedDishMode === DISH_MODE_RESTAURANT ? sortRestaurantDishesByDistance(resolved) : resolved;
   }, [followingDeck, addedDishIds, excludedTagSet, selectedDishMode, currentLocation?.lat, currentLocation?.lng]);
 
+  useEffect(() => {
+    if (selectedDishMode !== DISH_MODE_RESTAURANT) return;
+    if (currentLocationStatus !== "ready") return;
+    setForYouIndex(0);
+    setFollowingIndex(0);
+    setForYouIndexByMode((prev) => ({ ...(prev || {}), [DISH_MODE_RESTAURANT]: 0 }));
+    setFollowingIndexByMode((prev) => ({ ...(prev || {}), [DISH_MODE_RESTAURANT]: 0 }));
+  }, [selectedDishMode, currentLocationStatus, currentLocation?.lat, currentLocation?.lng]);
+
   const getModeIndex = (map, fallbackIndex = 0) => {
     const stored = Number(map?.[selectedDishMode]);
     return Number.isFinite(stored) && stored >= 0 ? stored : fallbackIndex;
@@ -1780,7 +1789,7 @@ export default function Feed() {
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}
-            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
 	            dishes={orderedForYou}
 	            preserveContinuity
 	            initialIndex={currentForYouIndex}
@@ -1839,7 +1848,7 @@ export default function Feed() {
           ) : (
             <SwipeDeck
               ref={followingDeckRef}
-              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}`}
+              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
 	              dishes={orderedFollowing}
 	              preserveContinuity
 	              initialIndex={currentFollowingIndex}

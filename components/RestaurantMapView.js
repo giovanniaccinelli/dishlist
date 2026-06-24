@@ -295,7 +295,7 @@ function createFollowedAvatarOverlay({ map, position, users, onClick }) {
   return overlay;
 }
 
-function createTagIconOverlay({ map, position, markup }) {
+function createTagIconOverlay({ map, position, markup, zIndex = 1 }) {
   if (typeof window === "undefined" || !window.google?.maps || !markup) return null;
   const overlay = new window.google.maps.OverlayView();
   let node = null;
@@ -309,12 +309,12 @@ function createTagIconOverlay({ map, position, markup }) {
     node.style.alignItems = "center";
     node.style.justifyContent = "center";
     node.style.pointerEvents = "none";
-    node.style.transform = "translate(-50%, -50%) translateY(-22px)";
-    node.style.zIndex = "2";
+    node.style.transform = "translate(-50%, -50%) translateY(-24px)";
+    node.style.zIndex = String(zIndex);
     node.innerHTML = markup
       .replace('width="23"', 'width="18"')
       .replace('height="23"', 'height="18"');
-    this.getPanes()?.overlayMouseTarget.appendChild(node);
+    this.getPanes()?.markerLayer.appendChild(node);
   };
 
   overlay.draw = function draw() {
@@ -729,6 +729,7 @@ export default function RestaurantMapView({
           map: mapRef.current,
           position,
           markup: tagMarkup,
+          zIndex: selected ? 21 : 11,
         });
         if (overlay) markersRef.current.push(overlay);
       }

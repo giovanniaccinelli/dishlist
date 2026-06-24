@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>DishList uses the camera so you can take photos of dishes.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DishList uses your location to center the restaurant map around you and sort restaurant dishes by nearby places.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>DishList can save generated or selected dish images to your photo library if you choose.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

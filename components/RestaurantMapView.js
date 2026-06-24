@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
+import { getRestaurantDistanceMeters } from "../app/lib/restaurants";
 import { useAuth } from "../app/lib/auth";
 import DishRatingBadge from "./DishRatingBadge";
 import { useLanguage } from "./LanguageProvider";
@@ -106,22 +107,6 @@ function getRestaurantGoogleMapsUrl(group = {}) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, address].filter(Boolean).join(", "))}`;
   }
   return "";
-}
-
-function getMapDistanceMeters(a, b) {
-  if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) {
-    return Number.POSITIVE_INFINITY;
-  }
-  const earthRadius = 6371000;
-  const toRad = (value) => (value * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return 2 * earthRadius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
 const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => encodeURIComponent(`
@@ -275,6 +260,7 @@ export default function RestaurantMapView({
   showSearch = true,
   embedded = false,
   onMapClick = null,
+  currentLocation = null,
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -383,7 +369,7 @@ export default function RestaurantMapView({
     return [...groups].sort((a, b) => {
       if (a.placeId === anchor.placeId) return -1;
       if (b.placeId === anchor.placeId) return 1;
-      const distanceDiff = getMapDistanceMeters(anchor, a) - getMapDistanceMeters(anchor, b);
+      const distanceDiff = getRestaurantDistanceMeters(anchor, a) - getRestaurantDistanceMeters(anchor, b);
       if (distanceDiff !== 0) return distanceDiff;
       return String(a.name || "").localeCompare(String(b.name || ""));
     });
@@ -553,8 +539,14 @@ export default function RestaurantMapView({
     if (mapRef.current) return;
 
     mapRef.current = new window.google.maps.Map(mapNodeRef.current, {
-      center: { lat: 45.4642, lng: 9.19 },
-      zoom: 5,
+      center:
+        Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)
+          ? { lat: currentLocation.lat, lng: currentLocation.lng }
+          : { lat: 45.4642, lng: 9.19 },
+      zoom:
+        Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)
+          ? 12
+          : 5,
       disableDefaultUI: true,
       gestureHandling: "greedy",
       clickableIcons: false,
@@ -577,7 +569,7 @@ export default function RestaurantMapView({
         onMapClick();
       });
     }
-  }, [mapState]);
+  }, [currentLocation?.lat, currentLocation?.lng, mapState, onMapClick]);
 
   useEffect(() => {
     if (!mapRef.current || mapState !== "ready") return;
@@ -650,9 +642,15 @@ export default function RestaurantMapView({
       return;
     }
 
+    if (Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)) {
+      mapRef.current.setCenter({ lat: currentLocation.lat, lng: currentLocation.lng });
+      mapRef.current.setZoom(12);
+      return;
+    }
+
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [followingIdSet, groups, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
+  }, [currentLocation?.lat, currentLocation?.lng, followingIdSet, groups, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;

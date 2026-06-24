@@ -12,6 +12,7 @@ import { getRestaurantDishGroups } from "../lib/restaurants";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
+import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 
 const MAP_CACHE_KEY = "map:restaurants";
 
@@ -46,6 +47,7 @@ function MapPageContent() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
+  const { location: currentLocation } = usePrivateGeolocation({ enabled: true });
   const cachedMap = getSessionPageCache(MAP_CACHE_KEY)?.value;
   const [dishes, setDishes] = useState(() => cachedMap?.dishes || []);
   const [leaderboardRestaurantAnswers, setLeaderboardRestaurantAnswers] = useState(() => cachedMap?.leaderboardRestaurantAnswers || []);
@@ -126,6 +128,7 @@ function MapPageContent() {
       <RestaurantMapView
         groups={groups}
         initialSelectedPlaceId={selectedPlaceId}
+        currentLocation={selectedPlaceId ? null : currentLocation}
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
         className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.75rem)] min-h-[24rem] max-h-none w-full max-w-[42rem]"

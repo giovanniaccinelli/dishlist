@@ -53,6 +53,8 @@ import { resolveRepresentativeTags } from "./lib/profileTags";
 import { useUnreadDirects } from "./lib/useUnreadDirects";
 import { useLanguage } from "../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache";
+import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "./lib/restaurants";
+import { usePrivateGeolocation } from "./lib/usePrivateGeolocation";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -288,6 +290,9 @@ export default function Feed() {
   const [feedHasRendered, setFeedHasRendered] = useState(false);
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
+  const { location: currentLocation } = usePrivateGeolocation({
+    enabled: selectedDishMode === DISH_MODE_RESTAURANT,
+  });
   const feedCacheKey = getFeedCacheKey(userId, guestMode);
   const activeDeckRef = activeFeed === "following" ? followingDeckRef : forYouDeckRef;
   const showDishModeFilterButton = true;
@@ -312,6 +317,25 @@ export default function Feed() {
       .map((value) => String(value || "").trim())
       .filter(Boolean);
   const isFromFollowedUser = (dish, followedSet) => getDishOwnerIds(dish).some((ownerId) => followedSet.has(ownerId));
+  const sortRestaurantDishesByDistance = (items) => {
+    if (!Number.isFinite(currentLocation?.lat) || !Number.isFinite(currentLocation?.lng)) return items;
+    return items
+      .map((dish, index) => {
+        const restaurantLocation = getDishRestaurantLocation(dish);
+        return {
+          dish,
+          index,
+          distance: restaurantLocation
+            ? getRestaurantDistanceMeters(currentLocation, restaurantLocation)
+            : Number.POSITIVE_INFINITY,
+        };
+      })
+      .sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance;
+        return a.index - b.index;
+      })
+      .map(({ dish }) => dish);
+  };
   const requestAiFeedOrder = async ({ deck, tagCounts, followedSet, representativeTags }) => {
     if (!Array.isArray(deck) || deck.length < 6) return [];
     const candidates = deck.slice(0, FEED_AI_CANDIDATE_LIMIT).map((dish) => ({
@@ -1008,16 +1032,17 @@ export default function Feed() {
     return !dishTags.some((tag) => excludedTagSet.has(tag));
   };
 
-  const orderedForYou = useMemo(
-    () => forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode)),
-    [forYouDeck, addedDishIds, excludedTagSet, selectedDishMode]
-  );
+  const orderedForYou = useMemo(() => {
+    const filtered = forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode));
+    return selectedDishMode === DISH_MODE_RESTAURANT ? sortRestaurantDishesByDistance(filtered) : filtered;
+  }, [forYouDeck, addedDishIds, excludedTagSet, selectedDishMode, currentLocation?.lat, currentLocation?.lng]);
 
   const orderedFollowing = useMemo(() => {
     const base = followingDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d));
     const modeFiltered = base.filter((d) => dishModeMatches(d, selectedDishMode));
-    return modeFiltered.length ? modeFiltered : base;
-  }, [followingDeck, addedDishIds, excludedTagSet, selectedDishMode]);
+    const resolved = modeFiltered.length ? modeFiltered : base;
+    return selectedDishMode === DISH_MODE_RESTAURANT ? sortRestaurantDishesByDistance(resolved) : resolved;
+  }, [followingDeck, addedDishIds, excludedTagSet, selectedDishMode, currentLocation?.lat, currentLocation?.lng]);
 
   const getModeIndex = (map, fallbackIndex = 0) => {
     const stored = Number(map?.[selectedDishMode]);

@@ -52,6 +52,33 @@ export function normalizeRestaurant(restaurant) {
   };
 }
 
+export function getRestaurantDistanceMeters(a, b) {
+  if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) {
+    return Number.POSITIVE_INFINITY;
+  }
+  const earthRadius = 6371000;
+  const toRad = (value) => (value * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * earthRadius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+export function getDishRestaurantLocation(dish) {
+  const normalized = normalizeRestaurant(dish?.restaurant);
+  if (normalized) {
+    return { lat: normalized.lat, lng: normalized.lng };
+  }
+  const lat = Number(dish?.restaurantLat || dish?.lat);
+  const lng = Number(dish?.restaurantLng || dish?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
 function getDishOwnerId(dish) {
   return String(dish?.owner || dish?.ownerId || dish?.userId || dish?.uploadedBy || dish?.createdBy || "").trim();
 }

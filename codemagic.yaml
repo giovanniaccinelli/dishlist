@@ -80,5 +80,7 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: VVLCZK238Q
+        issuer_id: 75bff3d7-7609-4a92-9b66-212cfb0d4861
         submit_to_testflight: true

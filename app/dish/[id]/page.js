@@ -899,7 +899,7 @@ export default function DishDetail() {
     );
 
     return (
-      <motion.div className="w-full max-w-md mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div className="w-full max-w-[29rem] mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="relative mb-3 pt-1">
           <div className="mt-3 flex justify-center gap-2">
             {EDIT_COMPOSER_STEPS.map((step, index) => (
@@ -1294,7 +1294,7 @@ export default function DishDetail() {
         )}
       </div>
 
-      <div className={`screen-between-navs-center px-5 ${editOpen ? "pointer-events-none" : ""}`}>
+      <div className={`screen-between-navs-center px-3 ${editOpen ? "pointer-events-none" : ""}`}>
         <div className="w-full">
           <SwipeDeck
             ref={activeDeckRef}

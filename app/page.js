@@ -1738,7 +1738,7 @@ export default function Feed() {
           </div>
         </div>
       )}
-      <div className="px-4 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3 -mt-1">
+      <div className="px-3 pt-0 grid grid-cols-[48px_1fr_48px] items-end gap-3 -mt-1">
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
@@ -1785,7 +1785,7 @@ export default function Feed() {
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
-      <div className="bottom-nav-spacer px-4 pt-0 flex-1 min-h-0 overflow-hidden relative">
+      <div className="bottom-nav-spacer px-3 pt-0 flex-1 min-h-0 overflow-hidden relative">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

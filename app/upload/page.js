@@ -502,7 +502,7 @@ export default function UploadPage() {
     );
 
     return (
-      <motion.div className="w-full max-w-md mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div className="w-full max-w-[29rem] mx-auto pt-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <div className="mb-3 pt-1">
           <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">
             {language === "it" ? "Aggiungi un piatto" : "Add a dish"}
@@ -932,9 +932,9 @@ export default function UploadPage() {
     <div className={`${showLegacyUploadFlow ? "h-[100dvh] overflow-y-auto" : "bottom-nav-spacer h-[100dvh] overflow-hidden"} bg-transparent text-black flex flex-col`}>
       {!showLegacyUploadFlow ? <div className="h-[calc(var(--app-top-nav-offset)-0.75rem)]" /> : null}
 
-      <div className={showLegacyUploadFlow ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-4"}>
+      <div className={showLegacyUploadFlow ? "fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-4 backdrop-blur-sm flex items-center justify-center" : "screen-between-navs-center px-3"}>
         {showLegacyUploadFlow ? (
-          <div className="w-full max-w-md mx-auto">
+          <div className="w-full max-w-[29rem] mx-auto">
             <div className="mb-4 flex items-center justify-between">
               {directEntryMode ? (
                 <h1 className="text-[2.05rem] leading-[0.95] font-semibold text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.34)]">

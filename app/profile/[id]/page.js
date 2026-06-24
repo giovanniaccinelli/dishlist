@@ -1855,7 +1855,7 @@ export default function PublicProfile() {
                 }}
               >
                 <div
-                  className="flex w-full max-w-md flex-col"
+                  className="flex w-full max-w-[29rem] flex-col"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <button

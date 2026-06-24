@@ -1406,7 +1406,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div
-        className={`isolate relative w-full max-w-md ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
+        className={`isolate relative w-full max-w-[29rem] ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
         onPointerDownCapture={(event) => {
           handleDeckMediaUnlock(event);
           releasePromotedMotionLock(event);

@@ -122,6 +122,13 @@ function extractDecorColor(className = "") {
   return "#111111";
 }
 
+function extractTagPinFillColor(tag = "") {
+  const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
+  const bgMatch = String(decor?.pillClass || "").match(/bg-\[(#[0-9A-Fa-f]{3,8})\]/);
+  if (bgMatch?.[1]) return bgMatch[1];
+  return "";
+}
+
 function getDominantRestaurantTag(group = {}) {
   const counts = new Map();
   for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
@@ -185,7 +192,8 @@ function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  const fillColor = selected ? "#F2C94C" : "#E64646";
+  const tagFillColor = dominantTag ? extractTagPinFillColor(dominantTag) : "";
+  const fillColor = selected ? "#F2C94C" : tagFillColor || "#E64646";
   const tagSymbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : null;
   const hasTagSymbol = Boolean(tagSymbolMarkup);
   return {

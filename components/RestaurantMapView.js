@@ -146,7 +146,7 @@ function getDominantRestaurantTag(group = {}) {
   return winner || "";
 }
 
-function getRestaurantTagIconSvg(tag = "") {
+function getRestaurantTagIconMarkup(tag = "") {
   const normalizedTag = String(tag || "").trim().toLowerCase();
   const decor = TAG_DECOR[normalizedTag];
   const Icon = decor?.icon;
@@ -156,16 +156,16 @@ function getRestaurantTagIconSvg(tag = "") {
       className: "",
       strokeWidth: 1.95,
     })
-  ).replace("<svg ", `<svg width="23" height="23" `);
+  ).replace("<svg ", `<svg width="23" height="23" style="display:block;color:${extractDecorColor(decor?.iconClass)};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `);
   const iconColor = extractDecorColor(decor?.iconClass);
-  return `<g transform="translate(11.5,9.25)" style="color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))">${iconMarkup}</g>`;
+  if (!iconMarkup || iconMarkup.includes("undefined") || iconMarkup.includes("NaN")) return null;
+  return iconMarkup.replace(`style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `, `style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `);
 }
 
 const getRestaurantPinSvg = (
   strokeColor = "white",
   fillColor = "#E64646",
-  symbolMarkup = "",
-  showInnerBadge = true
+  showDefaultSymbol = true
 ) => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -177,8 +177,8 @@ const getRestaurantPinSvg = (
     <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
     <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
   </g>
-  ${showInnerBadge ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
-  ${symbolMarkup || `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+  ${showDefaultSymbol ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
+  ${showDefaultSymbol ? `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
     <path d="M5 2v6"/>
     <path d="M7 2v6"/>
@@ -186,28 +186,16 @@ const getRestaurantPinSvg = (
     <path d="M5 10v12"/>
     <path d="M19 2c-2.8 1.6-4 4.1-4 7.5V13h4"/>
     <path d="M19 2v20"/>
-  </g>`}
+  </g>` : ""}
 </svg>`);
 
-function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
+function getRestaurantMarkerIcon(markerTone = "default", { showDefaultSymbol = true } = {}) {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  const normalizedTag = String(dominantTag || "").trim().toLowerCase();
   const fillColor = selected ? "#F2C94C" : "#3B3B3F";
-  const tagSymbolMarkup = normalizedTag ? getRestaurantTagIconSvg(normalizedTag) : null;
-  const hasTagSymbol =
-    typeof tagSymbolMarkup === "string" &&
-    tagSymbolMarkup.length > 0 &&
-    !tagSymbolMarkup.includes("undefined") &&
-    !tagSymbolMarkup.includes("NaN");
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(
-      strokeColor,
-      fillColor,
-      hasTagSymbol ? tagSymbolMarkup : "",
-      !hasTagSymbol
-    )}`,
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, showDefaultSymbol)}`,
     scaledSize: new window.google.maps.Size(selected ? 40 : 36, selected ? 47 : 42),
     anchor: new window.google.maps.Point(selected ? 20 : 18, selected ? 47 : 42),
   };
@@ -298,6 +286,47 @@ function createFollowedAvatarOverlay({ map, position, users, onClick }) {
   overlay.onRemove = function onRemove() {
     if (node) {
       node.removeEventListener("click", onClick);
+      node.remove();
+      node = null;
+    }
+  };
+
+  overlay.setMap(map);
+  return overlay;
+}
+
+function createTagIconOverlay({ map, position, markup }) {
+  if (typeof window === "undefined" || !window.google?.maps || !markup) return null;
+  const overlay = new window.google.maps.OverlayView();
+  let node = null;
+
+  overlay.onAdd = function onAdd() {
+    node = document.createElement("div");
+    node.style.position = "absolute";
+    node.style.width = "23px";
+    node.style.height = "23px";
+    node.style.display = "flex";
+    node.style.alignItems = "center";
+    node.style.justifyContent = "center";
+    node.style.pointerEvents = "none";
+    node.style.transform = "translate(-50%, -50%) translateY(-21px)";
+    node.style.zIndex = "3";
+    node.innerHTML = markup;
+    this.getPanes()?.overlayMouseTarget.appendChild(node);
+  };
+
+  overlay.draw = function draw() {
+    if (!node) return;
+    const projection = this.getProjection();
+    if (!projection) return;
+    const point = projection.fromLatLngToDivPixel(new window.google.maps.LatLng(position.lat, position.lng));
+    if (!point) return;
+    node.style.left = `${point.x}px`;
+    node.style.top = `${point.y}px`;
+  };
+
+  overlay.onRemove = function onRemove() {
+    if (node) {
       node.remove();
       node = null;
     }
@@ -675,11 +704,15 @@ export default function RestaurantMapView({
       const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
       const selected = selectedPlaceId === group.placeId;
       const dominantTag = getDominantRestaurantTag(group);
+      const tagMarkup = dominantTag ? getRestaurantTagIconMarkup(dominantTag) : null;
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default", dominantTag),
+        icon: getRestaurantMarkerIcon(
+          selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default",
+          { showDefaultSymbol: !tagMarkup }
+        ),
         zIndex: selected ? 20 : undefined,
       });
       marker.addListener("click", () => {
@@ -689,6 +722,14 @@ export default function RestaurantMapView({
         setSelectedPlaceId(group.placeId);
       });
       markersRef.current.push(marker);
+      if (tagMarkup) {
+        const overlay = createTagIconOverlay({
+          map: mapRef.current,
+          position,
+          markup: tagMarkup,
+        });
+        if (overlay) markersRef.current.push(overlay);
+      }
       if (markerUsers.length) {
         const overlay = createFollowedAvatarOverlay({
           map: mapRef.current,

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { renderToStaticMarkup } from "react-dom/server";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
@@ -12,6 +13,8 @@ import { useAuth } from "../app/lib/auth";
 import DishRatingBadge from "./DishRatingBadge";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
+import { TAG_OPTIONS } from "../app/lib/tags";
+import { TAG_DECOR } from "../app/lib/tagDecor";
 
 const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
 
@@ -109,12 +112,60 @@ function getRestaurantGoogleMapsUrl(group = {}) {
   return "";
 }
 
-const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => encodeURIComponent(`
+const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
+
+function extractDecorColor(className = "") {
+  const hexMatch = String(className).match(/text-\[(#[0-9A-Fa-f]{3,8})\]/);
+  if (hexMatch?.[1]) return hexMatch[1];
+  if (String(className).includes("text-black")) return "#111111";
+  if (String(className).includes("text-white")) return "#FFFFFF";
+  return "#111111";
+}
+
+function getDominantRestaurantTag(group = {}) {
+  const counts = new Map();
+  for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
+    const tags = Array.isArray(dish?.tags) ? dish.tags : [];
+    for (const rawTag of tags) {
+      const tag = String(rawTag || "").trim().toLowerCase();
+      if (!TAG_ORDER_INDEX.has(tag)) continue;
+      counts.set(tag, (counts.get(tag) || 0) + 1);
+    }
+  }
+  let winner = "";
+  let winnerCount = -1;
+  let winnerOrder = Number.POSITIVE_INFINITY;
+  for (const [tag, count] of counts.entries()) {
+    const order = TAG_ORDER_INDEX.get(tag) ?? Number.POSITIVE_INFINITY;
+    if (count > winnerCount || (count === winnerCount && order < winnerOrder)) {
+      winner = tag;
+      winnerCount = count;
+      winnerOrder = order;
+    }
+  }
+  return winner || "";
+}
+
+function getRestaurantTagIconSvg(tag = "") {
+  const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
+  const Icon = decor?.icon;
+  if (!Icon) return "";
+  const iconMarkup = renderToStaticMarkup(
+    createElement(Icon, {
+      className: "",
+      strokeWidth: 2.05,
+    })
+  ).replace("<svg ", `<svg width="18" height="18" `);
+  const iconColor = extractDecorColor(decor?.iconClass);
+  return `<g transform="translate(14,11.5)" style="color:${iconColor}">${iconMarkup}</g>`;
+}
+
+const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646", symbolMarkup = "") => encodeURIComponent(`
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.1"/>
   <circle cx="23" cy="20.5" r="12.4" fill="#111111"/>
-  <g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+  ${symbolMarkup || `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
     <path d="M5 2v6"/>
     <path d="M7 2v6"/>
@@ -122,16 +173,17 @@ const getRestaurantPinSvg = (strokeColor = "white", fillColor = "#E64646") => en
     <path d="M5 10v12"/>
     <path d="M19 2c-2.8 1.6-4 4.1-4 7.5V13h4"/>
     <path d="M19 2v20"/>
-  </g>
+  </g>`}
 </svg>`);
 
-function getRestaurantMarkerIcon(markerTone = "default") {
+function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
   const fillColor = selected ? "#F2C94C" : "#E64646";
+  const symbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : "";
   return {
-    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor)}`,
+    url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, symbolMarkup)}`,
     scaledSize: new window.google.maps.Size(selected ? 40 : 36, selected ? 47 : 42),
     anchor: new window.google.maps.Point(selected ? 20 : 18, selected ? 47 : 42),
   };
@@ -261,10 +313,11 @@ export default function RestaurantMapView({
   embedded = false,
   onMapClick = null,
   currentLocation = null,
+  enableFollowingFilter = false,
 }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const sheetRef = useRef(null);
@@ -287,6 +340,7 @@ export default function RestaurantMapView({
   const [carouselAnchorPlaceId, setCarouselAnchorPlaceId] = useState("");
   const [carouselDragX, setCarouselDragX] = useState(0);
   const [carouselDragging, setCarouselDragging] = useState(false);
+  const [restaurantFilter, setRestaurantFilter] = useState("all");
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
@@ -297,6 +351,12 @@ export default function RestaurantMapView({
   const useRestaurantCarousel = !embedded;
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
   const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
+  const displayedGroups = useMemo(() => {
+    if (!enableFollowingFilter || restaurantFilter !== "following") return groups;
+    return groups.filter((group) =>
+      (group.users || []).some((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet))
+    );
+  }, [enableFollowingFilter, followingIdSet, groups, restaurantFilter]);
 
   const animateMapCamera = (center, zoom, { duration = 520 } = {}) => {
     const map = mapRef.current;
@@ -361,19 +421,19 @@ export default function RestaurantMapView({
   const selectedGroup = useMemo(() => {
     if (selectedPlaceId === "__none__") return null;
     if (!selectedPlaceId) return null;
-    return groups.find((group) => group.placeId === selectedPlaceId) || groups[0] || null;
-  }, [groups, selectedPlaceId]);
+    return displayedGroups.find((group) => group.placeId === selectedPlaceId) || displayedGroups[0] || null;
+  }, [displayedGroups, selectedPlaceId]);
   const carouselGroups = useMemo(() => {
-    if (!useRestaurantCarousel || !groups.length) return groups;
-    const anchor = groups.find((group) => group.placeId === carouselAnchorPlaceId) || selectedGroup || groups[0];
-    return [...groups].sort((a, b) => {
+    if (!useRestaurantCarousel || !displayedGroups.length) return displayedGroups;
+    const anchor = displayedGroups.find((group) => group.placeId === carouselAnchorPlaceId) || selectedGroup || displayedGroups[0];
+    return [...displayedGroups].sort((a, b) => {
       if (a.placeId === anchor.placeId) return -1;
       if (b.placeId === anchor.placeId) return 1;
       const distanceDiff = getRestaurantDistanceMeters(anchor, a) - getRestaurantDistanceMeters(anchor, b);
       if (distanceDiff !== 0) return distanceDiff;
       return String(a.name || "").localeCompare(String(b.name || ""));
     });
-  }, [carouselAnchorPlaceId, groups, selectedGroup, useRestaurantCarousel]);
+  }, [carouselAnchorPlaceId, displayedGroups, selectedGroup, useRestaurantCarousel]);
   const selectedGroupUsers = useMemo(() => {
     const users = Array.isArray(selectedGroup?.users) ? [...selectedGroup.users] : [];
     return users.sort((a, b) => {
@@ -484,7 +544,7 @@ export default function RestaurantMapView({
       return;
     }
 
-    const localMatches = groups
+    const localMatches = displayedGroups
       .filter((group) => group.name?.toLowerCase().includes(trimmed.toLowerCase()))
       .slice(0, 4)
       .map((group) => ({
@@ -513,7 +573,7 @@ export default function RestaurantMapView({
           const merged = [
             ...localMatches.map((item) => ({
               ...item,
-              _pinnedGroup: groups.find((group) => group.placeId === item.place_id) || null,
+              _pinnedGroup: displayedGroups.find((group) => group.placeId === item.place_id) || null,
             })),
             ...googleResults,
           ].filter((item) => {
@@ -531,7 +591,7 @@ export default function RestaurantMapView({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [groups, mapState, query, searchFocused]);
+  }, [displayedGroups, mapState, query, searchFocused]);
 
   useEffect(() => {
     if (mapState !== "ready") return;
@@ -577,12 +637,12 @@ export default function RestaurantMapView({
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
 
-    if (!groups.length) {
+    if (!displayedGroups.length) {
       setSelectedPlaceId("__none__");
       return;
     }
     const bounds = new window.google.maps.LatLngBounds();
-    groups.forEach((group) => {
+    displayedGroups.forEach((group) => {
       const position = { lat: group.lat, lng: group.lng };
       const followedUsers = (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet));
       const ownUsers = (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, ownIdSet));
@@ -590,11 +650,12 @@ export default function RestaurantMapView({
       const hasOwnUser = ownUsers.length > 0;
       const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
       const selected = selectedPlaceId === group.placeId;
+      const dominantTag = getDominantRestaurantTag(group);
       const marker = new window.google.maps.Marker({
         map: mapRef.current,
         position,
         title: group.name,
-        icon: getRestaurantMarkerIcon(selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default"),
+        icon: getRestaurantMarkerIcon(selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default", dominantTag),
         zIndex: selected ? 20 : undefined,
       });
       marker.addListener("click", () => {
@@ -623,12 +684,12 @@ export default function RestaurantMapView({
 
     setSelectedPlaceId((current) => {
       if (current === "__none__") return current;
-      return current && groups.some((group) => group.placeId === current) ? current : "__none__";
+      return current && displayedGroups.some((group) => group.placeId === current) ? current : "__none__";
     });
 
     const highlightedGroup =
-      (initialSelectedPlaceId && groups.find((group) => group.placeId === initialSelectedPlaceId)) ||
-      (selectedPlaceId && selectedPlaceId !== "__none__" && groups.find((group) => group.placeId === selectedPlaceId));
+      (initialSelectedPlaceId && displayedGroups.find((group) => group.placeId === initialSelectedPlaceId)) ||
+      (selectedPlaceId && selectedPlaceId !== "__none__" && displayedGroups.find((group) => group.placeId === selectedPlaceId));
 
     if (highlightedGroup) {
       focusMapOnGroup(highlightedGroup, { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
@@ -637,8 +698,8 @@ export default function RestaurantMapView({
 
     if (selectedPlaceId === "__none__") return;
 
-    if (groups.length === 1) {
-      focusMapOnGroup(groups[0], { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
+    if (displayedGroups.length === 1) {
+      focusMapOnGroup(displayedGroups[0], { keepAboveSheet: Boolean(selectedPlaceId && selectedPlaceId !== "__none__") });
       return;
     }
 
@@ -650,7 +711,7 @@ export default function RestaurantMapView({
 
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
-  }, [currentLocation?.lat, currentLocation?.lng, followingIdSet, groups, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
+  }, [currentLocation?.lat, currentLocation?.lng, displayedGroups, followingIdSet, initialSelectedPlaceId, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;
@@ -735,7 +796,7 @@ export default function RestaurantMapView({
   };
 
   const handlePredictionSelect = (prediction) => {
-    const matchingGroup = groups.find((group) => group.placeId === prediction?.place_id);
+    const matchingGroup = displayedGroups.find((group) => group.placeId === prediction?.place_id);
     if (matchingGroup) {
       focusGroup(matchingGroup);
       return;
@@ -1175,8 +1236,30 @@ export default function RestaurantMapView({
           </div>
         </div>
         ) : null}
+        {enableFollowingFilter ? (
+          <div className="absolute right-3 top-[4.2rem] z-[11]">
+            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/84 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => setRestaurantFilter("all")}
+                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none ${restaurantFilter === "all" ? "" : "text-white/82"}`}
+                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+              >
+                {language === "it" ? "Tutti" : "All"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRestaurantFilter("following")}
+                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none ${restaurantFilter === "following" ? "" : "text-white/82"}`}
+                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+              >
+                {language === "it" ? "Seguiti" : "Following"}
+              </button>
+            </div>
+          </div>
+        ) : null}
 
-        {mapState === "ready" && groups.length > 0 ? (
+        {mapState === "ready" && displayedGroups.length > 0 ? (
           <div ref={mapNodeRef} className="h-full w-full" />
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center">

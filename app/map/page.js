@@ -129,6 +129,7 @@ function MapPageContent() {
         groups={groups}
         initialSelectedPlaceId={selectedPlaceId}
         currentLocation={selectedPlaceId ? null : currentLocation}
+        enableFollowingFilter
         emptyTitle="No restaurants pinned yet"
         emptyText="Restaurant dishes with a selected place will show up here."
         className="mb-3 mx-auto h-[calc(100dvh-var(--app-top-nav-offset)-var(--app-bottom-nav-height)-3.75rem)] min-h-[24rem] max-h-none w-full max-w-[42rem]"

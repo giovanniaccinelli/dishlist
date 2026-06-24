@@ -284,6 +284,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding-top: 0;
+  transform: translateY(-0.22rem);
 }
 
 :where(

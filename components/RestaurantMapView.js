@@ -122,14 +122,52 @@ function extractDecorColor(className = "") {
   return "#111111";
 }
 
-function extractTagPinFillColor(tag = "") {
-  const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
-  const pillClass = String(decor?.pillClass || "");
-  const borderMatch = pillClass.match(/border-\[(#[0-9A-Fa-f]{3,8})\]/);
-  if (borderMatch?.[1]) return borderMatch[1];
-  const bgMatch = pillClass.match(/bg-\[(#[0-9A-Fa-f]{3,8})\]/);
-  if (bgMatch?.[1]) return bgMatch[1];
-  return "";
+const TAG_PIN_THEMES = {
+  "high protein": { fill: "#A34723", icon: "#FFF6EE" },
+  comfort: { fill: "#C96A1B", icon: "#FFF7E8" },
+  "carb heavy": { fill: "#B38717", icon: "#FFF8E1" },
+  quick: { fill: "#1D7FA6", icon: "#F2FBFF" },
+  cheat: { fill: "#C6582C", icon: "#FFF3EC" },
+  easy: { fill: "#6366F1", icon: "#F6F7FF" },
+  fit: { fill: "#1F8A4D", icon: "#F1FFF7" },
+  premium: { fill: "#C69A00", icon: "#FFF9DF" },
+  veg: { fill: "#2F9A43", icon: "#F2FFF1" },
+  fancy: { fill: "#7C4CC2", icon: "#F8F1FF" },
+  budget: { fill: "#9B6A4A", icon: "#FFF6F0" },
+  winter: { fill: "#3C89C9", icon: "#F2FAFF" },
+  "late night": { fill: "#5E54C7", icon: "#F5F3FF" },
+  light: { fill: "#6E7888", icon: "#FFFFFF" },
+  vegan: { fill: "#2E9E57", icon: "#F0FFF5" },
+  "low carb": { fill: "#C53A4A", icon: "#FFF4F5" },
+  spicy: { fill: "#D94A2E", icon: "#FFF4F1" },
+  gourmet: { fill: "#8A6A46", icon: "#FFF8F0" },
+  summer: { fill: "#D9A400", icon: "#FFF9E5" },
+  "date night": { fill: "#B13D56", icon: "#FFF3F6" },
+  pasta: { fill: "#D99116", icon: "#FFF8E8" },
+  italian: { fill: "#1FA463", icon: "#F7FFF9" },
+  ethnic: { fill: "#3B82F6", icon: "#F3F8FF" },
+  seafood: { fill: "#0891B2", icon: "#F1FDFF" },
+  aesthetic: { fill: "#DB2777", icon: "#FFF3F9" },
+  fresh: { fill: "#10B981", icon: "#F1FFF9" },
+  asian: { fill: "#DC2626", icon: "#FFF5F5" },
+  fried: { fill: "#C46A1A", icon: "#FFF7EC" },
+  delivery: { fill: "#0EA5E9", icon: "#F1FBFF" },
+  dessert: { fill: "#DB2777", icon: "#FFF3F9" },
+  american: { fill: "#2563EB", icon: "#F4F8FF" },
+  rice: { fill: "#C8A31B", icon: "#FFFBEA" },
+  "fast food": { fill: "#E11D48", icon: "#FFF3F6" },
+};
+
+function getTagPinTheme(tag = "") {
+  const normalizedTag = String(tag || "").trim().toLowerCase();
+  const preset = TAG_PIN_THEMES[normalizedTag];
+  if (preset) return preset;
+  const decor = TAG_DECOR[normalizedTag];
+  const fallbackColor = extractDecorColor(decor?.iconClass);
+  return {
+    fill: fallbackColor || "#E64646",
+    icon: "#FFFFFF",
+  };
 }
 
 function getDominantRestaurantTag(group = {}) {
@@ -157,16 +195,18 @@ function getDominantRestaurantTag(group = {}) {
 }
 
 function getRestaurantTagIconSvg(tag = "") {
-  const decor = TAG_DECOR[String(tag || "").trim().toLowerCase()];
+  const normalizedTag = String(tag || "").trim().toLowerCase();
+  const decor = TAG_DECOR[normalizedTag];
   const Icon = decor?.icon;
   if (!Icon) return null;
+  const theme = getTagPinTheme(normalizedTag);
   const iconMarkup = renderToStaticMarkup(
     createElement(Icon, {
       className: "",
       strokeWidth: 1.95,
     })
   ).replace("<svg ", `<svg width="23" height="23" `);
-  const iconColor = extractDecorColor(decor?.iconClass);
+  const iconColor = theme?.icon || extractDecorColor(decor?.iconClass);
   return `<g transform="translate(11.5,9.25)" style="color:${iconColor}">${iconMarkup}</g>`;
 }
 
@@ -195,8 +235,8 @@ function getRestaurantMarkerIcon(markerTone = "default", dominantTag = "") {
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  const tagFillColor = dominantTag ? extractTagPinFillColor(dominantTag) : "";
-  const fillColor = selected ? "#F2C94C" : tagFillColor || "#E64646";
+  const tagTheme = dominantTag ? getTagPinTheme(dominantTag) : null;
+  const fillColor = selected ? "#F2C94C" : tagTheme?.fill || "#E64646";
   const tagSymbolMarkup = dominantTag ? getRestaurantTagIconSvg(dominantTag) : null;
   const hasTagSymbol = Boolean(tagSymbolMarkup);
   return {

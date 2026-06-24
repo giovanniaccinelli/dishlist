@@ -29,14 +29,6 @@ export default function BottomNav() {
     return pathname === href;
   };
 
-  const getAccent = (label) => {
-    if (label === "feed") return "bg-[#E64646]";
-    if (label === "mappa") return "bg-[#E64646]";
-    if (label === "explore") return "bg-[#E64646]";
-    if (label === "profile") return "bg-[#E64646]";
-    return "bg-[#E64646]";
-  };
-
   return (
     <>
       <div className="bottom-nav-shell">
@@ -44,12 +36,11 @@ export default function BottomNav() {
           const active = isActive(item.href);
           const Icon = item.icon;
           const wrapperClass = "bottom-nav-item";
-          const accentClass = getAccent(item.label);
           const iconClass = item.prominent
-            ? `bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
+            ? `bottom-nav-upload-btn no-accent-border w-14 h-10 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
                 active ? "scale-105" : ""
               }`
-            : `no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-all ${
+            : `no-accent-border w-[3.85rem] h-12 rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/45"
               }`;
           if (item.requiresAuth && !user) {
@@ -60,17 +51,16 @@ export default function BottomNav() {
                 className={wrapperClass}
                 type="button"
               >
-                <div className="flex flex-col items-center gap-0">
+                <div className="flex items-center justify-center">
                   <div
                     className={
                       item.prominent
-                        ? "bottom-nav-upload-btn no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                        : "no-accent-border w-14 h-11 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                        ? "bottom-nav-upload-btn no-accent-border w-14 h-10 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                        : "no-accent-border w-[3.85rem] h-12 rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
                     }
                   >
-                    <Icon size={item.prominent ? 26 : 22} />
+                    <Icon size={item.prominent ? 26 : 24} />
                   </div>
-                  {item.prominent ? <span className="invisible h-[3px] w-5" /> : <div className="h-[3px] w-5 -translate-y-1" />}
                 </div>
               </button>
             );
@@ -82,25 +72,18 @@ export default function BottomNav() {
               href={item.href}
               className={wrapperClass}
             >
-              <div className="flex flex-col items-center gap-0">
+              <div className="flex items-center justify-center">
                 <div className={iconClass}>
                   {item.label === "profile" && user?.photoURL ? (
                     <img
                       src={user.photoURL}
                       alt={user.displayName || "Profile"}
-                      className="h-7 w-7 rounded-full object-cover"
+                      className="h-7.5 w-7.5 rounded-full object-cover"
                     />
                   ) : (
-                    <Icon size={item.prominent ? 26 : 22} />
+                    <Icon size={item.prominent ? 26 : 24} />
                   )}
                 </div>
-                {item.prominent ? (
-                  <span className="invisible h-[3px] w-5" />
-                ) : (
-                  <div className="flex h-[3px] w-5 -translate-y-1 items-start justify-center">
-                    <span className={`no-accent-border h-1.5 rounded-full transition-all ${active ? `w-5 ${accentClass}` : "w-0 bg-transparent"}`} />
-                  </div>
-                )}
               </div>
             </Link>
           );

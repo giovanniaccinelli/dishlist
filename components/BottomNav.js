@@ -37,10 +37,10 @@ export default function BottomNav() {
           const Icon = item.icon;
           const wrapperClass = "bottom-nav-item";
           const iconClass = item.prominent
-            ? `bottom-nav-upload-btn no-accent-border w-14 h-10 rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
+            ? `bottom-nav-upload-btn no-accent-border w-[3.7rem] h-[3rem] rounded-2xl flex items-center justify-center shadow-md transition-all bg-black text-white ${
                 active ? "scale-105" : ""
               }`
-            : `no-accent-border w-[4.15rem] h-[3.2rem] rounded-2xl flex items-center justify-center transition-all ${
+            : `no-accent-border w-[4.4rem] h-[3.45rem] rounded-2xl flex items-center justify-center transition-all ${
                 active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/45"
               }`;
           if (item.requiresAuth && !user) {
@@ -55,11 +55,11 @@ export default function BottomNav() {
                   <div
                     className={
                       item.prominent
-                        ? "bottom-nav-upload-btn no-accent-border w-14 h-10 rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                        : "no-accent-border w-[4.15rem] h-[3.2rem] rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
+                        ? "bottom-nav-upload-btn no-accent-border w-[3.7rem] h-[3rem] rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
+                        : "no-accent-border w-[4.4rem] h-[3.45rem] rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/45"
                     }
                   >
-                    <Icon size={item.prominent ? 26 : 24} />
+                    <Icon size={item.prominent ? 26 : 25} />
                   </div>
                 </div>
               </button>
@@ -78,10 +78,10 @@ export default function BottomNav() {
                     <img
                       src={user.photoURL}
                       alt={user.displayName || "Profile"}
-                      className="h-7 w-7 rounded-full object-cover"
+                      className="h-7.5 w-7.5 rounded-full object-cover"
                     />
                   ) : (
-                    <Icon size={item.prominent ? 26 : 24} />
+                    <Icon size={item.prominent ? 26 : 25} />
                   )}
                 </div>
               </div>

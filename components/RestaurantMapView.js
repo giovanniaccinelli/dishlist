@@ -192,7 +192,7 @@ function getRestaurantMarkerIcon(markerTone = "default", { showDefaultSymbol = t
   if (typeof window === "undefined" || !window.google?.maps) return undefined;
   const selected = markerTone === "selected";
   const strokeColor = selected ? "#D9A500" : markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  const fillColor = selected ? "#F2C94C" : "#3B3B3F";
+  const fillColor = selected ? "#F2C94C" : "#FFFFFF";
   return {
     url: `data:image/svg+xml;charset=UTF-8,${getRestaurantPinSvg(strokeColor, fillColor, showDefaultSymbol)}`,
     scaledSize: new window.google.maps.Size(selected ? 40 : 36, selected ? 47 : 42),
@@ -319,7 +319,7 @@ function createRestaurantPinOverlay({
           : markerTone === "followed"
             ? "#F2C94C"
             : "white";
-    const fillColor = markerTone === "selected" ? "#F2C94C" : "#3B3B3F";
+    const fillColor = markerTone === "selected" ? "#F2C94C" : "#FFFFFF";
     const showDefaultSymbol = !tagMarkup;
 
     node = document.createElement("button");

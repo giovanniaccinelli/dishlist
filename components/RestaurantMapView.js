@@ -209,9 +209,10 @@ const getRestaurantPinSvgMarkup = (
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="pinGloss" x1="12" y1="4" x2="35" y2="42" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="white" stop-opacity="0.44"/>
-      <stop offset="0.42" stop-color="${fillColor}" stop-opacity="1"/>
-      <stop offset="1" stop-color="${strokeColor}" stop-opacity="0.22"/>
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.2" stop-color="${fillColor}"/>
+      <stop offset="0.72" stop-color="${fillColor}"/>
+      <stop offset="1" stop-color="${strokeColor}"/>
     </linearGradient>
   </defs>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="url(#pinGloss)"/>

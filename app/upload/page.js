@@ -1445,7 +1445,12 @@ export default function UploadPage() {
                   className="dish-modal-primary-btn w-full rounded-full py-3 font-semibold transition"
                   disabled={loadingUpload}
                 >
-                  {loadingUpload ? (storyMode ? "Publishing..." : "Uploading...") : (storyMode ? "Publish story" : "Upload dish")}
+                  {loadingUpload ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <span className="dishlist-action-spinner" />
+                      <span>{storyMode ? "Publishing..." : "Uploading..."}</span>
+                    </span>
+                  ) : (storyMode ? "Publish story" : "Upload dish")}
                 </motion.button>
               </>
             ) : null}

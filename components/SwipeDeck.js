@@ -345,6 +345,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [isEjecting, setIsEjecting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [outgoingSwipe, setOutgoingSwipe] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [secondaryActionLoading, setSecondaryActionLoading] = useState(false);
+  const [tertiaryActionLoading, setTertiaryActionLoading] = useState(false);
   const [promotedCardMotionLocked, setPromotedCardMotionLocked] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -1149,6 +1152,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const runAction = (card) => {
     if (typeof onAction !== "function") {
       if (typeof onAuthRequired === "function") onAuthRequired();
+      setActionLoading(false);
       return;
     }
     Promise.resolve(onAction(card))
@@ -1168,14 +1172,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         setToastVariant("error");
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
-      });
+      })
+      .finally(() => setActionLoading(false));
   };
 
   const handleActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjecting || actionLoading) return;
     const card = currentCard;
+    setActionLoading(true);
     if (dismissOnAction) advanceCard();
     resetDragPosition();
     runAction(card);
@@ -1209,9 +1215,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const handleSecondaryActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjecting || secondaryActionLoading) return;
     if (typeof onSecondaryAction !== "function") return;
     const card = currentCard;
+    setSecondaryActionLoading(true);
     if (dismissOnSecondaryAction) advanceCard();
     resetDragPosition();
     Promise.resolve(onSecondaryAction(card))
@@ -1233,15 +1240,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         setToastVariant("error");
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
-      });
+      })
+      .finally(() => setSecondaryActionLoading(false));
   };
 
   const handleTertiaryActionPress = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (disabled || isEjecting) return;
+    if (disabled || isEjecting || tertiaryActionLoading) return;
     if (typeof onTertiaryAction !== "function") return;
     const card = currentCard;
+    setTertiaryActionLoading(true);
     if (dismissOnTertiaryAction) advanceCard();
     resetDragPosition();
     Promise.resolve(onTertiaryAction(card)).catch((err) => {
@@ -1249,7 +1258,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       setToastVariant("error");
       setToast("Action failed");
       setTimeout(() => setToast(""), 1200);
-    });
+    }).finally(() => setTertiaryActionLoading(false));
   };
 
   const handleStartOver = () => {
@@ -2547,9 +2556,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   "add-action-btn no-accent-border w-14 h-14 text-[36px]"
                 }
                 aria-label="Action"
-                disabled={disabled}
+                disabled={disabled || actionLoading}
               >
-                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+                {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
               </button>
             </div>
           ) : null}
@@ -2590,9 +2599,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   "no-accent-border px-4 py-2 rounded-full bg-black text-white text-sm font-semibold shadow-lg"
                 }
                 aria-label="Secondary action"
-                disabled={disabled}
+                disabled={disabled || secondaryActionLoading}
               >
-                {resolvedSecondaryActionLabel === "Edit" ? (
+                {secondaryActionLoading ? (
+                  <span className="dishlist-action-spinner" />
+                ) : resolvedSecondaryActionLabel === "Edit" ? (
                   <Pencil size={18} strokeWidth={2.1} />
                 ) : resolvedSecondaryActionLabel === "map" ? (
                   <RestaurantMapIcon className="h-[1.45rem] w-[1.45rem] text-white" strokeWidth={2.1} />
@@ -2636,9 +2647,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 }}
                 className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
                 aria-label="Secondary action"
-                disabled={disabled}
+                disabled={disabled || secondaryActionLoading}
               >
-                {resolvedSecondaryActionLabel === "Edit" ? <Pencil size={18} strokeWidth={2.1} /> : resolvedSecondaryActionLabel}
+                {secondaryActionLoading ? <span className="dishlist-action-spinner" /> : resolvedSecondaryActionLabel === "Edit" ? <Pencil size={18} strokeWidth={2.1} /> : resolvedSecondaryActionLabel}
               </button>
               <button
                 type="button"
@@ -2646,8 +2657,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 onClick={handleTertiaryActionPress}
                 className="add-action-btn action-btn-white-ring h-14 w-14 shrink-0"
                 aria-label="Additional action"
+                disabled={disabled || tertiaryActionLoading}
               >
-                {tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
+                {tertiaryActionLoading ? <span className="dishlist-action-spinner" /> : tertiaryActionLabel === "list-plus" ? <ListPlus size={22} strokeWidth={2.1} /> : tertiaryActionLabel}
               </button>
               <button
                 type="button"
@@ -2717,9 +2729,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 }}
                 className={`add-action-btn action-btn-white-ring h-14 w-14 shrink-0 ${String(actionClassName || "").includes("text-[#2BD36B]") ? "text-[#2BD36B]" : "text-[36px]"}`}
                 aria-label="Action"
-                disabled={disabled}
+                disabled={disabled || actionLoading}
               >
-                {actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
+                {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
               </button>
             </div>
           ) : null}

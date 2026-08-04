@@ -824,7 +824,30 @@ input, textarea, select {
 }
 
 button.shopping-list-floating-button.shopping-list-floating-button {
-  border-color: #2BD36B !important;
-  border-width: 4px !important;
-  border-style: solid !important;
+  position: fixed;
+}
+
+button.shopping-list-floating-button.shopping-list-floating-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 3px solid #2BD36B;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.dishlist-action-spinner {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: dishlists-spin 0.72s linear infinite;
+}
+
+@keyframes dishlists-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

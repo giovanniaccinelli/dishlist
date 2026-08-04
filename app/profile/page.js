@@ -3515,7 +3515,12 @@ export default function Profile() {
                 className="w-full bg-black text-white py-3 rounded-full font-semibold hover:opacity-90 transition"
                 disabled={loadingUpload}
               >
-                {loadingUpload ? "Uploading..." : "Post Dish"}
+                {loadingUpload ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <span className="dishlist-action-spinner" />
+                    <span>Uploading...</span>
+                  </span>
+                ) : "Post Dish"}
               </motion.button>
               <button
                 onClick={() => {
@@ -5809,7 +5814,7 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setShoppingListOpen(true)}
-          className="shopping-list-floating-button fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#2BD36B] bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md"
+          className="shopping-list-floating-button no-accent-border fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md"
           style={{
             bottom: "calc(var(--app-bottom-nav-height) + 1rem)",
             borderColor: "#2BD36B",

@@ -371,7 +371,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCardShellRef = useRef(null);
   const topMetadataRef = useRef(null);
   const bottomMetadataRef = useRef(null);
+  const nextCardShellRef = useRef(null);
+  const nextTopMetadataRef = useRef(null);
+  const nextBottomMetadataRef = useRef(null);
   const [compactMediaBounds, setCompactMediaBounds] = useState({ top: 112, bottom: 180 });
+  const [nextCompactMediaBounds, setNextCompactMediaBounds] = useState({ top: 112, bottom: 180 });
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
@@ -512,6 +516,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardStableKey = currentCard?.id || currentCard?._key || "";
+  const nextCardStableKey = nextCard?.id || nextCard?._key || "";
   useEffect(() => {
     setIsDragging(false);
     resetDragPosition();
@@ -778,6 +783,49 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     currentRestaurantLabel,
     darkMode,
     normalizedDishLink,
+    showStoryHistoryCounter,
+  ]);
+  useLayoutEffect(() => {
+    if (!squareCardLayout || !nextCard) return undefined;
+
+    let frameId = 0;
+    const measureBounds = () => {
+      const cardRect = nextCardShellRef.current?.getBoundingClientRect?.();
+      if (!cardRect) return;
+
+      const topRect = nextTopMetadataRef.current?.getBoundingClientRect?.();
+      const bottomRect = nextBottomMetadataRef.current?.getBoundingClientRect?.();
+      const top = topRect ? Math.max(64, Math.round(topRect.bottom - cardRect.top + 14)) : 112;
+      const bottom = bottomRect ? Math.max(104, Math.round(cardRect.bottom - bottomRect.top + 14)) : 180;
+
+      setNextCompactMediaBounds((prev) => (
+        prev.top === top && prev.bottom === bottom ? prev : { top, bottom }
+      ));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(measureBounds);
+    };
+
+    scheduleMeasure();
+    const observedNodes = [nextCardShellRef.current, nextTopMetadataRef.current, nextBottomMetadataRef.current].filter(Boolean);
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
+    observedNodes.forEach((node) => observer?.observe(node));
+    window.addEventListener("resize", scheduleMeasure);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      observer?.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+    };
+  }, [
+    squareCardLayout,
+    nextCard,
+    nextCardStableKey,
+    nextCard?.description,
+    nextCard?.name,
+    nextCard?.taggedUserName,
     showStoryHistoryCounter,
   ]);
   const resolvedSecondaryActionLabel =
@@ -1311,7 +1359,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   };
 
-  const renderPreviewChrome = (dish, { compact = false } = {}) => {
+  const renderPreviewChrome = (dish, { compact = false, topRef = null, bottomRef = null } = {}) => {
     if (!dish) return null;
     const previewAccentBorder = isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border";
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
@@ -1332,7 +1380,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
         />
-        <div className={`pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] flex-col items-start gap-1.5 text-white`}>
+        <div
+          ref={topRef}
+          className={`pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] flex-col items-start gap-1.5 text-white`}
+        >
           <div className="flex min-w-0 items-center gap-2">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${previewAccentBorder} bg-black/35 text-sm font-bold`}>
               {dish.ownerPhotoURL ? (
@@ -1409,7 +1460,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             }}
           />
         ) : null}
-        <div className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
+        <div ref={bottomRef} className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
           <div className="text-left text-2xl font-bold">{dish.name}</div>
           {dish.description ? (
             <p className="mt-0.5 line-clamp-2 text-sm text-white/80">{dish.description}</p>
@@ -1503,13 +1554,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       >
         {nextCard ? (
           <motion.div
+            ref={nextCardShellRef}
             className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {squareCardLayout ? (
               <div
                 className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
+                style={{ top: nextCompactMediaBounds.top, bottom: nextCompactMediaBounds.bottom }}
               >
                 <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                   {renderImage(nextCard, {
@@ -1528,7 +1580,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 },
               })
             )}
-            {renderPreviewChrome(nextCard, { compact: squareCardLayout })}
+            {renderPreviewChrome(nextCard, {
+              compact: squareCardLayout,
+              topRef: nextTopMetadataRef,
+              bottomRef: nextBottomMetadataRef,
+            })}
           </motion.div>
         ) : null}
         <AnimatePresence>

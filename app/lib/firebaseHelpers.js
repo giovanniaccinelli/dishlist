@@ -497,11 +497,11 @@ function customDishlistItemDoc(userId, dishlistId, dishId) {
 }
 
 function shoppingListItemsCollection(userId) {
-  return collection(db, "users", userId, "shoppingList", "items");
+  return collection(db, "users", userId, "shoppingListItems");
 }
 
 function shoppingListItemDoc(userId, ingredientKey) {
-  return doc(db, "users", userId, "shoppingList", "items", ingredientKey);
+  return doc(db, "users", userId, "shoppingListItems", ingredientKey);
 }
 
 function makeSystemDishlist(id, name, dishes) {

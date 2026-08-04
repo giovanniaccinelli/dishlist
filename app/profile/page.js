@@ -669,7 +669,7 @@ export default function Profile() {
       setShoppingListOpen(false);
       return undefined;
     }
-    return onSnapshot(collection(db, "users", user.uid, "shoppingList", "items"), (snapshot) => {
+    return onSnapshot(collection(db, "users", user.uid, "shoppingListItems"), (snapshot) => {
       const items = snapshot.docs
         .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));

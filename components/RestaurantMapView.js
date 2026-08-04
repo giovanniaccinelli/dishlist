@@ -207,7 +207,14 @@ const getRestaurantPinSvgMarkup = (
   showDefaultSymbol = true
 ) => `
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
+  <defs>
+    <linearGradient id="pinGloss" x1="12" y1="4" x2="35" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="white" stop-opacity="0.44"/>
+      <stop offset="0.42" stop-color="${fillColor}" stop-opacity="1"/>
+      <stop offset="1" stop-color="${strokeColor}" stop-opacity="0.22"/>
+    </linearGradient>
+  </defs>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="url(#pinGloss)"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
   ${showDefaultSymbol ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
   ${showDefaultSymbol ? `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">

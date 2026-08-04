@@ -823,7 +823,7 @@ input, textarea, select {
   pointer-events: none !important;
 }
 
-.shopping-list-floating-button {
+button.shopping-list-floating-button.shopping-list-floating-button {
   border-color: #2BD36B !important;
   border-width: 4px !important;
   border-style: solid !important;

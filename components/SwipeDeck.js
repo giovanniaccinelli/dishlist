@@ -324,7 +324,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
-  const [cardLayout, setCardLayout] = useState("full");
+  const [cardLayout, setCardLayout] = useState(() => {
+    if (typeof window === "undefined") return "full";
+    return window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square" ? "square" : "full";
+  });
   const SWIPE_EJECT_THRESHOLD = 88;
   const SWIPE_EJECT_VELOCITY = 680;
   const SWIPE_PROJECTED_THRESHOLD = 128;
@@ -1532,7 +1535,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
           {dish.taggedUserName ? (
-            <div className="mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+            <div
+              className={darkMode
+                ? "no-accent-border mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                : `mt-1 inline-flex max-w-full items-center rounded-full border-2 ${previewAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`
+              }
+            >
               @{String(dish.taggedUserName).replace(/^@+/, "")}
             </div>
           ) : null}
@@ -1540,7 +1548,12 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <div className="mt-1 flex flex-col items-start gap-1">
               <RatingStars value={dish.rating} size="text-[1.05rem]" readOnly />
               {previewPriceLabel ? (
-                <span className="inline-flex rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-black text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
+                <span
+                  className={darkMode
+                    ? "no-accent-border inline-flex rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-black text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                    : `inline-flex rounded-full border-2 ${previewAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-black text-white/92 backdrop-blur-[6px]`
+                  }
+                >
                   {previewPriceLabel}
                 </span>
               ) : null}

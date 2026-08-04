@@ -1512,7 +1512,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <p className="text-lg font-semibold leading-none">{dish.ownerName || "Unknown"}</p>
             </div>
           ) : null}
-          <div className="text-left text-2xl font-bold">{dish.name}</div>
+          <div className="m-0 block w-full p-0 text-left text-2xl font-bold leading-[2rem] text-white">{dish.name}</div>
           {dish.description || previewDishLink ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
               {dish.description ? (
@@ -2150,7 +2150,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       e.preventDefault();
                       router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
                     }}
-                    className="text-left text-2xl font-bold hover:underline"
+                    className="m-0 block w-full appearance-none bg-transparent p-0 text-left text-2xl font-bold leading-[2rem] text-white hover:underline"
                   >
                     {currentCard.name}
                   </button>

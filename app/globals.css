@@ -822,3 +822,9 @@ input, textarea, select {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+.shopping-list-floating-button {
+  border-color: #2BD36B !important;
+  border-width: 4px !important;
+  border-style: solid !important;
+}

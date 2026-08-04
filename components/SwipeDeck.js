@@ -1173,7 +1173,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
       })
-      .finally(() => setActionLoading(false));
+      .finally(() => {
+        setTimeout(() => setActionLoading(false), 650);
+      });
   };
 
   const handleActionPress = (e) => {
@@ -1241,7 +1243,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
       })
-      .finally(() => setSecondaryActionLoading(false));
+      .finally(() => {
+        setTimeout(() => setSecondaryActionLoading(false), 650);
+      });
   };
 
   const handleTertiaryActionPress = (e) => {
@@ -1258,7 +1262,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       setToastVariant("error");
       setToast("Action failed");
       setTimeout(() => setToast(""), 1200);
-    }).finally(() => setTertiaryActionLoading(false));
+    }).finally(() => {
+      setTimeout(() => setTertiaryActionLoading(false), 650);
+    });
   };
 
   const handleStartOver = () => {
@@ -1787,6 +1793,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
+          {(actionLoading || secondaryActionLoading || tertiaryActionLoading) && !outgoingSwipe ? (
+            <div className="pointer-events-none absolute inset-0 z-[90] flex items-center justify-center bg-black/34 backdrop-blur-[2px]">
+              <div className="no-accent-border flex h-28 w-28 flex-col items-center justify-center rounded-full bg-black/78 text-[#2BD36B] shadow-[0_18px_48px_rgba(0,0,0,0.38)]">
+                <span className="dishlist-action-spinner text-[2.15rem]" />
+                <span className="mt-2 text-[12px] font-black uppercase tracking-[0.16em] text-white/88">Carica</span>
+              </div>
+            </div>
+          ) : null}
           {swipeAddEnabled && !outgoingSwipe && (
             <motion.div
               className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22"

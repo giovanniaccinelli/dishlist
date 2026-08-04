@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Pencil, Plus, X } from "lucide-react";
 import { getIngredientColor, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientName } from "../app/lib/ingredients";
 
 export default function IngredientPillEditor({
@@ -50,7 +50,8 @@ export default function IngredientPillEditor({
             </span>
           );
         })}
-        <div className="flex min-w-[9rem] flex-1 items-center gap-2">
+        <div className="flex min-w-[12rem] flex-1 items-center gap-2 rounded-full border-2 border-[#E4B43F]/65 bg-[#FFF9E8] px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+          <Pencil size={15} className="shrink-0 text-[#A36F00]" strokeWidth={2.2} />
           <input
             type="text"
             value={draft}

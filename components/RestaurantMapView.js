@@ -1395,12 +1395,12 @@ export default function RestaurantMapView({
         ) : null}
         {enableFollowingFilter ? (
           <div className="absolute right-3 top-[4.2rem] z-[11]">
-            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-[#090909]/92 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] ring-1 ring-white/14 backdrop-blur-md">
+            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-[#050505]/90 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => setRestaurantFilter("all")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "all" ? "" : "text-white"}`}
-                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "rgba(255,255,255,0.12)", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "#2A2A2A", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Tutti" : "All"}
               </button>
@@ -1408,7 +1408,7 @@ export default function RestaurantMapView({
                 type="button"
                 onClick={() => setRestaurantFilter("following")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "following" ? "" : "text-white"}`}
-                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "rgba(255,255,255,0.12)", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "#2A2A2A", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Seguiti" : "Following"}
               </button>

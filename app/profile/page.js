@@ -97,6 +97,7 @@ const STORY_CHOOSER_STEPS = [
 const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
 const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
 const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
+const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
 const CORE_PROFILE_DISHLIST_ORDER = ["saved", "all_dishes", "uploaded", "to_try"];
 
 function StoryStatIcon({ size = 10 }) {
@@ -643,6 +644,7 @@ export default function Profile() {
   const [shoppingListItems, setShoppingListItems] = useState([]);
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const [shoppingIngredientDraft, setShoppingIngredientDraft] = useState("");
+  const [squareCardLayout, setSquareCardLayout] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -663,6 +665,18 @@ export default function Profile() {
   const profileAliasKey = profileAliasIds.join("|");
   const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
   const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square");
+  }, []);
+
+  const updateCardLayoutPreference = (enabled) => {
+    setSquareCardLayout(enabled);
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(CARD_LAYOUT_STORAGE_KEY, enabled ? "square" : "full");
+    window.dispatchEvent(new CustomEvent("dishlist-card-layout-change", { detail: enabled ? "square" : "full" }));
+  };
+
   useEffect(() => {
     if (!user?.uid) {
       setShoppingListItems([]);
@@ -3604,6 +3618,25 @@ export default function Profile() {
                     <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${darkMode ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
                   </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => updateCardLayoutPreference(!squareCardLayout)}
+                  className={`no-accent-border mt-3 flex w-full items-center justify-between rounded-[1.45rem] p-4 text-left ${
+                    darkMode ? "bg-[#141414] text-white" : "bg-white text-black"
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">{t("Card compatte")}</div>
+                    <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                      {t("Immagine quadrata con metadata")}
+                    </div>
+                  </div>
+                  <span className={`no-accent-border flex h-8 w-14 items-center rounded-full p-1 transition ${
+                    squareCardLayout ? "bg-[#FFC247]" : "bg-black/14"
+                  }`}>
+                    <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${squareCardLayout ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
+                  </span>
+                </button>
               </section>
 
               <section className="mb-5">
@@ -5746,7 +5779,7 @@ export default function Profile() {
         ) : null}
       </AnimatePresence>
 
-      {shoppingListItems.length > 0 ? (
+      {shoppingListItems.length > 0 && showingDishlistOverview ? (
         <button
           type="button"
           onClick={() => setShoppingListOpen(true)}

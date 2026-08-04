@@ -25,6 +25,8 @@ import { RatingStars } from "./RatingStars";
 import { formatDishPrice } from "../app/lib/dishPrice";
 import { getDishIngredientItems, getIngredientColor } from "../app/lib/ingredients";
 
+const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
+
 function DeckAutoplayVideo({
   src,
   className = "",
@@ -322,6 +324,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 }, ref) {
   const router = useRouter();
   const { darkMode, t } = useLanguage();
+  const [cardLayout, setCardLayout] = useState("full");
   const SWIPE_EJECT_THRESHOLD = 88;
   const SWIPE_EJECT_VELOCITY = 680;
   const SWIPE_PROJECTED_THRESHOLD = 128;
@@ -439,6 +442,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!rawLink) return "";
     return /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
   }, [deck, currentIndex]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const readLayout = () => {
+      setCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square" ? "square" : "full");
+    };
+    readLayout();
+    const handleLayoutChange = (event) => {
+      const nextLayout = event?.detail === "square" ? "square" : "full";
+      setCardLayout(nextLayout);
+    };
+    window.addEventListener("dishlist-card-layout-change", handleLayoutChange);
+    window.addEventListener("storage", readLayout);
+    return () => {
+      window.removeEventListener("dishlist-card-layout-change", handleLayoutChange);
+      window.removeEventListener("storage", readLayout);
+    };
+  }, []);
 
   useEffect(() => {
     const formatted = formatDeckDishes(dishes);
@@ -708,6 +729,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
+  const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -1532,7 +1554,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onDrag={updateDragRotation}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && !outgoingSwipe && (
             <motion.div
@@ -1821,12 +1843,23 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-label={hasRestaurantMapView ? "Open restaurant map view" : "Open recipe view"}
                 />
               ) : null}
-              {renderImage(currentCard, {
-                active: !visibleRecipe,
-                onVideoRef: (node) => {
-                  currentVideoRef.current = node;
-                },
-              })}
+              {squareCardLayout ? (
+                <div className="absolute left-5 right-5 top-1/2 z-0 aspect-square -translate-y-1/2 overflow-hidden rounded-[1.45rem] bg-black">
+                  {renderImage(currentCard, {
+                    active: !visibleRecipe,
+                    onVideoRef: (node) => {
+                      currentVideoRef.current = node;
+                    },
+                  })}
+                </div>
+              ) : (
+                renderImage(currentCard, {
+                  active: !visibleRecipe,
+                  onVideoRef: (node) => {
+                    currentVideoRef.current = node;
+                  },
+                })
+              )}
               {!visibleRecipe && isDishVideo(currentCard) ? (
                 <div
                   data-no-drag="true"
@@ -1842,7 +1875,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   aria-hidden="true"
                 />
               ) : null}
-              {!visibleRecipe ? (
+              {!visibleRecipe && !squareCardLayout ? (
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 z-[15]"
                   style={{

@@ -113,6 +113,45 @@ function getRestaurantGoogleMapsUrl(group = {}) {
 }
 
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
+const RESTAURANT_TAG_PIN_THEME = {
+  fit: { fill: "#DCFCE7", stroke: "#22C55E" },
+  "high protein": { fill: "#FFE4D6", stroke: "#FB923C" },
+  veg: { fill: "#E0F2FE", stroke: "#38BDF8" },
+  vegan: { fill: "#D1FAE5", stroke: "#34D399" },
+  light: { fill: "#F1F5F9", stroke: "#94A3B8" },
+  easy: { fill: "#EDE9FE", stroke: "#A78BFA" },
+  quick: { fill: "#CCFBF1", stroke: "#2DD4BF" },
+  fancy: { fill: "#FCE7F3", stroke: "#F472B6" },
+  comfort: { fill: "#FEF3C7", stroke: "#FBBF24" },
+  "carb heavy": { fill: "#FFF7ED", stroke: "#FDBA74" },
+  "low carb": { fill: "#E0F2FE", stroke: "#0EA5E9" },
+  spicy: { fill: "#FEE2E2", stroke: "#EF4444" },
+  "late night": { fill: "#E0E7FF", stroke: "#818CF8" },
+  cheat: { fill: "#FFE4E6", stroke: "#FB7185" },
+  budget: { fill: "#ECFCCB", stroke: "#A3E635" },
+  premium: { fill: "#FEF9C3", stroke: "#EAB308" },
+  summer: { fill: "#FFEDD5", stroke: "#FB923C" },
+  winter: { fill: "#DBEAFE", stroke: "#60A5FA" },
+  gourmet: { fill: "#F5F3FF", stroke: "#C084FC" },
+  "date night": { fill: "#FAE8FF", stroke: "#E879F9" },
+  pasta: { fill: "#FDE68A", stroke: "#F59E0B" },
+  italian: { fill: "#DCFCE7", stroke: "#EF4444" },
+  ethnic: { fill: "#DBEAFE", stroke: "#60A5FA" },
+  seafood: { fill: "#CFFAFE", stroke: "#22D3EE" },
+  aesthetic: { fill: "#FCE7F3", stroke: "#F472B6" },
+  fresh: { fill: "#D1FAE5", stroke: "#34D399" },
+  asian: { fill: "#FEE2E2", stroke: "#F87171" },
+  fried: { fill: "#FFEDD5", stroke: "#FB923C" },
+  delivery: { fill: "#E0F2FE", stroke: "#38BDF8" },
+  dessert: { fill: "#FCE7F3", stroke: "#F472B6" },
+  american: { fill: "#DBEAFE", stroke: "#EF4444" },
+  rice: { fill: "#FEFCE8", stroke: "#FDE047" },
+  "fast food": { fill: "#FFE4E6", stroke: "#FB7185" },
+};
+
+function getRestaurantTagPinTheme(tag = "") {
+  return RESTAURANT_TAG_PIN_THEME[String(tag || "").trim().toLowerCase()] || null;
+}
 
 function extractDecorColor(className = "") {
   const hexMatch = String(className).match(/text-\[(#[0-9A-Fa-f]{3,8})\]/);
@@ -299,6 +338,7 @@ function createRestaurantPinOverlay({
   position,
   markerTone = "default",
   tagMarkup = null,
+  tagTheme = null,
   title = "",
   selected = false,
   onClick,
@@ -313,13 +353,13 @@ function createRestaurantPinOverlay({
     const height = selected ? 47 : 42;
     const strokeColor =
       markerTone === "selected"
-        ? "#D9A500"
+        ? (tagTheme?.stroke || "#D9A500")
         : markerTone === "own"
           ? "#2BD36B"
           : markerTone === "followed"
             ? "#F2C94C"
-            : "white";
-    const fillColor = markerTone === "selected" ? "#F2C94C" : "#FFFFFF";
+            : (tagTheme?.stroke || "white");
+    const fillColor = tagTheme?.fill || (markerTone === "selected" ? "#F2C94C" : "#FFFFFF");
     const showDefaultSymbol = !tagMarkup;
 
     node = document.createElement("button");
@@ -765,12 +805,14 @@ export default function RestaurantMapView({
       const selected = selectedPlaceId === group.placeId;
       const dominantTag = getDominantRestaurantTag(group);
       const tagMarkup = dominantTag ? getRestaurantTagIconMarkup(dominantTag) : null;
+      const tagTheme = dominantTag ? getRestaurantTagPinTheme(dominantTag) : null;
       const marker = createRestaurantPinOverlay({
         map: mapRef.current,
         position,
         title: group.name,
         markerTone: selected ? "selected" : hasOwnUser ? "own" : hasFollowedUser ? "followed" : "default",
         tagMarkup,
+        tagTheme,
         selected,
         onClick: () => {
           if (Date.now() < mapGestureUntilRef.current) return;
@@ -1353,20 +1395,20 @@ export default function RestaurantMapView({
         ) : null}
         {enableFollowingFilter ? (
           <div className="absolute right-3 top-[4.2rem] z-[11]">
-            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-black/84 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md">
+            <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-[#090909]/92 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.3)] ring-1 ring-white/14 backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => setRestaurantFilter("all")}
-                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none ${restaurantFilter === "all" ? "" : "text-white/82"}`}
-                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "all" ? "" : "text-white"}`}
+                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "rgba(255,255,255,0.12)", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Tutti" : "All"}
               </button>
               <button
                 type="button"
                 onClick={() => setRestaurantFilter("following")}
-                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none ${restaurantFilter === "following" ? "" : "text-white/82"}`}
-                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : undefined}
+                className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "following" ? "" : "text-white"}`}
+                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "rgba(255,255,255,0.12)", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Seguiti" : "Following"}
               </button>

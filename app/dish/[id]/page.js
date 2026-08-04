@@ -1294,7 +1294,7 @@ export default function DishDetail() {
         )}
       </div>
 
-      <div className={`screen-between-navs-center px-3 ${editOpen ? "pointer-events-none" : ""}`}>
+      <div className={`screen-between-navs-center swipe-deck-layer px-3 ${editOpen ? "pointer-events-none" : ""}`}>
         <div className="w-full">
           <SwipeDeck
             ref={activeDeckRef}

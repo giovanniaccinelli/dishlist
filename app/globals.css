@@ -790,6 +790,12 @@ html.dark .map-restaurant-card-solid {
   padding-bottom: 0.5rem;
 }
 
+.swipe-deck-layer {
+  position: relative;
+  z-index: 60;
+  overflow: visible;
+}
+
 .top-nav-modal-frame {
   padding-top: calc(var(--app-top-nav-offset) + 2.75rem);
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.75rem);

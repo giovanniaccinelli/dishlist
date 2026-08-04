@@ -1785,7 +1785,7 @@ export default function Feed() {
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>
       </div>
-      <div className="bottom-nav-spacer px-3 pt-0 flex-1 min-h-0 overflow-hidden relative">
+      <div className="bottom-nav-spacer swipe-deck-layer px-3 pt-0 flex-1 min-h-0">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
           <SwipeDeck
             ref={forYouDeckRef}

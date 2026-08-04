@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Lock, Plus, Star, Trash2 } from "lucide-react";
+import { Check, Lock, Plus, ShoppingCart, Star, Trash2 } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { TAG_DECOR } from "../app/lib/tagDecor";
@@ -72,6 +72,7 @@ export default function DishlistPickerModal({
   confirmLabel = "Save",
   variant = "sheet",
   dishPreview = null,
+  dishData = null,
   storyOption = false,
   storySelected = false,
   onToggleStory,
@@ -83,6 +84,8 @@ export default function DishlistPickerModal({
   const [sortingSearch, setSortingSearch] = useState("");
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
+  const resolvedDishData = dishData || dishPreview;
+  const showShoppingListOption = resolvedDishData && String(resolvedDishData?.dishMode || "").toLowerCase() !== "restaurant";
   const isSwipeCard = variant === "swipe";
   const isSortingCard = variant === "sorting";
   const orderedLists = isSortingCard ? lists : orderPickerLists(lists, isSwipeCard);
@@ -286,6 +289,43 @@ export default function DishlistPickerModal({
                         }`}
                       >
                         {storySelected ? <Check size={14} /> : <Plus size={14} />}
+                      </div>
+                    </button>
+                  ) : null}
+                  {showShoppingListOption ? (
+                    <button
+                      type="button"
+                      onClick={() => onToggle?.({ id: "shopping_list", name: t("Lista della spesa"), type: "special" })}
+                      className={`no-accent-border mb-1 flex items-center justify-between rounded-[1.15rem] border px-3.5 py-3 text-left ${
+                        darkMode
+                          ? selectedSet.has("shopping_list")
+                            ? "border-[#2BD36B]/80 bg-[#102817] text-white"
+                            : "border-[#2BD36B]/32 bg-[#101B13] text-white"
+                          : selectedSet.has("shopping_list")
+                            ? "border-[#1FA463]/80 bg-[#F2FFF6]"
+                            : "border-[#2BD36B]/35 bg-[#F7FFF8]"
+                      }`}
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-[#2BD36B]/12" : "bg-[#2BD36B]/10"}`}>
+                          <ShoppingCart size={17} className="text-[#2BD36B]" strokeWidth={2.25} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
+                            {t("Lista della spesa")}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`no-accent-border ml-4 flex h-7 w-7 items-center justify-center rounded-full border ${
+                          selectedSet.has("shopping_list")
+                            ? "border-[#2BD36B] bg-[#2BD36B] text-black"
+                            : darkMode
+                              ? "border-[#2BD36B]/30 bg-[#152318] text-[#2BD36B]"
+                              : "border-[#2BD36B]/35 bg-white text-[#2BD36B]"
+                        }`}
+                      >
+                        {selectedSet.has("shopping_list") ? <Check size={14} /> : <Plus size={14} />}
                       </div>
                     </button>
                   ) : null}

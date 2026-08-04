@@ -26,6 +26,7 @@ import {
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { normalizeRestaurant } from "./restaurants";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "./tagDishlists";
+import { getDishIngredientItems, inferIngredientColorId, normalizeIngredientKey, normalizeIngredientName } from "./ingredients";
 
 const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
 const ownerPhotoCache = new Map();
@@ -177,6 +178,7 @@ function buildDishPayload(dishId, dishData = null) {
         mediaType: dishData.mediaType || (dishData.mediaMimeType?.startsWith("video/") ? "video" : "image"),
         mediaMimeType: dishData.mediaMimeType || "",
         recipeIngredients: dishData.recipeIngredients || "",
+        recipeIngredientItems: getDishIngredientItems(dishData),
         recipeMethod: dishData.recipeMethod || "",
         rating: Math.max(0, Math.min(5, Math.round((Number(dishData.rating) || 0) * 2) / 2)),
         price: Number.isFinite(Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice)) && Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice) > 0 ? Number(dishData.price ?? dishData.priceAmount ?? dishData.restaurantPrice) : null,
@@ -218,6 +220,7 @@ async function hydrateDishPayload(dishId, payload) {
           : "image"),
       mediaMimeType: data.mediaMimeType || payload?.mediaMimeType || "",
       recipeIngredients: data.recipeIngredients || payload?.recipeIngredients || "",
+      recipeIngredientItems: getDishIngredientItems(data.recipeIngredientItems?.length ? data : payload),
       recipeMethod: data.recipeMethod || payload?.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(data.rating ?? payload?.rating) || 0) * 2) / 2)),
       price: Number.isFinite(Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice)) && Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice) > 0 ? Number(data.price ?? data.priceAmount ?? data.restaurantPrice ?? payload?.price ?? payload?.priceAmount ?? payload?.restaurantPrice) : null,
@@ -371,6 +374,7 @@ async function mergeDishesWithCanonical(dishes = []) {
           : "image"),
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
+      recipeIngredientItems: getDishIngredientItems(canonical.recipeIngredientItems?.length ? canonical : dish),
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
       price: Number.isFinite(Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice)) && Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) > 0 ? Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) : null,
@@ -490,6 +494,14 @@ function customDishlistItemsCollection(userId, dishlistId) {
 
 function customDishlistItemDoc(userId, dishlistId, dishId) {
   return doc(db, "users", userId, "dishlists", dishlistId, "items", dishId);
+}
+
+function shoppingListItemsCollection(userId) {
+  return collection(db, "users", userId, "shoppingList", "items");
+}
+
+function shoppingListItemDoc(userId, ingredientKey) {
+  return doc(db, "users", userId, "shoppingList", "items", ingredientKey);
 }
 
 function makeSystemDishlist(id, name, dishes) {
@@ -1342,11 +1354,99 @@ export async function updateCustomDishlistDetails(userId, dishlistId, updates = 
 
 export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   if (!userId || !dishData?.id || !dishlistId) return false;
+  if (dishlistId === "shopping_list") return addDishIngredientsToShoppingList(userId, dishData);
   if (dishlistId === "uploaded") return true;
   if (dishlistId === "all_dishes") return true;
   if (dishlistId === "saved") return saveDishToUserList(userId, dishData.id, dishData);
   if (dishlistId === "to_try") return addDishToToTryList(userId, dishData.id, dishData);
   return addDishToCustomDishlist(userId, dishlistId, dishData.id, dishData);
+}
+
+export async function addShoppingListIngredient(userId, ingredient) {
+  const name = normalizeIngredientName(typeof ingredient === "string" ? ingredient : ingredient?.name);
+  const key = normalizeIngredientKey(name);
+  if (!userId || !name || !key) return false;
+  const color = String(typeof ingredient === "object" ? ingredient?.color || "" : "") || inferIngredientColorId(name);
+  try {
+    await runTransaction(db, async (transaction) => {
+      const itemRef = shoppingListItemDoc(userId, key);
+      const snap = await transaction.get(itemRef);
+      if (snap.exists()) {
+        transaction.set(
+          itemRef,
+          {
+            count: Math.max(1, Number(snap.data()?.count || 1)) + 1,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        return;
+      }
+      transaction.set(itemRef, {
+        key,
+        name,
+        color,
+        count: 1,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    });
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to add shopping-list ingredient:", err);
+    return false;
+  }
+}
+
+export async function addDishIngredientsToShoppingList(userId, dishData) {
+  if (!userId || String(dishData?.dishMode || "").toLowerCase() === "restaurant") return false;
+  const ingredients = getDishIngredientItems(dishData);
+  if (!ingredients.length) return true;
+  const results = await Promise.all(ingredients.map((ingredient) => addShoppingListIngredient(userId, ingredient)));
+  return results.every(Boolean);
+}
+
+export async function getShoppingListItems(userId) {
+  if (!userId) return [];
+  try {
+    const snapshot = await getDocs(shoppingListItemsCollection(userId));
+    return snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+  } catch (err) {
+    console.error("Failed to get shopping-list items:", err);
+    return [];
+  }
+}
+
+export async function removeShoppingListIngredient(userId, ingredientKey) {
+  if (!userId || !ingredientKey) return false;
+  try {
+    await deleteDoc(shoppingListItemDoc(userId, ingredientKey));
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to remove shopping-list ingredient:", err);
+    return false;
+  }
+}
+
+export async function clearShoppingList(userId) {
+  if (!userId) return false;
+  try {
+    const snapshot = await getDocs(shoppingListItemsCollection(userId));
+    for (let i = 0; i < snapshot.docs.length; i += 400) {
+      const batch = writeBatch(db);
+      snapshot.docs.slice(i, i + 400).forEach((docSnap) => batch.delete(docSnap.ref));
+      await batch.commit();
+    }
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to clear shopping list:", err);
+    return false;
+  }
 }
 
 export async function queueDishForDishlistSorting(userId, dishData) {
@@ -2279,6 +2379,7 @@ export async function getSavedDishesFromFirestore(userId, { force = false } = {}
       restaurant: normalizeRestaurant(canonical.restaurant || dish.restaurant),
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
+      recipeIngredientItems: getDishIngredientItems(canonical.recipeIngredientItems?.length ? canonical : dish),
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
       rating: Math.max(0, Math.min(5, Math.round((Number(canonical.rating ?? dish.rating) || 0) * 2) / 2)),
       price: Number.isFinite(Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice)) && Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) > 0 ? Number(canonical.price ?? canonical.priceAmount ?? canonical.restaurantPrice ?? dish.price ?? dish.priceAmount ?? dish.restaurantPrice) : null,

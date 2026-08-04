@@ -11,7 +11,7 @@ import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import ImageFramingModal from "../../components/ImageFramingModal";
-import IngredientBulletTextarea from "../../components/IngredientBulletTextarea";
+import IngredientPillEditor from "../../components/IngredientPillEditor";
 import StoryMealTagModal from "../../components/StoryMealTagModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
 import RestaurantPlacePicker from "../../components/RestaurantPlacePicker";
@@ -29,6 +29,8 @@ import {
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { getTagDishlistId } from "../lib/tagDishlists";
 import { suggestDishTagsFromName } from "../lib/dishTagSuggestions";
+import { suggestIngredientsFromName } from "../lib/ingredientSuggestions";
+import { ingredientItemsToText, normalizeIngredientItems } from "../lib/ingredients";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
 import { clearSessionPageCache } from "../lib/sessionPageCache";
@@ -52,6 +54,7 @@ export default function UploadPage() {
   const [dishDescription, setDishDescription] = useState("");
   const [dishLink, setDishLink] = useState("");
   const [dishRecipeIngredients, setDishRecipeIngredients] = useState("");
+  const [dishRecipeIngredientItems, setDishRecipeIngredientItems] = useState([]);
   const [dishRecipeMethod, setDishRecipeMethod] = useState("");
   const [storyTaggedUser, setStoryTaggedUser] = useState("");
   const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
@@ -88,6 +91,8 @@ export default function UploadPage() {
   const [taggableUsers, setTaggableUsers] = useState([]);
   const [tagUserSearch, setTagUserSearch] = useState("");
   const [tagUsersLoading, setTagUsersLoading] = useState(false);
+  const suggestedIngredientsForNameRef = useRef("");
+  const isRestaurantUpload = dishMode === DISH_MODE_RESTAURANT;
   const showLegacyUploadFlow = false;
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -166,6 +171,25 @@ export default function UploadPage() {
     };
   }, [composerStep, dishMode, dishName, dishTags.length, loadingUpload, showUploadForm, uploadStep]);
 
+  useEffect(() => {
+    const shouldSuggestIngredients = showLegacyUploadFlow ? uploadStep >= 1 : composerStep >= 2;
+    const name = dishName.trim();
+    if (!shouldSuggestIngredients || loadingUpload || isRestaurantUpload || name.length < 2) return undefined;
+    if (dishRecipeIngredientItems.length > 0) return undefined;
+    if (suggestedIngredientsForNameRef.current === name.toLowerCase()) return undefined;
+    suggestedIngredientsForNameRef.current = name.toLowerCase();
+    let active = true;
+    (async () => {
+      const suggestions = await suggestIngredientsFromName(name, dishMode);
+      if (!active || !suggestions.length) return;
+      setDishRecipeIngredientItems((prev) => (prev.length ? prev : suggestions));
+      setDishRecipeIngredients((prev) => prev || ingredientItemsToText(suggestions));
+    })();
+    return () => {
+      active = false;
+    };
+  }, [composerStep, dishMode, dishName, dishRecipeIngredientItems.length, isRestaurantUpload, loadingUpload, showLegacyUploadFlow, uploadStep]);
+
   const toggleTag = (tag) => {
     setDishTags((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -239,6 +263,8 @@ export default function UploadPage() {
       if (dishImage) {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
       }
+      const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
+      const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
       if (storyMode) {
         const storyId = `story-${Date.now()}`;
         const ok = await publishCustomStory(user.uid, {
@@ -247,7 +273,8 @@ export default function UploadPage() {
           name: dishName.trim(),
           description: dishDescription.trim(),
           dishLink: getNormalizedDishLink(),
-          recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
+          recipeIngredients: recipeIngredientsText,
+          recipeIngredientItems: normalizedIngredientItems,
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           rating: isRestaurantUpload ? dishRating : 0,
@@ -280,7 +307,8 @@ export default function UploadPage() {
           dishLink: getNormalizedDishLink(),
           dishMode,
           restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
-          recipeIngredients: isRestaurantUpload ? "" : dishRecipeIngredients.trim(),
+          recipeIngredients: recipeIngredientsText,
+          recipeIngredientItems: normalizedIngredientItems,
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
           rating: isRestaurantUpload ? dishRating : 0,
@@ -363,7 +391,6 @@ export default function UploadPage() {
   const filteredTaggableUsers = taggableUsers.filter((candidate) =>
     (candidate.displayName || "").toLowerCase().includes(tagUserSearch.trim().toLowerCase())
   );
-  const isRestaurantUpload = dishMode === DISH_MODE_RESTAURANT;
   const normalizedDishPrice = Number(String(dishPrice).replace(/[^\d.,]/g, "").replace(",", "."));
   const dishPricePayload = isRestaurantUpload && Number.isFinite(normalizedDishPrice) && normalizedDishPrice > 0
     ? normalizedDishPrice
@@ -726,7 +753,16 @@ export default function UploadPage() {
                       </>
                     ) : (
                       <>
-                        <IngredientBulletTextarea placeholder={language === "it" ? "Ingredienti" : "Ingredients"} value={dishRecipeIngredients} onChange={setDishRecipeIngredients} className="w-full rounded-[1rem] border border-[#E4B43F]/55 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" rows={5} disabled={loadingUpload} />
+                        <IngredientPillEditor
+                          placeholder={language === "it" ? "Aggiungi ingrediente" : "Add ingredient"}
+                          value={dishRecipeIngredientItems}
+                          onChange={(items) => {
+                            const normalized = normalizeIngredientItems(items);
+                            setDishRecipeIngredientItems(normalized);
+                            setDishRecipeIngredients(ingredientItemsToText(normalized));
+                          }}
+                          disabled={loadingUpload}
+                        />
                         <textarea placeholder={language === "it" ? "Procedimento" : "Method"} value={dishRecipeMethod} onChange={(e) => setDishRecipeMethod(e.target.value)} className="w-full resize-none rounded-[1rem] border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} rows={6} disabled={loadingUpload} />
                       </>
                     )}
@@ -1234,12 +1270,15 @@ export default function UploadPage() {
                   <div className="text-[11px] font-semibold tracking-[0.22em] uppercase text-black/35">Optional</div>
                 </div>
                 <h2 className="text-[1.75rem] leading-none font-semibold mb-4 text-black text-center">Ingredients and recipe</h2>
-	                <IngredientBulletTextarea
-	                  placeholder="Ingredients"
-	                  value={dishRecipeIngredients}
-	                  onChange={setDishRecipeIngredients}
-	                  className="w-full p-4 rounded-[1.5rem] bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FFF7_100%)] text-black mb-3 border-2 default-accent-border shadow-[0_12px_26px_rgba(43,211,107,0.12)] focus:outline-none focus:ring-2 focus:ring-[#67C587]/20"
-	                  rows={3}
+	                <IngredientPillEditor
+	                  placeholder="Add ingredient"
+	                  value={dishRecipeIngredientItems}
+	                  onChange={(items) => {
+	                    const normalized = normalizeIngredientItems(items);
+	                    setDishRecipeIngredientItems(normalized);
+	                    setDishRecipeIngredients(ingredientItemsToText(normalized));
+	                  }}
+	                  className="mb-3 border-2 default-accent-border bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FFF7_100%)] shadow-[0_12px_26px_rgba(43,211,107,0.12)]"
 	                  disabled={loadingUpload}
 	                />
 	                <textarea
@@ -1624,6 +1663,12 @@ export default function UploadPage() {
         mode="multiple"
         selectedIds={selectedDishlistIds}
         lockedIds={["all_dishes", "uploaded"]}
+        dishData={{
+          name: dishName,
+          dishMode,
+          recipeIngredientItems: dishRecipeIngredientItems,
+          recipeIngredients: dishRecipeIngredients,
+        }}
         storyOption
         storySelected={uploadToStory}
         onToggleStory={() => setUploadToStory((value) => !value)}

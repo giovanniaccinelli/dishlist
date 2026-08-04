@@ -2027,6 +2027,7 @@ export default function Feed() {
         loading={dishlistsLoading}
         variant={dishlistPickerVariant}
         dishPreview={dishlistPickerVariant === "swipe" ? dishlistPickerDish : null}
+        dishData={dishlistPickerDish}
       />
       <AnimatePresence>
         {activityOpen ? (

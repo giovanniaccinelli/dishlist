@@ -813,6 +813,7 @@ export default function Dishes() {
         onConfirm={handleDishlistSelect}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
+        dishData={dishlistPickerDish}
       />
       <DishModeFilterModal
         open={dishModeFilterOpen}

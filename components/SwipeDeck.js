@@ -23,6 +23,7 @@ import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 import { formatDishPrice } from "../app/lib/dishPrice";
+import { getDishIngredientItems, getIngredientColor } from "../app/lib/ingredients";
 
 function DeckAutoplayVideo({
   src,
@@ -661,7 +662,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
   const currentCardIsRestaurant = isRestaurantDish(currentCard);
-  const hasIngredientsText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeIngredients || "").trim());
+  const currentIngredientItems = !currentCardIsRestaurant ? getDishIngredientItems(currentCard) : [];
+  const hasIngredientsText = !currentCardIsRestaurant && (currentIngredientItems.length > 0 || Boolean(String(currentCard?.recipeIngredients || "").trim()));
   const hasMethodText = !currentCardIsRestaurant && Boolean(String(currentCard?.recipeMethod || "").trim());
   const hasAnyRecipeText = hasIngredientsText || hasMethodText;
   const hasRestaurantMapView =
@@ -2078,9 +2080,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         </button>
                       ) : null}
                     </div>
-                    <p className={`text-sm leading-6 whitespace-pre-wrap ${darkMode ? "text-white/78" : "text-black/80"}`}>
-                      {currentCard.recipeIngredients}
-                    </p>
+                    {currentIngredientItems.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {currentIngredientItems.map((item) => {
+                          const color = getIngredientColor(item.color);
+                          return (
+                            <span
+                              key={item.key}
+                              className="inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-[13px] font-semibold leading-none"
+                              style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                            >
+                              {item.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className={`text-sm leading-6 whitespace-pre-wrap ${darkMode ? "text-white/78" : "text-black/80"}`}>
+                        {currentCard.recipeIngredients}
+                      </p>
+                    )}
                   </div>
                   ) : null}
                   {hasMethodText ? (
@@ -2584,11 +2603,28 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
                 <div className="mb-4 text-xl font-bold leading-tight">{currentCard?.name}</div>
-                <p className={`text-sm leading-7 whitespace-pre-wrap ${darkMode ? "text-white/80" : "text-black/80"}`}>
-                  {recipePanelModal === "ingredients"
-                    ? currentCard?.recipeIngredients || "No ingredients provided."
-                    : currentCard?.recipeMethod || "No method provided."}
-                </p>
+                {recipePanelModal === "ingredients" && currentIngredientItems.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {currentIngredientItems.map((item) => {
+                      const color = getIngredientColor(item.color);
+                      return (
+                        <span
+                          key={item.key}
+                          className="inline-flex min-h-9 items-center rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none"
+                          style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                        >
+                          {item.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className={`text-sm leading-7 whitespace-pre-wrap ${darkMode ? "text-white/80" : "text-black/80"}`}>
+                    {recipePanelModal === "ingredients"
+                      ? currentCard?.recipeIngredients || "No ingredients provided."
+                      : currentCard?.recipeMethod || "No method provided."}
+                  </p>
+                )}
               </div>
             </div>
             </motion.div>

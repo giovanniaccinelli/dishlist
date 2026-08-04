@@ -40,9 +40,12 @@ import {
   updateCustomDishlistDetails,
   publishDishAsStory,
   removePendingDishlistSorting,
+  addShoppingListIngredient,
+  clearShoppingList,
   getAvatarTone,
   isDisplayNameTaken,
   isValidCustomDishlist,
+  removeShoppingListIngredient,
   normalizeProfilePhotoURL,
 } from "../lib/firebaseHelpers";
 import { dispatchPushEvent } from "../lib/pushClient";
@@ -52,7 +55,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -83,6 +86,7 @@ import {
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
+import { getIngredientColor, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -636,6 +640,9 @@ export default function Profile() {
   const [dishlistPickerSource, setDishlistPickerSource] = useState("manual");
   const [pendingDishlistSorting, setPendingDishlistSorting] = useState([]);
   const [dismissedPendingDishIds, setDismissedPendingDishIds] = useState([]);
+  const [shoppingListItems, setShoppingListItems] = useState([]);
+  const [shoppingListOpen, setShoppingListOpen] = useState(false);
+  const [shoppingIngredientDraft, setShoppingIngredientDraft] = useState("");
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -656,6 +663,38 @@ export default function Profile() {
   const profileAliasKey = profileAliasIds.join("|");
   const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
   const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
+  useEffect(() => {
+    if (!user?.uid) {
+      setShoppingListItems([]);
+      setShoppingListOpen(false);
+      return undefined;
+    }
+    return onSnapshot(collection(db, "users", user.uid, "shoppingList", "items"), (snapshot) => {
+      const items = snapshot.docs
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+      setShoppingListItems(items);
+      if (!items.length) setShoppingListOpen(false);
+    });
+  }, [user?.uid]);
+
+  const handleAddShoppingIngredient = async () => {
+    const name = normalizeIngredientName(shoppingIngredientDraft);
+    if (!user?.uid || !name) return;
+    const ok = await addShoppingListIngredient(user.uid, { name, color: inferIngredientColorId(name) });
+    if (ok) setShoppingIngredientDraft("");
+  };
+
+  const handleRemoveShoppingIngredient = async (item) => {
+    if (!user?.uid) return;
+    await removeShoppingListIngredient(user.uid, item?.id || normalizeIngredientKey(item?.name));
+  };
+
+  const handleClearShoppingList = async () => {
+    if (!user?.uid) return;
+    await clearShoppingList(user.uid);
+  };
+
   const handleDishModeSelect = (nextMode) => {
     const normalized =
       nextMode === DISH_MODE_COOKING || nextMode === DISH_MODE_RESTAURANT || nextMode === DISH_MODE_ALL
@@ -1271,11 +1310,13 @@ export default function Profile() {
         imageFields = await uploadDishImageVariants(dishImage, user.uid);
         if (!imageFields.imageURL) throw new Error("Failed to upload image.");
       }
+      const normalizedIngredientItems = normalizeIngredientItems(dishRecipeIngredients);
       const dishId = await saveDishToFirestore({
         name: dishName,
         description: dishDescription || "",
         dishMode: DISH_MODE_COOKING,
         recipeIngredients: dishRecipeIngredients || "",
+        recipeIngredientItems: normalizedIngredientItems,
         recipeMethod: dishRecipeMethod || "",
         tags: dishTags,
         rating: 0,
@@ -1306,6 +1347,7 @@ export default function Profile() {
               description: dishDescription || "",
               dishMode: DISH_MODE_COOKING,
               recipeIngredients: dishRecipeIngredients || "",
+              recipeIngredientItems: normalizedIngredientItems,
               recipeMethod: dishRecipeMethod || "",
               rating: 0,
               tags: dishTags,
@@ -5326,6 +5368,7 @@ export default function Profile() {
         loading={dishlistPickerLoading}
         variant={dishlistPickerSource === "pending" ? "sorting" : "sheet"}
         dishPreview={dishlistPickerSource === "pending" ? dishlistPickerDish : null}
+        dishData={dishlistPickerDish}
       />
       <AnimatePresence>
         {profileCalendarOpen ? (
@@ -5699,6 +5742,110 @@ export default function Profile() {
                 </div>
               </div>
             ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {shoppingListItems.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setShoppingListOpen(true)}
+          className="no-accent-border fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#2BD36B] bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md"
+          style={{ bottom: "calc(var(--app-bottom-nav-height) + 1rem)" }}
+          aria-label="Open shopping list"
+        >
+          <ShoppingCart size={27} strokeWidth={2.2} />
+          <span className="no-accent-border absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#2BD36B] px-1.5 text-[11px] font-black leading-none text-black">
+            {shoppingListItems.reduce((sum, item) => sum + Math.max(1, Number(item.count || 1)), 0)}
+          </span>
+        </button>
+      ) : null}
+
+      <AnimatePresence>
+        {shoppingListOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[130] flex items-end justify-center bg-black/50 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShoppingListOpen(false)}
+          >
+            <motion.div
+              className={`w-full max-w-md overflow-hidden rounded-[2rem] border px-5 pb-5 pt-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] ${
+                darkMode ? "border-[#2BD36B]/28 bg-[#0D120E] text-white" : "border-[#2BD36B]/32 bg-[linear-gradient(180deg,#F7FFF8_0%,#F5F4EC_100%)] text-black"
+              }`}
+              initial={{ y: 28, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 22, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className={`no-accent-border mx-auto mb-4 h-1.5 w-12 rounded-full ${darkMode ? "bg-white/14" : "bg-black/12"}`} />
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2BD36B]">Shopping</p>
+                  <h3 className="mt-1 text-[1.45rem] font-semibold leading-tight">{t("Lista della spesa")}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearShoppingList}
+                  className={`rounded-full border px-3 py-2 text-xs font-bold ${
+                    darkMode ? "border-[#2BD36B]/28 bg-[#132318] text-[#7AF0A0]" : "border-[#2BD36B]/35 bg-white text-[#168A4A]"
+                  }`}
+                >
+                  {t("Svuota")}
+                </button>
+              </div>
+              <div className="mb-4 flex gap-2">
+                <input
+                  type="text"
+                  value={shoppingIngredientDraft}
+                  onChange={(event) => setShoppingIngredientDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    handleAddShoppingIngredient();
+                  }}
+                  placeholder={t("Aggiungi ingrediente")}
+                  className={`min-w-0 flex-1 rounded-full border px-4 py-3 text-[16px] outline-none ${
+                    darkMode ? "border-white/12 bg-[#171717] text-white placeholder:text-white/32" : "border-black/8 bg-white text-black placeholder:text-black/35"
+                  }`}
+                  style={{ fontSize: 16 }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddShoppingIngredient}
+                  className="no-accent-border flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2BD36B] text-black"
+                  aria-label="Add ingredient"
+                >
+                  <Plus size={19} strokeWidth={2.4} />
+                </button>
+              </div>
+              <div className="flex max-h-[46dvh] flex-wrap gap-2 overflow-y-auto pr-1">
+                {shoppingListItems.map((item) => {
+                  const color = getIngredientColor(item.color || inferIngredientColorId(item.name));
+                  const count = Math.max(1, Number(item.count || 1));
+                  return (
+                    <span
+                      key={item.id}
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none"
+                      style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                    >
+                      {item.name}
+                      {count > 1 ? <span className="font-black">x{count}</span> : null}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveShoppingIngredient(item)}
+                        className="no-accent-border -mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/8"
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        <X size={12} strokeWidth={2.4} />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

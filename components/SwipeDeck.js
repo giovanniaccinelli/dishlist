@@ -368,6 +368,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const descriptionRef = useRef(null);
+  const currentCardShellRef = useRef(null);
+  const topMetadataRef = useRef(null);
+  const bottomMetadataRef = useRef(null);
+  const [compactMediaBounds, setCompactMediaBounds] = useState({ top: 112, bottom: 180 });
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
@@ -730,6 +734,52 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
+  useLayoutEffect(() => {
+    if (!squareCardLayout) return undefined;
+
+    let frameId = 0;
+    const measureBounds = () => {
+      const cardRect = currentCardShellRef.current?.getBoundingClientRect?.();
+      if (!cardRect) return;
+
+      const topRect = topMetadataRef.current?.getBoundingClientRect?.();
+      const bottomRect = bottomMetadataRef.current?.getBoundingClientRect?.();
+      const top = topRect ? Math.max(64, Math.round(topRect.bottom - cardRect.top + 14)) : 112;
+      const bottom = bottomRect ? Math.max(104, Math.round(cardRect.bottom - bottomRect.top + 14)) : 180;
+
+      setCompactMediaBounds((prev) => (
+        prev.top === top && prev.bottom === bottom ? prev : { top, bottom }
+      ));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(measureBounds);
+    };
+
+    scheduleMeasure();
+    const observedNodes = [currentCardShellRef.current, topMetadataRef.current, bottomMetadataRef.current].filter(Boolean);
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
+    observedNodes.forEach((node) => observer?.observe(node));
+    window.addEventListener("resize", scheduleMeasure);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      observer?.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+    };
+  }, [
+    squareCardLayout,
+    currentCardStableKey,
+    currentCard?.description,
+    currentCard?.name,
+    currentCard?.taggedUserName,
+    currentDishPriceLabel,
+    currentRestaurantLabel,
+    darkMode,
+    normalizedDishLink,
+    showStoryHistoryCounter,
+  ]);
   const resolvedSecondaryActionLabel =
     typeof secondaryActionLabel === "function" ? secondaryActionLabel(currentCard) : secondaryActionLabel;
   const resolvedSecondaryActionClassName =
@@ -1526,6 +1576,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
         </AnimatePresence>
         <motion.div
+          ref={currentCardShellRef}
           key={currentCard._key}
           drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -1641,6 +1692,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             />
           ) : null}
           <div
+            ref={topMetadataRef}
             className={`absolute top-4 left-4 z-30 flex flex-col items-start gap-1.5 ${darkMode ? "max-w-[14.5rem]" : "max-w-[11.5rem]"} ${visibleRestaurantMap ? "hidden" : ""}`}
             style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
           >
@@ -1844,13 +1896,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 />
               ) : null}
               {squareCardLayout ? (
-                <div className="absolute left-5 right-5 top-1/2 z-0 aspect-square -translate-y-1/2 overflow-hidden rounded-[1.45rem] bg-black">
-                  {renderImage(currentCard, {
-                    active: !visibleRecipe,
-                    onVideoRef: (node) => {
-                      currentVideoRef.current = node;
-                    },
-                  })}
+                <div
+                  className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
+                  style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
+                >
+                  <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
+                    {renderImage(currentCard, {
+                      active: !visibleRecipe,
+                      onVideoRef: (node) => {
+                        currentVideoRef.current = node;
+                      },
+                    })}
+                  </div>
                 </div>
               ) : (
                 renderImage(currentCard, {
@@ -1890,6 +1947,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {!visibleRecipe ? (
                 <div
+                  ref={bottomMetadataRef}
                   className={`absolute left-5 right-5 text-white z-20`}
                   style={{ bottom: textBottom, backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
                 >

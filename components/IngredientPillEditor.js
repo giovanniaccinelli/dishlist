@@ -50,8 +50,8 @@ export default function IngredientPillEditor({
             </span>
           );
         })}
-        <div className="flex min-w-[12rem] flex-1 items-center gap-2 rounded-full border-2 border-[#E4B43F]/65 bg-[#FFF9E8] px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
-          <Pencil size={15} className="shrink-0 text-[#A36F00]" strokeWidth={2.2} />
+        <div className="flex min-w-[12rem] flex-1 items-center gap-2 rounded-full border border-black/10 bg-[#F8F6F0] px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] focus-within:border-black/22">
+          <Pencil size={15} className="shrink-0 text-black/42" strokeWidth={2.1} />
           <input
             type="text"
             value={draft}

@@ -55,6 +55,29 @@ function getDishlistDisplayName(dishlist, t = (value) => value) {
   return t(dishlist?.name || "");
 }
 
+function DishlistPickerLoadingState({ label = "Carica", darkMode = false, overlay = false }) {
+  const content = (
+    <div className="no-accent-border flex h-32 w-32 flex-col items-center justify-center rounded-full bg-black/82 text-[#2BD36B] shadow-[0_22px_58px_rgba(0,0,0,0.42)]">
+      <span className="dishlist-action-spinner text-[2.35rem]" />
+      <span className="mt-2 text-[12px] font-black uppercase tracking-[0.16em] text-white/88">{label}</span>
+    </div>
+  );
+
+  if (overlay) {
+    return (
+      <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 backdrop-blur-[3px]">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex min-h-0 flex-1 items-center justify-center rounded-[1.4rem] px-4 py-10 ${darkMode ? "bg-white/8" : "bg-[#F2EFE8]"}`}>
+      {content}
+    </div>
+  );
+}
+
 export default function DishlistPickerModal({
   open,
   onClose,
@@ -243,18 +266,9 @@ export default function DishlistPickerModal({
                 </div>
               </div>
             ) : null}
-            {saving ? (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 backdrop-blur-[3px]">
-                <div className="no-accent-border flex h-32 w-32 flex-col items-center justify-center rounded-full bg-black/82 text-[#2BD36B] shadow-[0_22px_58px_rgba(0,0,0,0.42)]">
-                  <span className="dishlist-action-spinner text-[2.35rem]" />
-                  <span className="mt-2 text-[12px] font-black uppercase tracking-[0.16em] text-white/88">Carica</span>
-                </div>
-              </div>
-            ) : null}
+            {saving ? <DishlistPickerLoadingState label={t("Saving...")} overlay /> : null}
             {loading ? (
-              <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
-                {t("Loading dishlists...")}
-              </div>
+              <DishlistPickerLoadingState label={t("Loading")} darkMode={darkMode} />
             ) : displayedLists.length === 0 ? (
               <div className={`rounded-[1.4rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/60" : "bg-[#F2EFE8] text-black/55"}`}>
                 {isSortingCard && sortingSearch.trim() ? t("No results") : t("No dishlists yet.")}

@@ -374,6 +374,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextCardShellRef = useRef(null);
   const nextTopMetadataRef = useRef(null);
   const nextBottomMetadataRef = useRef(null);
+  const compactMediaBoundsByCardRef = useRef(new Map());
   const [compactMediaBounds, setCompactMediaBounds] = useState({ top: 112, bottom: 180 });
   const [nextCompactMediaBounds, setNextCompactMediaBounds] = useState({ top: 112, bottom: 180 });
   const scrollPanelActiveRef = useRef(false);
@@ -740,6 +741,15 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
   useLayoutEffect(() => {
+    if (!squareCardLayout || !currentCardStableKey) return;
+    const cachedBounds = compactMediaBoundsByCardRef.current.get(currentCardStableKey);
+    if (!cachedBounds) return;
+    setCompactMediaBounds((prev) => (
+      prev.top === cachedBounds.top && prev.bottom === cachedBounds.bottom ? prev : cachedBounds
+    ));
+  }, [squareCardLayout, currentCardStableKey]);
+
+  useLayoutEffect(() => {
     if (!squareCardLayout) return undefined;
 
     let frameId = 0;
@@ -751,9 +761,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const bottomRect = bottomMetadataRef.current?.getBoundingClientRect?.();
       const top = topRect ? Math.max(64, Math.round(topRect.bottom - cardRect.top + 14)) : 112;
       const bottom = bottomRect ? Math.max(104, Math.round(cardRect.bottom - bottomRect.top + 14)) : 180;
+      const nextBounds = { top, bottom };
 
+      if (currentCardStableKey) compactMediaBoundsByCardRef.current.set(currentCardStableKey, nextBounds);
       setCompactMediaBounds((prev) => (
-        prev.top === top && prev.bottom === bottom ? prev : { top, bottom }
+        prev.top === top && prev.bottom === bottom ? prev : nextBounds
       ));
     };
 
@@ -797,9 +809,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       const bottomRect = nextBottomMetadataRef.current?.getBoundingClientRect?.();
       const top = topRect ? Math.max(64, Math.round(topRect.bottom - cardRect.top + 14)) : 112;
       const bottom = bottomRect ? Math.max(104, Math.round(cardRect.bottom - bottomRect.top + 14)) : 180;
+      const nextBounds = { top, bottom };
 
+      if (nextCardStableKey) compactMediaBoundsByCardRef.current.set(nextCardStableKey, nextBounds);
       setNextCompactMediaBounds((prev) => (
-        prev.top === top && prev.bottom === bottom ? prev : { top, bottom }
+        prev.top === top && prev.bottom === bottom ? prev : nextBounds
       ));
     };
 
@@ -1376,32 +1390,37 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
     return (
       <>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
-        />
+        {darkMode ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent"
+          />
+        ) : null}
         <div
           ref={topRef}
           className={`pointer-events-none absolute left-4 top-4 z-[13] flex max-w-[14.5rem] flex-col items-start gap-1.5 text-white`}
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${previewAccentBorder} bg-black/35 text-sm font-bold`}>
-              {dish.ownerPhotoURL ? (
-                <img src={dish.ownerPhotoURL} alt={dish.ownerName || "User"} className="h-full w-full object-cover" />
-              ) : (
-                (dish.ownerName?.[0] || "U").toUpperCase()
-              )}
+          {darkMode ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${previewAccentBorder} bg-black/35 text-sm font-bold`}>
+                {dish.ownerPhotoURL ? (
+                  <img src={dish.ownerPhotoURL} alt={dish.ownerName || "User"} className="h-full w-full object-cover" />
+                ) : (
+                  (dish.ownerName?.[0] || "U").toUpperCase()
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
+                {previewUploadDate ? (
+                  <div className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75">
+                    {previewUploadDate}
+                  </div>
+                ) : null}
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-[0.98rem] font-semibold leading-tight">{dish.ownerName || "Unknown"}</p>
-              {previewUploadDate ? (
-                <div className="mt-0.5 truncate text-[0.82rem] font-medium leading-none text-white/75">
-                  {previewUploadDate}
-                </div>
-              ) : null}
-            </div>
-          </div>
+          ) : null}
           <div className="flex items-center gap-1.5">
+            {!darkMode && dish?.dishMode ? <DishModeBadge dishMode={dish.dishMode} className="h-8 w-8 shrink-0 self-center" /> : null}
             {showStoryHistoryCounter ? (
               <div className="no-accent-border inline-flex h-8 items-center gap-1 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md self-center">
                 <StoryStatIcon size={12} />
@@ -1461,6 +1480,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           />
         ) : null}
         <div ref={bottomRef} className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
+          {!darkMode ? (
+            <div className="mb-1 flex items-center gap-2">
+              <div className={`flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 ${previewAccentBorder} bg-white/20 text-xs font-bold`}>
+                {dish.ownerPhotoURL ? (
+                  <img src={dish.ownerPhotoURL} alt={dish.ownerName || "User"} className="h-full w-full object-cover" />
+                ) : (
+                  (dish.ownerName?.[0] || "U").toUpperCase()
+                )}
+              </div>
+              <p className="text-lg font-semibold leading-none">{dish.ownerName || "Unknown"}</p>
+            </div>
+          ) : null}
           <div className="text-left text-2xl font-bold">{dish.name}</div>
           {dish.description ? (
             <p className="mt-0.5 line-clamp-2 text-sm text-white/80">{dish.description}</p>

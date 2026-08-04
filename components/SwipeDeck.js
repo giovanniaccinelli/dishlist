@@ -209,32 +209,6 @@ function getSafeRestaurantPlaceId(dish) {
   return typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
 }
 
-function getCompactMediaBoundsForDish(dish, { darkMode = false, showStoryHistoryCounter = false, textBottom = 156 } = {}) {
-  if (!dish) return { top: 112, bottom: 180 };
-
-  const hasRestaurant = isRestaurantDish(dish);
-  const hasRestaurantLabel = hasRestaurant && Boolean(getSafeRestaurantLabel(dish) && getSafeRestaurantPlaceId(dish));
-  const hasDescription = Boolean(String(dish.description || "").trim());
-  const hasTaggedUser = Boolean(String(dish.taggedUserName || "").trim());
-  const hasPrice = hasRestaurant && Boolean(formatDishPrice(dish));
-
-  let topContentHeight = 32;
-  if (darkMode) topContentHeight += 46;
-  if (showStoryHistoryCounter) topContentHeight += darkMode ? 38 : 0;
-  if (hasRestaurantLabel) topContentHeight += 34;
-
-  let bottomContentHeight = 34;
-  if (!darkMode) bottomContentHeight += 32;
-  if (hasDescription || dish.dishLink) bottomContentHeight += 42;
-  if (hasTaggedUser) bottomContentHeight += 28;
-  if (hasRestaurant) bottomContentHeight += hasPrice ? 54 : 30;
-
-  return {
-    top: Math.max(64, 16 + topContentHeight + 14),
-    bottom: Math.max(104, textBottom + bottomContentHeight + 14),
-  };
-}
-
 function getRestaurantGoogleMapsUrl(restaurant = {}) {
   const placeId = String(restaurant.placeId || "").trim();
   const name = String(restaurant.name || "").trim();
@@ -766,19 +740,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
-  const stableCompactMediaBounds = useMemo(
-    () => getCompactMediaBoundsForDish(currentCard, { darkMode, showStoryHistoryCounter, textBottom }),
-    [currentCardStableKey, currentCard?.description, currentCard?.dishLink, currentCard?.taggedUserName, currentDishPriceLabel, currentRestaurantLabel, darkMode, showStoryHistoryCounter, textBottom]
-  );
-  const stableNextCompactMediaBounds = useMemo(
-    () => getCompactMediaBoundsForDish(nextCard, { darkMode, showStoryHistoryCounter, textBottom }),
-    [nextCardStableKey, nextCard?.description, nextCard?.dishLink, nextCard?.taggedUserName, darkMode, showStoryHistoryCounter, textBottom]
-  );
   const outgoingSwipeSquareLayout = cardLayout === "square" && outgoingSwipe?.card && !isRecipeOnlyDish(outgoingSwipe.card);
-  const stableOutgoingCompactMediaBounds = useMemo(
-    () => getCompactMediaBoundsForDish(outgoingSwipe?.card, { darkMode, showStoryHistoryCounter, textBottom }),
-    [outgoingSwipe?.key, outgoingSwipe?.card?.description, outgoingSwipe?.card?.dishLink, outgoingSwipe?.card?.taggedUserName, darkMode, showStoryHistoryCounter, textBottom]
-  );
   useLayoutEffect(() => {
     if (!squareCardLayout || !currentCardStableKey) return;
     const cachedBounds = compactMediaBoundsByCardRef.current.get(currentCardStableKey);
@@ -1354,6 +1316,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         duration,
         borderColor: isRestaurantDish(dish) ? "#E64646" : "#E4B43F",
         borderClass: isRestaurantDish(dish) ? "dish-card-shell--restaurant" : "dish-card-shell--default",
+        compactBounds: compactMediaBounds,
       });
       setPromotedCardMotionLocked(true);
       resetDragPosition();
@@ -1647,7 +1610,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             {squareCardLayout ? (
               <div
                 className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                style={{ top: stableNextCompactMediaBounds.top, bottom: stableNextCompactMediaBounds.bottom }}
+                style={{ top: nextCompactMediaBounds.top, bottom: nextCompactMediaBounds.bottom }}
               >
                 <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                   {renderImage(nextCard, {
@@ -1711,7 +1674,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {outgoingSwipeSquareLayout ? (
                 <div
                   className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                  style={{ top: stableOutgoingCompactMediaBounds.top, bottom: stableOutgoingCompactMediaBounds.bottom }}
+                  style={{
+                    top: (outgoingSwipe.compactBounds || compactMediaBounds).top,
+                    bottom: (outgoingSwipe.compactBounds || compactMediaBounds).bottom,
+                  }}
                 >
                   <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                     {renderImage(outgoingSwipe.card, { preview: true })}
@@ -2069,7 +2035,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {squareCardLayout ? (
                 <div
                   className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                  style={{ top: stableCompactMediaBounds.top, bottom: stableCompactMediaBounds.bottom }}
+                  style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
                 >
                   <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                     {renderImage(currentCard, {

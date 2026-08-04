@@ -5810,7 +5810,11 @@ export default function Profile() {
           type="button"
           onClick={() => setShoppingListOpen(true)}
           className="fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#2BD36B] bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32),0_0_0_5px_rgba(43,211,107,0.14)] backdrop-blur-md"
-          style={{ bottom: "calc(var(--app-bottom-nav-height) + 1rem)" }}
+          style={{
+            bottom: "calc(var(--app-bottom-nav-height) + 1rem)",
+            borderColor: "#2BD36B",
+            boxShadow: "0 18px 42px rgba(0,0,0,0.32), 0 0 0 5px rgba(43,211,107,0.18), inset 0 0 0 1px rgba(43,211,107,0.55)",
+          }}
           aria-label="Open shopping list"
         >
           <ShoppingCart size={27} strokeWidth={2.2} />

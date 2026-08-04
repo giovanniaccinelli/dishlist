@@ -1411,9 +1411,29 @@ export async function getShoppingListItems(userId) {
   if (!userId) return [];
   try {
     const snapshot = await getDocs(shoppingListItemsCollection(userId));
-    return snapshot.docs
-      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+    const byKey = new Map();
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data();
+      const name = normalizeIngredientName(data?.name);
+      const key = normalizeIngredientKey(data?.key || name || docSnap.id);
+      if (!key || !name) return;
+      const count = Math.max(1, Number(data?.count || 1));
+      const existing = byKey.get(key);
+      if (existing) {
+        existing.count += count;
+        return;
+      }
+      byKey.set(key, {
+        id: key,
+        key,
+        name,
+        color: data?.color || inferIngredientColorId(name),
+        count,
+        createdAt: data?.createdAt || null,
+        updatedAt: data?.updatedAt || null,
+      });
+    });
+    return Array.from(byKey.values()).sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
   } catch (err) {
     console.error("Failed to get shopping-list items:", err);
     return [];
@@ -1423,7 +1443,20 @@ export async function getShoppingListItems(userId) {
 export async function removeShoppingListIngredient(userId, ingredientKey) {
   if (!userId || !ingredientKey) return false;
   try {
-    await deleteDoc(shoppingListItemDoc(userId, ingredientKey));
+    const normalizedKey = normalizeIngredientKey(ingredientKey);
+    const snapshot = await getDocs(shoppingListItemsCollection(userId));
+    const matchingDocs = snapshot.docs.filter((docSnap) => {
+      const data = docSnap.data();
+      const docKey = normalizeIngredientKey(data?.key || data?.name || docSnap.id);
+      return docSnap.id === ingredientKey || docSnap.id === normalizedKey || docKey === normalizedKey;
+    });
+    if (!matchingDocs.length) {
+      await deleteDoc(shoppingListItemDoc(userId, normalizedKey || ingredientKey));
+    } else {
+      const batch = writeBatch(db);
+      matchingDocs.forEach((docSnap) => batch.delete(docSnap.ref));
+      await batch.commit();
+    }
     clearReadCache(userId);
     return true;
   } catch (err) {

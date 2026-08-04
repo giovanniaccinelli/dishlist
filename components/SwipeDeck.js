@@ -209,6 +209,32 @@ function getSafeRestaurantPlaceId(dish) {
   return typeof dish?.restaurant?.placeId === "string" ? dish.restaurant.placeId.trim() : "";
 }
 
+function getCompactMediaBoundsForDish(dish, { darkMode = false, showStoryHistoryCounter = false, textBottom = 156 } = {}) {
+  if (!dish) return { top: 112, bottom: 180 };
+
+  const hasRestaurant = isRestaurantDish(dish);
+  const hasRestaurantLabel = hasRestaurant && Boolean(getSafeRestaurantLabel(dish) && getSafeRestaurantPlaceId(dish));
+  const hasDescription = Boolean(String(dish.description || "").trim());
+  const hasTaggedUser = Boolean(String(dish.taggedUserName || "").trim());
+  const hasPrice = hasRestaurant && Boolean(formatDishPrice(dish));
+
+  let topContentHeight = 32;
+  if (darkMode) topContentHeight += 46;
+  if (showStoryHistoryCounter) topContentHeight += darkMode ? 38 : 0;
+  if (hasRestaurantLabel) topContentHeight += 34;
+
+  let bottomContentHeight = 34;
+  if (!darkMode) bottomContentHeight += 32;
+  if (hasDescription || dish.dishLink) bottomContentHeight += 42;
+  if (hasTaggedUser) bottomContentHeight += 28;
+  if (hasRestaurant) bottomContentHeight += hasPrice ? 54 : 30;
+
+  return {
+    top: Math.max(64, 16 + topContentHeight + 14),
+    bottom: Math.max(104, textBottom + bottomContentHeight + 14),
+  };
+}
+
 function getRestaurantGoogleMapsUrl(restaurant = {}) {
   const placeId = String(restaurant.placeId || "").trim();
   const name = String(restaurant.name || "").trim();
@@ -740,6 +766,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
+  const stableCompactMediaBounds = useMemo(
+    () => getCompactMediaBoundsForDish(currentCard, { darkMode, showStoryHistoryCounter, textBottom }),
+    [currentCardStableKey, currentCard?.description, currentCard?.dishLink, currentCard?.taggedUserName, currentDishPriceLabel, currentRestaurantLabel, darkMode, showStoryHistoryCounter, textBottom]
+  );
+  const stableNextCompactMediaBounds = useMemo(
+    () => getCompactMediaBoundsForDish(nextCard, { darkMode, showStoryHistoryCounter, textBottom }),
+    [nextCardStableKey, nextCard?.description, nextCard?.dishLink, nextCard?.taggedUserName, darkMode, showStoryHistoryCounter, textBottom]
+  );
   useLayoutEffect(() => {
     if (!squareCardLayout || !currentCardStableKey) return;
     const cachedBounds = compactMediaBoundsByCardRef.current.get(currentCardStableKey);
@@ -1382,6 +1416,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const previewStoryStats = dish?.id ? storyPushStatsByDish?.[dish.id] || null : null;
     const previewStoryPushCount = Number(previewStoryStats?.count || 0);
     const previewIsRestaurant = isRestaurantDish(dish);
+    const previewDishLink = String(dish?.dishLink || "").trim();
     const previewHasRecipe = !previewIsRestaurant && (Boolean(String(dish?.recipeIngredients || "").trim()) || Boolean(String(dish?.recipeMethod || "").trim()));
     const previewHasRestaurantMap = previewIsRestaurant && Boolean(getSafeRestaurantPlaceId(dish) && previewRestaurantLabel);
     const previewHasToggle = previewHasRecipe || previewHasRestaurantMap;
@@ -1493,8 +1528,23 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           ) : null}
           <div className="text-left text-2xl font-bold">{dish.name}</div>
-          {dish.description ? (
-            <p className="mt-0.5 line-clamp-2 text-sm text-white/80">{dish.description}</p>
+          {dish.description || previewDishLink ? (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
+              {dish.description ? (
+                <p className="min-w-0 flex-1 line-clamp-2">{dish.description}</p>
+              ) : null}
+              {previewDishLink ? (
+                <span
+                  className={darkMode
+                    ? "no-accent-border inline-flex shrink-0 items-center gap-1 rounded-full bg-black/68 px-2.5 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                    : `inline-flex shrink-0 items-center gap-1 rounded-full border-2 ${previewAccentBorder} bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`
+                  }
+                >
+                  <span>Link</span>
+                  <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                </span>
+              ) : null}
+            </div>
           ) : null}
           {dish.taggedUserName ? (
             <div className="mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md">
@@ -1592,7 +1642,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             {squareCardLayout ? (
               <div
                 className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                style={{ top: nextCompactMediaBounds.top, bottom: nextCompactMediaBounds.bottom }}
+                style={{ top: stableNextCompactMediaBounds.top, bottom: stableNextCompactMediaBounds.bottom }}
               >
                 <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                   {renderImage(nextCard, {
@@ -2003,7 +2053,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {squareCardLayout ? (
                 <div
                   className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                  style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
+                  style={{ top: stableCompactMediaBounds.top, bottom: stableCompactMediaBounds.bottom }}
                 >
                   <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                     {renderImage(currentCard, {

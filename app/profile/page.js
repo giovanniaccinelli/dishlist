@@ -98,6 +98,34 @@ const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
 const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
 const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
+
+function normalizeShoppingListSnapshotItems(docs = []) {
+  const byKey = new Map();
+  docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    const name = normalizeIngredientName(data?.name);
+    const key = normalizeIngredientKey(data?.key || name || docSnap.id);
+    if (!key || !name) return;
+    const existing = byKey.get(key);
+    const count = Math.max(1, Number(data?.count || 1));
+    if (existing) {
+      existing.count += count;
+      existing.sourceIds.push(docSnap.id);
+      return;
+    }
+    byKey.set(key, {
+      id: key,
+      key,
+      sourceIds: [docSnap.id],
+      name,
+      color: data?.color || inferIngredientColorId(name),
+      count,
+      createdAt: data?.createdAt || null,
+      updatedAt: data?.updatedAt || null,
+    });
+  });
+  return Array.from(byKey.values()).sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+}
 const CORE_PROFILE_DISHLIST_ORDER = ["saved", "all_dishes", "uploaded", "to_try"];
 
 function StoryStatIcon({ size = 10 }) {
@@ -684,9 +712,7 @@ export default function Profile() {
       return undefined;
     }
     return onSnapshot(collection(db, "users", user.uid, "shoppingListItems"), (snapshot) => {
-      const items = snapshot.docs
-        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+      const items = normalizeShoppingListSnapshotItems(snapshot.docs);
       setShoppingListItems(items);
       if (!items.length) setShoppingListOpen(false);
     });
@@ -701,7 +727,7 @@ export default function Profile() {
 
   const handleRemoveShoppingIngredient = async (item) => {
     if (!user?.uid) return;
-    await removeShoppingListIngredient(user.uid, item?.id || normalizeIngredientKey(item?.name));
+    await removeShoppingListIngredient(user.uid, item?.key || item?.id || normalizeIngredientKey(item?.name));
   };
 
   const handleClearShoppingList = async () => {
@@ -5783,7 +5809,7 @@ export default function Profile() {
         <button
           type="button"
           onClick={() => setShoppingListOpen(true)}
-          className="no-accent-border fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#2BD36B] bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md"
+          className="fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#2BD36B] bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32),0_0_0_5px_rgba(43,211,107,0.14)] backdrop-blur-md"
           style={{ bottom: "calc(var(--app-bottom-nav-height) + 1rem)" }}
           aria-label="Open shopping list"
         >

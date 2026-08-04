@@ -774,6 +774,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     () => getCompactMediaBoundsForDish(nextCard, { darkMode, showStoryHistoryCounter, textBottom }),
     [nextCardStableKey, nextCard?.description, nextCard?.dishLink, nextCard?.taggedUserName, darkMode, showStoryHistoryCounter, textBottom]
   );
+  const outgoingSwipeSquareLayout = cardLayout === "square" && outgoingSwipe?.card && !isRecipeOnlyDish(outgoingSwipe.card);
+  const stableOutgoingCompactMediaBounds = useMemo(
+    () => getCompactMediaBoundsForDish(outgoingSwipe?.card, { darkMode, showStoryHistoryCounter, textBottom }),
+    [outgoingSwipe?.key, outgoingSwipe?.card?.description, outgoingSwipe?.card?.dishLink, outgoingSwipe?.card?.taggedUserName, darkMode, showStoryHistoryCounter, textBottom]
+  );
   useLayoutEffect(() => {
     if (!squareCardLayout || !currentCardStableKey) return;
     const cachedBounds = compactMediaBoundsByCardRef.current.get(currentCardStableKey);
@@ -1673,7 +1678,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <motion.div
               layout={false}
               key={outgoingSwipe.key}
-              className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+              className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} ${outgoingSwipeSquareLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
               initial={{
                 x: outgoingSwipe.startX,
                 y: outgoingSwipe.startY,
@@ -1703,8 +1708,19 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 finishOutgoingSwipe();
               }}
             >
-              {renderImage(outgoingSwipe.card, { preview: true })}
-              {renderPreviewChrome(outgoingSwipe.card)}
+              {outgoingSwipeSquareLayout ? (
+                <div
+                  className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
+                  style={{ top: stableOutgoingCompactMediaBounds.top, bottom: stableOutgoingCompactMediaBounds.bottom }}
+                >
+                  <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
+                    {renderImage(outgoingSwipe.card, { preview: true })}
+                  </div>
+                </div>
+              ) : (
+                renderImage(outgoingSwipe.card, { preview: true })
+              )}
+              {renderPreviewChrome(outgoingSwipe.card, { compact: outgoingSwipeSquareLayout })}
               {outgoingSwipe.targetX > 0 ? (
                 <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#23C268]/22">
                   <div className="flex h-48 w-48 scale-110 flex-col items-center justify-center rounded-full border-4 border-[#23C268]/90 bg-black/45 px-5 text-center shadow-[0_0_42px_rgba(35,194,104,0.45)] backdrop-blur-sm">

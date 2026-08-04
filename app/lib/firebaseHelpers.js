@@ -1362,20 +1362,40 @@ export async function saveDishToSelectedDishlist(userId, dishlistId, dishData) {
   return addDishToCustomDishlist(userId, dishlistId, dishData.id, dishData);
 }
 
-export async function addShoppingListIngredient(userId, ingredient) {
+export async function addShoppingListIngredient(userId, ingredient, options = {}) {
   const name = normalizeIngredientName(typeof ingredient === "string" ? ingredient : ingredient?.name);
   const key = normalizeIngredientKey(name);
   if (!userId || !name || !key) return false;
   const color = String(typeof ingredient === "object" ? ingredient?.color || "" : "") || inferIngredientColorId(name);
+  const sourceDishId = normalizeIngredientKey(options?.sourceDishId || "");
   try {
     await runTransaction(db, async (transaction) => {
       const itemRef = shoppingListItemDoc(userId, key);
       const snap = await transaction.get(itemRef);
       if (snap.exists()) {
+        const data = snap.data() || {};
+        const existingDishIds = Array.isArray(data.dishIds) ? data.dishIds.map((id) => String(id || "")) : [];
+        if (sourceDishId && existingDishIds.includes(sourceDishId)) {
+          transaction.set(
+            itemRef,
+            {
+              name,
+              key,
+              color: data.color || color,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+          return;
+        }
         transaction.set(
           itemRef,
           {
-            count: Math.max(1, Number(snap.data()?.count || 1)) + 1,
+            name,
+            key,
+            color: data.color || color,
+            count: Math.max(1, Number(data.count || 1)) + 1,
+            ...(sourceDishId ? { dishIds: arrayUnion(sourceDishId) } : { manualCount: Math.max(0, Number(data.manualCount || 0)) + 1 }),
             updatedAt: serverTimestamp(),
           },
           { merge: true }
@@ -1387,6 +1407,7 @@ export async function addShoppingListIngredient(userId, ingredient) {
         name,
         color,
         count: 1,
+        ...(sourceDishId ? { dishIds: [sourceDishId], manualCount: 0 } : { dishIds: [], manualCount: 1 }),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -1403,7 +1424,10 @@ export async function addDishIngredientsToShoppingList(userId, dishData) {
   if (!userId || String(dishData?.dishMode || "").toLowerCase() === "restaurant") return false;
   const ingredients = getDishIngredientItems(dishData);
   if (!ingredients.length) return true;
-  const results = await Promise.all(ingredients.map((ingredient) => addShoppingListIngredient(userId, ingredient)));
+  const sourceDishId = String(dishData?.id || "");
+  const results = await Promise.all(
+    ingredients.map((ingredient) => addShoppingListIngredient(userId, ingredient, { sourceDishId }))
+  );
   return results.every(Boolean);
 }
 
@@ -1420,7 +1444,7 @@ export async function getShoppingListItems(userId) {
       const count = Math.max(1, Number(data?.count || 1));
       const existing = byKey.get(key);
       if (existing) {
-        existing.count += count;
+        existing.count = Math.max(existing.count, count);
         return;
       }
       byKey.set(key, {

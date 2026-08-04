@@ -107,9 +107,13 @@ function normalizeShoppingListSnapshotItems(docs = []) {
     const key = normalizeIngredientKey(data?.key || name || docSnap.id);
     if (!key || !name) return;
     const existing = byKey.get(key);
+    const dishIds = Array.isArray(data?.dishIds)
+      ? Array.from(new Set(data.dishIds.map((id) => normalizeIngredientKey(id)).filter(Boolean)))
+      : [];
     const count = Math.max(1, Number(data?.count || 1));
     if (existing) {
-      existing.count += count;
+      existing.count = Math.max(existing.count, count);
+      existing.dishIds = Array.from(new Set([...(existing.dishIds || []), ...dishIds]));
       existing.sourceIds.push(docSnap.id);
       return;
     }
@@ -117,6 +121,7 @@ function normalizeShoppingListSnapshotItems(docs = []) {
       id: key,
       key,
       sourceIds: [docSnap.id],
+      dishIds,
       name,
       color: data?.color || inferIngredientColorId(name),
       count,

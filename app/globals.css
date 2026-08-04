@@ -791,8 +791,6 @@ html.dark .map-restaurant-card-solid {
 }
 
 .swipe-deck-layer {
-  position: relative;
-  z-index: 60;
   overflow: visible;
 }
 

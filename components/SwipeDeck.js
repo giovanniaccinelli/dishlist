@@ -336,6 +336,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [toastVariant, setToastVariant] = useState("success");
   const [showRecipe, setShowRecipe] = useState(false);
   const [isEjecting, setIsEjecting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [outgoingSwipe, setOutgoingSwipe] = useState(null);
   const [promotedCardMotionLocked, setPromotedCardMotionLocked] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
@@ -383,6 +384,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     setOutgoingSwipe(null);
     setPromotedCardMotionLocked(false);
     setIsEjecting(false);
+    setIsDragging(false);
   }, []);
   const resetDragPosition = useCallback(() => {
     dragX.stop();
@@ -484,6 +486,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCard = useMemo(() => deck[currentIndex] || null, [deck, currentIndex]);
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardStableKey = currentCard?.id || currentCard?._key || "";
+  useEffect(() => {
+    setIsDragging(false);
+    resetDragPosition();
+  }, [currentCardStableKey, resetDragPosition]);
+
   useEffect(() => {
     if (!deckEmpty) {
       autoResetRequestedRef.current = false;
@@ -1100,6 +1107,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const handleSwipeEnd = async (info, dish) => {
+    setIsDragging(false);
     if (disabled || isEjecting) return;
     const projectedX = info.offset.x + info.velocity.x * 0.28;
     const horizontalTravel = Math.abs(projectedX);
@@ -1406,7 +1414,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   return (
     <div className={`flex flex-col items-center justify-center ${fitHeight ? "h-full min-h-0" : "min-h-[72vh]"}`}>
       <div
-        className={`isolate relative w-full max-w-[29rem] ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
+        className={`relative w-full max-w-[29rem] ${fitHeight ? "h-full min-h-0" : "h-[74vh]"}`}
         onPointerDownCapture={(event) => {
           handleDeckMediaUnlock(event);
           releasePromotedMotionLock(event);
@@ -1520,8 +1528,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             });
           }}
           onDrag={updateDragRotation}
+          onDragStart={() => setIsDragging(true)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative z-30 overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} bg-white ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {swipeAddEnabled && !outgoingSwipe && (
             <motion.div

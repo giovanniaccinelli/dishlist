@@ -377,6 +377,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const compactMediaBoundsByCardRef = useRef(new Map());
   const [compactMediaBounds, setCompactMediaBounds] = useState({ top: 112, bottom: 180 });
   const [nextCompactMediaBounds, setNextCompactMediaBounds] = useState({ top: 112, bottom: 180 });
+  const [compactMediaMeasured, setCompactMediaMeasured] = useState(false);
+  const [nextCompactMediaMeasured, setNextCompactMediaMeasured] = useState(false);
   const scrollPanelActiveRef = useRef(false);
   const currentVideoRef = useRef(null);
   const nextVideoRef = useRef(null);
@@ -742,16 +744,26 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
   const outgoingSwipeSquareLayout = cardLayout === "square" && outgoingSwipe?.card && !isRecipeOnlyDish(outgoingSwipe.card);
   useLayoutEffect(() => {
-    if (!squareCardLayout || !currentCardStableKey) return;
+    if (!squareCardLayout || !currentCardStableKey) {
+      setCompactMediaMeasured(false);
+      return;
+    }
     const cachedBounds = compactMediaBoundsByCardRef.current.get(currentCardStableKey);
-    if (!cachedBounds) return;
+    if (!cachedBounds) {
+      setCompactMediaMeasured(false);
+      return;
+    }
     setCompactMediaBounds((prev) => (
       prev.top === cachedBounds.top && prev.bottom === cachedBounds.bottom ? prev : cachedBounds
     ));
+    setCompactMediaMeasured(true);
   }, [squareCardLayout, currentCardStableKey]);
 
   useLayoutEffect(() => {
-    if (!squareCardLayout) return undefined;
+    if (!squareCardLayout) {
+      setCompactMediaMeasured(false);
+      return undefined;
+    }
 
     let frameId = 0;
     const measureBounds = () => {
@@ -768,6 +780,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       setCompactMediaBounds((prev) => (
         prev.top === top && prev.bottom === bottom ? prev : nextBounds
       ));
+      setCompactMediaMeasured(true);
     };
 
     const scheduleMeasure = () => {
@@ -775,7 +788,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       frameId = requestAnimationFrame(measureBounds);
     };
 
-    scheduleMeasure();
+    measureBounds();
     const observedNodes = [currentCardShellRef.current, topMetadataRef.current, bottomMetadataRef.current].filter(Boolean);
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
     observedNodes.forEach((node) => observer?.observe(node));
@@ -799,7 +812,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     showStoryHistoryCounter,
   ]);
   useLayoutEffect(() => {
-    if (!squareCardLayout || !nextCard) return undefined;
+    if (!squareCardLayout || !nextCard) {
+      setNextCompactMediaMeasured(false);
+      return undefined;
+    }
 
     let frameId = 0;
     const measureBounds = () => {
@@ -816,6 +832,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       setNextCompactMediaBounds((prev) => (
         prev.top === top && prev.bottom === bottom ? prev : nextBounds
       ));
+      setNextCompactMediaMeasured(true);
     };
 
     const scheduleMeasure = () => {
@@ -823,7 +840,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       frameId = requestAnimationFrame(measureBounds);
     };
 
-    scheduleMeasure();
+    measureBounds();
     const observedNodes = [nextCardShellRef.current, nextTopMetadataRef.current, nextBottomMetadataRef.current].filter(Boolean);
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
     observedNodes.forEach((node) => observer?.observe(node));
@@ -1610,7 +1627,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             {squareCardLayout ? (
               <div
                 className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                style={{ top: nextCompactMediaBounds.top, bottom: nextCompactMediaBounds.bottom }}
+                style={{
+                  top: nextCompactMediaBounds.top,
+                  bottom: nextCompactMediaBounds.bottom,
+                  opacity: nextCompactMediaMeasured ? 1 : 0,
+                }}
               >
                 <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                   {renderImage(nextCard, {
@@ -2035,7 +2056,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {squareCardLayout ? (
                 <div
                   className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
-                  style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
+                  style={{
+                    top: compactMediaBounds.top,
+                    bottom: compactMediaBounds.bottom,
+                    opacity: compactMediaMeasured ? 1 : 0,
+                  }}
                 >
                   <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
                     {renderImage(currentCard, {

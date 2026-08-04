@@ -114,39 +114,39 @@ function getRestaurantGoogleMapsUrl(group = {}) {
 
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
 const RESTAURANT_TAG_PIN_THEME = {
-  fit: { fill: "#34D399", stroke: "#047857" },
-  "high protein": { fill: "#FB923C", stroke: "#C2410C" },
-  veg: { fill: "#38BDF8", stroke: "#0369A1" },
-  vegan: { fill: "#22C55E", stroke: "#15803D" },
-  light: { fill: "#A7F3D0", stroke: "#10B981" },
-  easy: { fill: "#A78BFA", stroke: "#6D28D9" },
-  quick: { fill: "#2DD4BF", stroke: "#0F766E" },
-  fancy: { fill: "#F472B6", stroke: "#BE185D" },
-  comfort: { fill: "#FACC15", stroke: "#B45309" },
-  "carb heavy": { fill: "#FDBA74", stroke: "#EA580C" },
-  "low carb": { fill: "#0EA5E9", stroke: "#0369A1" },
-  spicy: { fill: "#F87171", stroke: "#B91C1C" },
-  "late night": { fill: "#818CF8", stroke: "#4338CA" },
-  cheat: { fill: "#FB7185", stroke: "#BE123C" },
-  budget: { fill: "#A3E635", stroke: "#4D7C0F" },
-  premium: { fill: "#FDE047", stroke: "#A16207" },
-  summer: { fill: "#F97316", stroke: "#C2410C" },
-  winter: { fill: "#60A5FA", stroke: "#1D4ED8" },
-  gourmet: { fill: "#C084FC", stroke: "#7E22CE" },
-  "date night": { fill: "#E879F9", stroke: "#A21CAF" },
-  pasta: { fill: "#FBBF24", stroke: "#B45309" },
-  italian: { fill: "#4ADE80", stroke: "#DC2626" },
-  ethnic: { fill: "#60A5FA", stroke: "#2563EB" },
-  seafood: { fill: "#22D3EE", stroke: "#0891B2" },
-  aesthetic: { fill: "#F9A8D4", stroke: "#DB2777" },
-  fresh: { fill: "#34D399", stroke: "#059669" },
-  asian: { fill: "#F87171", stroke: "#DC2626" },
-  fried: { fill: "#FB923C", stroke: "#C2410C" },
-  delivery: { fill: "#38BDF8", stroke: "#0284C7" },
-  dessert: { fill: "#F472B6", stroke: "#BE185D" },
-  american: { fill: "#60A5FA", stroke: "#DC2626" },
-  rice: { fill: "#FDE047", stroke: "#CA8A04" },
-  "fast food": { fill: "#FB7185", stroke: "#BE123C" },
+  fit: { fill: "#9CF2BE", stroke: "#10A360" },
+  "high protein": { fill: "#FFC18A", stroke: "#E66A1A" },
+  veg: { fill: "#9BE7FF", stroke: "#1599D3" },
+  vegan: { fill: "#86EFAC", stroke: "#16A34A" },
+  light: { fill: "#CFFAE6", stroke: "#35B887" },
+  easy: { fill: "#C7B7FF", stroke: "#8060E8" },
+  quick: { fill: "#8EF2E6", stroke: "#16A89C" },
+  fancy: { fill: "#FFB1DA", stroke: "#E04E9B" },
+  comfort: { fill: "#FFE072", stroke: "#D99313" },
+  "carb heavy": { fill: "#FFD0A3", stroke: "#E97822" },
+  "low carb": { fill: "#8DDCFF", stroke: "#0D91D2" },
+  spicy: { fill: "#FFA0A0", stroke: "#E23A3A" },
+  "late night": { fill: "#AEB8FF", stroke: "#6874E8" },
+  cheat: { fill: "#FFA4B3", stroke: "#E64665" },
+  budget: { fill: "#C9F56B", stroke: "#7FB315" },
+  premium: { fill: "#FFF06A", stroke: "#D2A10A" },
+  summer: { fill: "#FFB066", stroke: "#E86510" },
+  winter: { fill: "#9AC4FF", stroke: "#3E7CE8" },
+  gourmet: { fill: "#D8AFFF", stroke: "#A24FE3" },
+  "date night": { fill: "#F5ABFF", stroke: "#CF55DC" },
+  pasta: { fill: "#FFD66A", stroke: "#D8890B" },
+  italian: { fill: "#A8F0B9", stroke: "#E34B4B" },
+  ethnic: { fill: "#9BC7FF", stroke: "#4A82E6" },
+  seafood: { fill: "#8CF0FF", stroke: "#13AFC4" },
+  aesthetic: { fill: "#FFC0E0", stroke: "#E35A9E" },
+  fresh: { fill: "#94F0C6", stroke: "#18A872" },
+  asian: { fill: "#FFA2A2", stroke: "#E04848" },
+  fried: { fill: "#FFC08A", stroke: "#E07119" },
+  delivery: { fill: "#9DE2FF", stroke: "#229DD8" },
+  dessert: { fill: "#FFB5D9", stroke: "#E04B95" },
+  american: { fill: "#9DC7FF", stroke: "#E04B4B" },
+  rice: { fill: "#FFF27E", stroke: "#D5B014" },
+  "fast food": { fill: "#FFA6B6", stroke: "#E64A65" },
 };
 
 function getRestaurantTagPinTheme(tag = "") {
@@ -195,10 +195,10 @@ function getRestaurantTagIconMarkup(tag = "") {
       className: "",
       strokeWidth: 1.95,
     })
-  ).replace("<svg ", `<svg width="23" height="23" style="display:block;color:${extractDecorColor(decor?.iconClass)};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `);
+  ).replace("<svg ", `<svg width="23" height="23" style="display:block;color:#111111;filter:drop-shadow(0 1px 0 rgba(255,255,255,0.25))" `);
   const iconColor = extractDecorColor(decor?.iconClass);
   if (!iconMarkup || iconMarkup.includes("undefined") || iconMarkup.includes("NaN")) return null;
-  return iconMarkup.replace(`style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `, `style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `);
+  return iconMarkup.replace(`style="display:block;color:${iconColor};filter:drop-shadow(0 1px 1px rgba(0,0,0,0.28))" `, `style="display:block;color:#111111;filter:drop-shadow(0 1px 0 rgba(255,255,255,0.25))" `);
 }
 
 const getRestaurantPinSvgMarkup = (
@@ -208,7 +208,6 @@ const getRestaurantPinSvgMarkup = (
 ) => `
 <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
-  <path d="M14 10.5C17.05 7.5 22.55 6.15 27.45 7.65C21.1 8.45 15.95 12.05 13.75 17.9C12.75 15.55 12.7 12.45 14 10.5Z" fill="white" opacity="0.32"/>
   <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
   ${showDefaultSymbol ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
   ${showDefaultSymbol ? `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -390,7 +389,7 @@ function createRestaurantPinOverlay({
       .replace("<svg ", `<svg width="${width}" height="${height}" style="display:block" `);
 
     if (tagMarkup) {
-      const iconSize = selected ? 20 : 18;
+      const iconSize = selected ? 18 : 16;
       const iconWrap = document.createElement("div");
       iconWrap.style.position = "absolute";
       iconWrap.style.left = "50%";
@@ -1401,7 +1400,7 @@ export default function RestaurantMapView({
                 type="button"
                 onClick={() => setRestaurantFilter("all")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "all" ? "" : "text-white"}`}
-                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "#2A2A2A", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Tutti" : "All"}
               </button>
@@ -1409,7 +1408,7 @@ export default function RestaurantMapView({
                 type="button"
                 onClick={() => setRestaurantFilter("following")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "following" ? "" : "text-white"}`}
-                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { backgroundColor: "#2A2A2A", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Seguiti" : "Following"}
               </button>

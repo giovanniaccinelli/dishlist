@@ -61,6 +61,7 @@ export default function DishlistPickerModal({
   lists = [],
   dishName = "dish",
   loading = false,
+  saving = false,
   title = "Choose dishlists",
   eyebrow = "Add To",
   mode = "multiple",
@@ -239,6 +240,14 @@ export default function DishlistPickerModal({
                   <div className={`truncate text-base font-bold ${darkMode ? "text-white" : "text-black"}`}>
                     {dishPreview?.name || dishName}
                   </div>
+                </div>
+              </div>
+            ) : null}
+            {saving ? (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 backdrop-blur-[3px]">
+                <div className="no-accent-border flex h-32 w-32 flex-col items-center justify-center rounded-full bg-black/82 text-[#2BD36B] shadow-[0_22px_58px_rgba(0,0,0,0.42)]">
+                  <span className="dishlist-action-spinner text-[2.35rem]" />
+                  <span className="mt-2 text-[12px] font-black uppercase tracking-[0.16em] text-white/88">Carica</span>
                 </div>
               </div>
             ) : null}
@@ -506,9 +515,15 @@ export default function DishlistPickerModal({
                     <button
                       type="button"
                       onClick={onConfirm}
+                      disabled={saving}
                       className="dish-modal-primary-btn min-h-[3.15rem] rounded-full px-6 text-sm font-bold transition disabled:opacity-60"
                     >
-                      {t(resolvedConfirmLabel)}
+                      {saving ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <span className="dishlist-action-spinner" />
+                          <span>{t("Saving...")}</span>
+                        </span>
+                      ) : t(resolvedConfirmLabel)}
                     </button>
                   </div>
                 ) : null}

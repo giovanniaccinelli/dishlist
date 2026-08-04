@@ -252,6 +252,7 @@ export default function Feed() {
   const [dishlistPickerVariant, setDishlistPickerVariant] = useState("sheet");
   const [dishlists, setDishlists] = useState([]);
   const [dishlistsLoading, setDishlistsLoading] = useState(false);
+  const [dishlistPickerSaving, setDishlistPickerSaving] = useState(false);
   const [selectedDishlistIds, setSelectedDishlistIds] = useState(["all_dishes"]);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -1295,30 +1296,37 @@ export default function Feed() {
   };
 
   const handleDishlistSelect = async () => {
-    if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0) return;
+    if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0 || dishlistPickerSaving) return;
+    setDishlistPickerSaving(true);
+    const minimumLoading = new Promise((resolve) => setTimeout(resolve, 650));
     const dishToAdd = dishlistPickerDish;
-    const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
-    const results = await Promise.all(
-      persistDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
-    );
-    if (results.some((result) => !result)) {
-      setToastVariant("error");
-      setToast("Save failed");
+    try {
+      const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
+      const results = await Promise.all(
+        persistDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
+      );
+      await minimumLoading;
+      if (results.some((result) => !result)) {
+        setToastVariant("error");
+        setToast("Save failed");
+        setTimeout(() => setToast(""), 1200);
+        return;
+      }
+      setDishlistPickerOpen(false);
+      setDishlistPickerDish(null);
+      setToastVariant("success");
+      setToast("Added to DishList");
       setTimeout(() => setToast(""), 1200);
-      return;
+      setAddedDishIds((prev) => {
+        const next = new Set(prev);
+        next.add(dishToAdd.id);
+        return next;
+      });
+      setForYouDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+      setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
+    } finally {
+      setDishlistPickerSaving(false);
     }
-    setDishlistPickerOpen(false);
-    setDishlistPickerDish(null);
-    setToastVariant("success");
-    setToast("Added to DishList");
-    setTimeout(() => setToast(""), 1200);
-    setAddedDishIds((prev) => {
-      const next = new Set(prev);
-      next.add(dishToAdd.id);
-      return next;
-    });
-    setForYouDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
-    setFollowingDeck((prev) => prev.filter((d) => d.id !== dishToAdd.id));
   };
 
   const buildActivityItems = async ({ includeExpanded = false } = {}) => {
@@ -2025,6 +2033,7 @@ export default function Feed() {
         onConfirm={handleDishlistSelect}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
+        saving={dishlistPickerSaving}
         variant={dishlistPickerVariant}
         dishPreview={dishlistPickerVariant === "swipe" ? dishlistPickerDish : null}
         dishData={dishlistPickerDish}

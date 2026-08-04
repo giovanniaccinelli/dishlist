@@ -665,6 +665,7 @@ export default function Profile() {
   const [dishlistPickerDish, setDishlistPickerDish] = useState(null);
   const [dishlistPickerLists, setDishlistPickerLists] = useState([]);
   const [dishlistPickerLoading, setDishlistPickerLoading] = useState(false);
+  const [dishlistPickerSaving, setDishlistPickerSaving] = useState(false);
   const [dishlistPickerSelectedIds, setDishlistPickerSelectedIds] = useState([]);
   const [dishlistPickerSource, setDishlistPickerSource] = useState("manual");
   const [pendingDishlistSorting, setPendingDishlistSorting] = useState([]);
@@ -1921,7 +1922,7 @@ export default function Profile() {
   };
 
   const handleConfirmDishlistPicker = async () => {
-    if (!user?.uid || !dishlistPickerDish?.id) return;
+    if (!user?.uid || !dishlistPickerDish?.id || dishlistPickerSaving) return;
     const selectedSet = new Set(dishlistPickerSelectedIds);
     const persistDishlistIds = dishlistPickerSelectedIds.filter(
       (dishlistId) => dishlistId !== "all_dishes" && !(dishlistId === "to_try" && selectedSet.has("saved"))
@@ -1990,42 +1991,49 @@ export default function Profile() {
       })();
       return;
     }
-    const addResults = await Promise.all(
-      persistDishlistIds.map((dishlistId) =>
-        saveDishToSelectedDishlist(user.uid, dishlistId, dishlistPickerDish)
-      )
-    );
-    const removeResults = await Promise.all(
-      Array.from(currentIds)
-        .filter((dishlistId) => !nextIds.has(dishlistId))
-        .map((dishlistId) => {
-          if (dishlistId === "saved") return removeSavedDishFromUser(user.uid, dishlistPickerDish.id);
-          if (dishlistId === "to_try") return removeDishFromToTry(user.uid, dishlistPickerDish.id);
-          return removeDishFromCustomDishlist(user.uid, dishlistId, dishlistPickerDish.id);
-        })
-    );
-    const ok = addResults.every(Boolean) && removeResults.every(Boolean);
-    setToast(ok ? "Added to DishList" : "Save failed");
-    setTimeout(() => setToast(""), 1200);
-    if (ok) {
-      if (dishlistPickerSource === "pending") {
-        await removePendingDishlistSorting(user.uid, dishlistPickerDish.id);
-        setPendingDishlistSorting((prev) => prev.filter((dish) => dish.id !== dishlistPickerDish.id));
-        setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dishlistPickerDish.id));
+    setDishlistPickerSaving(true);
+    const minimumLoading = new Promise((resolve) => setTimeout(resolve, 650));
+    try {
+      const addResults = await Promise.all(
+        persistDishlistIds.map((dishlistId) =>
+          saveDishToSelectedDishlist(user.uid, dishlistId, dishlistPickerDish)
+        )
+      );
+      const removeResults = await Promise.all(
+        Array.from(currentIds)
+          .filter((dishlistId) => !nextIds.has(dishlistId))
+          .map((dishlistId) => {
+            if (dishlistId === "saved") return removeSavedDishFromUser(user.uid, dishlistPickerDish.id);
+            if (dishlistId === "to_try") return removeDishFromToTry(user.uid, dishlistPickerDish.id);
+            return removeDishFromCustomDishlist(user.uid, dishlistId, dishlistPickerDish.id);
+          })
+      );
+      await minimumLoading;
+      const ok = addResults.every(Boolean) && removeResults.every(Boolean);
+      setToast(ok ? "Added to DishList" : "Save failed");
+      setTimeout(() => setToast(""), 1200);
+      if (ok) {
+        if (dishlistPickerSource === "pending") {
+          await removePendingDishlistSorting(user.uid, dishlistPickerDish.id);
+          setPendingDishlistSorting((prev) => prev.filter((dish) => dish.id !== dishlistPickerDish.id));
+          setDismissedPendingDishIds((prev) => prev.filter((id) => id !== dishlistPickerDish.id));
+        }
+        setDishlistPickerOpen(false);
+        setDishlistPickerDish(null);
+        setDishlistPickerLists([]);
+        setDishlistPickerSelectedIds([]);
+        setDishlistPickerSource("manual");
+        const [saved, toTry, custom] = await Promise.all([
+          getSavedDishesFromFirestore(user.uid),
+          getToTryDishesFromFirestore(user.uid),
+          getCustomDishlistsForUser(user.uid),
+        ]);
+        setSavedDishes(saved);
+        setToTryDishes(toTry);
+        setCustomDishlists(sanitizeCustomDishlists(custom));
       }
-      setDishlistPickerOpen(false);
-      setDishlistPickerDish(null);
-      setDishlistPickerLists([]);
-      setDishlistPickerSelectedIds([]);
-      setDishlistPickerSource("manual");
-      const [saved, toTry, custom] = await Promise.all([
-        getSavedDishesFromFirestore(user.uid),
-        getToTryDishesFromFirestore(user.uid),
-        getCustomDishlistsForUser(user.uid),
-      ]);
-      setSavedDishes(saved);
-      setToTryDishes(toTry);
-      setCustomDishlists(sanitizeCustomDishlists(custom));
+    } finally {
+      setDishlistPickerSaving(false);
     }
   };
 
@@ -5430,6 +5438,7 @@ export default function Profile() {
         eyebrow={dishlistPickerSource === "pending" ? t("Salvato") : undefined}
         confirmLabel={dishlistPickerSource === "pending" ? "Salta" : t("Save dish")}
         loading={dishlistPickerLoading}
+        saving={dishlistPickerSaving}
         variant={dishlistPickerSource === "pending" ? "sorting" : "sheet"}
         dishPreview={dishlistPickerSource === "pending" ? dishlistPickerDish : null}
         dishData={dishlistPickerDish}

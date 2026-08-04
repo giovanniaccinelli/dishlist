@@ -1311,7 +1311,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   };
 
-  const renderPreviewChrome = (dish) => {
+  const renderPreviewChrome = (dish, { compact = false } = {}) => {
     if (!dish) return null;
     const previewAccentBorder = isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border";
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
@@ -1399,14 +1399,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           </div>
         ) : null}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
-          style={{
-            height: "42%",
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
-          }}
-        />
+        {!compact ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
+            style={{
+              height: "42%",
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.58) 42%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0) 100%)",
+            }}
+          />
+        ) : null}
         <div className="pointer-events-none absolute left-5 right-5 z-[13] text-white" style={{ bottom: textBottom }}>
           <div className="text-left text-2xl font-bold">{dish.name}</div>
           {dish.description ? (
@@ -1501,16 +1503,32 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       >
         {nextCard ? (
           <motion.div
-            className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
-            {renderImage(nextCard, {
-              preview: true,
-              onVideoRef: (node) => {
-                nextVideoRef.current = node;
-              },
-            })}
-            {renderPreviewChrome(nextCard)}
+            {squareCardLayout ? (
+              <div
+                className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
+                style={{ top: compactMediaBounds.top, bottom: compactMediaBounds.bottom }}
+              >
+                <div className="aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] bg-black">
+                  {renderImage(nextCard, {
+                    preview: true,
+                    onVideoRef: (node) => {
+                      nextVideoRef.current = node;
+                    },
+                  })}
+                </div>
+              </div>
+            ) : (
+              renderImage(nextCard, {
+                preview: true,
+                onVideoRef: (node) => {
+                  nextVideoRef.current = node;
+                },
+              })
+            )}
+            {renderPreviewChrome(nextCard, { compact: squareCardLayout })}
           </motion.div>
         ) : null}
         <AnimatePresence>

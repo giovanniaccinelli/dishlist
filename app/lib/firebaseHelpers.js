@@ -632,6 +632,23 @@ export async function uploadDishImageVariants(file, userId) {
   };
 }
 
+export async function uploadDishMediaItems(files = [], userId) {
+  const mediaFiles = Array.isArray(files) ? files.filter(Boolean).slice(0, 5) : [];
+  if (!mediaFiles.length) {
+    return { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "", mediaItems: [] };
+  }
+  const mediaItems = await Promise.all(mediaFiles.map((file) => uploadDishImageVariants(file, userId)));
+  const first = mediaItems[0] || {};
+  return {
+    imageURL: first.imageURL || "",
+    cardURL: first.cardURL || first.imageURL || "",
+    thumbURL: first.thumbURL || first.cardURL || first.imageURL || "",
+    mediaType: first.mediaType || "image",
+    mediaMimeType: first.mediaMimeType || "",
+    mediaItems,
+  };
+}
+
 export async function uploadProfileImage(file, userId) {
   if (!file || !userId) {
     throw new Error("Missing file or userId for profile upload.");

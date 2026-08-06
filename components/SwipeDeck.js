@@ -16,7 +16,7 @@ import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import RestaurantMapView from "./RestaurantMapView";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish, getDishLikeState, toggleDishLike } from "../app/lib/firebaseHelpers";
-import { DEFAULT_DISH_IMAGE, getDishImageUrl, isDishVideo } from "../app/lib/dishImage";
+import { DEFAULT_DISH_IMAGE, getDishImageUrl, getDishMediaItems, isDishVideo } from "../app/lib/dishImage";
 import { isRecipeOnlyDish } from "../app/lib/dishContent";
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
@@ -371,6 +371,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
+  const [mediaIndexByCardKey, setMediaIndexByCardKey] = useState({});
+  const [zoomMedia, setZoomMedia] = useState(null);
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -1382,19 +1384,38 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const renderImage = (
     dish,
-    { active = false, preview = false, onVideoRef = null, onImageReady = null } = {}
+    { active = false, preview = false, onVideoRef = null, onImageReady = null, carousel = true, zoomable = true } = {}
   ) => {
-    const imageSrc = getDishImageUrl(dish);
-    if (isDishVideo(dish)) {
-      return (
+    const mediaItems = getDishMediaItems(dish);
+    const fallbackMedia = {
+      cardURL: getDishImageUrl(dish),
+      thumbURL: getDishImageUrl(dish, "thumb"),
+      mediaType: isDishVideo(dish) ? "video" : "image",
+      mediaMimeType: dish?.mediaMimeType || "",
+    };
+    const items = mediaItems.length ? mediaItems : [fallbackMedia];
+    const cardKey = String(dish?._key || dish?.id || dish?.cardURL || dish?.imageURL || "");
+    const selectedIndex = Math.min(Math.max(0, Number(mediaIndexByCardKey[cardKey] || 0)), Math.max(0, items.length - 1));
+    const media = items[selectedIndex] || items[0] || fallbackMedia;
+    const imageSrc = media.cardURL || media.imageURL || media.url || DEFAULT_DISH_IMAGE;
+    const mediaIsVideo = media.mediaType === "video" || media.mediaMimeType?.startsWith("video/") || (selectedIndex === 0 && isDishVideo(dish));
+    const hasCarousel = carousel && items.length > 1;
+    const setMediaIndex = (nextIndex) => {
+      setMediaIndexByCardKey((prev) => ({ ...prev, [cardKey]: Math.min(Math.max(0, nextIndex), items.length - 1) }));
+    };
+    const openZoom = (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      if (mediaIsVideo || !zoomable) return;
+      setZoomMedia({ dishName: dish?.name || "Dish", items, index: selectedIndex, cardKey });
+    };
+    const mediaNode = mediaIsVideo ? (
         <DeckAutoplayVideo
           src={imageSrc}
           onVideoRef={onVideoRef}
           className="pointer-events-none block w-full h-full object-cover"
         />
-      );
-    }
-    return (
+      ) : (
       <img
         src={imageSrc}
         alt={dish.name}
@@ -1407,6 +1428,62 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           if (typeof onImageReady === "function") onImageReady();
         }}
       />
+    );
+    if (!hasCarousel && !zoomable) return mediaNode;
+    return (
+      <div className="relative h-full w-full">
+        {mediaNode}
+        {hasCarousel ? (
+          <>
+            <button
+              type="button"
+              data-no-drag="true"
+              className="absolute left-0 top-0 z-[9] h-full w-1/2"
+              aria-label="Previous image"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                setMediaIndex(selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1);
+              }}
+            />
+            <button
+              type="button"
+              data-no-drag="true"
+              className="absolute right-0 top-0 z-[9] h-full w-1/2"
+              aria-label="Next image"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                setMediaIndex(selectedIndex >= items.length - 1 ? 0 : selectedIndex + 1);
+              }}
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[10] flex justify-center gap-1.5">
+              {items.map((item, index) => (
+                <span
+                  key={`${item.cardURL || item.imageURL || index}-${index}`}
+                  className={`h-1.5 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.32)] transition-all ${
+                    index === selectedIndex ? "w-8 opacity-95" : "w-4 opacity-45"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+        {!mediaIsVideo && zoomable ? (
+          <button
+            type="button"
+            data-no-drag="true"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={openZoom}
+            className="absolute right-3 top-3 z-[11] flex h-9 w-9 items-center justify-center rounded-full border border-white/18 bg-black/62 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md"
+            aria-label="Zoom image"
+          >
+            <Maximize2 size={16} strokeWidth={2.25} />
+          </button>
+        ) : null}
+      </div>
     );
   };
 
@@ -2776,6 +2853,80 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           history={currentStoryPushHistory}
         />
       ) : null}
+      <AnimatePresence>
+        {zoomMedia ? (
+          <motion.div
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/92 p-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setZoomMedia(null)}
+          >
+            <motion.div
+              className="relative h-full w-full max-w-3xl overflow-hidden rounded-[1.4rem]"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img
+                src={zoomMedia.items?.[zoomMedia.index]?.cardURL || zoomMedia.items?.[zoomMedia.index]?.imageURL || DEFAULT_DISH_IMAGE}
+                alt={zoomMedia.dishName}
+                className="h-full w-full object-contain"
+                onError={(event) => {
+                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setZoomMedia(null)}
+                className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-black/62 text-white backdrop-blur-md"
+                aria-label="Close image"
+              >
+                <X size={20} />
+              </button>
+              {zoomMedia.items?.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="absolute left-0 top-0 h-full w-1/2"
+                    aria-label="Previous image"
+                    onClick={() => {
+                      setZoomMedia((prev) => {
+                        if (!prev) return prev;
+                        const nextIndex = prev.index <= 0 ? prev.items.length - 1 : prev.index - 1;
+                        setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
+                        return { ...prev, index: nextIndex };
+                      });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-0 top-0 h-full w-1/2"
+                    aria-label="Next image"
+                    onClick={() => {
+                      setZoomMedia((prev) => {
+                        if (!prev) return prev;
+                        const nextIndex = prev.index >= prev.items.length - 1 ? 0 : prev.index + 1;
+                        setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
+                        return { ...prev, index: nextIndex };
+                      });
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-5 z-[3] flex justify-center gap-1.5">
+                    {zoomMedia.items.map((item, index) => (
+                      <span
+                        key={`${item.cardURL || item.imageURL || index}-${index}`}
+                        className={`h-1.5 rounded-full bg-white transition-all ${index === zoomMedia.index ? "w-9 opacity-95" : "w-5 opacity-42"}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <AnimatePresence>
         {descriptionModalOpen ? (
           <motion.div

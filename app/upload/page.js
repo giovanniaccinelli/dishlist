@@ -24,7 +24,7 @@ import {
   publishDishAsStory,
   saveDishToFirestore,
   saveDishToSelectedDishlist,
-  uploadDishImageVariants,
+  uploadDishMediaItems,
 } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { getTagDishlistId } from "../lib/tagDishlists";
@@ -65,6 +65,9 @@ export default function UploadPage() {
   const [dishIsPublic, setDishIsPublic] = useState(true);
   const [dishImage, setDishImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [dishMediaFiles, setDishMediaFiles] = useState([]);
+  const [dishMediaPreviews, setDishMediaPreviews] = useState([]);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [imageFramingFile, setImageFramingFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -96,6 +99,7 @@ export default function UploadPage() {
   const showLegacyUploadFlow = false;
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const dishMediaPreviewsRef = useRef([]);
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -150,10 +154,14 @@ export default function UploadPage() {
   }, [loading, user]);
 
   useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
+    dishMediaPreviewsRef.current = dishMediaPreviews;
+  }, [dishMediaPreviews]);
+
+  useEffect(() => () => {
+    dishMediaPreviewsRef.current.forEach((item) => {
+      if (item?.url) URL.revokeObjectURL(item.url);
+    });
+  }, []);
 
   useEffect(() => {
     const shouldSuggestTags = showLegacyUploadFlow ? uploadStep === 2 : composerStep === 3;
@@ -198,31 +206,68 @@ export default function UploadPage() {
     });
   };
 
-  const applySelectedMediaFile = (file) => {
+  const applySelectedMediaFile = (file, { append = false } = {}) => {
     if (!file) return;
-    setDishImage(file);
-    setPreview((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return URL.createObjectURL(file);
+    if (append && dishMediaFiles.length >= 5) return;
+    const nextPreview = { url: URL.createObjectURL(file), type: file.type || "" };
+    setDishMediaFiles((previousFiles) => {
+      const nextFiles = append ? [...previousFiles, file].slice(0, 5) : [file];
+      setDishImage(nextFiles[0] || null);
+      setActiveMediaIndex(append ? nextFiles.length - 1 : 0);
+      return nextFiles;
+    });
+    setDishMediaPreviews((previousPreviews) => {
+      const previewsToRevoke = append ? [] : previousPreviews;
+      previewsToRevoke.forEach((item) => {
+        if (item?.url) URL.revokeObjectURL(item.url);
+      });
+      const nextPreviews = append ? [...previousPreviews, nextPreview].slice(0, 5) : [nextPreview];
+      setPreview(nextPreviews[0]?.url || null);
+      return nextPreviews;
     });
     setMediaPickerOpen(false);
   };
 
-  const handleImageChange = (file) => {
-    if (!file) return;
+  const handleImageFilesChange = (files, { append = false } = {}) => {
+    const incomingFiles = Array.from(files || []).filter((file) => file?.type?.startsWith("image/") || file?.type?.startsWith("video/"));
+    if (!incomingFiles.length) return;
     setMediaPickerOpen(false);
-    if (file.type?.startsWith("image/")) {
-      setImageFramingFile(file);
+    if (incomingFiles.length === 1 && incomingFiles[0].type?.startsWith("image/")) {
+      setImageFramingFile({ file: incomingFiles[0], append });
       return;
     }
-    applySelectedMediaFile(file);
+    const remainingSlots = append ? Math.max(0, 5 - dishMediaFiles.length) : 5;
+    if (remainingSlots <= 0) return;
+    const usableFiles = incomingFiles[0]?.type?.startsWith("video/")
+      ? incomingFiles.slice(0, 1)
+      : incomingFiles.filter((file) => file.type?.startsWith("image/")).slice(0, remainingSlots);
+    const nextPreviews = usableFiles.map((file) => ({ url: URL.createObjectURL(file), type: file.type || "" }));
+    setDishMediaFiles((previousFiles) => {
+      const nextFiles = append ? [...previousFiles, ...usableFiles].slice(0, 5) : usableFiles;
+      setDishImage(nextFiles[0] || null);
+      setActiveMediaIndex(append ? Math.max(0, nextFiles.length - 1) : 0);
+      return nextFiles;
+    });
+    setDishMediaPreviews((previousPreviews) => {
+      const previewsToRevoke = append ? [] : previousPreviews;
+      previewsToRevoke.forEach((item) => {
+        if (item?.url) URL.revokeObjectURL(item.url);
+      });
+      const merged = append ? [...previousPreviews, ...nextPreviews].slice(0, 5) : nextPreviews;
+      setPreview(merged[0]?.url || null);
+      return merged;
+    });
+  };
+
+  const handleImageChange = (file) => {
+    if (!file) return;
+    handleImageFilesChange([file]);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && (file.type.startsWith("image/") || file.type.startsWith("video/"))) handleImageChange(file);
+    handleImageFilesChange(e.dataTransfer.files);
   };
 
   const getNormalizedDishLink = () => {
@@ -259,9 +304,9 @@ export default function UploadPage() {
       setStoryMealTagPickerOpen(false);
       setLoadingUpload(true);
     try {
-      let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
-      if (dishImage) {
-        imageFields = await uploadDishImageVariants(dishImage, user.uid);
+      let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "", mediaItems: [] };
+      if (dishMediaFiles.length) {
+        imageFields = await uploadDishMediaItems(dishMediaFiles, user.uid);
       }
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
@@ -486,6 +531,16 @@ export default function UploadPage() {
     setComposerStep(0);
     setComposerDetailsOpen(true);
     setRestaurant(null);
+    setDishImage(null);
+    setPreview(null);
+    setDishMediaFiles([]);
+    setDishMediaPreviews((items) => {
+      items.forEach((item) => {
+        if (item?.url) URL.revokeObjectURL(item.url);
+      });
+      return [];
+    });
+    setActiveMediaIndex(0);
   };
 
   const renderGuidedComposer = () => {
@@ -504,8 +559,18 @@ export default function UploadPage() {
     const detailPanelOpen = composerStep === 2 && composerDetailsOpen;
     const pillShowsFrontSelected = showExtraStep || showReviewStep;
     const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep || showGhostModeStep;
+    const activeMediaPreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
+    const hasMediaCarousel = dishMediaPreviews.length > 1;
+    const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
     const classicBottomShade =
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
+    const renderUploadMediaPreview = (mediaPreview, className = "absolute inset-0 h-full w-full object-cover") => {
+      if (!mediaPreview) return null;
+      if (mediaPreview.type?.startsWith("video/")) {
+        return <video src={mediaPreview.url} className={className} autoPlay muted loop playsInline controls={false} />;
+      }
+      return <img src={mediaPreview.url} alt="Dish preview" className={className} />;
+    };
     const cardTopIdentity = (
       <>
         <div className="pointer-events-none absolute inset-x-0 top-0 z-[30] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
@@ -559,18 +624,72 @@ export default function UploadPage() {
           </div>
         </div>
 
-        <div className={`dish-card-shell relative h-[74vh] max-h-[39rem] min-h-[32rem] overflow-hidden rounded-[28px] bg-white ${isRestaurantUpload ? "dish-card-shell--restaurant" : "dish-card-shell--default"}`}>
-          {preview ? (
-            dishImage?.type?.startsWith("video/") ? (
-              <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
-            ) : (
-              <img src={preview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
-            )
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
-          )}
+        <div className={`dish-card-shell relative h-[74vh] max-h-[39rem] min-h-[32rem] overflow-hidden rounded-[28px] bg-black ${isRestaurantUpload ? "dish-card-shell--restaurant" : "dish-card-shell--default"}`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
+          {composerStep >= 1 ? (
+            <div className="absolute left-5 right-5 top-[9.25rem] z-[4]">
+              <div
+                className={`relative aspect-square w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${
+                  isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"
+                }`}
+              >
+                {activeMediaPreview ? (
+                  renderUploadMediaPreview(activeMediaPreview)
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setMediaPickerOpen(true)}
+                    className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 text-white"
+                  >
+                    <div
+                      className={`flex h-[4.85rem] w-[4.85rem] items-center justify-center rounded-[1.4rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
+                        isRestaurantUpload ? "restaurant-accent-border" : "default-accent-border"
+                      }`}
+                      style={{
+                        background: isRestaurantUpload
+                          ? "linear-gradient(135deg,rgba(230,70,70,0.98)_0%,rgba(120,24,24,0.98)_100%)"
+                          : "linear-gradient(135deg,rgba(228,180,63,0.98)_0%,rgba(122,88,14,0.98)_100%)",
+                      }}
+                    >
+                      <Camera size={28} />
+                    </div>
+                    <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
+                  </button>
+                )}
+                {activeMediaPreview ? (
+                  <>
+                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => setActiveMediaIndex((index) => Math.max(0, index - 1))} />
+                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1))} />
+                  </>
+                ) : null}
+                {canAddMoreMedia ? (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setMediaPickerOpen(true);
+                    }}
+                    className="absolute right-3 top-3 z-[6] flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-black/72 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                    aria-label="Add more images"
+                  >
+                    <Plus size={19} strokeWidth={2.4} />
+                  </button>
+                ) : null}
+                {hasMediaCarousel ? (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[6] flex justify-center gap-1.5">
+                    {dishMediaPreviews.map((item, index) => (
+                      <span
+                        key={`${item.url}-${index}`}
+                        className={`h-1.5 rounded-full bg-white transition-all ${index === activeMediaIndex ? "w-8 opacity-95" : "w-4 opacity-42"}`}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
-          {composerStep === 1 && !preview ? (
+          {false && composerStep === 1 && !preview ? (
             <button
               type="button"
               onClick={() => setMediaPickerOpen(true)}
@@ -801,26 +920,36 @@ export default function UploadPage() {
               </div>
 
               <div
-                className="absolute inset-0"
+                className="absolute inset-0 bg-black"
                 style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
-                {preview ? (
-                  dishImage?.type?.startsWith("video/") ? (
-                    <video src={preview} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline controls={false} />
-                  ) : (
-                    <img src={preview} alt="Dish preview" className="absolute inset-0 h-full w-full object-cover" />
-                  )
-                ) : (
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(155deg,#252525_0%,#0A0A0A_100%)]" />
-                )}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
+                <div className="absolute left-5 right-5 top-[9.25rem] z-[4]">
+                  <div className={`relative aspect-square w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"}`}>
+                    {activeMediaPreview ? renderUploadMediaPreview(activeMediaPreview) : null}
+                    {canAddMoreMedia ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setMediaPickerOpen(true);
+                        }}
+                        className="absolute right-3 top-3 z-[6] flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-black/72 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                        aria-label="Add more images"
+                      >
+                        <Plus size={19} strokeWidth={2.4} />
+                      </button>
+                    ) : null}
+                    {hasMediaCarousel ? (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[6] flex justify-center gap-1.5">
+                        {dishMediaPreviews.map((item, index) => (
+                          <span key={`${item.url}-${index}`} className={`h-1.5 rounded-full bg-white transition-all ${index === activeMediaIndex ? "w-8 opacity-95" : "w-4 opacity-42"}`} />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
                 <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
-                <div
-                  className="pointer-events-none absolute inset-x-0 bottom-0 z-[12]"
-                  style={{
-                    height: "48%",
-                    background: classicBottomShade,
-                  }}
-                />
                 <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
                   <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
                   {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
@@ -1105,7 +1234,7 @@ export default function UploadPage() {
                   onDragLeave={() => setDragActive(false)}
                   onDrop={handleDrop}
                   onClick={() => {
-                    if (!loadingUpload && !preview) setMediaPickerOpen(true);
+                    if (!loadingUpload) setMediaPickerOpen(true);
                   }}
                   className={`w-full h-36 rounded-[1.65rem] border-2 border-dashed ${
                     dragActive
@@ -1125,7 +1254,8 @@ export default function UploadPage() {
                     ref={libraryInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleImageChange(e.target.files?.[0])}
+                    multiple
+                    onChange={(e) => handleImageFilesChange(e.target.files, { append: Boolean(dishMediaFiles.length) })}
                     className="hidden"
                     disabled={loadingUpload}
                   />
@@ -1491,6 +1621,25 @@ export default function UploadPage() {
         )}
       </div>
 
+      <input
+        ref={libraryInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={(event) => handleImageFilesChange(event.target.files, { append: Boolean(dishMediaFiles.length) })}
+        className="hidden"
+        disabled={loadingUpload}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*,video/*"
+        capture="environment"
+        onChange={(event) => handleImageChange(event.target.files?.[0])}
+        className="hidden"
+        disabled={loadingUpload}
+      />
+
       <AnimatePresence>
         {tagUserPickerOpen ? (
           <motion.div
@@ -1640,13 +1789,14 @@ export default function UploadPage() {
         ) : null}
         <ImageFramingModal
           open={Boolean(imageFramingFile)}
-          file={imageFramingFile}
+          file={imageFramingFile?.file || null}
           dishName={dishName}
           ownerName={user?.displayName || "You"}
           onCancel={() => setImageFramingFile(null)}
           onConfirm={(framedFile) => {
+            const append = Boolean(imageFramingFile?.append);
             setImageFramingFile(null);
-            applySelectedMediaFile(framedFile);
+            applySelectedMediaFile(framedFile, { append });
           }}
         />
         {showAuthPrompt && (

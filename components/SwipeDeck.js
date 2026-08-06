@@ -374,7 +374,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [mediaIndexByCardKey, setMediaIndexByCardKey] = useState({});
   const [zoomMedia, setZoomMedia] = useState(null);
   const mediaPinchRef = useRef({ startDistance: 0, opened: false, suppressClickUntil: 0 });
-  const mediaTapHandledRef = useRef({ until: 0 });
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -530,8 +529,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const nextCard = deck[currentIndex + 1] || null;
   const currentCardStableKey = currentCard?.id || currentCard?._key || "";
   const nextCardStableKey = nextCard?.id || nextCard?._key || "";
-  const currentMediaItems = useMemo(() => (currentCard ? getDishMediaItems(currentCard) : []), [currentCard]);
-  const currentHasMediaCarousel = currentMediaItems.length > 1;
   useEffect(() => {
     setIsDragging(false);
     resetDragPosition();
@@ -569,72 +566,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (currentCardStableKey) cardSidePreferenceRef.current.set(currentCardStableKey, nextVisible);
     setShowRecipe(nextVisible);
   }, [currentCardStableKey]);
-
-  const getCurrentMediaRect = useCallback(() => {
-    const cardRect = currentCardShellRef.current?.getBoundingClientRect?.();
-    if (!cardRect) return null;
-    if (!squareCardLayout) return cardRect;
-    const horizontalInset = 20;
-    const top = cardRect.top + Number(compactMediaBounds.top || 0);
-    const bottom = cardRect.bottom - Number(compactMediaBounds.bottom || 0);
-    const availableHeight = Math.max(0, bottom - top);
-    const availableWidth = Math.max(0, cardRect.width - horizontalInset * 2);
-    const size = Math.min(availableWidth, availableHeight);
-    const left = cardRect.left + (cardRect.width - size) / 2;
-    const centeredTop = top + (availableHeight - size) / 2;
-    return {
-      left,
-      right: left + size,
-      top: centeredTop,
-      bottom: centeredTop + size,
-      width: size,
-      height: size,
-    };
-  }, [compactMediaBounds.bottom, compactMediaBounds.top, squareCardLayout]);
-
-  const getMediaHit = useCallback((clientX, clientY) => {
-    const rect = getCurrentMediaRect();
-    if (!rect) return { inMedia: false, side: "" };
-    const inMedia = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-    if (!inMedia) return { inMedia: false, side: "" };
-    return { inMedia: true, side: clientX < rect.left + rect.width / 2 ? "previous" : "next" };
-  }, [getCurrentMediaRect]);
-
-  const setCurrentMediaIndex = useCallback((nextIndex) => {
-    if (!currentCardStableKey || !currentMediaItems.length) return;
-    setMediaIndexByCardKey((prev) => ({
-      ...prev,
-      [currentCardStableKey]: Math.min(Math.max(0, nextIndex), currentMediaItems.length - 1),
-    }));
-  }, [currentCardStableKey, currentMediaItems.length]);
-
-  const getCurrentMediaIndex = useCallback(() => {
-    if (!currentCardStableKey || !currentMediaItems.length) return 0;
-    return Math.min(Math.max(0, Number(mediaIndexByCardKey[currentCardStableKey] || 0)), currentMediaItems.length - 1);
-  }, [currentCardStableKey, currentMediaItems.length, mediaIndexByCardKey]);
-
-  const advanceCurrentMedia = useCallback((side) => {
-    if (!currentHasMediaCarousel) return false;
-    const selectedIndex = getCurrentMediaIndex();
-    const nextIndex =
-      side === "previous"
-        ? selectedIndex <= 0 ? currentMediaItems.length - 1 : selectedIndex - 1
-        : selectedIndex >= currentMediaItems.length - 1 ? 0 : selectedIndex + 1;
-    setCurrentMediaIndex(nextIndex);
-    mediaTapHandledRef.current.until = Date.now() + 420;
-    return true;
-  }, [currentHasMediaCarousel, currentMediaItems.length, getCurrentMediaIndex, setCurrentMediaIndex]);
-
-  const openCurrentMediaZoom = useCallback(() => {
-    if (!currentCard || !currentMediaItems.length) return false;
-    const selectedIndex = getCurrentMediaIndex();
-    const media = currentMediaItems[selectedIndex] || currentMediaItems[0];
-    const mediaIsVideo = media?.mediaType === "video" || media?.mediaMimeType?.startsWith("video/");
-    if (mediaIsVideo) return false;
-    setZoomMedia({ dishName: currentCard?.name || "Dish", items: currentMediaItems, index: selectedIndex, cardKey: currentCardStableKey });
-    mediaTapHandledRef.current.until = Date.now() + 520;
-    return true;
-  }, [currentCard, currentCardStableKey, currentMediaItems, getCurrentMediaIndex]);
 
   useEffect(() => {
     const savedSide = currentCardStableKey ? cardSidePreferenceRef.current.get(currentCardStableKey) : undefined;
@@ -2232,38 +2163,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
-                  onTouchStart={(e) => {
-                    if (e.touches.length < 2 || !currentMediaItems.length) return;
-                    const firstHit = getMediaHit(e.touches[0].clientX, e.touches[0].clientY);
-                    const secondHit = getMediaHit(e.touches[1].clientX, e.touches[1].clientY);
-                    if (!firstHit.inMedia || !secondHit.inMedia) return;
-                    mediaPinchRef.current.startDistance = Math.hypot(
-                      e.touches[1].clientX - e.touches[0].clientX,
-                      e.touches[1].clientY - e.touches[0].clientY
-                    );
-                    mediaPinchRef.current.opened = false;
-                  }}
-                  onTouchMove={(e) => {
-                    const startDistance = mediaPinchRef.current.startDistance;
-                    if (!startDistance || e.touches.length < 2) return;
-                    const nextDistance = Math.hypot(
-                      e.touches[1].clientX - e.touches[0].clientX,
-                      e.touches[1].clientY - e.touches[0].clientY
-                    );
-                    if (Math.abs(nextDistance - startDistance) < 24) return;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    cardBackTapCancelledRef.current = true;
-                    if (!mediaPinchRef.current.opened) {
-                      mediaPinchRef.current.opened = openCurrentMediaZoom();
-                    }
-                  }}
-                  onTouchEnd={() => {
-                    if (mediaPinchRef.current.startDistance) {
-                      mediaPinchRef.current.suppressClickUntil = Date.now() + 420;
-                    }
-                    mediaPinchRef.current.startDistance = 0;
-                  }}
                   onPointerDown={(e) => {
                     cardBackTapCancelledRef.current = false;
                     cardBackTapRef.current = { x: e.clientX, y: e.clientY };
@@ -2280,18 +2179,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     cardBackTapRef.current = null;
                     const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) : 0;
                     if (moved > 10 || cardBackTapCancelledRef.current) return;
-                    if (Date.now() <= mediaPinchRef.current.suppressClickUntil) {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      return;
-                    }
-                    const mediaHit = getMediaHit(e.clientX, e.clientY);
-                    if (mediaHit.inMedia && currentHasMediaCarousel) {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      advanceCurrentMedia(mediaHit.side);
-                      return;
-                    }
                     e.stopPropagation();
                     e.preventDefault();
                     setCardBackVisible(true);
@@ -2299,16 +2186,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    if (Date.now() <= mediaPinchRef.current.suppressClickUntil || Date.now() <= mediaTapHandledRef.current.until) {
-                      return;
-                    }
                     if (cardBackTapCancelledRef.current) {
                       cardBackTapCancelledRef.current = false;
-                      return;
-                    }
-                    const mediaHit = getMediaHit(e.clientX, e.clientY);
-                    if (mediaHit.inMedia && currentHasMediaCarousel) {
-                      advanceCurrentMedia(mediaHit.side);
                       return;
                     }
                     setCardBackVisible(true);
@@ -2319,7 +2198,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {squareCardLayout ? (
                 <div
-                  className="absolute left-5 right-5 z-20 flex items-center justify-center overflow-hidden"
+                  className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
                   style={{
                     top: compactMediaBounds.top,
                     bottom: compactMediaBounds.bottom,

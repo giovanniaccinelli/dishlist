@@ -562,10 +562,6 @@ export default function UploadPage() {
     const activeMediaPreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
     const hasMediaCarousel = dishMediaPreviews.length > 1;
     const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
-    const uploadMediaBounds = {
-      top: showNameInputs ? "6.15rem" : "7.2rem",
-      bottom: showNameInputs ? "13.05rem" : "13.6rem",
-    };
     const classicBottomShade =
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
     const renderUploadMediaPreview = (mediaPreview, className = "absolute inset-0 h-full w-full object-cover") => {
@@ -631,7 +627,7 @@ export default function UploadPage() {
         <div className={`dish-card-shell relative h-[74vh] max-h-[39rem] min-h-[32rem] overflow-hidden rounded-[28px] bg-black ${isRestaurantUpload ? "dish-card-shell--restaurant" : "dish-card-shell--default"}`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
           {composerStep >= 1 ? (
-            <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={uploadMediaBounds}>
+            <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={{ top: "7.85rem", bottom: "13.6rem" }}>
               <div
                 className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${
                   isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"
@@ -928,7 +924,7 @@ export default function UploadPage() {
                 style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
-                <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={uploadMediaBounds}>
+                <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={{ top: "7.85rem", bottom: "13.6rem" }}>
                   <div className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"}`}>
                     {activeMediaPreview ? renderUploadMediaPreview(activeMediaPreview) : null}
                     {canAddMoreMedia ? (

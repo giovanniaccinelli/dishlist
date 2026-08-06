@@ -2198,7 +2198,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ) : null}
               {squareCardLayout ? (
                 <div
-                  className="absolute left-5 right-5 z-0 flex items-center justify-center overflow-hidden"
+                  className="absolute left-5 right-5 z-20 flex items-center justify-center overflow-hidden"
                   style={{
                     top: compactMediaBounds.top,
                     bottom: compactMediaBounds.bottom,

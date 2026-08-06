@@ -627,9 +627,9 @@ export default function UploadPage() {
         <div className={`dish-card-shell relative h-[74vh] max-h-[39rem] min-h-[32rem] overflow-hidden rounded-[28px] bg-black ${isRestaurantUpload ? "dish-card-shell--restaurant" : "dish-card-shell--default"}`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
           {composerStep >= 1 ? (
-            <div className="absolute left-5 right-5 top-[9.25rem] z-[4]">
+            <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={{ top: "7.85rem", bottom: "13.6rem" }}>
               <div
-                className={`relative aspect-square w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${
+                className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${
                   isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"
                 }`}
               >
@@ -656,7 +656,7 @@ export default function UploadPage() {
                     <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
                   </button>
                 )}
-                {activeMediaPreview ? (
+                {activeMediaPreview && hasMediaCarousel ? (
                   <>
                     <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => setActiveMediaIndex((index) => Math.max(0, index - 1))} />
                     <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1))} />
@@ -924,8 +924,8 @@ export default function UploadPage() {
                 style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
-                <div className="absolute left-5 right-5 top-[9.25rem] z-[4]">
-                  <div className={`relative aspect-square w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"}`}>
+                <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={{ top: "7.85rem", bottom: "13.6rem" }}>
+                  <div className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"}`}>
                     {activeMediaPreview ? renderUploadMediaPreview(activeMediaPreview) : null}
                     {canAddMoreMedia ? (
                       <button

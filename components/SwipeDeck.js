@@ -373,6 +373,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
   const [mediaIndexByCardKey, setMediaIndexByCardKey] = useState({});
   const [zoomMedia, setZoomMedia] = useState(null);
+  const mediaPinchRef = useRef({ startDistance: 0, opened: false, suppressClickUntil: 0 });
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -1384,7 +1385,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   const renderImage = (
     dish,
-    { active = false, preview = false, onVideoRef = null, onImageReady = null, carousel = true, zoomable = true } = {}
+    { active = false, preview = false, onVideoRef = null, onImageReady = null, carousel = true, zoomable = true, onPlainTap = null } = {}
   ) => {
     const mediaItems = getDishMediaItems(dish);
     const fallbackMedia = {
@@ -1403,11 +1404,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const setMediaIndex = (nextIndex) => {
       setMediaIndexByCardKey((prev) => ({ ...prev, [cardKey]: Math.min(Math.max(0, nextIndex), items.length - 1) }));
     };
-    const openZoom = (event) => {
-      event.stopPropagation();
-      event.preventDefault();
+    const openZoomFromPinch = () => {
       if (mediaIsVideo || !zoomable) return;
+      mediaPinchRef.current.opened = true;
+      mediaPinchRef.current.suppressClickUntil = Date.now() + 520;
       setZoomMedia({ dishName: dish?.name || "Dish", items, index: selectedIndex, cardKey });
+    };
+    const getTouchDistance = (touches) => {
+      if (!touches || touches.length < 2) return 0;
+      const first = touches[0];
+      const second = touches[1];
+      return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
     };
     const mediaNode = mediaIsVideo ? (
         <DeckAutoplayVideo
@@ -1431,7 +1438,42 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
     if (!hasCarousel && !zoomable) return mediaNode;
     return (
-      <div className="relative h-full w-full">
+      <div
+        className={`relative h-full w-full ${active ? "z-[20]" : "z-0"}`}
+        onTouchStart={(event) => {
+          if (!zoomable || mediaIsVideo || event.touches.length < 2) return;
+          mediaPinchRef.current.startDistance = getTouchDistance(event.touches);
+          mediaPinchRef.current.opened = false;
+        }}
+        onTouchMove={(event) => {
+          const startDistance = mediaPinchRef.current.startDistance;
+          if (!zoomable || mediaIsVideo || !startDistance || event.touches.length < 2) return;
+          const nextDistance = getTouchDistance(event.touches);
+          if (Math.abs(nextDistance - startDistance) < 24) return;
+          event.stopPropagation();
+          event.preventDefault();
+          if (!mediaPinchRef.current.opened) openZoomFromPinch();
+        }}
+        onTouchEnd={(event) => {
+          if (event.touches.length >= 2) return;
+          if (mediaPinchRef.current.startDistance) {
+            mediaPinchRef.current.suppressClickUntil = Date.now() + 360;
+          }
+          mediaPinchRef.current.startDistance = 0;
+          mediaPinchRef.current.opened = false;
+        }}
+        onClickCapture={(event) => {
+          if (Date.now() <= mediaPinchRef.current.suppressClickUntil) {
+            event.stopPropagation();
+            event.preventDefault();
+            return;
+          }
+          if (hasCarousel || typeof onPlainTap !== "function") return;
+          event.stopPropagation();
+          event.preventDefault();
+          onPlainTap();
+        }}
+      >
         {mediaNode}
         {hasCarousel ? (
           <>
@@ -1470,18 +1512,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               ))}
             </div>
           </>
-        ) : null}
-        {!mediaIsVideo && zoomable ? (
-          <button
-            type="button"
-            data-no-drag="true"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={openZoom}
-            className="absolute right-3 top-3 z-[11] flex h-9 w-9 items-center justify-center rounded-full border border-white/18 bg-black/62 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-md"
-            aria-label="Zoom image"
-          >
-            <Maximize2 size={16} strokeWidth={2.25} />
-          </button>
         ) : null}
       </div>
     );
@@ -2181,6 +2211,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       onVideoRef: (node) => {
                         currentVideoRef.current = node;
                       },
+                      onPlainTap: hasCardBackView && !currentCardRecipeOnly ? () => setCardBackVisible(true) : null,
                     })}
                   </div>
                 </div>
@@ -2190,6 +2221,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onVideoRef: (node) => {
                     currentVideoRef.current = node;
                   },
+                  onPlainTap: hasCardBackView && !currentCardRecipeOnly ? () => setCardBackVisible(true) : null,
                 })
               )}
               {!visibleRecipe && isDishVideo(currentCard) ? (

@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, CornerUpRight, Heart, ListPlus, Pencil, Maximize2, X, Users, MessageCircle } from "lucide-react";
+import { Plus, CornerUpRight, Heart, ListPlus, Pencil, Maximize2, X, Users, MessageCircle, ShoppingCart } from "lucide-react";
 import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
@@ -293,6 +293,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   onAction,
   onRightSwipe,
   onSavesPress,
+  onShoppingListAction,
   onTertiaryAction,
   actionOnRightSwipe = true,
   dismissOnAction = true,
@@ -305,6 +306,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   actionClassName,
   secondaryActionClassName,
   tertiaryActionClassName,
+  movePrimaryActionToTopRight = false,
   actionToast,
   secondaryActionToast,
   rightSwipeToast = "Aggiunto al profilo",
@@ -348,6 +350,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [actionLoading, setActionLoading] = useState(false);
   const [secondaryActionLoading, setSecondaryActionLoading] = useState(false);
   const [tertiaryActionLoading, setTertiaryActionLoading] = useState(false);
+  const [shoppingActionLoading, setShoppingActionLoading] = useState(false);
   const [promotedCardMotionLocked, setPromotedCardMotionLocked] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -752,6 +755,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
   const visibleRecipe = currentCardRecipeOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
+  const showShoppingListAction = Boolean(onShoppingListAction) && !currentCardIsRestaurant && !visibleRestaurantMap;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
   const outgoingSwipeSquareLayout = cardLayout === "square" && outgoingSwipe?.card && !isRecipeOnlyDish(outgoingSwipe.card);
   useLayoutEffect(() => {
@@ -883,6 +887,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Boolean(resolvedSecondaryActionLabel) &&
     Boolean(tertiaryActionLabel) &&
     Boolean(actionLabel);
+  const shouldMovePrimaryActionTop = Boolean(movePrimaryActionToTopRight && showShoppingListAction && actionLabel && !hasBottomActionRow);
   const nextCardScale = useTransform(dragX, [-120, -18, 0, 18, 120], [1, 1, 1, 1, 1]);
 
   const startCardVideo = useCallback((video) => {
@@ -1270,6 +1275,37 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }).finally(() => {
       setTimeout(() => setTertiaryActionLoading(false), 650);
     });
+  };
+
+  const handleShoppingListActionPress = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (disabled || isEjecting || shoppingActionLoading) return;
+    if (typeof onShoppingListAction !== "function" || !currentCard || currentCardIsRestaurant) return;
+    const card = currentCard;
+    setShoppingActionLoading(true);
+    Promise.resolve(onShoppingListAction(card))
+      .then((result) => {
+        if (result?.skipToast) return;
+        if (result?.ok === false) {
+          setToastVariant("error");
+          setToast(result?.message || "Lista spesa non aggiornata");
+          setTimeout(() => setToast(""), 1200);
+          return;
+        }
+        setToastVariant("success");
+        setToast(result?.message || "Aggiunto alla lista della spesa");
+        setTimeout(() => setToast(""), 1200);
+      })
+      .catch((err) => {
+        console.error("Deck shopping list action failed:", err);
+        setToastVariant("error");
+        setToast("Lista spesa non aggiornata");
+        setTimeout(() => setToast(""), 1200);
+      })
+      .finally(() => {
+        setTimeout(() => setShoppingActionLoading(false), 650);
+      });
   };
 
   const handleStartOver = () => {
@@ -1904,7 +1940,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
           className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
-          {(actionLoading || secondaryActionLoading || tertiaryActionLoading) && !outgoingSwipe ? (
+          {(actionLoading || secondaryActionLoading || tertiaryActionLoading || shoppingActionLoading) && !outgoingSwipe ? (
             <div className="pointer-events-none absolute inset-0 z-[90] flex items-center justify-center bg-black/34 backdrop-blur-[2px]">
               <div className="no-accent-border flex h-28 w-28 flex-col items-center justify-center rounded-full bg-black/78 text-[#2BD36B] shadow-[0_18px_48px_rgba(0,0,0,0.38)]">
                 <span className="dishlist-action-spinner text-[2.15rem]" />
@@ -2108,6 +2144,44 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             >
               <Users size={13} strokeWidth={2.25} />
               <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
+            </button>
+          ) : null}
+          {shouldMovePrimaryActionTop ? (
+            <button
+              data-no-drag="true"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {}
+              }}
+              onPointerMove={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId);
+                } catch {}
+                handleActionPress(e);
+              }}
+              className={`absolute right-4 z-30 ${actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}`}
+              style={{ top: "3.75rem", backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+              aria-label="Action"
+              disabled={disabled || actionLoading}
+            >
+              {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
           ) : null}
           {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly ? (
@@ -2607,7 +2681,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </div>
           </motion.div>
 
-          {!visibleRestaurantMap && actionLabel && !hasBottomActionRow ? (
+          {!visibleRestaurantMap && (actionLabel || showShoppingListAction) && !hasBottomActionRow ? (
             <div
               className={`absolute right-6 z-30 flex items-center gap-1.5`}
               style={{ bottom: actionBottom, backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
@@ -2649,6 +2723,45 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   color={dishLiked ? (currentCardIsRestaurant ? "#E64646" : "#E4B43F") : "currentColor"}
                 />
               </button>
+              {showShoppingListAction ? (
+                <button
+                  data-no-drag="true"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    try {
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch {}
+                  }}
+                  onPointerMove={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onPointerUp={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    try {
+                      e.currentTarget.releasePointerCapture(e.pointerId);
+                    } catch {}
+                    handleShoppingListActionPress(e);
+                  }}
+                  className="add-action-btn h-14 w-14 shrink-0 text-[#2BD36B]"
+                  style={{ borderColor: "#2BD36B", borderWidth: "1.5px" }}
+                  aria-label="Aggiungi alla lista della spesa"
+                  disabled={disabled || shoppingActionLoading}
+                >
+                  {shoppingActionLoading ? <span className="dishlist-action-spinner" /> : <ShoppingCart size={25} strokeWidth={2.25} />}
+                </button>
+              ) : null}
+              {!shouldMovePrimaryActionTop && actionLabel ? (
               <button
                 data-no-drag="true"
                 onPointerDown={(e) => {
@@ -2687,6 +2800,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               >
                 {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
               </button>
+              ) : null}
             </div>
           ) : null}
 

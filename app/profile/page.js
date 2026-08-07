@@ -2835,10 +2835,6 @@ export default function Profile() {
                   </motion.div>
                 );
               }
-              const canAddToShoppingList =
-                user?.uid &&
-                String(dish?.dishMode || "").toLowerCase() !== "restaurant" &&
-                (profileIdCandidates.includes(dish?.owner) || dish?.owner === user?.uid || !dish?.owner);
               return (
               <motion.div
                 key={`${dish.id}-${index}`}
@@ -2878,31 +2874,6 @@ export default function Profile() {
                   </div>
                   {renderDishCounters(dish)}
                 </div>
-                {canAddToShoppingList ? (
-                  <button
-                    type="button"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 450 };
-                    }}
-                    onPointerUp={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      dishActionPointerGuardRef.current = { dishId: dish?.id || "", until: Date.now() + 450 };
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAddDishToShoppingList(dish);
-                    }}
-                    className="no-accent-border absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-[#07140B]/96 text-[#2BD36B] shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-md"
-                    style={{ border: "1.5px solid #2BD36B" }}
-                    aria-label="Add ingredients to shopping list"
-                  >
-                    <ShoppingCart size={18} strokeWidth={2.25} />
-                  </button>
-                ) : null}
                 {(allowDelete || onRemovePreview || profileIdCandidates.includes(dish?.owner)) && (
                   <button
                     type="button"
@@ -2927,10 +2898,9 @@ export default function Profile() {
                         listId: activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system" ? activeDishlist.id : activeDishlist?.id,
                       });
                     }}
-                    className={`absolute right-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition ${
+                    className={`absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition ${
                       darkMode ? "border-white/12 bg-black/70 text-white" : "border-black/8 bg-white/92 text-black"
                     }`}
-                    style={{ top: canAddToShoppingList ? "3.25rem" : "0.5rem" }}
                     aria-label="Dish actions"
                   >
                     <MoreHorizontal size={18} strokeWidth={2.4} />
@@ -2970,14 +2940,6 @@ export default function Profile() {
   const handleProfileMapDishAction = async (dish) => {
     await handleOpenDishlistPicker(dish);
     return { skipToast: true };
-  };
-
-  const handleAddDishToShoppingList = async (dish) => {
-    if (!user?.uid || !dish?.id || String(dish?.dishMode || "").toLowerCase() === "restaurant") return;
-    const ok = await saveDishToSelectedDishlist(user.uid, "shopping_list", dish);
-    setToastVariant(ok ? "success" : "error");
-    setToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
-    setTimeout(() => setToast(""), 1200);
   };
 
   return (

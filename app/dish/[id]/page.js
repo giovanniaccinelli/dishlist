@@ -795,6 +795,17 @@ export default function DishDetail() {
     return { skipToast: true };
   };
 
+  const handleAddToShoppingList = async (dishCard) => {
+    if (!userId || !dishCard?.id || String(dishCard?.dishMode || "").toLowerCase() === "restaurant") {
+      return { ok: false, message: "Lista spesa non aggiornata" };
+    }
+    const ok = await saveDishToSelectedDishlist(userId, "shopping_list", dishCard);
+    setPageToastVariant(ok ? "success" : "error");
+    setPageToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
+    setTimeout(() => setPageToast(""), 1200);
+    return { skipToast: true };
+  };
+
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id) return;
     const selectedSet = new Set(selectedDishlistIds);
@@ -1316,6 +1327,7 @@ export default function DishDetail() {
             } : undefined}
             onSavesPress={handleOpenSavers}
             onSharePress={handleShare}
+            onShoppingListAction={shouldUseStoryActions ? handleAddToShoppingList : undefined}
             onTertiaryAction={!shouldUseStoryActions && !isForeignProfileContext && !isPublicSource ? handleManageDishlists : undefined}
             onRightSwipe={enableProfileDeckNavigation ? undefined : shouldUsePublicActions ? handleRightSwipeToTry : undefined}
             actionOnRightSwipe={enableProfileDeckNavigation ? false : !shouldUsePublicActions}
@@ -1335,6 +1347,7 @@ export default function DishDetail() {
             tertiaryActionLabel={!shouldUseStoryActions && !isForeignProfileContext && !isPublicSource ? "list-plus" : undefined}
             tertiaryActionClassName="add-action-btn w-14 h-14"
             secondaryActionClassName={shouldUseStoryActions ? undefined : getSecondaryActionClassName}
+            movePrimaryActionToTopRight={shouldUseStoryActions}
             actionToast={
               shouldUseStoryActions
                 ? undefined

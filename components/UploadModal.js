@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { uploadDishImageVariants, saveDishToFirestore } from '../app/lib/firebaseHelpers';
 import { useAuth } from '../app/lib/auth';
+import { hapticError, hapticImpact, hapticSuccess } from '../app/lib/haptics';
 
 export default function UploadModal({ onClose, onDishAdded }) {
   const { user } = useAuth();
@@ -22,15 +23,18 @@ export default function UploadModal({ onClose, onDishAdded }) {
 
   const handlePost = async () => {
     if (!dishName) {
+      void hapticError();
       alert('Please provide a dish name.');
       return;
     }
     if (!user) {
+      void hapticError();
       alert('You must be logged in.');
       return;
     }
 
     setLoading(true);
+    void hapticImpact('medium');
     try {
       // Upload image
       let imageFields = { imageURL: '', cardURL: '', thumbURL: '', mediaType: 'image', mediaMimeType: '' };
@@ -59,8 +63,10 @@ export default function UploadModal({ onClose, onDishAdded }) {
       setDishDescription('');
       setDishImage(null);
       setPreview(null);
+      void hapticSuccess();
       onClose();
     } catch (error) {
+      void hapticError();
       alert('Upload failed: ' + error.message);
     } finally {
       setLoading(false);

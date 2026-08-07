@@ -87,6 +87,7 @@ import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getIngredientColor, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
+import { hapticError, hapticImpact, hapticSuccess } from "../lib/haptics";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -1344,12 +1345,14 @@ export default function Profile() {
 
   const handlePost = async () => {
     if (!dishName) {
+      void hapticError();
       setToastVariant("error");
       setToast("Dish name is required");
       setTimeout(() => setToast(""), 1200);
       return;
     }
     setLoadingUpload(true);
+    void hapticImpact("medium");
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "" };
       if (dishImage) {
@@ -1418,9 +1421,11 @@ export default function Profile() {
       setPreview(null);
       setIsModalOpen(false);
       setToastVariant("success");
+      void hapticSuccess();
       setToast("Dish uploaded");
       setTimeout(() => setToast(""), 1200);
     } catch {
+      void hapticError();
       setToastVariant("error");
       setToast("Upload failed");
       setTimeout(() => setToast(""), 1400);

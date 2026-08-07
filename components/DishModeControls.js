@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Utensils, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { hapticImpact, hapticSelection } from "../app/lib/haptics";
 import { useLanguage } from "./LanguageProvider";
 
 export const DISH_MODE_ALL = "all";
@@ -159,6 +160,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
       <button
         type="button"
         onClick={() => {
+          void hapticSelection();
           onClick?.();
           setPickerOpen(true);
         }}
@@ -219,7 +221,15 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
               {choices.map((choice) => {
                 const selected = value === choice.mode;
                 return (
-                  <DishModeChoiceLine key={choice.mode} choice={choice} selected={selected} onClick={() => onSelect(choice.mode)} />
+                  <DishModeChoiceLine
+                    key={choice.mode}
+                    choice={choice}
+                    selected={selected}
+                    onClick={() => {
+                      void hapticImpact("light");
+                      onSelect(choice.mode);
+                    }}
+                  />
                 );
               })}
             </div>
@@ -281,6 +291,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
 
   const choose = (nextMode) => {
     if (closingMode) return;
+    void hapticImpact("medium");
     setMode(nextMode);
     setGlobalDishMode(nextMode);
     markOpeningDishModeChosen();

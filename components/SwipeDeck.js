@@ -1351,7 +1351,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       horizontalIntent && !verticalDominant;
     if (shouldEject) {
       const direction = projectedX >= 0 ? 1 : -1;
-      void hapticImpact(direction > 0 ? "medium" : "light");
+      if (direction > 0) void hapticImpact("medium");
       setIsEjecting(true);
       if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && direction > 0) {
         runAction(dish);

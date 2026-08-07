@@ -15,6 +15,7 @@ import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 import { TAG_OPTIONS } from "../app/lib/tags";
 import { TAG_DECOR } from "../app/lib/tagDecor";
+import { hapticSelection } from "../app/lib/haptics";
 
 const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
 
@@ -907,6 +908,7 @@ export default function RestaurantMapView({
   const cycleRestaurant = (direction) => {
     if (!carouselGroups.length) return;
     const nextIndex = (selectedIndex + direction + carouselGroups.length) % carouselGroups.length;
+    void hapticSelection();
     focusGroup(carouselGroups[nextIndex], direction, { preserveAnchor: true });
   };
 
@@ -915,6 +917,7 @@ export default function RestaurantMapView({
     const nextIndex = (selectedIndex + direction + carouselGroups.length) % carouselGroups.length;
     const targetGroup = carouselGroups[nextIndex];
     if (!targetGroup) return;
+    void hapticSelection();
     const step = carouselStepPx || carouselTrackRef.current?.firstElementChild?.getBoundingClientRect?.().width || 0;
     if (!step) {
       focusGroup(targetGroup, direction, { preserveAnchor: true });

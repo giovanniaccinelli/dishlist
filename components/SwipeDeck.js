@@ -352,6 +352,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [secondaryActionLoading, setSecondaryActionLoading] = useState(false);
   const [tertiaryActionLoading, setTertiaryActionLoading] = useState(false);
   const [shoppingActionLoading, setShoppingActionLoading] = useState(false);
+  const [shoppingCartBurstId, setShoppingCartBurstId] = useState(0);
   const [promotedCardMotionLocked, setPromotedCardMotionLocked] = useState(false);
   const [scrollPanelActive, setScrollPanelActive] = useState(false);
   const [recipePanelModal, setRecipePanelModal] = useState(null);
@@ -1296,7 +1297,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     void hapticImpact("medium");
     Promise.resolve(onShoppingListAction(card))
       .then((result) => {
-        if (result?.skipToast) return;
         if (result?.ok === false) {
           void hapticError();
           setToastVariant("error");
@@ -1304,6 +1304,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           setTimeout(() => setToast(""), 1200);
           return;
         }
+        setShoppingCartBurstId(Date.now());
+        setTimeout(() => setShoppingCartBurstId(0), 780);
+        if (result?.skipToast) return;
         setToastVariant("success");
         void hapticSuccess();
         setToast(result?.message || "Aggiunto alla lista della spesa");
@@ -2195,8 +2198,16 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 } catch {}
                 handleActionPress(e);
               }}
-              className={`absolute right-4 z-30 ${actionClassName || "add-action-btn no-accent-border w-14 h-14 text-[36px]"}`}
-              style={{ top: "3.75rem", backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+              className={`absolute right-4 z-30 ${actionClassName || "add-action-btn no-accent-border text-[36px]"}`}
+              style={{
+                top: "3.75rem",
+                width: "2.9rem",
+                height: "2.9rem",
+                borderWidth: "1.5px",
+                backfaceVisibility: "hidden",
+                transform: "translateZ(0)",
+                willChange: "transform, opacity",
+              }}
               aria-label="Action"
               disabled={disabled || actionLoading}
             >
@@ -2772,12 +2783,58 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     } catch {}
                     handleShoppingListActionPress(e);
                   }}
-                  className="add-action-btn h-14 w-14 shrink-0 text-[#2BD36B]"
-                  style={{ borderColor: "#2BD36B", borderWidth: "1.5px" }}
+                  className="add-action-btn relative h-[3.75rem] w-[3.75rem] shrink-0 overflow-visible"
+                  style={{
+                    borderColor: "#2BD36B",
+                    borderWidth: "2px",
+                    color: "#2BD36B",
+                    WebkitTextFillColor: "#2BD36B",
+                    backgroundColor: "rgba(7,20,11,0.82)",
+                  }}
                   aria-label="Aggiungi alla lista della spesa"
                   disabled={disabled || shoppingActionLoading}
                 >
-                  {shoppingActionLoading ? <span className="dishlist-action-spinner" /> : <ShoppingCart size={25} strokeWidth={2.25} />}
+                  <AnimatePresence>
+                    {shoppingCartBurstId ? (
+                      <motion.span
+                        key={shoppingCartBurstId}
+                        className="pointer-events-none absolute inset-0 z-[2]"
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.72, ease: "easeOut" }}
+                        aria-hidden="true"
+                      >
+                        {[0, 1, 2].map((dot) => (
+                          <motion.span
+                            key={dot}
+                            className="absolute h-2 w-2 rounded-full"
+                            style={{
+                              left: dot === 0 ? "30%" : dot === 1 ? "48%" : "64%",
+                              top: dot === 0 ? "-0.45rem" : dot === 1 ? "-0.85rem" : "-0.35rem",
+                              backgroundColor: dot === 0 ? "#2BD36B" : dot === 1 ? "#E4B43F" : "#7DD3FC",
+                              boxShadow: "0 0 12px rgba(43,211,107,0.45)",
+                            }}
+                            initial={{ y: -18, x: dot === 0 ? -18 : dot === 1 ? 0 : 18, scale: 0.72, opacity: 0 }}
+                            animate={{ y: 22, x: dot === 0 ? 6 : dot === 1 ? 0 : -6, scale: [0.72, 1, 0.55], opacity: [0, 1, 0] }}
+                            transition={{ duration: 0.62, delay: dot * 0.055, ease: "easeInOut" }}
+                          />
+                        ))}
+                        <motion.span
+                          className="absolute inset-[-0.25rem] rounded-full"
+                          style={{ border: "1px solid rgba(43,211,107,0.78)" }}
+                          initial={{ scale: 0.78, opacity: 0.5 }}
+                          animate={{ scale: 1.28, opacity: 0 }}
+                          transition={{ duration: 0.58, ease: "easeOut" }}
+                        />
+                      </motion.span>
+                    ) : null}
+                  </AnimatePresence>
+                  {shoppingActionLoading ? (
+                    <span className="dishlist-action-spinner" />
+                  ) : (
+                    <ShoppingCart size={27} strokeWidth={2.35} color="#2BD36B" />
+                  )}
                 </button>
               ) : null}
               {!shouldMovePrimaryActionTop && actionLabel ? (

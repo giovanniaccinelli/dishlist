@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
 import { useAuth } from "../app/lib/auth";
 import { RestaurantMapIcon } from "./DishModeControls";
+import { TAG_OPTIONS } from "../app/lib/tags";
+import { TAG_DECOR } from "../app/lib/tagDecor";
 
 const MILAN_PREVIEW_CENTER = { lat: 45.4642, lng: 9.19 };
 const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
@@ -33,12 +36,96 @@ function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
   return unprojectLatLng({ x: point.x, y: point.y + verticalOffsetPx }, zoom);
 }
 
-const getPinSvg = (strokeColor = "white") => encodeURIComponent(`
-<svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" fill="#E64646"/>
-  <path d="M21 49C21 49 38 31.6 38 18.8C38 8.96 30.39 2 21 2C11.61 2 4 8.96 4 18.8C4 31.6 21 49 21 49Z" stroke="${strokeColor}" stroke-width="2"/>
-  <circle cx="21" cy="19" r="11.2" fill="#111111"/>
-  <g transform="translate(14 12) scale(0.6)" stroke="white" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round">
+const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
+const RESTAURANT_TAG_PIN_THEME = {
+  fit: { fill: "#34D399", stroke: "#047857" },
+  "high protein": { fill: "#FB923C", stroke: "#C2410C" },
+  veg: { fill: "#38BDF8", stroke: "#0369A1" },
+  vegan: { fill: "#22C55E", stroke: "#15803D" },
+  light: { fill: "#5EEAD4", stroke: "#0F766E" },
+  easy: { fill: "#A78BFA", stroke: "#6D28D9" },
+  quick: { fill: "#2DD4BF", stroke: "#0F766E" },
+  fancy: { fill: "#F472B6", stroke: "#BE185D" },
+  comfort: { fill: "#FACC15", stroke: "#B45309" },
+  "carb heavy": { fill: "#FDBA74", stroke: "#EA580C" },
+  "low carb": { fill: "#0EA5E9", stroke: "#0369A1" },
+  spicy: { fill: "#F87171", stroke: "#B91C1C" },
+  "late night": { fill: "#818CF8", stroke: "#4338CA" },
+  cheat: { fill: "#FB7185", stroke: "#BE123C" },
+  budget: { fill: "#A3E635", stroke: "#4D7C0F" },
+  premium: { fill: "#FDE047", stroke: "#A16207" },
+  summer: { fill: "#F97316", stroke: "#C2410C" },
+  winter: { fill: "#60A5FA", stroke: "#1D4ED8" },
+  gourmet: { fill: "#C084FC", stroke: "#7E22CE" },
+  "date night": { fill: "#E879F9", stroke: "#A21CAF" },
+  pasta: { fill: "#FBBF24", stroke: "#B45309" },
+  italian: { fill: "#4ADE80", stroke: "#DC2626" },
+  ethnic: { fill: "#60A5FA", stroke: "#2563EB" },
+  seafood: { fill: "#22D3EE", stroke: "#0891B2" },
+  aesthetic: { fill: "#F9A8D4", stroke: "#DB2777" },
+  fresh: { fill: "#34D399", stroke: "#059669" },
+  asian: { fill: "#F87171", stroke: "#DC2626" },
+  fried: { fill: "#FB923C", stroke: "#C2410C" },
+  delivery: { fill: "#38BDF8", stroke: "#0284C7" },
+  dessert: { fill: "#F472B6", stroke: "#BE185D" },
+  american: { fill: "#60A5FA", stroke: "#DC2626" },
+  rice: { fill: "#FDE047", stroke: "#CA8A04" },
+  "fast food": { fill: "#FB7185", stroke: "#BE123C" },
+};
+
+function getRestaurantTagPinTheme(tag = "") {
+  return RESTAURANT_TAG_PIN_THEME[String(tag || "").trim().toLowerCase()] || null;
+}
+
+function getDominantRestaurantTag(group = {}) {
+  const counts = new Map();
+  for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
+    const tags = Array.isArray(dish?.tags) ? dish.tags : [];
+    for (const rawTag of tags) {
+      const tag = String(rawTag || "").trim().toLowerCase();
+      if (!TAG_ORDER_INDEX.has(tag)) continue;
+      counts.set(tag, (counts.get(tag) || 0) + 1);
+    }
+  }
+  let winner = "";
+  let winnerCount = -1;
+  let winnerOrder = Number.POSITIVE_INFINITY;
+  for (const [tag, count] of counts.entries()) {
+    const order = TAG_ORDER_INDEX.get(tag) ?? Number.POSITIVE_INFINITY;
+    if (count > winnerCount || (count === winnerCount && order < winnerOrder)) {
+      winner = tag;
+      winnerCount = count;
+      winnerOrder = order;
+    }
+  }
+  return winner || "";
+}
+
+function getRestaurantTagIconMarkup(tag = "") {
+  const normalizedTag = String(tag || "").trim().toLowerCase();
+  const decor = TAG_DECOR[normalizedTag];
+  const Icon = decor?.icon;
+  if (!Icon) return null;
+  const iconMarkup = renderToStaticMarkup(
+    createElement(Icon, {
+      className: "",
+      strokeWidth: 1.95,
+    })
+  ).replace("<svg ", '<svg width="23" height="23" style="display:block;color:#111111" ');
+  if (!iconMarkup || iconMarkup.includes("undefined") || iconMarkup.includes("NaN")) return null;
+  return iconMarkup;
+}
+
+const getRestaurantPinSvgMarkup = (
+  strokeColor = "white",
+  fillColor = "#FFFFFF",
+  showDefaultSymbol = true
+) => `
+<svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" fill="${fillColor}"/>
+  <path d="M23 52C23 52 41 33.65 41 20.25C41 9.95 32.94 2.5 23 2.5C13.06 2.5 5 9.95 5 20.25C5 33.65 23 52 23 52Z" stroke="${strokeColor}" stroke-width="2.35"/>
+  ${showDefaultSymbol ? '<circle cx="23" cy="20.5" r="12.4" fill="#111111"/>' : ""}
+  ${showDefaultSymbol ? `<g transform="translate(15.35 12.9) scale(0.66)" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 2v6"/>
     <path d="M5 2v6"/>
     <path d="M7 2v6"/>
@@ -46,17 +133,85 @@ const getPinSvg = (strokeColor = "white") => encodeURIComponent(`
     <path d="M5 10v12"/>
     <path d="M19 2c-2.8 1.6-4 4.1-4 7.5V13h4"/>
     <path d="M19 2v20"/>
-  </g>
-</svg>`);
+  </g>` : ""}
+</svg>`;
 
-function getRestaurantMarkerIcon(markerTone = "default") {
-  if (typeof window === "undefined" || !window.google?.maps) return undefined;
-  const strokeColor = markerTone === "own" ? "#2BD36B" : markerTone === "followed" ? "#F2C94C" : "white";
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${getPinSvg(strokeColor)}`,
-    scaledSize: new window.google.maps.Size(32, 38),
-    anchor: new window.google.maps.Point(16, 38),
+function createPreviewRestaurantPinOverlay({ map, position, markerTone = "default", group = {}, title = "" }) {
+  if (typeof window === "undefined" || !window.google?.maps) return null;
+  const overlay = new window.google.maps.OverlayView();
+  let node = null;
+
+  overlay.onAdd = function onAdd() {
+    const width = 34;
+    const height = 40;
+    const dominantTag = getDominantRestaurantTag(group);
+    const tagTheme = dominantTag ? getRestaurantTagPinTheme(dominantTag) : null;
+    const tagMarkup = dominantTag ? getRestaurantTagIconMarkup(dominantTag) : null;
+    const strokeColor =
+      markerTone === "own"
+        ? "#2BD36B"
+        : markerTone === "followed"
+          ? "#F2C94C"
+          : (tagTheme?.stroke || "white");
+    const fillColor = tagTheme?.fill || "#FFFFFF";
+    const showDefaultSymbol = !tagMarkup;
+
+    node = document.createElement("div");
+    if (title) node.title = title;
+    node.style.position = "absolute";
+    node.style.width = `${width}px`;
+    node.style.height = `${height}px`;
+    node.style.transform = "translate(-50%, -100%)";
+    node.style.zIndex = "12";
+    node.style.pointerEvents = "none";
+
+    const pin = document.createElement("div");
+    pin.style.position = "relative";
+    pin.style.width = `${width}px`;
+    pin.style.height = `${height}px`;
+    pin.style.filter = "drop-shadow(0 2px 2px rgba(0,0,0,0.24))";
+    pin.innerHTML = getRestaurantPinSvgMarkup(strokeColor, fillColor, showDefaultSymbol)
+      .replace("<svg ", `<svg width="${width}" height="${height}" style="display:block" `);
+
+    if (tagMarkup) {
+      const iconSize = 15;
+      const iconWrap = document.createElement("div");
+      iconWrap.style.position = "absolute";
+      iconWrap.style.left = "50%";
+      iconWrap.style.top = "6.6px";
+      iconWrap.style.width = `${iconSize}px`;
+      iconWrap.style.height = `${iconSize}px`;
+      iconWrap.style.transform = "translate(-50%, 0)";
+      iconWrap.style.display = "flex";
+      iconWrap.style.alignItems = "center";
+      iconWrap.style.justifyContent = "center";
+      iconWrap.innerHTML = tagMarkup
+        .replace('width="23"', `width="${iconSize}"`)
+        .replace('height="23"', `height="${iconSize}"`);
+      pin.appendChild(iconWrap);
+    }
+
+    node.appendChild(pin);
+    this.getPanes()?.overlayLayer.appendChild(node);
   };
+
+  overlay.draw = function draw() {
+    if (!node) return;
+    const projection = this.getProjection();
+    if (!projection) return;
+    const point = projection.fromLatLngToDivPixel(new window.google.maps.LatLng(position.lat, position.lng));
+    if (!point) return;
+    node.style.left = `${point.x}px`;
+    node.style.top = `${point.y}px`;
+  };
+
+  overlay.onRemove = function onRemove() {
+    node?.remove();
+    node = null;
+  };
+
+  overlay.setMap(map);
+  return overlay;
 }
 
 function normalizeUserIds(values = []) {
@@ -93,7 +248,7 @@ function createPreviewAvatarOverlay({ map, position, users }) {
     node.style.alignItems = "center";
     node.style.justifyContent = "center";
     node.style.pointerEvents = "none";
-    node.style.transform = "translate(-50%, -100%) translateY(-39px)";
+    node.style.transform = "translate(-50%, -100%) translateY(-41px)";
     node.style.zIndex = "4";
 
     users.slice(0, 3).forEach((user, index) => {
@@ -231,14 +386,14 @@ export default function MapPreview({
       const followedUsers = showAvatars ? (group.users || []).filter((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet)) : [];
       const hasOwnUser = ownUsers.length > 0;
       const markerUsers = [...ownUsers, ...followedUsers.filter((groupUser) => !mapUserMatchesIdSet(groupUser, ownIdSet))];
-      const marker = new window.google.maps.Marker({
+      const marker = createPreviewRestaurantPinOverlay({
         map: mapRef.current,
         position: { lat: group.lat, lng: group.lng },
         title: group.name || "Restaurant",
-        clickable: false,
-        icon: getRestaurantMarkerIcon(hasOwnUser ? "own" : followedUsers.length ? "followed" : "default"),
+        group,
+        markerTone: hasOwnUser ? "own" : followedUsers.length ? "followed" : "default",
       });
-      markersRef.current.push(marker);
+      if (marker) markersRef.current.push(marker);
       if (markerUsers.length) {
         const overlay = createPreviewAvatarOverlay({
           map: mapRef.current,

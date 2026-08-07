@@ -188,7 +188,7 @@ export default function UploadPage() {
     suggestedIngredientsForNameRef.current = name.toLowerCase();
     let active = true;
     (async () => {
-      const suggestions = await suggestIngredientsFromName(name, dishMode);
+      const suggestions = await suggestIngredientsFromName(name, dishMode, language);
       if (!active || !suggestions.length) return;
       setDishRecipeIngredientItems((prev) => (prev.length ? prev : suggestions));
       setDishRecipeIngredients((prev) => prev || ingredientItemsToText(suggestions));
@@ -196,7 +196,7 @@ export default function UploadPage() {
     return () => {
       active = false;
     };
-  }, [composerStep, dishMode, dishName, dishRecipeIngredientItems.length, isRestaurantUpload, loadingUpload, showLegacyUploadFlow, uploadStep]);
+  }, [composerStep, dishMode, dishName, dishRecipeIngredientItems.length, isRestaurantUpload, language, loadingUpload, showLegacyUploadFlow, uploadStep]);
 
   const toggleTag = (tag) => {
     setDishTags((prev) => {
@@ -563,8 +563,8 @@ export default function UploadPage() {
     const hasMediaCarousel = dishMediaPreviews.length > 1;
     const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
     const uploadMediaBounds = {
-      top: showNameInputs ? "6.15rem" : "7.2rem",
-      bottom: showNameInputs ? "13.05rem" : "13.6rem",
+      top: showNameInputs ? "5rem" : "6.85rem",
+      bottom: showNameInputs ? "15.75rem" : "13.95rem",
     };
     const classicBottomShade =
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";

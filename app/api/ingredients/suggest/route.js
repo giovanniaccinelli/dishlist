@@ -63,6 +63,7 @@ export async function POST(request) {
 
   const dishName = cleanString(body?.dishName, 100);
   const dishMode = cleanString(body?.dishMode || "home", 32).toLowerCase();
+  const language = cleanString(body?.language || "en", 8).toLowerCase().startsWith("it") ? "it" : "en";
   if (dishName.length < 2 || dishMode === "restaurant") {
     return NextResponse.json({ ingredients: [], aiUsed: false, reason: "unsupported" });
   }
@@ -72,7 +73,7 @@ export async function POST(request) {
   const useGateway = Boolean(gatewayToken);
   const token = gatewayToken || openAiToken;
   if (!token) {
-    return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName), aiUsed: false, reason: "missing_ai_key" });
+    return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName, language), aiUsed: false, reason: "missing_ai_key" });
   }
 
   const endpoint = useGateway
@@ -97,7 +98,7 @@ export async function POST(request) {
           {
             role: "system",
             content:
-              "Suggest distinctive grocery ingredients for a home-cooked dish. Return compact JSON only. Use simple ingredient names, no quantities. Avoid generic pantry staples such as salt, pepper, olive oil, or oil unless one is a defining ingredient in the dish name. Pick a color id for each ingredient from: green, mint, blue, yellow, orange, red, pink, purple, slate.",
+              `Suggest distinctive grocery ingredients for a home-cooked dish. Return compact JSON only. Use simple ingredient names, no quantities. Return ingredient names in ${language === "it" ? "Italian" : "English"}. Avoid generic pantry staples such as salt, pepper, olive oil, or oil unless one is a defining ingredient in the dish name. Pick a color id for each ingredient from: green, mint, blue, yellow, orange, red, pink, purple, slate.`,
           },
           {
             role: "user",
@@ -112,15 +113,15 @@ export async function POST(request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName), aiUsed: false, reason: "provider_error" });
+      return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName, language), aiUsed: false, reason: "provider_error" });
     }
 
     const result = await response.json();
     const parsed = safeParseJson(result?.choices?.[0]?.message?.content || "");
     const ingredients = removeGenericPantryStaples(normalizeAiIngredients(parsed?.ingredients), dishName);
-    return NextResponse.json({ ingredients: ingredients.length ? ingredients : suggestIngredientsLocally(dishName), aiUsed: ingredients.length > 0, model });
+    return NextResponse.json({ ingredients: ingredients.length ? ingredients : suggestIngredientsLocally(dishName, language), aiUsed: ingredients.length > 0, model });
   } catch (error) {
-    return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName), aiUsed: false, reason: error?.name === "AbortError" ? "timeout" : "error" });
+    return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName, language), aiUsed: false, reason: error?.name === "AbortError" ? "timeout" : "error" });
   } finally {
     clearTimeout(timeout);
   }

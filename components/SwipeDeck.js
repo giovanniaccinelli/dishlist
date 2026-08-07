@@ -1544,10 +1544,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {items.map((item, index) => (
                 <span
                   key={`${item.cardURL || item.imageURL || index}-${index}`}
-                  className={`h-1 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.5)] transition-opacity ${
-                    index === selectedIndex ? "opacity-95" : "opacity-35"
-                  }`}
-                  style={{ flex: 1 }}
+                  className="h-1 rounded-full shadow-[0_1px_5px_rgba(0,0,0,0.5)] transition-opacity"
+                  style={{
+                    flex: 1,
+                    backgroundColor: index === selectedIndex ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.36)",
+                  }}
                 />
               ))}
             </div>
@@ -3111,12 +3112,18 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       });
                     }}
                   />
-                  <div className="pointer-events-none absolute left-4 right-4 top-4 z-[3] flex gap-1.5">
+                  <div
+                    className="pointer-events-none absolute left-4 right-4 z-[20] flex gap-1.5"
+                    style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+                  >
                     {zoomMedia.items.map((item, index) => (
                       <span
                         key={`${item.cardURL || item.imageURL || index}-${index}`}
-                        className={`h-1 rounded-full bg-white transition-opacity ${index === zoomMedia.index ? "opacity-95" : "opacity-35"}`}
-                        style={{ flex: 1 }}
+                        className="h-1 rounded-full shadow-[0_1px_5px_rgba(0,0,0,0.5)] transition-opacity"
+                        style={{
+                          flex: 1,
+                          backgroundColor: index === zoomMedia.index ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.36)",
+                        }}
                       />
                     ))}
                   </div>

@@ -15,26 +15,79 @@ const LOCAL_RECIPES = [
   { match: /tiramisu/i, items: ["mascarpone", "eggs", "coffee", "ladyfingers", "cocoa"] },
 ];
 
-export function suggestIngredientsLocally(dishName = "") {
-  const recipe = LOCAL_RECIPES.find((entry) => entry.match.test(dishName));
-  const items = recipe?.items || [];
-  return normalizeIngredientItems(items.map((name) => ({ name, color: inferIngredientColorId(name) })));
+const ITALIAN_INGREDIENT_NAMES = {
+  pasta: "pasta",
+  eggs: "uova",
+  pecorino: "pecorino",
+  guanciale: "guanciale",
+  "black pepper": "pepe nero",
+  tomato: "pomodoro",
+  chili: "peperoncino",
+  basil: "basilico",
+  "pine nuts": "pinoli",
+  parmesan: "parmigiano",
+  garlic: "aglio",
+  "olive oil": "olio d'oliva",
+  rice: "riso",
+  stock: "brodo",
+  butter: "burro",
+  onion: "cipolla",
+  flour: "farina",
+  yeast: "lievito",
+  mozzarella: "mozzarella",
+  "burger buns": "pane per burger",
+  "beef patty": "hamburger di manzo",
+  cheese: "formaggio",
+  lettuce: "lattuga",
+  milk: "latte",
+  sugar: "zucchero",
+  cucumber: "cetriolo",
+  feta: "feta",
+  olives: "olive",
+  chicken: "pollo",
+  lemon: "limone",
+  rosemary: "rosmarino",
+  salmon: "salmone",
+  dill: "aneto",
+  yogurt: "yogurt",
+  mascarpone: "mascarpone",
+  coffee: "caffe",
+  ladyfingers: "savoiardi",
+  cocoa: "cacao",
+};
+
+function localizeIngredientName(name, language = "en") {
+  if (String(language || "").toLowerCase().startsWith("it")) {
+    return ITALIAN_INGREDIENT_NAMES[name] || name;
+  }
+  return name;
 }
 
-export async function suggestIngredientsFromName(dishName, dishMode = "home") {
+export function suggestIngredientsLocally(dishName = "", language = "en") {
+  const recipe = LOCAL_RECIPES.find((entry) => entry.match.test(dishName));
+  const items = recipe?.items || [];
+  return normalizeIngredientItems(
+    items.map((name) => {
+      const localizedName = localizeIngredientName(name, language);
+      return { name: localizedName, color: inferIngredientColorId(localizedName) };
+    })
+  );
+}
+
+export async function suggestIngredientsFromName(dishName, dishMode = "home", language = "en") {
   const cleanName = String(dishName || "").trim();
   if (cleanName.length < 2 || String(dishMode || "").toLowerCase() === "restaurant") return [];
   try {
     const response = await fetch("/api/ingredients/suggest", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dishName: cleanName, dishMode }),
+      body: JSON.stringify({ dishName: cleanName, dishMode, language }),
     });
-    if (!response.ok) return suggestIngredientsLocally(cleanName);
+    if (!response.ok) return suggestIngredientsLocally(cleanName, language);
     const data = await response.json();
     const ingredients = normalizeIngredientItems(data?.ingredients || []);
-    return ingredients.length ? ingredients : suggestIngredientsLocally(cleanName);
+    return ingredients.length ? ingredients : suggestIngredientsLocally(cleanName, language);
   } catch {
-    return suggestIngredientsLocally(cleanName);
+    return suggestIngredientsLocally(cleanName, language);
   }
 }

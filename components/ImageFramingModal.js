@@ -315,15 +315,15 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
     <AnimatePresence>
       {open && file ? (
         <motion.div
-          className="fixed inset-0 z-[140] flex items-center justify-center bg-black/76 px-4 py-5 backdrop-blur-xl"
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-black/82 px-4 py-5 backdrop-blur-xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onCancel}
         >
           <motion.div
-            className={`flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-[2rem] border shadow-[0_30px_90px_rgba(0,0,0,0.45)] ${
-              darkMode ? "border-white/12 bg-[#0D0D0D] text-white" : "border-black/10 bg-[#F8F6F0] text-black"
+            className={`flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-[1.45rem] border shadow-[0_30px_90px_rgba(0,0,0,0.45)] ${
+              darkMode ? "border-white/12 bg-[#0D0D0D] text-white" : "border-black/10 bg-[#F7F5EF] text-black"
             }`}
             initial={{ y: 24, scale: 0.98, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
@@ -349,7 +349,7 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
               <div
                 ref={frameRef}
-                className="relative mx-auto aspect-[9/16] max-h-[58vh] w-full max-w-[18.25rem] touch-none overflow-hidden rounded-[28px] border-2 border-white/12 bg-black"
+                className="relative mx-auto aspect-square max-h-[55vh] w-full max-w-[22rem] touch-none overflow-hidden rounded-[1.45rem] border-2 border-white/12 bg-black"
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -391,7 +391,7 @@ export default function ImageFramingModal({ open, file, onCancel, onConfirm, dis
                 <div className="pointer-events-none absolute bottom-5 left-5 right-5 text-white">
                   <div className="truncate text-2xl font-bold">{dishName || copy.previewName}</div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] ring-1 ring-white/14" />
+                <div className="pointer-events-none absolute inset-0 rounded-[1.45rem] ring-1 ring-white/16" />
               </div>
 
               <div className={`mt-4 rounded-[1.3rem] border px-4 py-3 ${darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white"}`}>

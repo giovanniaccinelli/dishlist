@@ -36,7 +36,12 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          agvtool new-version -all "$BUILD_NUMBER"
+          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-13}"
+          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 13 ]; then
+            EFFECTIVE_BUILD_NUMBER=13
+          fi
+          echo "Using iOS build number $EFFECTIVE_BUILD_NUMBER"
+          agvtool new-version -all "$EFFECTIVE_BUILD_NUMBER"
       - name: Set up code signing
         script: |
           set -euo pipefail

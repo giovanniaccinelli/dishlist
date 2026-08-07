@@ -34,6 +34,7 @@ import { ingredientItemsToText, normalizeIngredientItems } from "../lib/ingredie
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
 import { clearSessionPageCache } from "../lib/sessionPageCache";
+import { hapticError, hapticImpact, hapticSelection, hapticSuccess } from "../lib/haptics";
 
 const COMPOSER_STEPS = ["Modo", "Media", "Dettagli", "Tags", "Extra", "Review"];
 
@@ -280,22 +281,26 @@ export default function UploadPage() {
   const handlePost = async (selectedStoryMealTag = "") => {
     const storyMealTag = typeof selectedStoryMealTag === "string" ? selectedStoryMealTag : "";
     if (!user) {
+      void hapticError();
       setShowAuthPrompt(true);
       return;
     }
     if (!dishName.trim()) {
+      void hapticError();
       setToastVariant("error");
       setToast("Dish name is required");
       setTimeout(() => setToast(""), 1200);
       return;
     }
     if (isRestaurantUpload && !restaurant?.placeId) {
+      void hapticError();
       setToastVariant("error");
       setToast("Restaurant is required");
       setTimeout(() => setToast(""), 1400);
       return;
     }
     if ((storyMode || uploadToStory) && !storyMealTag) {
+      void hapticImpact("light");
       setDishlistPickerOpen(false);
       setStoryMealTagPickerOpen(true);
       return;
@@ -303,6 +308,7 @@ export default function UploadPage() {
       setDishlistPickerOpen(false);
       setStoryMealTagPickerOpen(false);
       setLoadingUpload(true);
+      void hapticImpact("medium");
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "", mediaItems: [] };
       if (dishMediaFiles.length) {
@@ -343,6 +349,7 @@ export default function UploadPage() {
           storyName: dishName.trim(),
         });
         setToastVariant("success");
+        void hapticSuccess();
         setToast("Story published");
         setTimeout(() => navigateBackToOrigin(), 1200);
       } else {
@@ -400,6 +407,7 @@ export default function UploadPage() {
           }
         }
         setToastVariant("success");
+        void hapticSuccess();
         setToast("Dish uploaded");
         setTimeout(() => navigateBackToOrigin(), 1200);
         setDishRating(0);
@@ -409,6 +417,7 @@ export default function UploadPage() {
       }
     } catch (err) {
       console.error("Failed to upload dish:", err);
+      void hapticError();
       setToastVariant("error");
       setToast(storyMode ? "Story failed" : "Upload failed");
       setTimeout(() => setToast(""), 1400);
@@ -662,8 +671,8 @@ export default function UploadPage() {
                 )}
                 {activeMediaPreview && hasMediaCarousel ? (
                   <>
-                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => setActiveMediaIndex((index) => Math.max(0, index - 1))} />
-                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1))} />
+                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => { void hapticSelection(); setActiveMediaIndex((index) => Math.max(0, index - 1)); }} />
+                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => { void hapticSelection(); setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1)); }} />
                   </>
                 ) : null}
                 {canAddMoreMedia ? (

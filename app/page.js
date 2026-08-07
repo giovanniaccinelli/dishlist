@@ -55,6 +55,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache";
 import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "./lib/restaurants";
 import { usePrivateGeolocation } from "./lib/usePrivateGeolocation";
+import { hapticError, hapticImpact, hapticSuccess } from "./lib/haptics";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -1121,6 +1122,7 @@ export default function Feed() {
   };
 
   const handleAdd = async (dishToAdd, variant = "sheet") => {
+    void hapticImpact("light");
     if (!userId) {
       if (isGuestFeedOnboarding()) {
         if (!dishToAdd?.id) return false;
@@ -1163,6 +1165,7 @@ export default function Feed() {
   const handleRightSwipeToTry = async (dishToAdd) => {
     if (!userId) {
       if (isGuestFeedOnboarding()) return handleAdd(dishToAdd, "swipe");
+      void hapticError();
       setShowAuthPrompt(true);
       return false;
     }
@@ -1172,6 +1175,7 @@ export default function Feed() {
       queueDishForDishlistSorting(userId, dishToAdd),
     ]);
     if (!saved || !queued) return false;
+    void hapticSuccess();
     setAddedDishIds((prev) => {
       const next = new Set(prev);
       next.add(dishToAdd.id);
@@ -1297,6 +1301,7 @@ export default function Feed() {
 
   const handleDishlistSelect = async () => {
     if (!userId || !dishlistPickerDish?.id || selectedDishlistIds.length === 0 || dishlistPickerSaving) return;
+    void hapticImpact("medium");
     setDishlistPickerSaving(true);
     const minimumLoading = new Promise((resolve) => setTimeout(resolve, 650));
     const dishToAdd = dishlistPickerDish;
@@ -1307,12 +1312,14 @@ export default function Feed() {
       );
       await minimumLoading;
       if (results.some((result) => !result)) {
+        void hapticError();
         setToastVariant("error");
         setToast("Save failed");
         setTimeout(() => setToast(""), 1200);
         return;
       }
       setDishlistPickerOpen(false);
+      void hapticSuccess();
       setDishlistPickerDish(null);
       setToastVariant("success");
       setToast("Added to DishList");

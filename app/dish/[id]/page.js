@@ -47,6 +47,7 @@ import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import StoryMealTagModal from "../../../components/StoryMealTagModal";
 import { useLanguage } from "../../../components/LanguageProvider";
+import { hapticError, hapticImpact, hapticSuccess } from "../../lib/haptics";
 import { clearSessionPageCache } from "../../lib/sessionPageCache";
 
 function StoryStatIcon({ size = 10 }) {
@@ -797,9 +798,12 @@ export default function DishDetail() {
 
   const handleAddToShoppingList = async (dishCard) => {
     if (!userId || !dishCard?.id || String(dishCard?.dishMode || "").toLowerCase() === "restaurant") {
+      void hapticError();
       return { ok: false, message: "Lista spesa non aggiornata" };
     }
+    void hapticImpact("medium");
     const ok = await saveDishToSelectedDishlist(userId, "shopping_list", dishCard);
+    void (ok ? hapticSuccess() : hapticError());
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
     setTimeout(() => setPageToast(""), 1200);
@@ -833,6 +837,7 @@ export default function DishDetail() {
         })
     );
     const ok = addResults.every(Boolean) && removeResults.every(Boolean);
+    void (ok ? hapticSuccess() : hapticError());
     setPageToastVariant(ok ? "success" : "error");
     setPageToast(ok ? "Added to DishList" : "Save failed");
     setTimeout(() => setPageToast(""), 1200);

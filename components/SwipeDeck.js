@@ -24,6 +24,7 @@ import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 import { formatDishPrice } from "../app/lib/dishPrice";
 import { getDishIngredientItems, getIngredientColor } from "../app/lib/ingredients";
+import { hapticError, hapticImpact, hapticSelection, hapticSuccess } from "../app/lib/haptics";
 
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
 
@@ -1171,14 +1172,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           return;
         }
         if (result === false) {
+          void hapticError();
           return;
         }
+        void hapticSuccess();
         setToastVariant("success");
         setToast(actionToast || "Added to DishList");
         setTimeout(() => setToast(""), 1200);
       })
       .catch((err) => {
         console.error("Deck action failed:", err);
+        void hapticError();
         setToastVariant("error");
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
@@ -1194,6 +1198,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (disabled || isEjecting || actionLoading) return;
     const card = currentCard;
     setActionLoading(true);
+    void hapticImpact("medium");
     if (dismissOnAction) advanceCard();
     resetDragPosition();
     runAction(card);
@@ -1236,12 +1241,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     Promise.resolve(onSecondaryAction(card))
       .then((result) => {
         if (result === false) {
+          void hapticError();
           setToastVariant("error");
           setToast("Action failed");
           setTimeout(() => setToast(""), 1200);
           return;
         }
         if (resolvedSecondaryActionToast) {
+          void hapticSuccess();
           setToastVariant("success");
           setToast(resolvedSecondaryActionToast);
           setTimeout(() => setToast(""), 1200);
@@ -1249,6 +1256,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       })
       .catch((err) => {
         console.error("Deck secondary action failed:", err);
+        void hapticError();
         setToastVariant("error");
         setToast("Action failed");
         setTimeout(() => setToast(""), 1200);
@@ -1265,6 +1273,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (typeof onTertiaryAction !== "function") return;
     const card = currentCard;
     setTertiaryActionLoading(true);
+    void hapticImpact("light");
     if (dismissOnTertiaryAction) advanceCard();
     resetDragPosition();
     Promise.resolve(onTertiaryAction(card)).catch((err) => {
@@ -1284,21 +1293,25 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (typeof onShoppingListAction !== "function" || !currentCard || currentCardIsRestaurant) return;
     const card = currentCard;
     setShoppingActionLoading(true);
+    void hapticImpact("medium");
     Promise.resolve(onShoppingListAction(card))
       .then((result) => {
         if (result?.skipToast) return;
         if (result?.ok === false) {
+          void hapticError();
           setToastVariant("error");
           setToast(result?.message || "Lista spesa non aggiornata");
           setTimeout(() => setToast(""), 1200);
           return;
         }
         setToastVariant("success");
+        void hapticSuccess();
         setToast(result?.message || "Aggiunto alla lista della spesa");
         setTimeout(() => setToast(""), 1200);
       })
       .catch((err) => {
         console.error("Deck shopping list action failed:", err);
+        void hapticError();
         setToastVariant("error");
         setToast("Lista spesa non aggiornata");
         setTimeout(() => setToast(""), 1200);
@@ -1335,6 +1348,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       horizontalIntent && !verticalDominant;
     if (shouldEject) {
       const direction = projectedX >= 0 ? 1 : -1;
+      void hapticImpact(direction > 0 ? "medium" : "light");
       setIsEjecting(true);
       if (!advanceOnAnySwipe && swipeAddEnabled && actionOnRightSwipe && direction > 0) {
         runAction(dish);
@@ -1346,14 +1360,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         Promise.resolve(onRightSwipe(dish))
           .then((result) => {
             if (result === false) {
+              void hapticError();
               setToastVariant("error");
               setToast(rightSwipeErrorToast);
               setTimeout(() => setToast(""), 1200);
               return;
             }
+            void hapticSuccess();
           })
           .catch((err) => {
             console.error("Right swipe action failed:", err);
+            void hapticError();
             setToastVariant("error");
             setToast(rightSwipeErrorToast);
             setTimeout(() => setToast(""), 1200);
@@ -1440,6 +1457,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const mediaIsVideo = media.mediaType === "video" || media.mediaMimeType?.startsWith("video/") || (selectedIndex === 0 && isDishVideo(dish));
     const hasCarousel = carousel && items.length > 1;
     const setMediaIndex = (nextIndex) => {
+      void hapticSelection();
       setMediaIndexByCardKey((prev) => ({ ...prev, [cardKey]: Math.min(Math.max(0, nextIndex), items.length - 1) }));
     };
     const openZoomFromPinch = () => {
@@ -3092,6 +3110,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index <= 0 ? prev.items.length - 1 : prev.index - 1;
+                        void hapticSelection();
                         setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };
@@ -3106,6 +3125,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index >= prev.items.length - 1 ? 0 : prev.index + 1;
+                        void hapticSelection();
                         setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };

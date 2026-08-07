@@ -373,7 +373,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const [storyHistoryOpen, setStoryHistoryOpen] = useState(false);
   const [mediaIndexByCardKey, setMediaIndexByCardKey] = useState({});
   const [zoomMedia, setZoomMedia] = useState(null);
+  const [zoomTransform, setZoomTransform] = useState({ scale: 1, x: 0, y: 0 });
   const mediaPinchRef = useRef({ startDistance: 0, opened: false, suppressClickUntil: 0 });
+  const zoomGestureRef = useRef({ distance: 0, scale: 1, x: 0, y: 0, point: null });
   const ingredientsPanelRef = useRef(null);
   const methodPanelRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -1409,6 +1411,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       mediaPinchRef.current.opened = true;
       mediaPinchRef.current.suppressClickUntil = Date.now() + 520;
       setZoomMedia({ dishName: dish?.name || "Dish", items, index: selectedIndex, cardKey });
+      setZoomTransform({ scale: 1, x: 0, y: 0 });
     };
     const getTouchDistance = (touches) => {
       if (!touches || touches.length < 2) return 0;
@@ -1501,13 +1504,14 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 setMediaIndex(selectedIndex >= items.length - 1 ? 0 : selectedIndex + 1);
               }}
             />
-            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[10] flex justify-center gap-1.5">
+            <div className="pointer-events-none absolute left-3 right-3 top-3 z-[10] flex gap-1.5">
               {items.map((item, index) => (
                 <span
                   key={`${item.cardURL || item.imageURL || index}-${index}`}
-                  className={`h-1.5 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.32)] transition-all ${
-                    index === selectedIndex ? "w-8 opacity-95" : "w-4 opacity-45"
+                  className={`h-1 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.5)] transition-opacity ${
+                    index === selectedIndex ? "opacity-95" : "opacity-35"
                   }`}
+                  style={{ flex: 1 }}
                 />
               ))}
             </div>
@@ -2888,31 +2892,77 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       <AnimatePresence>
         {zoomMedia ? (
           <motion.div
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/92 p-3"
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/96 p-3 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setZoomMedia(null)}
           >
             <motion.div
-              className="relative h-full w-full max-w-3xl overflow-hidden rounded-[1.4rem]"
+              className="relative h-full w-full max-w-3xl overflow-hidden"
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               onClick={(event) => event.stopPropagation()}
+              onWheel={(event) => {
+                event.preventDefault();
+                const nextScale = Math.min(4, Math.max(1, zoomTransform.scale - event.deltaY * 0.004));
+                setZoomTransform((prev) => ({ ...prev, scale: nextScale, x: nextScale === 1 ? 0 : prev.x, y: nextScale === 1 ? 0 : prev.y }));
+              }}
+              onTouchStart={(event) => {
+                if (event.touches.length === 2) {
+                  const [first, second] = event.touches;
+                  zoomGestureRef.current = {
+                    distance: Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY),
+                    scale: zoomTransform.scale,
+                    x: zoomTransform.x,
+                    y: zoomTransform.y,
+                    point: null,
+                  };
+                  return;
+                }
+                if (event.touches.length === 1 && zoomTransform.scale > 1) {
+                  zoomGestureRef.current.point = { x: event.touches[0].clientX, y: event.touches[0].clientY, baseX: zoomTransform.x, baseY: zoomTransform.y };
+                }
+              }}
+              onTouchMove={(event) => {
+                if (event.touches.length === 2) {
+                  event.preventDefault();
+                  const [first, second] = event.touches;
+                  const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+                  const start = zoomGestureRef.current.distance || distance;
+                  const nextScale = Math.min(4, Math.max(1, zoomGestureRef.current.scale * (distance / start)));
+                  setZoomTransform((prev) => ({ ...prev, scale: nextScale, x: nextScale === 1 ? 0 : prev.x, y: nextScale === 1 ? 0 : prev.y }));
+                  return;
+                }
+                if (event.touches.length === 1 && zoomTransform.scale > 1 && zoomGestureRef.current.point) {
+                  event.preventDefault();
+                  const point = zoomGestureRef.current.point;
+                  setZoomTransform((prev) => ({
+                    ...prev,
+                    x: point.baseX + event.touches[0].clientX - point.x,
+                    y: point.baseY + event.touches[0].clientY - point.y,
+                  }));
+                }
+              }}
             >
               <img
                 src={zoomMedia.items?.[zoomMedia.index]?.cardURL || zoomMedia.items?.[zoomMedia.index]?.imageURL || DEFAULT_DISH_IMAGE}
                 alt={zoomMedia.dishName}
-                className="h-full w-full object-contain"
+                className="h-full w-full object-contain transition-transform duration-75"
+                style={{ transform: `translate3d(${zoomTransform.x}px, ${zoomTransform.y}px, 0) scale(${zoomTransform.scale})`, transformOrigin: "center center" }}
                 onError={(event) => {
                   event.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
               <button
                 type="button"
-                onClick={() => setZoomMedia(null)}
-                className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-black/62 text-white backdrop-blur-md"
+                onClick={() => {
+                  setZoomMedia(null);
+                  setZoomTransform({ scale: 1, x: 0, y: 0 });
+                }}
+                className="absolute right-4 z-[12] flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-black/72 text-white backdrop-blur-md"
+                style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.75rem)" }}
                 aria-label="Close image"
               >
                 <X size={20} />
@@ -2921,12 +2971,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 <>
                   <button
                     type="button"
-                    className="absolute left-0 top-0 h-full w-1/2"
+                    className="absolute left-0 top-0 z-[2] h-full w-1/2"
                     aria-label="Previous image"
                     onClick={() => {
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index <= 0 ? prev.items.length - 1 : prev.index - 1;
+                        setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };
                       });
@@ -2934,22 +2985,24 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   />
                   <button
                     type="button"
-                    className="absolute right-0 top-0 h-full w-1/2"
+                    className="absolute right-0 top-0 z-[2] h-full w-1/2"
                     aria-label="Next image"
                     onClick={() => {
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index >= prev.items.length - 1 ? 0 : prev.index + 1;
+                        setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };
                       });
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-5 z-[3] flex justify-center gap-1.5">
+                  <div className="pointer-events-none absolute left-4 right-4 top-4 z-[3] flex gap-1.5">
                     {zoomMedia.items.map((item, index) => (
                       <span
                         key={`${item.cardURL || item.imageURL || index}-${index}`}
-                        className={`h-1.5 rounded-full bg-white transition-all ${index === zoomMedia.index ? "w-9 opacity-95" : "w-5 opacity-42"}`}
+                        className={`h-1 rounded-full bg-white transition-opacity ${index === zoomMedia.index ? "opacity-95" : "opacity-35"}`}
+                        style={{ flex: 1 }}
                       />
                     ))}
                   </div>

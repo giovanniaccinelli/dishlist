@@ -6,18 +6,18 @@ const LOCAL_RECIPES = [
   { match: /cacio\s*e\s*pepe/i, items: ["pasta", "pecorino", "black pepper"] },
   { match: /pesto/i, items: ["basil", "pine nuts", "parmesan", "garlic", "olive oil"] },
   { match: /risotto/i, items: ["rice", "stock", "butter", "parmesan", "onion"] },
-  { match: /pizza/i, items: ["flour", "yeast", "tomato", "mozzarella", "olive oil"] },
+  { match: /pizza/i, items: ["flour", "yeast", "tomato", "mozzarella"] },
   { match: /burger/i, items: ["burger buns", "beef patty", "cheese", "lettuce", "tomato"] },
   { match: /pancake/i, items: ["flour", "eggs", "milk", "butter", "sugar"] },
-  { match: /salad|insalata/i, items: ["lettuce", "tomato", "cucumber", "olive oil", "salt"] },
-  { match: /chicken|pollo/i, items: ["chicken", "olive oil", "garlic", "lemon", "salt"] },
-  { match: /salmon|salmone/i, items: ["salmon", "lemon", "olive oil", "salt", "pepper"] },
+  { match: /salad|insalata/i, items: ["lettuce", "tomato", "cucumber", "feta", "olives"] },
+  { match: /chicken|pollo/i, items: ["chicken", "garlic", "lemon", "rosemary"] },
+  { match: /salmon|salmone/i, items: ["salmon", "lemon", "dill", "yogurt"] },
   { match: /tiramisu/i, items: ["mascarpone", "eggs", "coffee", "ladyfingers", "cocoa"] },
 ];
 
 export function suggestIngredientsLocally(dishName = "") {
   const recipe = LOCAL_RECIPES.find((entry) => entry.match.test(dishName));
-  const items = recipe?.items || ["salt", "olive oil", "black pepper"];
+  const items = recipe?.items || [];
   return normalizeIngredientItems(items.map((name) => ({ name, color: inferIngredientColorId(name) })));
 }
 
@@ -32,7 +32,8 @@ export async function suggestIngredientsFromName(dishName, dishMode = "home") {
     });
     if (!response.ok) return suggestIngredientsLocally(cleanName);
     const data = await response.json();
-    return normalizeIngredientItems(data?.ingredients || suggestIngredientsLocally(cleanName));
+    const ingredients = normalizeIngredientItems(data?.ingredients || []);
+    return ingredients.length ? ingredients : suggestIngredientsLocally(cleanName);
   } catch {
     return suggestIngredientsLocally(cleanName);
   }

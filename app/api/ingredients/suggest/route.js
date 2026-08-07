@@ -36,6 +36,23 @@ function normalizeAiIngredients(items) {
   ).slice(0, 12);
 }
 
+function isGenericPantryStaple(name = "") {
+  const key = cleanString(name, 80).toLowerCase();
+  return /^(sale|salt|pepe|pepper|black pepper|white pepper|olio|oil|olive oil|extra virgin olive oil|olio evo|evo oil)$/.test(key);
+}
+
+function isDishDefiningPantryStaple(name = "", dishName = "") {
+  const ingredient = cleanString(name, 80).toLowerCase();
+  const dish = cleanString(dishName, 100).toLowerCase();
+  if (/pepper|pepe/.test(ingredient) && /pepe|pepper|carbonara/.test(dish)) return true;
+  if (/oil|olio/.test(ingredient) && /aglio.*olio|olio.*aglio|pesto/.test(dish)) return true;
+  return false;
+}
+
+function removeGenericPantryStaples(items, dishName) {
+  return items.filter((item) => !isGenericPantryStaple(item?.name) || isDishDefiningPantryStaple(item?.name, dishName));
+}
+
 export async function POST(request) {
   let body;
   try {
@@ -80,7 +97,7 @@ export async function POST(request) {
           {
             role: "system",
             content:
-              "Suggest typical grocery ingredients for a home-cooked dish. Return compact JSON only. Use simple ingredient names, no quantities. Pick a color id for each ingredient from: green, mint, blue, yellow, orange, red, pink, purple, slate.",
+              "Suggest distinctive grocery ingredients for a home-cooked dish. Return compact JSON only. Use simple ingredient names, no quantities. Avoid generic pantry staples such as salt, pepper, olive oil, or oil unless one is a defining ingredient in the dish name. Pick a color id for each ingredient from: green, mint, blue, yellow, orange, red, pink, purple, slate.",
           },
           {
             role: "user",
@@ -100,7 +117,7 @@ export async function POST(request) {
 
     const result = await response.json();
     const parsed = safeParseJson(result?.choices?.[0]?.message?.content || "");
-    const ingredients = normalizeAiIngredients(parsed?.ingredients);
+    const ingredients = removeGenericPantryStaples(normalizeAiIngredients(parsed?.ingredients), dishName);
     return NextResponse.json({ ingredients: ingredients.length ? ingredients : suggestIngredientsLocally(dishName), aiUsed: ingredients.length > 0, model });
   } catch (error) {
     return NextResponse.json({ ingredients: suggestIngredientsLocally(dishName), aiUsed: false, reason: error?.name === "AbortError" ? "timeout" : "error" });

@@ -31,6 +31,7 @@ import { getTagDishlistId } from "../lib/tagDishlists";
 import { suggestDishTagsFromName } from "../lib/dishTagSuggestions";
 import { suggestIngredientsFromName } from "../lib/ingredientSuggestions";
 import { ingredientItemsToText, normalizeIngredientItems } from "../lib/ingredients";
+import { normalizeRestaurantCategoryId, RESTAURANT_CATEGORY_OPTIONS } from "../lib/restaurantCategories";
 import { useLanguage } from "../../components/LanguageProvider";
 import { db } from "../lib/firebase";
 import { clearSessionPageCache } from "../lib/sessionPageCache";
@@ -60,6 +61,8 @@ export default function UploadPage() {
   const [storyTaggedUser, setStoryTaggedUser] = useState("");
   const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
   const [dishTags, setDishTags] = useState([]);
+  const [restaurantPrimaryCategory, setRestaurantPrimaryCategory] = useState("");
+  const [restaurantSecondaryCategory, setRestaurantSecondaryCategory] = useState("");
   const [dishRating, setDishRating] = useState(0);
   const [dishPrice, setDishPrice] = useState("");
   const [dishPriceCurrency, setDishPriceCurrency] = useState("EUR");
@@ -199,12 +202,75 @@ export default function UploadPage() {
     };
   }, [composerStep, dishMode, dishName, dishRecipeIngredientItems.length, isRestaurantUpload, language, loadingUpload, showLegacyUploadFlow, uploadStep]);
 
+  useEffect(() => {
+    if (isRestaurantUpload) return;
+    setRestaurantPrimaryCategory("");
+    setRestaurantSecondaryCategory("");
+  }, [isRestaurantUpload]);
+
   const toggleTag = (tag) => {
     setDishTags((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
       if (prev.length >= 6) return prev;
       return [...prev, tag];
     });
+  };
+
+  const chooseRestaurantCategory = (categoryId) => {
+    const normalizedId = normalizeRestaurantCategoryId(categoryId);
+    if (!normalizedId) return;
+    void hapticSelection();
+    if (restaurantPrimaryCategory === normalizedId) {
+      setRestaurantPrimaryCategory(restaurantSecondaryCategory || "");
+      setRestaurantSecondaryCategory("");
+      return;
+    }
+    if (restaurantSecondaryCategory === normalizedId) {
+      setRestaurantSecondaryCategory("");
+      return;
+    }
+    if (!restaurantPrimaryCategory) {
+      setRestaurantPrimaryCategory(normalizedId);
+      return;
+    }
+    if (!restaurantSecondaryCategory) {
+      setRestaurantSecondaryCategory(normalizedId);
+      return;
+    }
+    setRestaurantSecondaryCategory(normalizedId);
+  };
+
+  const renderRestaurantCategoryPicker = () => {
+    if (!isRestaurantUpload) return null;
+    return (
+      <div className="mb-5">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Categoria ristorante</p>
+          <p className="text-xs font-medium text-white/52">Scegline una, max secondaria</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
+            const Icon = category.icon;
+            const isPrimary = restaurantPrimaryCategory === category.id;
+            const isSecondary = restaurantSecondaryCategory === category.id;
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => chooseRestaurantCategory(category.id)}
+                className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
+                  isPrimary || isSecondary ? category.chip : "border-white/14 bg-white/7 text-white/68"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{category.label}</span>
+                {isPrimary ? <span className="text-[10px] opacity-70">1</span> : isSecondary ? <span className="text-[10px] opacity-70">2</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const applySelectedMediaFile = (file, { append = false } = {}) => {
@@ -299,6 +365,13 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1400);
       return;
     }
+    if (isRestaurantUpload && !normalizeRestaurantCategoryId(restaurantPrimaryCategory)) {
+      void hapticError();
+      setToastVariant("error");
+      setToast("Scegli una categoria ristorante");
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
     if ((storyMode || uploadToStory) && !storyMealTag) {
       void hapticImpact("light");
       setDishlistPickerOpen(false);
@@ -316,6 +389,8 @@ export default function UploadPage() {
       }
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
+      const primaryRestaurantCategory = isRestaurantUpload ? normalizeRestaurantCategoryId(restaurantPrimaryCategory) : "";
+      const secondaryRestaurantCategory = isRestaurantUpload && normalizeRestaurantCategoryId(restaurantSecondaryCategory) !== primaryRestaurantCategory ? normalizeRestaurantCategoryId(restaurantSecondaryCategory) : "";
       if (storyMode) {
         const storyId = `story-${Date.now()}`;
         const ok = await publishCustomStory(user.uid, {
@@ -328,6 +403,8 @@ export default function UploadPage() {
           recipeIngredientItems: normalizedIngredientItems,
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
+          restaurantPrimaryCategory: primaryRestaurantCategory,
+          restaurantSecondaryCategory: secondaryRestaurantCategory,
           rating: isRestaurantUpload ? dishRating : 0,
           price: dishPricePayload,
           priceAmount: dishPricePayload,
@@ -363,6 +440,8 @@ export default function UploadPage() {
           recipeIngredientItems: normalizedIngredientItems,
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
           tags: dishTags,
+          restaurantPrimaryCategory: primaryRestaurantCategory,
+          restaurantSecondaryCategory: secondaryRestaurantCategory,
           rating: isRestaurantUpload ? dishRating : 0,
           price: dishPricePayload,
           priceAmount: dishPricePayload,
@@ -413,6 +492,8 @@ export default function UploadPage() {
         setDishRating(0);
         setDishPrice("");
         setDishPriceCurrency("EUR");
+        setRestaurantPrimaryCategory("");
+        setRestaurantSecondaryCategory("");
         setUploadToStory(false);
       }
     } catch (err) {
@@ -920,6 +1001,7 @@ export default function UploadPage() {
                     {language === "it" ? "Tag" : "Tags"}
                   </div>
                 </div>
+                {renderRestaurantCategoryPicker()}
                 <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
@@ -1488,6 +1570,11 @@ export default function UploadPage() {
                   <p className="text-sm font-medium text-black">Tags</p>
                   <p className="text-xs text-black/60">{dishTags.length}/6</p>
                 </div>
+                {isRestaurantUpload ? (
+                  <div className="mb-5 rounded-[1.4rem] border-2 border-[#E64646]/45 bg-[#2A1111] p-3">
+                    {renderRestaurantCategoryPicker()}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);

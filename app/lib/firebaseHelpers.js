@@ -175,6 +175,8 @@ function buildDishPayload(dishId, dishData = null) {
         dishLink: dishData.dishLink || "",
         dishMode: dishData.dishMode || "",
         restaurant: normalizeRestaurant(dishData.restaurant),
+        restaurantPrimaryCategory: dishData.restaurantPrimaryCategory || dishData.restaurantCategory || "",
+        restaurantSecondaryCategory: dishData.restaurantSecondaryCategory || "",
         mediaType: dishData.mediaType || (dishData.mediaMimeType?.startsWith("video/") ? "video" : "image"),
         mediaMimeType: dishData.mediaMimeType || "",
         recipeIngredients: dishData.recipeIngredients || "",
@@ -212,6 +214,8 @@ async function hydrateDishPayload(dishId, payload) {
       dishLink: data.dishLink || payload?.dishLink || "",
       dishMode: data.dishMode || payload?.dishMode || "",
       restaurant: normalizeRestaurant(data.restaurant || payload?.restaurant),
+      restaurantPrimaryCategory: data.restaurantPrimaryCategory || data.restaurantCategory || payload?.restaurantPrimaryCategory || payload?.restaurantCategory || "",
+      restaurantSecondaryCategory: data.restaurantSecondaryCategory || payload?.restaurantSecondaryCategory || "",
       mediaType:
         data.mediaType ||
         payload?.mediaType ||
@@ -373,6 +377,8 @@ async function mergeDishesWithCanonical(dishes = []) {
           ? "video"
           : "image"),
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
+      restaurantPrimaryCategory: canonical.restaurantPrimaryCategory || canonical.restaurantCategory || dish.restaurantPrimaryCategory || dish.restaurantCategory || "",
+      restaurantSecondaryCategory: canonical.restaurantSecondaryCategory || dish.restaurantSecondaryCategory || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeIngredientItems: getDishIngredientItems(canonical.recipeIngredientItems?.length ? canonical : dish),
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",
@@ -2096,6 +2102,8 @@ function buildStoryPayload(userId, story) {
     storyMealTag: story.storyMealTag || story.mealTag || "",
     tags: normalizeTags(story.tags),
     restaurant: story.restaurant || null,
+    restaurantPrimaryCategory: story.restaurantPrimaryCategory || story.restaurantCategory || "",
+    restaurantSecondaryCategory: story.restaurantSecondaryCategory || "",
     cardURL: story.cardURL || story.imageURL || story.imageUrl || "",
     thumbURL: story.thumbURL || story.thumbnailURL || story.cardURL || story.imageURL || "",
     imageURL: story.imageURL || story.imageUrl || story.image_url || story.image || "",
@@ -2452,6 +2460,8 @@ export async function getSavedDishesFromFirestore(userId, { force = false } = {}
       dishMode: canonical.dishMode || dish.dishMode || "",
       restaurant: normalizeRestaurant(canonical.restaurant || dish.restaurant),
       mediaMimeType: canonical.mediaMimeType || dish.mediaMimeType || "",
+      restaurantPrimaryCategory: canonical.restaurantPrimaryCategory || canonical.restaurantCategory || dish.restaurantPrimaryCategory || dish.restaurantCategory || "",
+      restaurantSecondaryCategory: canonical.restaurantSecondaryCategory || dish.restaurantSecondaryCategory || "",
       recipeIngredients: canonical.recipeIngredients || dish.recipeIngredients || "",
       recipeIngredientItems: getDishIngredientItems(canonical.recipeIngredientItems?.length ? canonical : dish),
       recipeMethod: canonical.recipeMethod || dish.recipeMethod || "",

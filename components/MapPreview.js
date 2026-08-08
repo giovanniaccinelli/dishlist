@@ -8,6 +8,7 @@ import { useAuth } from "../app/lib/auth";
 import { RestaurantMapIcon } from "./DishModeControls";
 import { TAG_OPTIONS } from "../app/lib/tags";
 import { TAG_DECOR } from "../app/lib/tagDecor";
+import { getRestaurantCategory, normalizeRestaurantCategoryId, RESTAURANT_CATEGORY_OPTIONS } from "../app/lib/restaurantCategories";
 
 const MILAN_PREVIEW_CENTER = { lat: 45.4642, lng: 9.19 };
 const clampSiny = (value) => Math.min(Math.max(value, -0.9999), 0.9999);
@@ -37,6 +38,7 @@ function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
 }
 
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
+const RESTAURANT_CATEGORY_ORDER_INDEX = new Map(RESTAURANT_CATEGORY_OPTIONS.map((category, index) => [category.id, index]));
 const RESTAURANT_TAG_PIN_THEME = {
   fit: { fill: "#34D399", stroke: "#047857" },
   "high protein": { fill: "#FB923C", stroke: "#C2410C" },
@@ -74,10 +76,32 @@ const RESTAURANT_TAG_PIN_THEME = {
 };
 
 function getRestaurantTagPinTheme(tag = "") {
+  const category = getRestaurantCategory(tag);
+  if (category) return { fill: category.fill, stroke: category.stroke };
   return RESTAURANT_TAG_PIN_THEME[String(tag || "").trim().toLowerCase()] || null;
 }
 
 function getDominantRestaurantTag(group = {}) {
+  const categoryCounts = new Map();
+  for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
+    const category = normalizeRestaurantCategoryId(dish?.restaurantPrimaryCategory || dish?.restaurantCategory);
+    if (!category) continue;
+    categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+  }
+  if (categoryCounts.size) {
+    let winner = "";
+    let winnerCount = -1;
+    let winnerOrder = Number.POSITIVE_INFINITY;
+    for (const [category, count] of categoryCounts.entries()) {
+      const order = RESTAURANT_CATEGORY_ORDER_INDEX.get(category) ?? Number.POSITIVE_INFINITY;
+      if (count > winnerCount || (count === winnerCount && order < winnerOrder)) {
+        winner = category;
+        winnerCount = count;
+        winnerOrder = order;
+      }
+    }
+    if (winner) return winner;
+  }
   const counts = new Map();
   for (const dish of Array.isArray(group?.dishes) ? group.dishes : []) {
     const tags = Array.isArray(dish?.tags) ? dish.tags : [];
@@ -103,7 +127,8 @@ function getDominantRestaurantTag(group = {}) {
 
 function getRestaurantTagIconMarkup(tag = "") {
   const normalizedTag = String(tag || "").trim().toLowerCase();
-  const decor = TAG_DECOR[normalizedTag];
+  const category = getRestaurantCategory(normalizedTag);
+  const decor = category || TAG_DECOR[normalizedTag];
   const Icon = decor?.icon;
   if (!Icon) return null;
   const iconMarkup = renderToStaticMarkup(

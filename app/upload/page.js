@@ -239,13 +239,13 @@ export default function UploadPage() {
               void hapticSelection();
               setRestaurantCategoryPickerOpen(true);
             }}
-            className={`flex h-10 min-w-0 flex-1 items-center justify-center rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${
+            className={`flex h-11 min-w-0 flex-1 items-center justify-center rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${
               selectedRestaurantCategory ? selectedRestaurantCategory.chip : "border-white/18 bg-white/8 text-white/58"
             }`}
             aria-label="Select restaurant category"
           >
             <span className="flex min-w-0 items-center justify-center gap-2">
-              {SelectedIcon ? <SelectedIcon className="h-5 w-5 shrink-0" /> : null}
+              {SelectedIcon ? <SelectedIcon className="h-6 w-6 shrink-0" /> : null}
               <span className="truncate">{selectedRestaurantCategory?.label || "+"}</span>
             </span>
           </button>
@@ -1906,11 +1906,11 @@ export default function UploadPage() {
                       key={category.id}
                       type="button"
                       onClick={() => chooseRestaurantCategory(category.id)}
-                      className={`flex h-10 items-center gap-1.5 rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${category.chip} ${
+                      className={`flex h-11 items-center gap-2 rounded-full border-2 px-3.5 text-sm font-semibold transition active:scale-[0.985] ${category.chip} ${
                         active ? "ring-2 ring-white/70 ring-offset-2 ring-offset-[#111]" : "opacity-92"
                       }`}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className="h-6 w-6 shrink-0" />
                       <span>{category.label}</span>
                     </button>
                   );

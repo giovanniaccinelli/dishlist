@@ -230,24 +230,24 @@ export default function UploadPage() {
     if (!isRestaurantUpload) return null;
     const SelectedIcon = selectedRestaurantCategory?.icon;
     return (
-      <div className="mb-5">
-        <div className="mb-2 flex items-center gap-3">
-          <p className="shrink-0 text-sm font-semibold text-white">Categoria ristorante</p>
+      <div className="mb-4">
+        <div className="mb-2 flex items-center gap-2">
+          <p className="shrink-0 text-sm font-semibold text-white/88">Categoria ristorante</p>
           <button
             type="button"
             onClick={() => {
               void hapticSelection();
               setRestaurantCategoryPickerOpen(true);
             }}
-            className={`flex min-h-11 flex-1 items-center justify-between rounded-full border-2 px-3.5 py-2 text-left text-sm font-semibold transition active:scale-[0.985] ${
+            className={`flex h-10 min-w-0 flex-1 items-center justify-center rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${
               selectedRestaurantCategory ? selectedRestaurantCategory.chip : "border-white/18 bg-white/8 text-white/58"
             }`}
+            aria-label="Select restaurant category"
           >
-            <span className="flex min-w-0 items-center gap-2">
+            <span className="flex min-w-0 items-center justify-center gap-2">
               {SelectedIcon ? <SelectedIcon className="h-5 w-5 shrink-0" /> : null}
-              <span className="truncate">{selectedRestaurantCategory?.label || "Scegli categoria"}</span>
+              <span className="truncate">{selectedRestaurantCategory?.label || "+"}</span>
             </span>
-            <span className="ml-2 text-[11px] opacity-60">Apri</span>
           </button>
         </div>
       </div>
@@ -984,7 +984,7 @@ export default function UploadPage() {
                 {renderRestaurantCategoryField()}
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold text-white">Tag</p>
-                  <p className="text-xs font-medium text-white/45">Mood e caratteristiche del piatto</p>
+                  <p className="text-xs font-medium text-white/45">{dishTags.length}/6</p>
                 </div>
                 <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
@@ -1897,7 +1897,7 @@ export default function UploadPage() {
                   <X size={18} />
                 </button>
               </div>
-              <div className="grid max-h-[calc(72dvh-5rem)] grid-cols-2 gap-2 overflow-y-auto p-3">
+              <div className="flex max-h-[calc(72dvh-5rem)] flex-wrap content-start gap-2 overflow-y-auto p-3">
                 {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
                   const Icon = category.icon;
                   const active = restaurantPrimaryCategory === category.id;
@@ -1906,14 +1906,12 @@ export default function UploadPage() {
                       key={category.id}
                       type="button"
                       onClick={() => chooseRestaurantCategory(category.id)}
-                      className={`flex min-h-[3.65rem] items-center gap-2 rounded-[1.1rem] border-2 px-3 py-2 text-left text-sm font-semibold transition active:scale-[0.985] ${
-                        active ? category.chip : "border-white/12 bg-white/7 text-white/72"
+                      className={`flex h-10 items-center gap-1.5 rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${category.chip} ${
+                        active ? "ring-2 ring-white/70 ring-offset-2 ring-offset-[#111]" : "opacity-92"
                       }`}
                     >
-                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${active ? "bg-white/55" : "bg-white/10"}`}>
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0 truncate">{category.label}</span>
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span>{category.label}</span>
                     </button>
                   );
                 })}

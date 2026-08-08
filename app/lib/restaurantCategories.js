@@ -17,7 +17,7 @@ function PastaIcon({ className = "" }) {
 }
 
 function MeatIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M5.3 12.2c.4-4.1 3.4-6.9 7.1-6.9 3.5 0 6.3 2.3 6.3 5.6 0 4.2-3.5 7.8-8.2 7.8-3.2 0-5.5-2.5-5.2-6.5Z" fill="currentColor" fillOpacity="0.13" /><path d="M9.2 11.4c.7-1.5 1.9-2.3 3.5-2.3 1.5 0 2.7.9 2.7 2.2 0 1.8-1.7 3.4-3.8 3.4-1.7 0-2.9-1.3-2.4-3.3Z" /><path d="M6.9 15.9c3.5 1.4 7.3.3 10.3-3" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M5.4 13.5c0-4.6 3.6-8.2 8-8.2 3.4 0 5.5 1.9 5.5 4.7 0 4.8-4 8.7-8.7 8.7-3 0-4.8-2-4.8-5.2Z" fill="currentColor" fillOpacity="0.13" /><path d="M8.6 14.8c-.8-2.1.7-5.9 4.7-5.9 1.8 0 3 .9 3 2.3 0 2.4-2.2 4.3-4.7 4.3-1.2 0-2.1-.3-3-.7Z" /><circle cx="10.8" cy="12.2" r="1.35" /><path d="M14.5 8.1c1.4 2.2 1.1 4.9-.8 7.4" /></BaseSvg>;
 }
 
 function FishIcon({ className = "" }) {
@@ -25,7 +25,7 @@ function FishIcon({ className = "" }) {
 }
 
 function SushiIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M5.2 13.5c0-2.9 3.1-5.2 6.8-5.2s6.8 2.3 6.8 5.2-3.1 5.2-6.8 5.2-6.8-2.3-6.8-5.2Z" fill="currentColor" fillOpacity="0.1" /><path d="M6.2 11.8c1.4-2.3 3.4-3.6 5.8-3.6s4.4 1.3 5.8 3.6" /><path d="M8.2 11.6h7.6c.9 0 1.6.7 1.6 1.6v.2c0 .9-.7 1.6-1.6 1.6H8.2c-.9 0-1.6-.7-1.6-1.6v-.2c0-.9.7-1.6 1.6-1.6Z" fill="currentColor" fillOpacity="0.14" /><path d="M9.7 15.4c1.5.6 3.1.6 4.6 0" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M6.4 12.4c.6-2.3 2.7-3.9 5.6-3.9s5 1.6 5.6 3.9l.35 1.35c.45 1.75-.95 3.35-2.85 3.35H8.9c-1.9 0-3.3-1.6-2.85-3.35l.35-1.35Z" fill="currentColor" fillOpacity="0.1" /><path d="M5.6 10.2c1.3-2.15 3.5-3.3 6.4-3.3s5.1 1.15 6.4 3.3l-.75 2.5H6.35l-.75-2.5Z" fill="currentColor" fillOpacity="0.16" /><path d="M7.2 13h9.6" /><path d="M8.6 15.2h6.8" /></BaseSvg>;
 }
 
 function NoodlesIcon({ className = "" }) {
@@ -33,7 +33,7 @@ function NoodlesIcon({ className = "" }) {
 }
 
 function BurgerIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M5.5 11.2c.4-2.8 2.5-4.5 6.5-4.5s6.1 1.7 6.5 4.5H5.5Z" fill="currentColor" fillOpacity="0.12" /><path d="M5.2 14h13.6" /><path d="M6.4 16.8h11.2" /><path d="M8.2 9.1h.01M11.6 8.5h.01M15 9.2h.01" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M5.4 10.8c.45-2.7 2.8-4.4 6.6-4.4s6.15 1.7 6.6 4.4H5.4Z" fill="currentColor" fillOpacity="0.12" /><path d="M5.1 13h13.8" /><path d="M6 15.1c1.6.8 2.9.8 4.4 0s2.7-.8 4.2 0 2.6.8 3.4 0" /><path d="M6.3 17.5h11.4c-.4 1.2-1.5 1.9-3.1 1.9H9.4c-1.6 0-2.7-.7-3.1-1.9Z" fill="currentColor" fillOpacity="0.12" /><path d="M8.2 8.8h.01M11.8 8.2h.01M15.4 8.9h.01" /></BaseSvg>;
 }
 
 function TacoIcon({ className = "" }) {
@@ -45,7 +45,7 @@ function KebabIcon({ className = "" }) {
 }
 
 function PaninoIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M5.1 12c.5-3.5 3.2-5.6 6.9-5.6s6.4 2.1 6.9 5.6H5.1Z" fill="currentColor" fillOpacity="0.12" /><path d="M5.3 12.2c1.5.8 3 .8 4.5 0s3-.8 4.5 0 3 .8 4.5 0" /><path d="M6.4 14.6h11.2" /><path d="M7.6 17.2h8.8" /><path d="M8.3 9.7h.01M11.8 9.1h.01M15.3 9.8h.01" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M4.6 12.2c1.1-3 4-5 7.4-5s6.3 2 7.4 5H4.6Z" fill="currentColor" fillOpacity="0.12" /><path d="M5.2 12.6h13.6" /><path d="M6.4 14.8c1.4-.8 2.8-.8 4.2 0s2.8.8 4.2 0 2.2-.8 2.8 0" /><path d="M6.9 17.3h10.2" /><path d="M8 9.7c2.5-.8 5.5-.8 8 0" /></BaseSvg>;
 }
 
 function PlateIcon({ className = "" }) {
@@ -53,11 +53,11 @@ function PlateIcon({ className = "" }) {
 }
 
 function DrinkIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M8.2 4.6h7.6l-.8 7.2a3 3 0 0 1-6 0l-.8-7.2Z" fill="currentColor" fillOpacity="0.1" /><path d="M9 8.1h6" /><path d="M12 14.9v5" /><path d="M8.8 19.9h6.4" /><path d="M15.1 5.1 18 3.2" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M6.8 4.8h10.4L12 12.8 6.8 4.8Z" fill="currentColor" fillOpacity="0.11" /><path d="M8.8 7.8h6.4" /><path d="M12 12.8v6.8" /><path d="M8.8 19.6h6.4" /><path d="M15.1 5.1 18 3.1" /></BaseSvg>;
 }
 
 function CoffeeIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M5.3 8.2h10.8v5.1a4.2 4.2 0 0 1-4.2 4.2H9.5a4.2 4.2 0 0 1-4.2-4.2V8.2Z" fill="currentColor" fillOpacity="0.11" /><path d="M16.1 9.4h1.2a2.3 2.3 0 1 1 0 4.6h-1.2" /><path d="M8.5 4.1c-.7.8-.7 1.6 0 2.4M12 4.1c-.7.8-.7 1.6 0 2.4" /><path d="M6.9 20h10" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M5.4 8.2h10.4v5a4 4 0 0 1-4 4H9.4a4 4 0 0 1-4-4v-5Z" fill="currentColor" fillOpacity="0.11" /><path d="M15.8 9.5h1.25a2.25 2.25 0 1 1 0 4.5H15.8" /><path d="M8.5 4.1c-.7.8-.7 1.6 0 2.4M12 4.1c-.7.8-.7 1.6 0 2.4" /><path d="M6.7 19.8h9.8" /></BaseSvg>;
 }
 
 function PastryIcon({ className = "" }) {

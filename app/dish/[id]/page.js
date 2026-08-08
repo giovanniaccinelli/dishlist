@@ -47,8 +47,9 @@ import { RatingStars } from "../../../components/RatingStars";
 import RestaurantPlacePicker from "../../../components/RestaurantPlacePicker";
 import StoryMealTagModal from "../../../components/StoryMealTagModal";
 import { useLanguage } from "../../../components/LanguageProvider";
-import { hapticError, hapticImpact, hapticSuccess } from "../../lib/haptics";
+import { hapticError, hapticImpact, hapticSelection, hapticSuccess } from "../../lib/haptics";
 import { clearSessionPageCache } from "../../lib/sessionPageCache";
+import { normalizeRestaurantCategoryId, RESTAURANT_CATEGORY_OPTIONS } from "../../lib/restaurantCategories";
 
 function StoryStatIcon({ size = 10 }) {
   return (
@@ -112,6 +113,8 @@ export default function DishDetail() {
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [editDishMode, setEditDishMode] = useState(DISH_MODE_COOKING);
   const [editRestaurant, setEditRestaurant] = useState(null);
+  const [editRestaurantPrimaryCategory, setEditRestaurantPrimaryCategory] = useState("");
+  const [editRestaurantCategoryPickerOpen, setEditRestaurantCategoryPickerOpen] = useState(false);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editImageFramingFile, setEditImageFramingFile] = useState(null);
   const [editPreview, setEditPreview] = useState("");
@@ -554,10 +557,13 @@ export default function DishDetail() {
     setEditIsPublic(dishToEdit?.isPublic !== false);
     setEditDishMode(dishToEdit?.dishMode || DISH_MODE_COOKING);
     setEditRestaurant(dishToEdit?.restaurant || null);
+    setEditRestaurantPrimaryCategory(normalizeRestaurantCategoryId(dishToEdit?.restaurantPrimaryCategory || dishToEdit?.restaurantCategory || ""));
+    setEditRestaurantCategoryPickerOpen(false);
     setEditImageFile(null);
     setEditImageFramingFile(null);
     setEditMediaPickerOpen(false);
     setEditTagUserPickerOpen(false);
+    setEditRestaurantCategoryPickerOpen(false);
     setEditTagUserSearch("");
     setEditComposerDetailsOpen(true);
     setEditPreview(
@@ -598,6 +604,12 @@ export default function DishDetail() {
   }, [editDishMode, editOpen, editRating]);
 
   useEffect(() => {
+    if (!editOpen || editDishMode === DISH_MODE_RESTAURANT) return;
+    setEditRestaurantPrimaryCategory("");
+    setEditRestaurantCategoryPickerOpen(false);
+  }, [editDishMode, editOpen]);
+
+  useEffect(() => {
     if (!editOpen || editStep !== 3 || savingEdit) return undefined;
     const name = editName.trim();
     if (!name || editTags.length > 0) return undefined;
@@ -624,6 +636,10 @@ export default function DishDetail() {
     }
     if (editDishMode === DISH_MODE_RESTAURANT && !editRestaurant?.placeId) {
       alert(t("Restaurant is required"));
+      return;
+    }
+    if (editDishMode === DISH_MODE_RESTAURANT && !normalizeRestaurantCategoryId(editRestaurantPrimaryCategory)) {
+      alert("Scegli una categoria ristorante");
       return;
     }
 
@@ -673,6 +689,8 @@ export default function DishDetail() {
         isPublic: editIsPublic,
         dishMode: editDishMode,
         restaurant: editDishMode === DISH_MODE_RESTAURANT ? editRestaurant : null,
+        restaurantPrimaryCategory: editDishMode === DISH_MODE_RESTAURANT ? normalizeRestaurantCategoryId(editRestaurantPrimaryCategory) : "",
+        restaurantSecondaryCategory: "",
         imageURL: nextImageURL || "",
         cardURL: nextCardURL || nextImageURL || "",
         thumbURL: nextThumbURL || nextCardURL || nextImageURL || "",
@@ -874,6 +892,31 @@ export default function DishDetail() {
 
   const renderEditGuidedComposer = () => {
     const isRestaurantEdit = editDishMode === DISH_MODE_RESTAURANT;
+    const selectedRestaurantCategory = RESTAURANT_CATEGORY_OPTIONS.find((category) => category.id === editRestaurantPrimaryCategory) || null;
+    const SelectedRestaurantCategoryIcon = selectedRestaurantCategory?.icon;
+    const restaurantCategoryField = isRestaurantEdit ? (
+      <div className="mb-4">
+        <div className="mb-2 flex items-center gap-2">
+          <p className="shrink-0 text-sm font-semibold text-white/88">Categoria ristorante</p>
+          <button
+            type="button"
+            onClick={() => {
+              void hapticSelection();
+              setEditRestaurantCategoryPickerOpen(true);
+            }}
+            className={`flex h-11 min-w-0 flex-1 items-center justify-center rounded-full border-2 px-3 text-sm font-semibold transition active:scale-[0.985] ${
+              selectedRestaurantCategory ? selectedRestaurantCategory.chip : "border-white/18 bg-white/8 text-white/58"
+            }`}
+            aria-label="Select restaurant category"
+          >
+            <span className="flex min-w-0 items-center justify-center gap-2">
+              {SelectedRestaurantCategoryIcon ? <SelectedRestaurantCategoryIcon className="h-6 w-6 shrink-0" /> : null}
+              <span className="truncate">{selectedRestaurantCategory?.label || "+"}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    ) : null;
     const previewName = editName.trim() || (language === "it" ? "Nome piatto" : "Dish name");
     const previewDescription = editDescription.trim();
     const editPriceSymbol = PRICE_CURRENCIES.find((currency) => currency.code === editPriceCurrency)?.symbol || "€";
@@ -1106,6 +1149,7 @@ export default function DishDetail() {
                   {isRestaurantEdit ? (
                     <>
                       <RestaurantPlacePicker value={editRestaurant} onChange={setEditRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
+                      {restaurantCategoryField}
                       <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
                         <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
                         <RatingStars value={editRating} onChange={setEditRating} size="text-[1.45rem]" />
@@ -1133,6 +1177,11 @@ export default function DishDetail() {
               <div className="absolute inset-0 overflow-y-auto bg-[linear-gradient(180deg,rgba(16,16,20,0.985)_0%,rgba(8,8,10,0.985)_100%)] p-5 pb-24" style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
                 <div className="mb-4 pt-16">
                   <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">{language === "it" ? "Tag" : "Tags"}</div>
+                </div>
+                {restaurantCategoryField}
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">Tag</p>
+                  <p className="text-xs font-medium text-white/45">{editTags.length}/6</p>
                 </div>
                 <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
@@ -1655,6 +1704,62 @@ export default function DishDetail() {
               >
                 {t("Cancel")}
               </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
+        {editRestaurantCategoryPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[125] flex items-end justify-center bg-black/58 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur-[3px]"
+            onClick={() => setEditRestaurantCategoryPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="max-h-[72dvh] w-full max-w-md overflow-hidden rounded-[1.75rem] border-2 border-[#E64646]/55 bg-[#111] text-white shadow-[0_24px_70px_rgba(0,0,0,0.34)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div>
+                  <div className="text-[1.05rem] font-bold">Categoria ristorante</div>
+                  <div className="mt-0.5 text-xs font-medium text-white/45">Scegline una</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditRestaurantCategoryPickerOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/8 text-white/72"
+                  aria-label="Close restaurant category picker"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex max-h-[calc(72dvh-5rem)] flex-wrap content-start gap-2 overflow-y-auto p-3">
+                {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
+                  const Icon = category.icon;
+                  const active = editRestaurantPrimaryCategory === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        void hapticSelection();
+                        setEditRestaurantPrimaryCategory(category.id);
+                        setEditRestaurantCategoryPickerOpen(false);
+                      }}
+                      className={`flex h-11 items-center gap-2 rounded-full border-2 px-3.5 text-sm font-semibold transition active:scale-[0.985] ${category.chip} ${
+                        active ? "ring-2 ring-white/70 ring-offset-2 ring-offset-[#111]" : "opacity-92"
+                      }`}
+                    >
+                      <Icon className="h-6 w-6 shrink-0" />
+                      <span>{category.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
           </motion.div>
         ) : null}

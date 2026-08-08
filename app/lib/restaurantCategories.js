@@ -9,7 +9,7 @@ function BaseSvg({ className = "", children }) {
 }
 
 function PizzaIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M12 20.2 4.7 6.1c4.7-1.9 9.9-1.9 14.6 0L12 20.2Z" fill="currentColor" fillOpacity="0.13" /><path d="M6.4 8c3.6-1.2 7.6-1.2 11.2 0" /><circle cx="11.8" cy="11.3" r="1" fill="currentColor" /><circle cx="9.3" cy="14" r="1" fill="currentColor" /><circle cx="14.5" cy="14.3" r="1" fill="currentColor" /></BaseSvg>;
+  return <BaseSvg className={className}><path d="M12 20.1 5.2 6.8c4.4-1.7 9.2-1.7 13.6 0L12 20.1Z" fill="currentColor" fillOpacity="0.13" /><path d="M6.9 8.6c3.3-1 6.9-1 10.2 0" /><circle cx="11.8" cy="11.4" r=".78" fill="currentColor" /><circle cx="9.9" cy="14.3" r=".72" fill="currentColor" /><circle cx="13.9" cy="14.1" r=".72" fill="currentColor" /><path d="M11.9 16.3h.01" /></BaseSvg>;
 }
 
 function PastaIcon({ className = "" }) {
@@ -44,8 +44,8 @@ function KebabIcon({ className = "" }) {
   return <BaseSvg className={className}><path d="M12 4.1v15.8" /><path d="M8.4 7.1c1.5-1.2 5.7-1.2 7.2 0-.7 1.9-6.5 1.9-7.2 0Z" fill="currentColor" fillOpacity="0.12" /><path d="M7.9 11.3c1.7-1.4 6.5-1.4 8.2 0-.8 2.1-7.4 2.1-8.2 0Z" fill="currentColor" fillOpacity="0.12" /><path d="M8.6 15.8c1.4-1.1 5.4-1.1 6.8 0-.7 1.8-6.1 1.8-6.8 0Z" fill="currentColor" fillOpacity="0.12" /></BaseSvg>;
 }
 
-function PaninoIcon({ className = "" }) {
-  return <BaseSvg className={className}><path d="M4.6 12.2c1.1-3 4-5 7.4-5s6.3 2 7.4 5H4.6Z" fill="currentColor" fillOpacity="0.12" /><path d="M5.2 12.6h13.6" /><path d="M6.4 14.8c1.4-.8 2.8-.8 4.2 0s2.8.8 4.2 0 2.2-.8 2.8 0" /><path d="M6.9 17.3h10.2" /><path d="M8 9.7c2.5-.8 5.5-.8 8 0" /></BaseSvg>;
+function FoodTruckIcon({ className = "" }) {
+  return <BaseSvg className={className}><path d="M3.8 8.1h10.8v7.7H3.8V8.1Z" fill="currentColor" fillOpacity="0.12" /><path d="M14.6 10.5h3.2l2.4 2.5v2.8h-5.6v-5.3Z" fill="currentColor" fillOpacity="0.12" /><path d="M6.1 10.4h5.4" /><path d="M4.8 12.6h7.7" /><path d="M14.6 13h5.3" /><circle cx="7.1" cy="17.1" r="1.35" /><circle cx="17.2" cy="17.1" r="1.35" /><path d="M8.45 17.1h7.4" /></BaseSvg>;
 }
 
 function PlateIcon({ className = "" }) {
@@ -77,23 +77,23 @@ function BeerIcon({ className = "" }) {
 }
 
 export const RESTAURANT_CATEGORY_OPTIONS = [
-  { id: "pizza", label: "Pizza", icon: PizzaIcon, fill: "#FF6B4A", stroke: "#C2410C", chip: "border-[#FF7A59]/80 bg-[#35120C] text-[#FFD3C5]" },
-  { id: "pasta", label: "Pasta", icon: PastaIcon, fill: "#FBBF24", stroke: "#B45309", chip: "border-[#FBBF24]/80 bg-[#332307] text-[#FFE8A3]" },
-  { id: "carne", label: "Carne", icon: MeatIcon, fill: "#EF4444", stroke: "#991B1B", chip: "border-[#EF4444]/80 bg-[#351111] text-[#FFC6C6]" },
-  { id: "pesce", label: "Pesce", icon: FishIcon, fill: "#22D3EE", stroke: "#0891B2", chip: "border-[#22D3EE]/80 bg-[#082A32] text-[#BFF7FF]" },
-  { id: "sushi", label: "Sushi", icon: SushiIcon, fill: "#34D399", stroke: "#047857", chip: "border-[#34D399]/80 bg-[#08271C] text-[#BDF7D8]" },
-  { id: "noodles", label: "Noodles", icon: NoodlesIcon, fill: "#F87171", stroke: "#DC2626", chip: "border-[#F87171]/80 bg-[#351111] text-[#FFD0D0]" },
-  { id: "fast_food", label: "Fast food", icon: BurgerIcon, fill: "#FB7185", stroke: "#BE123C", chip: "border-[#FB7185]/80 bg-[#35111A] text-[#FFD1DA]" },
-  { id: "tacos", label: "Tacos", icon: TacoIcon, fill: "#F97316", stroke: "#C2410C", chip: "border-[#FB923C]/80 bg-[#321A0A] text-[#FFD8B8]" },
-  { id: "kebab", label: "Kebab", icon: KebabIcon, fill: "#A16207", stroke: "#713F12", chip: "border-[#D97706]/80 bg-[#2E1E08] text-[#FDE1A3]" },
-  { id: "street_food", label: "Street food", icon: PaninoIcon, fill: "#F59E0B", stroke: "#B45309", chip: "border-[#F59E0B]/80 bg-[#302109] text-[#FFE3A3]" },
-  { id: "ristorante", label: "Ristorante", icon: PlateIcon, fill: "#A78BFA", stroke: "#6D28D9", chip: "border-[#A78BFA]/80 bg-[#20143A] text-[#E5D8FF]" },
-  { id: "bar", label: "Bar", icon: DrinkIcon, fill: "#38BDF8", stroke: "#0284C7", chip: "border-[#38BDF8]/80 bg-[#082436] text-[#C7EEFF]" },
-  { id: "caffetteria", label: "Caffetteria", icon: CoffeeIcon, fill: "#A47551", stroke: "#6B3F25", chip: "border-[#C08A63]/80 bg-[#28180F] text-[#EFD1BC]" },
-  { id: "pasticceria", label: "Pasticceria", icon: PastryIcon, fill: "#F472B6", stroke: "#BE185D", chip: "border-[#F472B6]/80 bg-[#321325] text-[#FFD0E8]" },
-  { id: "gelateria", label: "Gelateria", icon: GelatoIcon, fill: "#67E8F9", stroke: "#0891B2", chip: "border-[#67E8F9]/80 bg-[#082A30] text-[#CCFBFF]" },
-  { id: "gourmet", label: "Gourmet", icon: StarIcon, fill: "#FDE047", stroke: "#A16207", chip: "border-[#FDE047]/80 bg-[#2A2407] text-[#FFF4A8]" },
-  { id: "pub", label: "Pub", icon: BeerIcon, fill: "#F59E0B", stroke: "#92400E", chip: "border-[#F59E0B]/80 bg-[#302109] text-[#FFE0A3]" },
+  { id: "pizza", label: "Pizza", icon: PizzaIcon, fill: "#E85D3F", stroke: "#9F321D", chip: "border-[#B94B35] bg-[#25100C] text-[#F4B09F]" },
+  { id: "pasta", label: "Pasta", icon: PastaIcon, fill: "#D9A441", stroke: "#8A5F15", chip: "border-[#A97825] bg-[#251B09] text-[#E8C982]" },
+  { id: "carne", label: "Carne", icon: MeatIcon, fill: "#B9433D", stroke: "#7A201D", chip: "border-[#9D3732] bg-[#241010] text-[#E2A09C]" },
+  { id: "pesce", label: "Pesce", icon: FishIcon, fill: "#3A9CB8", stroke: "#22677A", chip: "border-[#2E8198] bg-[#0A2027] text-[#A9D8E4]" },
+  { id: "sushi", label: "Sushi", icon: SushiIcon, fill: "#4C9A68", stroke: "#2E6844", chip: "border-[#3E8058] bg-[#0D2117] text-[#B5D9C2]" },
+  { id: "noodles", label: "Noodles", icon: NoodlesIcon, fill: "#C85B5B", stroke: "#893333", chip: "border-[#A94747] bg-[#251111] text-[#E2A9A9]" },
+  { id: "fast_food", label: "Fast food", icon: BurgerIcon, fill: "#C64A67", stroke: "#8C2740", chip: "border-[#A43B54] bg-[#271018] text-[#E3A6B6]" },
+  { id: "tacos", label: "Tacos", icon: TacoIcon, fill: "#C7772E", stroke: "#874B16", chip: "border-[#A86425] bg-[#26180B] text-[#E5BB8B]" },
+  { id: "kebab", label: "Kebab", icon: KebabIcon, fill: "#8A6540", stroke: "#5D3F25", chip: "border-[#775334] bg-[#21170F] text-[#D0B190]" },
+  { id: "street_food", label: "Street food", icon: FoodTruckIcon, fill: "#B68B34", stroke: "#7A5C1B", chip: "border-[#917025] bg-[#231B0D] text-[#DDC48A]" },
+  { id: "ristorante", label: "Ristorante", icon: PlateIcon, fill: "#816EB7", stroke: "#50427E", chip: "border-[#6C5A9A] bg-[#171326] text-[#C4BAE3]" },
+  { id: "bar", label: "Bar", icon: DrinkIcon, fill: "#477FAE", stroke: "#2B5273", chip: "border-[#386B93] bg-[#0B1B28] text-[#B2D0E7]" },
+  { id: "caffetteria", label: "Caffetteria", icon: CoffeeIcon, fill: "#9A7258", stroke: "#624535", chip: "border-[#7D5A45] bg-[#1F1510] text-[#D5B7A4]" },
+  { id: "pasticceria", label: "Pasticceria", icon: PastryIcon, fill: "#B95B8E", stroke: "#823B62", chip: "border-[#984A73] bg-[#24121D] text-[#E1ACC9]" },
+  { id: "gelateria", label: "Gelateria", icon: GelatoIcon, fill: "#58A9B5", stroke: "#34727B", chip: "border-[#468C96] bg-[#0D2124] text-[#B7DDE2]" },
+  { id: "gourmet", label: "Gourmet", icon: StarIcon, fill: "#BCA246", stroke: "#7C6720", chip: "border-[#968037] bg-[#211C0D] text-[#E1D08C]" },
+  { id: "pub", label: "Pub", icon: BeerIcon, fill: "#B8792E", stroke: "#7B4D1C", chip: "border-[#966225] bg-[#23180C] text-[#DFBA85]" },
 ];
 
 const CATEGORY_BY_ID = new Map(RESTAURANT_CATEGORY_OPTIONS.map((category) => [category.id, category]));

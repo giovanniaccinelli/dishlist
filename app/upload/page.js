@@ -62,7 +62,7 @@ export default function UploadPage() {
   const [storyTaggedUserId, setStoryTaggedUserId] = useState("");
   const [dishTags, setDishTags] = useState([]);
   const [restaurantPrimaryCategory, setRestaurantPrimaryCategory] = useState("");
-  const [restaurantSecondaryCategory, setRestaurantSecondaryCategory] = useState("");
+  const [restaurantCategoryPickerOpen, setRestaurantCategoryPickerOpen] = useState(false);
   const [dishRating, setDishRating] = useState(0);
   const [dishPrice, setDishPrice] = useState("");
   const [dishPriceCurrency, setDishPriceCurrency] = useState("EUR");
@@ -205,7 +205,7 @@ export default function UploadPage() {
   useEffect(() => {
     if (isRestaurantUpload) return;
     setRestaurantPrimaryCategory("");
-    setRestaurantSecondaryCategory("");
+    setRestaurantCategoryPickerOpen(false);
   }, [isRestaurantUpload]);
 
   const toggleTag = (tag) => {
@@ -220,54 +220,35 @@ export default function UploadPage() {
     const normalizedId = normalizeRestaurantCategoryId(categoryId);
     if (!normalizedId) return;
     void hapticSelection();
-    if (restaurantPrimaryCategory === normalizedId) {
-      setRestaurantPrimaryCategory(restaurantSecondaryCategory || "");
-      setRestaurantSecondaryCategory("");
-      return;
-    }
-    if (restaurantSecondaryCategory === normalizedId) {
-      setRestaurantSecondaryCategory("");
-      return;
-    }
-    if (!restaurantPrimaryCategory) {
-      setRestaurantPrimaryCategory(normalizedId);
-      return;
-    }
-    if (!restaurantSecondaryCategory) {
-      setRestaurantSecondaryCategory(normalizedId);
-      return;
-    }
-    setRestaurantSecondaryCategory(normalizedId);
+    setRestaurantPrimaryCategory(normalizedId);
+    setRestaurantCategoryPickerOpen(false);
   };
 
-  const renderRestaurantCategoryPicker = () => {
+  const selectedRestaurantCategory = RESTAURANT_CATEGORY_OPTIONS.find((category) => category.id === restaurantPrimaryCategory) || null;
+
+  const renderRestaurantCategoryField = () => {
     if (!isRestaurantUpload) return null;
+    const SelectedIcon = selectedRestaurantCategory?.icon;
     return (
       <div className="mb-5">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-semibold text-white">Categoria ristorante</p>
-          <p className="text-xs font-medium text-white/52">Scegline una, max secondaria</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
-            const Icon = category.icon;
-            const isPrimary = restaurantPrimaryCategory === category.id;
-            const isSecondary = restaurantSecondaryCategory === category.id;
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => chooseRestaurantCategory(category.id)}
-                className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
-                  isPrimary || isSecondary ? category.chip : "border-white/14 bg-white/7 text-white/68"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{category.label}</span>
-                {isPrimary ? <span className="text-[10px] opacity-70">1</span> : isSecondary ? <span className="text-[10px] opacity-70">2</span> : null}
-              </button>
-            );
-          })}
+        <div className="mb-2 flex items-center gap-3">
+          <p className="shrink-0 text-sm font-semibold text-white">Categoria ristorante</p>
+          <button
+            type="button"
+            onClick={() => {
+              void hapticSelection();
+              setRestaurantCategoryPickerOpen(true);
+            }}
+            className={`flex min-h-11 flex-1 items-center justify-between rounded-full border-2 px-3.5 py-2 text-left text-sm font-semibold transition active:scale-[0.985] ${
+              selectedRestaurantCategory ? selectedRestaurantCategory.chip : "border-white/18 bg-white/8 text-white/58"
+            }`}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              {SelectedIcon ? <SelectedIcon className="h-5 w-5 shrink-0" /> : null}
+              <span className="truncate">{selectedRestaurantCategory?.label || "Scegli categoria"}</span>
+            </span>
+            <span className="ml-2 text-[11px] opacity-60">Apri</span>
+          </button>
         </div>
       </div>
     );
@@ -390,7 +371,7 @@ export default function UploadPage() {
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
       const primaryRestaurantCategory = isRestaurantUpload ? normalizeRestaurantCategoryId(restaurantPrimaryCategory) : "";
-      const secondaryRestaurantCategory = isRestaurantUpload && normalizeRestaurantCategoryId(restaurantSecondaryCategory) !== primaryRestaurantCategory ? normalizeRestaurantCategoryId(restaurantSecondaryCategory) : "";
+      const secondaryRestaurantCategory = "";
       if (storyMode) {
         const storyId = `story-${Date.now()}`;
         const ok = await publishCustomStory(user.uid, {
@@ -493,7 +474,6 @@ export default function UploadPage() {
         setDishPrice("");
         setDishPriceCurrency("EUR");
         setRestaurantPrimaryCategory("");
-        setRestaurantSecondaryCategory("");
         setUploadToStory(false);
       }
     } catch (err) {
@@ -1001,7 +981,11 @@ export default function UploadPage() {
                     {language === "it" ? "Tag" : "Tags"}
                   </div>
                 </div>
-                {renderRestaurantCategoryPicker()}
+                {renderRestaurantCategoryField()}
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">Tag</p>
+                  <p className="text-xs font-medium text-white/45">Mood e caratteristiche del piatto</p>
+                </div>
                 <div className="flex flex-wrap content-start gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
@@ -1566,15 +1550,11 @@ export default function UploadPage() {
 	                  rows={1}
 	                  disabled={loadingUpload}
 	                />
+                {renderRestaurantCategoryField()}
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-medium text-black">Tags</p>
-                  <p className="text-xs text-black/60">{dishTags.length}/6</p>
+                  <p className="text-sm font-medium text-black">Tag</p>
+                  <p className="text-xs text-black/60">{dishTags.length}/6 · diversi dalla categoria</p>
                 </div>
-                {isRestaurantUpload ? (
-                  <div className="mb-5 rounded-[1.4rem] border-2 border-[#E64646]/45 bg-[#2A1111] p-3">
-                    {renderRestaurantCategoryPicker()}
-                  </div>
-                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {TAG_OPTIONS.map((tag) => {
                     const active = dishTags.includes(tag);
@@ -1884,6 +1864,60 @@ export default function UploadPage() {
               >
                 {t("Cancel")}
               </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
+        {restaurantCategoryPickerOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[125] flex items-end justify-center bg-black/58 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur-[3px]"
+            onClick={() => setRestaurantCategoryPickerOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="max-h-[72dvh] w-full max-w-md overflow-hidden rounded-[1.75rem] border-2 border-[#E64646]/55 bg-[#111] text-white shadow-[0_24px_70px_rgba(0,0,0,0.34)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div>
+                  <div className="text-[1.05rem] font-bold">Categoria ristorante</div>
+                  <div className="mt-0.5 text-xs font-medium text-white/45">Scegline una</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRestaurantCategoryPickerOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/8 text-white/72"
+                  aria-label="Close restaurant category picker"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="grid max-h-[calc(72dvh-5rem)] grid-cols-2 gap-2 overflow-y-auto p-3">
+                {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
+                  const Icon = category.icon;
+                  const active = restaurantPrimaryCategory === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => chooseRestaurantCategory(category.id)}
+                      className={`flex min-h-[3.65rem] items-center gap-2 rounded-[1.1rem] border-2 px-3 py-2 text-left text-sm font-semibold transition active:scale-[0.985] ${
+                        active ? category.chip : "border-white/12 bg-white/7 text-white/72"
+                      }`}
+                    >
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${active ? "bg-white/55" : "bg-white/10"}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 truncate">{category.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
           </motion.div>
         ) : null}

@@ -328,8 +328,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const router = useRouter();
   const { darkMode, t } = useLanguage();
   const [cardLayout, setCardLayout] = useState(() => {
-    if (typeof window === "undefined") return "full";
-    return window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square" ? "square" : "full";
+    if (typeof window === "undefined") return "square";
+    return window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "full" ? "full" : "square";
   });
   const SWIPE_EJECT_THRESHOLD = 88;
   const SWIPE_EJECT_VELOCITY = 680;
@@ -473,7 +473,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
     const readLayout = () => {
-      setCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square" ? "square" : "full");
+      setCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "full" ? "full" : "square");
     };
     readLayout();
     const handleLayoutChange = (event) => {
@@ -1460,7 +1460,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const mediaIsVideo = media.mediaType === "video" || media.mediaMimeType?.startsWith("video/") || (selectedIndex === 0 && isDishVideo(dish));
     const hasCarousel = carousel && items.length > 1;
     const setMediaIndex = (nextIndex) => {
-      void hapticSelection();
+      void hapticImpact("light");
       setMediaIndexByCardKey((prev) => ({ ...prev, [cardKey]: Math.min(Math.max(0, nextIndex), items.length - 1) }));
     };
     const openZoomFromPinch = () => {
@@ -3167,7 +3167,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index <= 0 ? prev.items.length - 1 : prev.index - 1;
-                        void hapticSelection();
+                        void hapticImpact("light");
                         setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };
@@ -3182,7 +3182,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       setZoomMedia((prev) => {
                         if (!prev) return prev;
                         const nextIndex = prev.index >= prev.items.length - 1 ? 0 : prev.index + 1;
-                        void hapticSelection();
+                        void hapticImpact("light");
                         setZoomTransform({ scale: 1, x: 0, y: 0 });
                         setMediaIndexByCardKey((map) => ({ ...map, [prev.cardKey]: nextIndex }));
                         return { ...prev, index: nextIndex };

@@ -671,8 +671,8 @@ export default function UploadPage() {
                 )}
                 {activeMediaPreview && hasMediaCarousel ? (
                   <>
-                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => { void hapticSelection(); setActiveMediaIndex((index) => Math.max(0, index - 1)); }} />
-                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => { void hapticSelection(); setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1)); }} />
+                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => { void hapticImpact("light"); setActiveMediaIndex((index) => Math.max(0, index - 1)); }} />
+                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => { void hapticImpact("light"); setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1)); }} />
                   </>
                 ) : null}
                 {canAddMoreMedia ? (

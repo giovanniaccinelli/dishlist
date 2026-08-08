@@ -679,7 +679,7 @@ export default function Profile() {
   const [shoppingListItems, setShoppingListItems] = useState([]);
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const [shoppingIngredientDraft, setShoppingIngredientDraft] = useState("");
-  const [squareCardLayout, setSquareCardLayout] = useState(false);
+  const [squareCardLayout, setSquareCardLayout] = useState(true);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -702,7 +702,7 @@ export default function Profile() {
   const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "square");
+    setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) !== "full");
   }, []);
 
   const updateCardLayoutPreference = (enabled) => {

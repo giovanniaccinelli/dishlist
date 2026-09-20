@@ -47,6 +47,17 @@ const PRICE_CURRENCIES = [
   { code: "JPY", symbol: "¥" },
 ];
 
+function UploadBlockingOverlay({ label = "Caricamento..." }) {
+  return (
+    <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/52 backdrop-blur-[3px]">
+      <div className="no-accent-border flex h-32 w-32 flex-col items-center justify-center rounded-full bg-black/82 text-[#2BD36B] shadow-[0_22px_58px_rgba(0,0,0,0.42)]">
+        <span className="dishlist-action-spinner text-[2.35rem]" />
+        <span className="mt-2 text-[12px] font-black uppercase tracking-[0.16em] text-white/88">{label}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -1981,6 +1992,9 @@ export default function UploadPage() {
         language={language}
         darkMode={darkMode}
       />
+      {loadingUpload ? (
+        <UploadBlockingOverlay label={language === "it" ? "Caricamento..." : storyMode ? "Publishing..." : "Uploading..."} />
+      ) : null}
       <AppToast message={toast} variant={toastVariant} />
       {!showLegacyUploadFlow ? <BottomNav /> : null}
     </div>

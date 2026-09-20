@@ -1,10 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Utensils, X } from "lucide-react";
+import { Shuffle, Utensils, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { hapticImpact, hapticSelection } from "../app/lib/haptics";
-import { useLanguage } from "./LanguageProvider";
 
 export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
@@ -65,12 +64,7 @@ export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.95 }) 
 }
 
 export function UnknownDishModeIcon({ className = "", strokeWidth = 2.15 }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M7.4 9.6c.4-1.7 1.8-2.8 3.7-2.8 2.1 0 3.7 1.3 3.7 3.2 0 1.5-.8 2.3-2.2 3.3-1.2.8-1.7 1.5-1.7 2.7" />
-      <path d="M10.95 19.8h.55" />
-    </svg>
-  );
+  return <Shuffle className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
 }
 
 export function dishModeMatches(dish, selectedMode) {
@@ -265,14 +259,13 @@ function DishModeChoiceLine({ choice, onClick }) {
 }
 
 export function DiningModeOpeningSelection({ className = "", onSelect, intro = false }) {
-  const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const [introVisible, setIntroVisible] = useState(Boolean(intro));
   const [closingMode, setClosingMode] = useState(null);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Al ristorante", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
-    { mode: DISH_MODE_COOKING, label: "A casa", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Non so", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
+    { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
   ];
 
   useEffect(() => {
@@ -306,7 +299,6 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
       transition={{ type: "spring", stiffness: 230, damping: 24, mass: 0.82 }}
       className="w-full"
     >
-      <div className="mb-5 text-center text-[1.65rem] font-bold leading-none text-white">{t("Dove vuoi mangiare?")}</div>
       <div className="space-y-3">
         {choices.map((choice) => (
           <DishModeChoiceLine

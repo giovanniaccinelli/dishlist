@@ -20,7 +20,7 @@ import {
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import {
   getDishIngredientItems,
-  getIngredientColor,
+  getIngredientPillStyle,
   inferIngredientColorId,
   normalizeIngredientKey,
   normalizeIngredientName,
@@ -114,15 +114,30 @@ export default function ShoppingListPage() {
   }, [dishesById, items]);
   const visibleDishes = useMemo(() => {
     const query = dishSearch.trim().toLowerCase();
-    if (!query) return dishPool.slice(0, 24);
-    return dishPool
+    const ranked = dishPool
+      .map((dish, index) => {
+        const ingredients = getDishIngredientItems(dish);
+        const addedCount = ingredients.filter((ingredient) => ingredientKeys.has(ingredient.key)).length;
+        const missingCount = ingredients.length - addedCount;
+        return { dish, ingredients, addedCount, missingCount, index };
+      })
       .filter((dish) => {
-        const name = String(dish?.name || "").toLowerCase();
-        const ingredients = getDishIngredientItems(dish).map((item) => item.name.toLowerCase()).join(" ");
+        if (!query) return true;
+        const name = String(dish.dish?.name || "").toLowerCase();
+        const ingredients = dish.ingredients.map((item) => item.name.toLowerCase()).join(" ");
         return name.includes(query) || ingredients.includes(query);
       })
+      .sort((a, b) => {
+        if (a.missingCount === 0 && b.missingCount > 0) return 1;
+        if (b.missingCount === 0 && a.missingCount > 0) return -1;
+        if (b.addedCount !== a.addedCount) return b.addedCount - a.addedCount;
+        if (b.missingCount !== a.missingCount) return b.missingCount - a.missingCount;
+        return a.index - b.index;
+      })
+      .map(({ dish }) => dish);
+    return ranked
       .slice(0, 24);
-  }, [dishPool, dishSearch]);
+  }, [dishPool, dishSearch, ingredientKeys]);
 
   const addTypedIngredient = async () => {
     const name = normalizeIngredientName(draft);
@@ -215,13 +230,12 @@ export default function ShoppingListPage() {
         {items.length ? (
           <div className="flex flex-wrap gap-2">
             {items.map((item) => {
-              const color = getIngredientColor(item.color || inferIngredientColorId(item.name));
               const count = Math.max(1, Number(item.count || 1));
               return (
                 <span
                   key={item.key}
                   className="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none"
-                  style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                  style={getIngredientPillStyle(item.color || inferIngredientColorId(item.name), darkMode)}
                 >
                   {item.name}
                   {count > 1 ? <span className="font-black">x{count}</span> : null}
@@ -254,7 +268,7 @@ export default function ShoppingListPage() {
             value={dishSearch}
             onChange={(event) => setDishSearch(event.target.value)}
             placeholder={language === "it" ? "Cerca piatti o ingredienti" : "Search dishes or ingredients"}
-            className="min-w-0 flex-1 bg-transparent py-1 text-[16px] outline-none placeholder:text-black/35"
+            className={`min-w-0 flex-1 bg-transparent py-1 text-[16px] outline-none ${darkMode ? "placeholder:text-white/32" : "placeholder:text-black/35"}`}
             style={{ fontSize: 16 }}
           />
         </div>

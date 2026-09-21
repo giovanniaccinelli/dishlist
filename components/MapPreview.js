@@ -40,39 +40,39 @@ function getOffsetCenter(group, zoom, verticalOffsetPx = 0) {
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
 const RESTAURANT_CATEGORY_ORDER_INDEX = new Map(RESTAURANT_CATEGORY_OPTIONS.map((category, index) => [category.id, index]));
 const RESTAURANT_TAG_PIN_THEME = {
-  fit: { fill: "#34D399", stroke: "#047857" },
-  "high protein": { fill: "#FB923C", stroke: "#C2410C" },
-  veg: { fill: "#38BDF8", stroke: "#0369A1" },
-  vegan: { fill: "#22C55E", stroke: "#15803D" },
-  light: { fill: "#5EEAD4", stroke: "#0F766E" },
-  easy: { fill: "#A78BFA", stroke: "#6D28D9" },
-  quick: { fill: "#2DD4BF", stroke: "#0F766E" },
-  fancy: { fill: "#F472B6", stroke: "#BE185D" },
-  comfort: { fill: "#FACC15", stroke: "#B45309" },
-  "carb heavy": { fill: "#FDBA74", stroke: "#EA580C" },
-  "low carb": { fill: "#0EA5E9", stroke: "#0369A1" },
-  spicy: { fill: "#F87171", stroke: "#B91C1C" },
-  "late night": { fill: "#818CF8", stroke: "#4338CA" },
-  cheat: { fill: "#FB7185", stroke: "#BE123C" },
-  budget: { fill: "#A3E635", stroke: "#4D7C0F" },
-  premium: { fill: "#FDE047", stroke: "#A16207" },
-  summer: { fill: "#F97316", stroke: "#C2410C" },
-  winter: { fill: "#60A5FA", stroke: "#1D4ED8" },
-  gourmet: { fill: "#C084FC", stroke: "#7E22CE" },
-  "date night": { fill: "#E879F9", stroke: "#A21CAF" },
-  pasta: { fill: "#FBBF24", stroke: "#B45309" },
-  italian: { fill: "#4ADE80", stroke: "#DC2626" },
-  ethnic: { fill: "#60A5FA", stroke: "#2563EB" },
-  seafood: { fill: "#22D3EE", stroke: "#0891B2" },
-  aesthetic: { fill: "#F9A8D4", stroke: "#DB2777" },
-  fresh: { fill: "#34D399", stroke: "#059669" },
-  asian: { fill: "#F87171", stroke: "#DC2626" },
-  fried: { fill: "#FB923C", stroke: "#C2410C" },
-  delivery: { fill: "#38BDF8", stroke: "#0284C7" },
-  dessert: { fill: "#F472B6", stroke: "#BE185D" },
-  american: { fill: "#60A5FA", stroke: "#DC2626" },
-  rice: { fill: "#FDE047", stroke: "#CA8A04" },
-  "fast food": { fill: "#FB7185", stroke: "#BE123C" },
+  fit: { fill: "#1FA463", stroke: "#0B5A36" },
+  "high protein": { fill: "#C66A22", stroke: "#70320F" },
+  veg: { fill: "#278F68", stroke: "#0D5440" },
+  vegan: { fill: "#21A55A", stroke: "#0B5C34" },
+  light: { fill: "#2A9D97", stroke: "#135C58" },
+  easy: { fill: "#6D5BD0", stroke: "#332875" },
+  quick: { fill: "#219B8E", stroke: "#0D5952" },
+  fancy: { fill: "#B94C86", stroke: "#672947" },
+  comfort: { fill: "#BD8E24", stroke: "#67490D" },
+  "carb heavy": { fill: "#C97828", stroke: "#6E3C0E" },
+  "low carb": { fill: "#2179B8", stroke: "#12496F" },
+  spicy: { fill: "#C83C35", stroke: "#691715" },
+  "late night": { fill: "#5F64C8", stroke: "#303477" },
+  cheat: { fill: "#C83E62", stroke: "#702137" },
+  budget: { fill: "#779C2D", stroke: "#3E5512" },
+  premium: { fill: "#B99A27", stroke: "#67530F" },
+  summer: { fill: "#CC6D25", stroke: "#71370E" },
+  winter: { fill: "#3C7CC8", stroke: "#214878" },
+  gourmet: { fill: "#8D68D4", stroke: "#432B78" },
+  "date night": { fill: "#A84AB8", stroke: "#5D2767" },
+  pasta: { fill: "#D39A25", stroke: "#72500E" },
+  italian: { fill: "#2C9E56", stroke: "#7A241D" },
+  ethnic: { fill: "#2E79BC", stroke: "#184979" },
+  seafood: { fill: "#1E99B4", stroke: "#0E5364" },
+  aesthetic: { fill: "#C5579B", stroke: "#6F2E58" },
+  fresh: { fill: "#259B70", stroke: "#0F5841" },
+  asian: { fill: "#C84843", stroke: "#71201C" },
+  fried: { fill: "#C66A22", stroke: "#70320F" },
+  delivery: { fill: "#2E86BC", stroke: "#175172" },
+  dessert: { fill: "#B94C86", stroke: "#672947" },
+  american: { fill: "#456EC2", stroke: "#742120" },
+  rice: { fill: "#C7A72F", stroke: "#6F5A12" },
+  "fast food": { fill: "#C83E62", stroke: "#702137" },
 };
 
 function getRestaurantTagPinTheme(tag = "") {
@@ -178,7 +178,7 @@ function createPreviewRestaurantPinOverlay({ map, position, markerTone = "defaul
         : markerTone === "followed"
           ? "#F2C94C"
           : (tagTheme?.stroke || "white");
-    const fillColor = tagTheme?.fill || "#FFFFFF";
+    const fillColor = tagTheme?.fill || (markerTone === "own" ? "#12351F" : markerTone === "followed" ? "#332B10" : "#E64646");
     const showDefaultSymbol = !tagMarkup;
 
     node = document.createElement("div");

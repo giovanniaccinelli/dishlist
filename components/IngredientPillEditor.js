@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Pencil, Plus, X } from "lucide-react";
-import { getIngredientColor, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientName } from "../app/lib/ingredients";
+import { getIngredientPillStyle, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientName } from "../app/lib/ingredients";
+import { useLanguage } from "./LanguageProvider";
 
 export default function IngredientPillEditor({
   value = [],
@@ -11,6 +12,7 @@ export default function IngredientPillEditor({
   disabled = false,
   className = "",
 }) {
+  const { darkMode } = useLanguage();
   const [draft, setDraft] = useState("");
   const items = useMemo(() => normalizeIngredientItems(value), [value]);
 
@@ -30,12 +32,11 @@ export default function IngredientPillEditor({
     <div className={`rounded-[1rem] border border-[#E4B43F]/55 bg-white px-3 py-3 text-black ${className}`}>
       <div className="flex flex-wrap gap-2">
         {items.map((item) => {
-          const color = getIngredientColor(item.color);
           return (
             <span
               key={item.key}
               className="inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold leading-none"
-              style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+              style={getIngredientPillStyle(item.color, darkMode)}
             >
               {item.name}
               <button

@@ -86,7 +86,7 @@ import {
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
-import { getIngredientColor, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
+import { getIngredientPillStyle, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
 import { hapticError, hapticImpact, hapticSuccess } from "../lib/haptics";
 
 const STORY_CHOOSER_STEPS = [
@@ -5830,9 +5830,8 @@ export default function Profile() {
       </AnimatePresence>
 
       {shoppingListItems.length > 0 && showingDishlistOverview ? (
-        <button
-          type="button"
-          onClick={() => setShoppingListOpen(true)}
+        <Link
+          href="/shopping-list"
           className="shopping-list-floating-button no-accent-border fixed right-5 z-[65] flex h-16 w-16 items-center justify-center rounded-full bg-[#07140B]/96 text-[#2BD36B] shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md"
           style={{
             bottom: "calc(var(--app-bottom-nav-height) + 1rem)",
@@ -5845,7 +5844,7 @@ export default function Profile() {
           <span className="no-accent-border absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#2BD36B] px-1.5 text-[11px] font-black leading-none text-black">
             {shoppingListItems.reduce((sum, item) => sum + Math.max(1, Number(item.count || 1)), 0)}
           </span>
-        </button>
+        </Link>
       ) : null}
 
       <AnimatePresence>
@@ -5910,13 +5909,12 @@ export default function Profile() {
               </div>
               <div className="flex max-h-[46dvh] flex-wrap gap-2 overflow-y-auto pr-1">
                 {shoppingListItems.map((item) => {
-                  const color = getIngredientColor(item.color || inferIngredientColorId(item.name));
                   const count = Math.max(1, Number(item.count || 1));
                   return (
                     <span
                       key={item.id}
                       className="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none"
-                      style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                      style={getIngredientPillStyle(item.color || inferIngredientColorId(item.name), darkMode)}
                     >
                       {item.name}
                       {count > 1 ? <span className="font-black">x{count}</span> : null}

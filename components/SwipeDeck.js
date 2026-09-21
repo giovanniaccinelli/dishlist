@@ -23,7 +23,7 @@ import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
 import { RatingStars } from "./RatingStars";
 import { formatDishPrice } from "../app/lib/dishPrice";
-import { getDishIngredientItems, getIngredientColor } from "../app/lib/ingredients";
+import { getDishIngredientItems, getIngredientPillStyle } from "../app/lib/ingredients";
 import { hapticError, hapticImpact, hapticSelection, hapticSuccess } from "../app/lib/haptics";
 
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
@@ -2589,12 +2589,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     {currentIngredientItems.length ? (
                       <div className="flex flex-wrap gap-2">
                         {currentIngredientItems.map((item) => {
-                          const color = getIngredientColor(item.color);
                           return (
                             <span
                               key={item.key}
                               className="inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-[13px] font-semibold leading-none"
-                              style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                              style={getIngredientPillStyle(item.color, darkMode)}
                             >
                               {item.name}
                             </span>
@@ -3332,12 +3331,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 {recipePanelModal === "ingredients" && currentIngredientItems.length ? (
                   <div className="flex flex-wrap gap-2">
                     {currentIngredientItems.map((item) => {
-                      const color = getIngredientColor(item.color);
                       return (
                         <span
                           key={item.key}
                           className="inline-flex min-h-9 items-center rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none"
-                          style={{ backgroundColor: color.bg, borderColor: color.border, color: color.text, WebkitTextFillColor: color.text }}
+                          style={getIngredientPillStyle(item.color, darkMode)}
                         >
                           {item.name}
                         </span>

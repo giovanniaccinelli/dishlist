@@ -46,6 +46,13 @@ function normalizeShoppingListDocs(docs = []) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+function stableHash(value = "") {
+  return String(value || "").split("").reduce((hash, char) => {
+    const next = (hash << 5) - hash + char.charCodeAt(0);
+    return next | 0;
+  }, 0);
+}
+
 export default function ShoppingListPage() {
   const { user, loading } = useAuth();
   const { t, darkMode, language } = useLanguage();
@@ -56,6 +63,8 @@ export default function ShoppingListPage() {
   const [dishSearch, setDishSearch] = useState("");
   const [loadingDishes, setLoadingDishes] = useState(true);
   const [savingKey, setSavingKey] = useState("");
+  const [suggestionSeed, setSuggestionSeed] = useState(() => Date.now());
+  const [selectedDish, setSelectedDish] = useState(null);
 
   useEffect(() => {
     if (loading) return;
@@ -88,6 +97,7 @@ export default function ShoppingListPage() {
         const recipeDishes = allDishes
           .filter((dish) => String(dish?.dishMode || "").toLowerCase() !== "restaurant")
           .filter((dish) => getDishIngredientItems(dish).length > 0);
+        setSuggestionSeed(Date.now());
         setDishPool(recipeDishes);
       } finally {
         if (active) setLoadingDishes(false);
@@ -119,7 +129,12 @@ export default function ShoppingListPage() {
         const ingredients = getDishIngredientItems(dish);
         const addedCount = ingredients.filter((ingredient) => ingredientKeys.has(ingredient.key)).length;
         const missingCount = ingredients.length - addedCount;
-        return { dish, ingredients, addedCount, missingCount, index };
+        const randomRank = Math.abs(stableHash(`${suggestionSeed}:${dish?.id || dish?.name || index}`));
+        const usefulnessScore =
+          (missingCount > 0 ? 100 : 0) +
+          Math.min(addedCount, 4) * 12 +
+          Math.min(missingCount, 8);
+        return { dish, ingredients, addedCount, missingCount, usefulnessScore, randomRank, index };
       })
       .filter((dish) => {
         if (!query) return true;
@@ -130,14 +145,14 @@ export default function ShoppingListPage() {
       .sort((a, b) => {
         if (a.missingCount === 0 && b.missingCount > 0) return 1;
         if (b.missingCount === 0 && a.missingCount > 0) return -1;
-        if (b.addedCount !== a.addedCount) return b.addedCount - a.addedCount;
-        if (b.missingCount !== a.missingCount) return b.missingCount - a.missingCount;
+        if (b.usefulnessScore !== a.usefulnessScore) return b.usefulnessScore - a.usefulnessScore;
+        if (a.randomRank !== b.randomRank) return a.randomRank - b.randomRank;
         return a.index - b.index;
       })
       .map(({ dish }) => dish);
     return ranked
       .slice(0, 24);
-  }, [dishPool, dishSearch, ingredientKeys]);
+  }, [dishPool, dishSearch, ingredientKeys, suggestionSeed]);
 
   const addTypedIngredient = async () => {
     const name = normalizeIngredientName(draft);
@@ -153,6 +168,7 @@ export default function ShoppingListPage() {
     setSavingKey(`dish:${dish.id}`);
     await addDishIngredientsToShoppingList(user.uid, dish);
     setSavingKey("");
+    setSelectedDish(null);
   };
 
   const removeIngredient = async (item) => {
@@ -283,7 +299,7 @@ export default function ShoppingListPage() {
                 <button
                   key={dish.id}
                   type="button"
-                  onClick={() => addDish(dish)}
+                  onClick={() => setSelectedDish(dish)}
                   disabled={Boolean(savingKey)}
                   className={`overflow-hidden rounded-[1.2rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
                 >
@@ -345,6 +361,86 @@ export default function ShoppingListPage() {
           </div>
         )}
       </section>
+
+      {selectedDish ? (
+        <div
+          className="fixed inset-0 z-[130] flex items-end justify-center bg-black/58 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur-[3px]"
+          onClick={() => setSelectedDish(null)}
+        >
+          <div
+            className={`max-h-[82dvh] w-full max-w-md overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgba(0,0,0,0.34)] ${darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-white text-black"}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative h-48 overflow-hidden">
+              <img
+                src={getDishImageUrl(selectedDish)}
+                alt={selectedDish.name || ""}
+                className="h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                }}
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-4 pb-4 pt-14 text-white">
+                <div className="text-[1.55rem] font-black leading-none">{selectedDish.name || "Dish"}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDish(null)}
+                className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/62 text-white backdrop-blur-md"
+                aria-label="Close dish ingredients"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="max-h-[calc(82dvh-12rem)] overflow-y-auto p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2BD36B]">Ingredienti</p>
+                  <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                    {getDishIngredientItems(selectedDish).filter((ingredient) => ingredientKeys.has(ingredient.key)).length}/{getDishIngredientItems(selectedDish).length} {language === "it" ? "gia in lista" : "already in list"}
+                  </div>
+                </div>
+                <Link
+                  href={`/dish/${selectedDish.id}?source=all_dishes`}
+                  className={`rounded-full px-3 py-2 text-xs font-bold ${darkMode ? "bg-white/10 text-white" : "bg-black/7 text-black"}`}
+                >
+                  {language === "it" ? "Apri" : "Open"}
+                </Link>
+              </div>
+              <div className="mb-5 flex flex-wrap gap-2">
+                {getDishIngredientItems(selectedDish).map((ingredient) => {
+                  const inList = ingredientKeys.has(ingredient.key);
+                  return (
+                    <span
+                      key={ingredient.key}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-none ${inList ? "" : "opacity-82"}`}
+                      style={getIngredientPillStyle(ingredient.color || inferIngredientColorId(ingredient.name), darkMode)}
+                    >
+                      {ingredient.name}
+                      {inList ? <span className="font-black">✓</span> : null}
+                    </span>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => addDish(selectedDish)}
+                disabled={Boolean(savingKey)}
+                className="dish-modal-primary-btn flex min-h-[3.15rem] w-full items-center justify-center rounded-full px-5 text-sm font-bold disabled:opacity-60"
+              >
+                {savingKey === `dish:${selectedDish.id}` ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="dishlist-action-spinner" />
+                    <span>{language === "it" ? "Aggiungo..." : "Adding..."}</span>
+                  </span>
+                ) : (
+                  language === "it" ? "Aggiungi ingredienti" : "Add ingredients"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <AuthPromptModal open={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
       <BottomNav />

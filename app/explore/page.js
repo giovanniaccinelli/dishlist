@@ -33,6 +33,7 @@ import { CategoryRowsLoading } from "../../components/AppLoadingState";
 import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { hasDishMedia } from "../lib/dishContent";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "../lib/restaurants";
 import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
@@ -50,7 +51,7 @@ import {
 import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
-const ROW_PREVIEW_LIMIT = 10;
+const ROW_PREVIEW_LIMIT = 2;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
 
@@ -433,7 +434,7 @@ function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
       className="top-action-btn relative"
       aria-label={label}
     >
-      <Icon size={18} className="text-black" />
+      <Icon size={18} />
       {highlighted ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
     </Link>
   );
@@ -468,7 +469,7 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves" }
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
         decoding="async"
-        className="w-full h-28 object-cover"
+        className="w-full h-36 object-cover"
         onError={(e) => {
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
@@ -588,8 +589,8 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
       </div>
       <div className="no-accent-border flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory shadow-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish, index) => (
-          <div key={`${title}-${dish.id}`} className="snap-start basis-[31.5%] min-w-[31.5%] shrink-0">
-            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 3} counterKind={counterKind} />
+          <div key={`${title}-${dish.id}`} className="snap-start basis-[48%] min-w-[48%] shrink-0">
+            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 2} counterKind={counterKind} />
           </div>
         ))}
       </div>
@@ -875,7 +876,7 @@ export default function Explore() {
             const dishTags = dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
             return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
           });
-    const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
+    const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish));
 
     const rows = [];
     rows.push({
@@ -891,7 +892,7 @@ export default function Explore() {
           return name.includes(term) || tags.some((tag) => tag.includes(term));
         })
       : trendingDishes;
-    const filteredTrendingPool = trendingPool.filter((dish) => dishModeMatches(dish, selectedDishMode));
+    const filteredTrendingPool = trendingPool.filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish));
     rows.push({
       key: "trending",
       title: "Trending Now",
@@ -904,11 +905,12 @@ export default function Explore() {
           Array.isArray(dish.tags) &&
           dish.tags.some((dishTag) => String(dishTag).toLowerCase() === String(tag).toLowerCase())
       );
+      const selectedDishes = sortMostSavedDishes(tagged).slice(0, BASE_LIMIT);
       return {
         key: `tag-${tag}`,
         rawTag: tag,
         title: String(tag),
-        dishes: randomizeRowDishes(tagged, `tag-${tag}`).slice(0, BASE_LIMIT),
+        dishes: randomizeRowDishes(selectedDishes, `tag-${tag}`),
         totalCount: tagged.length,
       };
     })

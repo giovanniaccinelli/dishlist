@@ -51,7 +51,6 @@ import {
 import { useLanguage } from "../../components/LanguageProvider";
 
 const BASE_LIMIT = 20;
-const ROW_PREVIEW_LIMIT = 2;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
 
@@ -546,7 +545,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
 
 function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
   const { title, dishes } = row;
-  const visible = dishes.slice(0, ROW_PREVIEW_LIMIT);
+  const visible = dishes;
   if (!visible.length) return null;
   const isRestaurantRow = row.key.startsWith("restaurant-");
   const counterKind = row.key === "trending" ? "stories" : "saves";

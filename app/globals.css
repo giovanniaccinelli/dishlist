@@ -192,6 +192,12 @@
   justify-content: center;
 }
 
+.top-action-btn svg {
+  width: 1.42rem;
+  height: 1.42rem;
+  stroke-width: 2.25;
+}
+
 .dish-card-shell {
   border-width: 1.5px !important;
   border-style: solid !important;

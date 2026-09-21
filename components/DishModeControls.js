@@ -180,7 +180,7 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.55rem] w-[1.55rem]" strokeWidth={2.35} /> },
   ];
 
   return (
@@ -265,7 +265,7 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
-    { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.82rem] w-[1.82rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.55rem] w-[1.55rem]" strokeWidth={2.35} /> },
   ];
 
   useEffect(() => {

@@ -1,24 +1,44 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Map, Plus, Search, User } from "lucide-react";
+import { Home, Map, Plus, Search, ShoppingCart, User } from "lucide-react";
 import { useAuth } from "../app/lib/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthPromptModal from "./AuthPromptModal";
 import { useLanguage } from "./LanguageProvider";
+import { DISH_MODE_COOKING } from "./DishModeControls";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [globalDishMode, setGlobalDishModeState] = useState("");
   const profileHref = "/profile";
+  const showShoppingListTab = globalDishMode === DISH_MODE_COOKING;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const readMode = (event) => {
+      const nextMode = String(event?.detail || window.localStorage.getItem("dish-mode:global") || "").trim().toLowerCase();
+      setGlobalDishModeState(nextMode);
+    };
+    readMode();
+    window.addEventListener("dish-mode:change", readMode);
+    window.addEventListener("storage", readMode);
+    return () => {
+      window.removeEventListener("dish-mode:change", readMode);
+      window.removeEventListener("storage", readMode);
+    };
+  }, []);
 
   const navItems = [
     { href: "/", icon: Home, label: "feed" },
     { href: "/explore", icon: Search, label: "explore" },
     { href: "/upload?direct=1", icon: Plus, label: "upload", requiresAuth: true, prominent: true },
-    { href: "/map", icon: Map, label: "mappa" },
+    showShoppingListTab
+      ? { href: "/shopping-list", icon: ShoppingCart, label: "lista", requiresAuth: true }
+      : { href: "/map", icon: Map, label: "mappa" },
     { href: profileHref, icon: User, label: "profile", requiresAuth: true },
   ];
 
@@ -26,6 +46,7 @@ export default function BottomNav() {
     if (href === "/") return pathname === "/" || pathname === "/feed";
     if (href === "/profile") return pathname.startsWith("/profile");
     if (href === "/map") return pathname === "/map";
+    if (href === "/shopping-list") return pathname === "/shopping-list";
     return pathname === href;
   };
 

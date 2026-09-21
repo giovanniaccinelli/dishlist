@@ -54,6 +54,13 @@ const ROW_PREVIEW_LIMIT = 10;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
 
+function stableHash(value = "") {
+  return String(value || "").split("").reduce((hash, char) => {
+    const next = (hash << 5) - hash + char.charCodeAt(0);
+    return next | 0;
+  }, 0);
+}
+
 function toTitleCase(value = "") {
   return String(value || "")
     .split(" ")
@@ -805,12 +812,9 @@ export default function Explore() {
   };
 
   const categoryRows = useMemo(() => {
-    const sortExploreDishes = (items, mode = selectedDishMode) => {
-      if (mode !== DISH_MODE_RESTAURANT) {
-        return [...items].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0));
-      }
-      if (!Number.isFinite(currentLocation?.lat) || !Number.isFinite(currentLocation?.lng)) {
-        return [...items].sort((a, b) => Number(b.saves || 0) - Number(a.saves || 0));
+    const withRestaurantDistance = (items) => {
+      if (selectedDishMode !== DISH_MODE_RESTAURANT || !Number.isFinite(currentLocation?.lat) || !Number.isFinite(currentLocation?.lng)) {
+        return items.map((dish, index) => ({ dish, index, distance: Number.POSITIVE_INFINITY }));
       }
       return items
         .map((dish, index) => {
@@ -822,11 +826,34 @@ export default function Explore() {
               ? getRestaurantDistanceMeters(currentLocation, restaurantLocation)
               : Number.POSITIVE_INFINITY,
           };
-        })
-        .sort((a, b) => {
-          if (a.distance !== b.distance) return a.distance - b.distance;
-          return a.index - b.index;
-        })
+        });
+    };
+
+    const sortMostSavedDishes = (items) => {
+      const decorated = withRestaurantDistance(items);
+      if (selectedDishMode === DISH_MODE_RESTAURANT && Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)) {
+        return decorated
+          .sort((a, b) => {
+            const saveDelta = Number(b.dish?.saves || 0) - Number(a.dish?.saves || 0);
+            if (saveDelta) return saveDelta;
+            if (a.distance !== b.distance) return a.distance - b.distance;
+            return a.index - b.index;
+          })
+          .map(({ dish }) => dish);
+      }
+      return decorated
+        .sort((a, b) => Number(b.dish?.saves || 0) - Number(a.dish?.saves || 0) || a.index - b.index)
+        .map(({ dish }) => dish);
+    };
+
+    const randomizeRowDishes = (items, rowKey = "") => {
+      return items
+        .map((dish, index) => ({
+          dish,
+          index,
+          randomRank: Math.abs(stableHash(`${rowKey}:${dish?.id || dish?.name || index}`)),
+        }))
+        .sort((a, b) => a.randomRank - b.randomRank || a.index - b.index)
         .map(({ dish }) => dish);
     };
 
@@ -854,7 +881,7 @@ export default function Explore() {
     rows.push({
       key: "most-saved",
       title: "Most Saved",
-      dishes: sortExploreDishes(modePool).slice(0, BASE_LIMIT),
+      dishes: sortMostSavedDishes(modePool).slice(0, BASE_LIMIT),
     });
 
     const trendingPool = term
@@ -881,7 +908,7 @@ export default function Explore() {
         key: `tag-${tag}`,
         rawTag: tag,
         title: String(tag),
-        dishes: sortExploreDishes(tagged).slice(0, BASE_LIMIT),
+        dishes: randomizeRowDishes(tagged, `tag-${tag}`).slice(0, BASE_LIMIT),
         totalCount: tagged.length,
       };
     })

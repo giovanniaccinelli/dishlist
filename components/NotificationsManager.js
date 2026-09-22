@@ -88,7 +88,26 @@ export default function NotificationsManager() {
       getNativePushPermissionState().then(setNativePermission).catch(() => setNativePermission("unsupported"));
       return;
     }
-    setEnabled(localStorage.getItem(ENABLED_KEY) === "1" && Notification.permission === "granted");
+    setEnabled(localStorage.getItem(ENABLED_KEY) === "1" && (!("Notification" in window) || Notification.permission === "granted"));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const syncNotificationSetting = () => {
+      if (isNativePushSupported()) {
+        setEnabled(localStorage.getItem(ENABLED_KEY) === "1");
+        getNativePushPermissionState().then(setNativePermission).catch(() => setNativePermission("unsupported"));
+        return;
+      }
+      const browserGranted = !("Notification" in window) || Notification.permission === "granted";
+      setEnabled(localStorage.getItem(ENABLED_KEY) === "1" && browserGranted);
+    };
+    window.addEventListener("dishlist:notifications-setting-change", syncNotificationSetting);
+    window.addEventListener("storage", syncNotificationSetting);
+    return () => {
+      window.removeEventListener("dishlist:notifications-setting-change", syncNotificationSetting);
+      window.removeEventListener("storage", syncNotificationSetting);
+    };
   }, []);
 
   useEffect(() => {

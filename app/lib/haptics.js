@@ -1,6 +1,16 @@
 "use client";
 
 let hapticsModulePromise = null;
+const HAPTICS_ENABLED_KEY = "dishlist:haptics-enabled";
+
+function hapticsEnabled() {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(HAPTICS_ENABLED_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
 
 function canVibrate() {
   return typeof window !== "undefined" && typeof window.navigator?.vibrate === "function";
@@ -22,6 +32,7 @@ async function getHapticsModule() {
 }
 
 export async function hapticSelection() {
+  if (!hapticsEnabled()) return;
   const hapticsBundle = await getHapticsModule();
   try {
     if (hapticsBundle?.Haptics?.selectionChanged) {
@@ -33,6 +44,7 @@ export async function hapticSelection() {
 }
 
 export async function hapticImpact(style = "light") {
+  if (!hapticsEnabled()) return;
   const hapticsBundle = await getHapticsModule();
   const impactStyle = {
     light: hapticsBundle?.ImpactStyle?.Light,
@@ -49,6 +61,7 @@ export async function hapticImpact(style = "light") {
 }
 
 export async function hapticSuccess() {
+  if (!hapticsEnabled()) return;
   const hapticsBundle = await getHapticsModule();
   try {
     if (hapticsBundle?.Haptics?.notification && hapticsBundle?.NotificationType?.Success) {
@@ -60,6 +73,7 @@ export async function hapticSuccess() {
 }
 
 export async function hapticError() {
+  if (!hapticsEnabled()) return;
   const hapticsBundle = await getHapticsModule();
   try {
     if (hapticsBundle?.Haptics?.notification && hapticsBundle?.NotificationType?.Error) {

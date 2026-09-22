@@ -55,7 +55,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { CalendarDays, ChevronDown, ChevronLeft, ListChecks, Minus, MoreHorizontal, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, ChevronLeft, ListChecks, MapPin, Minus, MoreHorizontal, MousePointerClick, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -100,6 +100,11 @@ const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
 const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
 const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
+const NOTIFICATIONS_ENABLED_KEY = "notifications:enabled";
+const NOTIFICATIONS_ASKED_KEY = "notifications:asked";
+const GEOLOCATION_CACHE_KEY = "dishlist:private-geolocation:v1";
+const GEOLOCATION_ENABLED_KEY = "dishlist:location-enabled";
+const HAPTICS_ENABLED_KEY = "dishlist:haptics-enabled";
 
 function normalizeShoppingListSnapshotItems(docs = []) {
   const byKey = new Map();
@@ -682,6 +687,9 @@ export default function Profile() {
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const [shoppingIngredientDraft, setShoppingIngredientDraft] = useState("");
   const [squareCardLayout, setSquareCardLayout] = useState(true);
+  const [notificationsPermissionEnabled, setNotificationsPermissionEnabled] = useState(false);
+  const [locationPermissionEnabled, setLocationPermissionEnabled] = useState(true);
+  const [hapticsPermissionEnabled, setHapticsPermissionEnabled] = useState(true);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = useState(DISH_MODE_ALL);
   const profileOptionsRef = useRef(null);
@@ -705,6 +713,9 @@ export default function Profile() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) !== "full");
+    setNotificationsPermissionEnabled(window.localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) === "1");
+    setLocationPermissionEnabled(window.localStorage.getItem(GEOLOCATION_ENABLED_KEY) !== "0");
+    setHapticsPermissionEnabled(window.localStorage.getItem(HAPTICS_ENABLED_KEY) !== "0");
   }, []);
 
   const updateCardLayoutPreference = (enabled) => {
@@ -712,6 +723,66 @@ export default function Profile() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(CARD_LAYOUT_STORAGE_KEY, enabled ? "square" : "full");
     window.dispatchEvent(new CustomEvent("dishlist-card-layout-change", { detail: enabled ? "square" : "full" }));
+  };
+
+  const setPermissionStorageValue = (key, value) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(key, value);
+    window.sessionStorage.setItem(key, value);
+  };
+
+  const refreshLocationPermission = () => {
+    if (typeof window === "undefined" || typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation = {
+          lat: Number(position.coords.latitude),
+          lng: Number(position.coords.longitude),
+          accuracy: Number(position.coords.accuracy || 0),
+          timestamp: Number(position.timestamp || Date.now()),
+        };
+        setPermissionStorageValue(GEOLOCATION_CACHE_KEY, JSON.stringify(nextLocation));
+        window.dispatchEvent(new Event("dishlist:location-setting-change"));
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 9000, maximumAge: 5 * 60 * 1000 }
+    );
+  };
+
+  const toggleNotificationsPermission = async () => {
+    if (typeof window === "undefined") return;
+    const next = !notificationsPermissionEnabled;
+    window.localStorage.setItem(NOTIFICATIONS_ASKED_KEY, "1");
+    if (!next) {
+      window.localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, "0");
+      setNotificationsPermissionEnabled(false);
+      window.dispatchEvent(new Event("dishlist:notifications-setting-change"));
+      return;
+    }
+    let granted = true;
+    if ("Notification" in window && Notification.permission !== "granted") {
+      granted = (await Notification.requestPermission()) === "granted";
+    }
+    window.localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, granted ? "1" : "0");
+    setNotificationsPermissionEnabled(granted);
+    window.dispatchEvent(new Event("dishlist:notifications-setting-change"));
+  };
+
+  const toggleLocationPermission = () => {
+    if (typeof window === "undefined") return;
+    const next = !locationPermissionEnabled;
+    setPermissionStorageValue(GEOLOCATION_ENABLED_KEY, next ? "1" : "0");
+    setLocationPermissionEnabled(next);
+    window.dispatchEvent(new Event("dishlist:location-setting-change"));
+    if (next) refreshLocationPermission();
+  };
+
+  const toggleHapticsPermission = () => {
+    if (typeof window === "undefined") return;
+    const next = !hapticsPermissionEnabled;
+    window.localStorage.setItem(HAPTICS_ENABLED_KEY, next ? "1" : "0");
+    setHapticsPermissionEnabled(next);
+    if (next) void hapticImpact("light");
   };
 
   useEffect(() => {
@@ -3638,6 +3709,77 @@ export default function Profile() {
                       >
                         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/10 text-[1.45rem]">{item.flag}</span>
                         <span className="font-semibold">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="mb-5">
+                <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                  darkMode ? "text-white/45" : "text-black/40"
+                }`}>
+                  {t("Permissions")}
+                </div>
+                <div className={`no-accent-border overflow-hidden rounded-[1.45rem] ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
+                  {[
+                    {
+                      key: "notifications",
+                      label: t("Notifications"),
+                      detail: t("Directs, comments, and new dishes"),
+                      enabled: notificationsPermissionEnabled,
+                      onClick: toggleNotificationsPermission,
+                      icon: Bell,
+                    },
+                    {
+                      key: "location",
+                      label: t("Location"),
+                      detail: t("Center maps around you"),
+                      enabled: locationPermissionEnabled,
+                      onClick: toggleLocationPermission,
+                      icon: MapPin,
+                    },
+                    {
+                      key: "haptics",
+                      label: t("Haptic feedback"),
+                      detail: t("Small taps while using the app"),
+                      enabled: hapticsPermissionEnabled,
+                      onClick: toggleHapticsPermission,
+                      icon: MousePointerClick,
+                    },
+                  ].map((permission, index) => {
+                    const Icon = permission.icon;
+                    return (
+                      <button
+                        key={permission.key}
+                        type="button"
+                        onClick={permission.onClick}
+                        className={`no-accent-border flex w-full items-center justify-between gap-3 px-4 py-4 text-left ${
+                          index > 0 ? darkMode ? "border-t border-white/8" : "border-t border-black/7" : ""
+                        }`}
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                            permission.enabled
+                              ? darkMode ? "bg-[#14371F] text-[#8EF0A9]" : "bg-[#EAFBF0] text-[#168A4A]"
+                              : darkMode ? "bg-white/8 text-white/48" : "bg-black/5 text-black/42"
+                          }`}>
+                            <Icon size={18} strokeWidth={2.25} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold">{permission.label}</span>
+                            <span className={`mt-0.5 block truncate text-sm ${darkMode ? "text-white/50" : "text-black/48"}`}>
+                              {permission.detail}
+                            </span>
+                          </span>
+                        </span>
+                        <span className={`no-accent-border flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition ${
+                          permission.enabled ? "bg-[#2BD36B]" : darkMode ? "bg-white/14" : "bg-black/14"
+                        }`}>
+                          <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${
+                            permission.enabled ? "translate-x-6 bg-white" : darkMode ? "translate-x-0 bg-[#050505]" : "translate-x-0 bg-white"
+                          }`} />
+                        </span>
                       </button>
                     );
                   })}

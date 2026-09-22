@@ -2077,7 +2077,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     <Link
                       data-no-drag="true"
                       href={`/profile/${currentCard.owner}`}
-                      className="block truncate text-[0.98rem] font-semibold leading-tight underline-offset-2 hover:underline"
+                      className="block truncate text-[0.98rem] font-semibold leading-tight"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {currentCard.ownerName || "Unknown"}
@@ -2383,7 +2383,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         <Link
                           data-no-drag="true"
                           href={`/profile/${currentCard.owner}`}
-                          className="text-lg font-semibold leading-none underline-offset-2 hover:underline"
+                          className="text-lg font-semibold leading-none"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {currentCard.ownerName || "Unknown"}
@@ -2403,7 +2403,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       e.preventDefault();
                       router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
                     }}
-                    className="m-0 block w-full appearance-none bg-transparent p-0 text-left text-2xl font-bold leading-[2rem] text-white hover:underline"
+                    className="m-0 block w-full appearance-none bg-transparent p-0 text-left text-2xl font-bold leading-[2rem] text-white"
                   >
                     {currentCard.name}
                   </button>
@@ -2457,8 +2457,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                         data-no-drag="true"
                         href={currentUser?.uid && currentCard.taggedUserId === currentUser.uid ? "/profile" : `/profile/${currentCard.taggedUserId}`}
                         className={darkMode
-                          ? "no-accent-border mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md underline-offset-2 hover:underline"
-                          : `mt-1 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px] underline-offset-2 hover:underline`
+                          ? "no-accent-border mt-1 inline-flex max-w-full items-center rounded-full bg-black/68 px-3 py-1 text-[11px] font-semibold text-white/92 shadow-[0_8px_22px_rgba(0,0,0,0.22)] backdrop-blur-md"
+                          : `mt-1 inline-flex max-w-full items-center rounded-full border-2 ${restaurantAccentBorder} bg-black/18 px-3 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-[6px]`
                         }
                         onClick={(e) => e.stopPropagation()}
                       >

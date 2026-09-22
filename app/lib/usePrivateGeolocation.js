@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 const GEOLOCATION_CACHE_KEY = "dishlist:private-geolocation:v1";
 const GEOLOCATION_LAST_REQUEST_KEY = "dishlist:private-geolocation:last-request:v1";
+const GEOLOCATION_ENABLED_KEY = "dishlist:location-enabled";
 const GEOLOCATION_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const GEOLOCATION_PROMPT_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -76,12 +77,26 @@ async function getGeolocationPermissionState() {
 export function usePrivateGeolocation({ enabled = false } = {}) {
   const cached = readCachedLocation();
   const [location, setLocation] = useState(cached);
+  const [locationEnabled, setLocationEnabled] = useState(() => getStorageValue(GEOLOCATION_ENABLED_KEY) !== "0");
   const [status, setStatus] = useState(
-    !enabled ? "idle" : cached ? "ready" : "loading"
+    !enabled || !locationEnabled ? "idle" : cached ? "ready" : "loading"
   );
 
   useEffect(() => {
-    if (!enabled) {
+    if (typeof window === "undefined") return undefined;
+    const handlePreferenceChange = () => {
+      setLocationEnabled(getStorageValue(GEOLOCATION_ENABLED_KEY) !== "0");
+    };
+    window.addEventListener("dishlist:location-setting-change", handlePreferenceChange);
+    window.addEventListener("storage", handlePreferenceChange);
+    return () => {
+      window.removeEventListener("dishlist:location-setting-change", handlePreferenceChange);
+      window.removeEventListener("storage", handlePreferenceChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || !locationEnabled) {
       setStatus("idle");
       return;
     }
@@ -142,7 +157,7 @@ export function usePrivateGeolocation({ enabled = false } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, locationEnabled]);
 
   return { location, status };
 }

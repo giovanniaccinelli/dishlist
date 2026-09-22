@@ -728,7 +728,7 @@ export default function Dishes() {
                       e.preventDefault();
                       handleDishNameSearch(dish.name || "");
                     }}
-                    className="pointer-events-auto text-left text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] hover:underline"
+                    className="pointer-events-auto text-left text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
                   >
                     {dish.name || "Untitled dish"}
                   </button>

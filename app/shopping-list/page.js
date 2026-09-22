@@ -53,6 +53,10 @@ function stableHash(value = "") {
   }, 0);
 }
 
+function sortShoppingItems(items = []) {
+  return [...items].sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+}
+
 export default function ShoppingListPage() {
   const { user, loading } = useAuth();
   const { t, darkMode, language } = useLanguage();
@@ -173,9 +177,41 @@ export default function ShoppingListPage() {
 
   const addDishIngredient = async (dish, ingredient) => {
     if (!user?.uid || !dish?.id || !ingredient?.key) return;
+    const sourceDishId = normalizeIngredientKey(dish.id);
+    const key = normalizeIngredientKey(ingredient.key || ingredient.name);
+    const name = normalizeIngredientName(ingredient.name);
+    if (!key || !name) return;
     setSavingKey(`dish:${dish.id}:ingredient:${ingredient.key}`);
-    await addShoppingListIngredient(user.uid, ingredient, { sourceDishId: dish.id });
-    setSavingKey("");
+    setItems((currentItems) => {
+      const existing = currentItems.find((item) => item.key === key);
+      if (existing) {
+        return sortShoppingItems(currentItems.map((item) => {
+          if (item.key !== key) return item;
+          const dishIds = Array.from(new Set([...(item.dishIds || []), sourceDishId].filter(Boolean)));
+          return {
+            ...item,
+            dishIds,
+            count: dishIds.length > (item.dishIds || []).length ? Math.max(1, Number(item.count || 1)) + 1 : Math.max(1, Number(item.count || 1)),
+          };
+        }));
+      }
+      return sortShoppingItems([
+        ...currentItems,
+        {
+          id: key,
+          key,
+          name,
+          color: ingredient.color || inferIngredientColorId(name),
+          count: 1,
+          dishIds: sourceDishId ? [sourceDishId] : [],
+        },
+      ]);
+    });
+    try {
+      await addShoppingListIngredient(user.uid, { ...ingredient, key, name }, { sourceDishId: dish.id });
+    } finally {
+      setSavingKey("");
+    }
   };
 
   const removeIngredient = async (item) => {

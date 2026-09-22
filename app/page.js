@@ -46,7 +46,6 @@ import {
 } from "../components/DishModeControls";
 import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
-import { isTextOnlyDish } from "./lib/dishContent";
 import { getDishImageUrl, isDishVideo } from "./lib/dishImage";
 import { useRouter } from "next/navigation";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "./lib/tags";
@@ -747,9 +746,7 @@ export default function Feed() {
         const { items: allItems } = await feedPagePromise;
         const seenIds = new Set(getStoredViewedDishIds());
         const seenCounts = getStoredViewedDishCounts();
-        const publicItems = allItems.filter(
-          (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
-        );
+        const publicItems = allItems.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
         const getLeastSeenItems = (items) => {
           if (!items.length) return [];
           const unseen = items.filter((dish) => !seenIds.has(String(dish.id)));
@@ -1008,9 +1005,7 @@ export default function Feed() {
       .then(() => {
         window.localStorage.setItem(recountFlagKey, "done");
         return getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false }).then(({ items }) => {
-          const publicItems = items.filter(
-            (dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish)
-          );
+          const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
 	          const ordered = publicItems
 	            .slice()
 	            .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
@@ -1202,7 +1197,7 @@ export default function Feed() {
         await setDoc(doc(db, "users", userId), { [FEED_VIEWED_FIELD]: [] }, { merge: true });
       }
       const { items } = await getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
-      const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish) && !isTextOnlyDish(dish));
+      const publicItems = items.filter((dish) => dish.isPublic !== false && !isOwnDish(dish));
       const ordered = publicItems
         .slice()
         .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));

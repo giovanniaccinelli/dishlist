@@ -454,7 +454,7 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title, t, priority = false, counterKind = "saves" }) {
+function DishPreview({ dish, title, t, priority = false, counterKind = "saves", featuredTrophy = false }) {
   const showStoryCounter = counterKind === "stories";
   const CounterIcon = showStoryCounter ? Camera : Users;
   const counterValue = showStoryCounter ? dish.storyCount : dish.saves;
@@ -462,6 +462,11 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves" }
     <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <DishRatingBadge dish={dish} />
+      {featuredTrophy ? (
+        <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/62 text-[#F7D76B] shadow-[0_8px_20px_rgba(0,0,0,0.26)] backdrop-blur-md">
+          <Trophy size={17} strokeWidth={2.35} />
+        </div>
+      ) : null}
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -473,16 +478,44 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves" }
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-white pointer-events-none flex flex-col justify-end gap-0.5">
-        <div className="text-[11px] font-semibold leading-tight truncate">
-                  {dish.name || t("Untitled dish")}
-                </div>
-        <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
-          <CounterIcon size={10} strokeWidth={2.2} />
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 via-black/42 to-transparent px-2.5 py-2.5 text-white pointer-events-none flex min-h-[54%] flex-col justify-end gap-1">
+        <div className="truncate text-[15px] font-black leading-tight">
+          {dish.name || t("Untitled dish")}
+        </div>
+        <div className="inline-flex items-center gap-1 text-[12px] font-semibold text-white/84">
+          <CounterIcon size={12} strokeWidth={2.25} />
           <span>{Math.max(0, Number(counterValue || 0))}</span>
         </div>
       </div>
     </div>
+  );
+}
+
+function SearchResultsGrid({ dishes, t }) {
+  if (!dishes.length) {
+    return (
+      <div className="rounded-[1.35rem] border border-black/8 bg-white/72 px-4 py-10 text-center text-sm font-semibold text-black/48">
+        {t("No dishes found")}
+      </div>
+    );
+  }
+
+  return (
+    <section className="pb-7">
+      <div className="grid grid-cols-2 gap-3">
+        {dishes.map((dish, index) => (
+          <DishPreview
+            key={`search-${dish.id}`}
+            dish={dish}
+            title="Search"
+            t={t}
+            priority={index < 4}
+            counterKind="saves"
+            featuredTrophy={index === 0}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -793,6 +826,29 @@ export default function Explore() {
       return mode === selectedDishMode;
     });
   }, [leaderboardQuestions, selectedDishMode]);
+  const normalizedAppliedTags = useMemo(
+    () => selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean),
+    [selectedTagsApplied]
+  );
+  const searchResultDishes = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return [];
+    return allDishes
+      .filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish))
+      .filter((dish) => {
+        if (!normalizedAppliedTags.length) return true;
+        if (!Array.isArray(dish.tags)) return false;
+        const dishTags = dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
+        return normalizedAppliedTags.every((tag) => dishTags.includes(tag));
+      })
+      .filter((dish) => {
+        const name = String(dish.name || "").toLowerCase();
+        const restaurantName = String(dish?.restaurant?.name || "").toLowerCase();
+        const tags = Array.isArray(dish.tags) ? dish.tags.map((tag) => String(tag).toLowerCase()) : [];
+        return name.includes(term) || restaurantName.includes(term) || tags.some((tag) => tag.includes(term));
+      })
+      .sort((a, b) => Number(b?.saves || 0) - Number(a?.saves || 0) || String(a?.name || "").localeCompare(String(b?.name || "")));
+  }, [allDishes, normalizedAppliedTags, search, selectedDishMode]);
   const toggleTagFilter = (tag) => {
     setSelectedTagsDraft((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
@@ -858,7 +914,7 @@ export default function Explore() {
     };
 
     const term = search.trim().toLowerCase();
-    const normalizedSelectedTags = selectedTagsApplied.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
+    const normalizedSelectedTags = normalizedAppliedTags;
     const textFiltered = term
       ? allDishes.filter((dish) => {
           const name = String(dish.name || "").toLowerCase();
@@ -919,7 +975,7 @@ export default function Explore() {
     rows.push(...tagRows);
 
     return rows.filter((row) => row.dishes.length > 0);
-  }, [allDishes, currentLocation?.lat, currentLocation?.lng, search, selectedDishMode, selectedTagsApplied, t, trendingDishes]);
+  }, [allDishes, currentLocation?.lat, currentLocation?.lng, normalizedAppliedTags, search, selectedDishMode, t, trendingDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -948,7 +1004,7 @@ export default function Explore() {
     setExpandedRow(null);
     router.replace(buildExploreUrl({ category: "" }), { scroll: false });
   };
-  const hideLeaderboardWhileSearching = search.trim().length > 0;
+  const isSearching = search.trim().length > 0;
 
   return (
     <div
@@ -1057,12 +1113,18 @@ export default function Explore() {
         <CategoryRowsLoading />
       ) : (
         <div>
-          {!hideLeaderboardWhileSearching ? <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} /> : null}
-          {categoryRows.map((row, index) => (
-            <div key={row.key}>
-              <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />
-            </div>
-          ))}
+          {isSearching ? (
+            <SearchResultsGrid dishes={searchResultDishes} t={t} />
+          ) : (
+            <>
+              {categoryRows.map((row, index) => (
+                <div key={row.key}>
+                  <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />
+                </div>
+              ))}
+              <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
+            </>
+          )}
         </div>
       )}
 

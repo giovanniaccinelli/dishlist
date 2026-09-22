@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Send, X } from "lucide-react";
+import { ShoppingCart, X } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import SwipeDeck from "../../components/SwipeDeck";
@@ -10,7 +10,6 @@ import { useAuth } from "../lib/auth";
 import { getAllDishesFromFirestore, getLeaderboardRestaurantAnswers, saveDishToUserList } from "../lib/firebaseHelpers";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
-import { useUnreadDirects } from "../lib/useUnreadDirects";
 import { useLanguage } from "../../components/LanguageProvider";
 import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 
@@ -46,7 +45,6 @@ function MapPageContent() {
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
   const { t } = useLanguage();
-  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const { location: currentLocation } = usePrivateGeolocation({ enabled: true });
   const cachedMap = getSessionPageCache(MAP_CACHE_KEY)?.value;
   const [dishes, setDishes] = useState(() => cachedMap?.dishes || []);
@@ -116,12 +114,11 @@ function MapPageContent() {
         <h1 className="text-2xl font-bold">{t("Mappa ristoranti")}</h1>
         <button
           type="button"
-          onClick={() => router.push(user ? "/directs" : "/")}
+          onClick={() => router.push(user ? "/shopping-list" : "/?auth=1")}
           className="top-action-btn relative"
-          aria-label="Directs"
+          aria-label="Lista della spesa"
         >
-          <Send size={18} />
-          {hasUnreadDirects ? <span className="no-accent-border absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#E64646]" /> : null}
+          <ShoppingCart size={18} />
         </button>
       </div>
 

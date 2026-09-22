@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { collection, onSnapshot } from "firebase/firestore";
-import { Plus, Search, ShoppingCart, Trash2, X } from "lucide-react";
+import { Map as MapIcon, Plus, Search, Trash2, X } from "lucide-react";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
@@ -194,9 +194,9 @@ export default function ShoppingListPage() {
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2BD36B]">Shopping</p>
           <h1 className="text-2xl font-bold">{t("Lista della spesa")}</h1>
         </div>
-        <div className="top-action-btn">
-          <ShoppingCart size={19} />
-        </div>
+        <Link href="/map" className="top-action-btn" aria-label="Mappa ristoranti">
+          <MapIcon size={19} />
+        </Link>
       </div>
 
       <section className={`rounded-[1.6rem] border p-4 ${darkMode ? "border-[#2BD36B]/24 bg-[#0D120E] text-white" : "border-[#2BD36B]/28 bg-[#F7FFF8]"}`}>

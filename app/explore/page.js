@@ -54,10 +54,6 @@ import { useLanguage } from "../../components/LanguageProvider";
 const BASE_LIMIT = 20;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
-const DISH_PREVIEW_BOTTOM_SHADE = {
-  height: "46%",
-  background: "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.62) 34%, rgba(0,0,0,0.2) 68%, rgba(0,0,0,0) 100%)",
-};
 
 function stableHash(value = "") {
   return String(value || "").split("").reduce((hash, char) => {
@@ -72,6 +68,10 @@ function toTitleCase(value = "") {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function getDishOwnerLabel(dish) {
+  return String(dish?.ownerName || dish?.userName || dish?.uploadedByName || dish?.createdByName || "Unknown").trim() || "Unknown";
 }
 
 function SafeDishOpenButton({ href, label, onOpen }) {
@@ -466,33 +466,34 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
   const CounterIcon = showStoryCounter ? Camera : Users;
   const counterValue = showStoryCounter ? dish.storyCount : dish.saves;
   return (
-    <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={onOpen} />
-      <DishRatingBadge dish={dish} />
-      {featuredTrophy ? (
-        <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex items-center justify-center text-[#F7D76B] drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]">
-          <Trophy size={20} strokeWidth={2.6} />
+    <div className="w-full">
+      <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+        <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={onOpen} />
+        <DishRatingBadge dish={dish} />
+        {featuredTrophy ? (
+          <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex items-center justify-center text-[#F7D76B] drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]">
+            <Trophy size={20} strokeWidth={2.6} />
+          </div>
+        ) : null}
+        <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
+          <CounterIcon size={13} strokeWidth={2.6} />
+          <span>{Math.max(0, Number(counterValue || 0))}</span>
         </div>
-      ) : null}
-      <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
-        <CounterIcon size={13} strokeWidth={2.6} />
-        <span>{Math.max(0, Number(counterValue || 0))}</span>
+        <img
+          src={getDishImageUrl(dish, "thumb")}
+          alt={dish.name}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          className="w-full h-36 object-cover"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_DISH_IMAGE;
+          }}
+        />
       </div>
-      <img
-        src={getDishImageUrl(dish, "thumb")}
-        alt={dish.name}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
-        decoding="async"
-        className="w-full h-36 object-cover"
-        onError={(e) => {
-          e.currentTarget.src = DEFAULT_DISH_IMAGE;
-        }}
-      />
-      <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-3 py-2.5 text-white pointer-events-none" style={DISH_PREVIEW_BOTTOM_SHADE}>
-        <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
-          {dish.name || t("Untitled dish")}
-        </div>
+      <div className="mt-2 min-w-0 px-0.5">
+        <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
+        <div className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
       </div>
     </div>
   );
@@ -732,27 +733,28 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }
         </div>
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish, index) => (
-            <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={() => onDishOpen?.(row.dishes, index, row.key)} />
-              <DishRatingBadge dish={dish} />
-              <img
-                src={getDishImageUrl(dish, "thumb")}
-                alt={dish.name}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-40 object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                }}
-              />
-              <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
-                <CounterIcon size={13} strokeWidth={2.6} />
-                <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-3 py-2.5 text-white pointer-events-none" style={DISH_PREVIEW_BOTTOM_SHADE}>
-                <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
-                  {dish.name || t("Untitled dish")}
+            <div key={`${row.key}-${dish.id}`} className="min-w-0">
+              <div className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+                <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={() => onDishOpen?.(row.dishes, index, row.key)} />
+                <DishRatingBadge dish={dish} />
+                <img
+                  src={getDishImageUrl(dish, "thumb")}
+                  alt={dish.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-40 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+                <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
+                  <CounterIcon size={13} strokeWidth={2.6} />
+                  <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
                 </div>
+              </div>
+              <div className="mt-2 min-w-0 px-0.5">
+                <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
+                <div className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
               </div>
             </div>
           ))}

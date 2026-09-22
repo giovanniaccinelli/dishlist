@@ -473,7 +473,7 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
   const ingredientItems = !isRestaurant ? getDishIngredientItems(dish).slice(0, 5) : [];
   const accentColor = isRestaurant ? "#E64646" : "#E4B43F";
   const renderNoPhotoMetadata = () => (
-    <div className={`pointer-events-none absolute z-20 flex items-end ${isRestaurant ? "inset-x-3 bottom-[3.4rem]" : "inset-x-2 bottom-2 min-h-7"}`}>
+    <div className={`pointer-events-none absolute z-20 flex items-end ${isRestaurant ? "inset-x-3 bottom-[4.45rem]" : "inset-x-2 bottom-[3.15rem] min-h-7"}`}>
       {isRestaurant ? (
         restaurantName ? (
           <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3.5 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.18)]">

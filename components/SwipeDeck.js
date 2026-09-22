@@ -15,6 +15,7 @@ import CommentsModal from "./CommentsModal";
 import StoryHistoryModal from "./StoryHistoryModal";
 import AppToast from "./AppToast";
 import RestaurantMapView from "./RestaurantMapView";
+import MapPreview from "./MapPreview";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish, getDishLikeState, toggleDishLike } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, getDishMediaItems, isDishVideo } from "../app/lib/dishImage";
 import { hasDishMedia, isRecipeOnlyDish } from "../app/lib/dishContent";
@@ -762,8 +763,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       ]
     : [];
   const currentCardNoMediaSingleSide = !hasDishMedia(currentCard);
+  const currentCardNoMediaRecipeSide = currentCardNoMediaSingleSide && !currentCardIsRestaurant;
   const currentCardRecipeOnly = hasDishMedia(currentCard) && isRecipeOnlyDish(currentCard);
-  const visibleRecipe = currentCardRecipeOnly || (!currentCardNoMediaSingleSide && showRecipe);
+  const visibleRecipe = currentCardRecipeOnly || currentCardNoMediaRecipeSide || (!currentCardNoMediaSingleSide && showRecipe);
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const showShoppingListAction = Boolean(onShoppingListAction) && !currentCardIsRestaurant && !visibleRestaurantMap;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
@@ -1487,11 +1489,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         }`}>
           {placeholderHasRestaurantMap ? (
             <div className="pointer-events-none absolute inset-0">
-              <RestaurantMapView
+              <MapPreview
                 groups={placeholderRestaurantGroups}
-                initialSelectedPlaceId={placeholderRestaurantPlaceId}
-                showSearch={false}
-                embedded
+                focusSingleGroup
+                singleGroupZoom={15}
+                showAvatars={false}
               />
             </div>
           ) : placeholderIsRestaurant ? (
@@ -1515,13 +1517,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               )}
             </div>
           )}
-          {placeholderRestaurantLabel && placeholderIsRestaurant ? (
-            <div className="pointer-events-none absolute bottom-[9.4rem] left-5 right-5 z-10">
-              <div className="inline-flex max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-4 py-1.5 text-[13px] font-black leading-none text-[#FFD4D0] shadow-[0_0_22px_rgba(230,70,70,0.18)]">
-                {placeholderRestaurantLabel}
-              </div>
-            </div>
-          ) : null}
           {typeof onImageReady === "function" ? (
             <img alt="" src={DEFAULT_DISH_IMAGE} className="hidden" onLoad={onImageReady} />
           ) : null}
@@ -2344,7 +2339,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             className="absolute inset-0"
             style={{ transformStyle: "preserve-3d" }}
             animate={{ rotateY: visibleRecipe ? 180 : 0 }}
-            transition={{ duration: 0.35, ease: "easeInOut" }}
+            transition={{ duration: currentCardNoMediaRecipeSide ? 0 : 0.35, ease: "easeInOut" }}
           >
             <div
               className={`absolute inset-0 ${visibleRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
@@ -2583,7 +2578,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               } ${hasRestaurantMapView ? "p-0" : "p-6 pt-16"} ${visibleRecipe ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
             >
-              {!hasRestaurantMapView ? (
+              {!hasRestaurantMapView && !currentCardNoMediaSingleSide ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"

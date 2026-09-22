@@ -58,6 +58,7 @@ import {
 import { getRestaurantDishGroups } from "../../lib/restaurants";
 import { LANGUAGE_IT, useLanguage } from "../../../components/LanguageProvider";
 import { getSessionPageCache, setSessionPageCache } from "../../lib/sessionPageCache";
+import { usePrivateGeolocation } from "../../lib/usePrivateGeolocation";
 
 const CORE_PROFILE_DISHLIST_ORDER = ["saved", "all_dishes", "uploaded", "to_try"];
 
@@ -401,9 +402,10 @@ export default function PublicProfile() {
   const routeProfileId = decodeURIComponent(String(id || ""));
   const router = useRouter();
   const pathname = usePathname();
-	  const { user } = useAuth();
-	  const { t, darkMode, language } = useLanguage();
-	  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
+  const { user } = useAuth();
+  const { location: currentLocation } = usePrivateGeolocation({ enabled: true });
+  const { t, darkMode, language } = useLanguage();
+  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const cachedPublicProfile = getSessionPageCache(`profile:public:${routeProfileId}`)?.value;
   const [profileUser, setProfileUser] = useState(() => cachedPublicProfile?.profileUser || null);
   const [savedDishes, setSavedDishes] = useState(() => cachedPublicProfile?.savedDishes || []);
@@ -1839,6 +1841,7 @@ export default function PublicProfile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
+                currentLocation={currentLocation}
                 className="h-full min-h-0 flex-1 max-h-none"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."

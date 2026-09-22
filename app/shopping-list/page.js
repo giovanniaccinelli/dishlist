@@ -171,6 +171,13 @@ export default function ShoppingListPage() {
     setSelectedDish(null);
   };
 
+  const addDishIngredient = async (dish, ingredient) => {
+    if (!user?.uid || !dish?.id || !ingredient?.key) return;
+    setSavingKey(`dish:${dish.id}:ingredient:${ingredient.key}`);
+    await addShoppingListIngredient(user.uid, ingredient, { sourceDishId: dish.id });
+    setSavingKey("");
+  };
+
   const removeIngredient = async (item) => {
     if (!user?.uid) return;
     setSavingKey(`remove:${item.key}`);
@@ -400,6 +407,7 @@ export default function ShoppingListPage() {
               <div className="mb-5 flex flex-wrap gap-2">
                 {getDishIngredientItems(selectedDish).map((ingredient) => {
                   const inList = ingredientKeys.has(ingredient.key);
+                  const ingredientSavingKey = `dish:${selectedDish.id}:ingredient:${ingredient.key}`;
                   return (
                     <span
                       key={ingredient.key}
@@ -407,7 +415,19 @@ export default function ShoppingListPage() {
                       style={getIngredientPillStyle(ingredient.color || inferIngredientColorId(ingredient.name), darkMode)}
                     >
                       {ingredient.name}
-                      {inList ? <span className="font-black">✓</span> : null}
+                      {inList ? (
+                        <span className="font-black">✓</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => addDishIngredient(selectedDish, ingredient)}
+                          disabled={Boolean(savingKey)}
+                          className="no-accent-border -mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/8 disabled:opacity-50"
+                          aria-label={`Add ${ingredient.name}`}
+                        >
+                          {savingKey === ingredientSavingKey ? <span className="dishlist-action-spinner h-3 w-3" /> : <Plus size={12} strokeWidth={2.6} />}
+                        </button>
+                      )}
                     </span>
                   );
                 })}

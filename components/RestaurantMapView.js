@@ -2,7 +2,7 @@
 
 import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapPin, Search, X } from "lucide-react";
+import { Funnel, MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
@@ -208,6 +208,16 @@ function getDominantRestaurantTag(group = {}) {
     }
   }
   return winner || "";
+}
+
+function groupMatchesRestaurantCategory(group = {}, categoryId = "") {
+  const normalizedCategory = normalizeRestaurantCategoryId(categoryId);
+  if (!normalizedCategory) return true;
+  return (Array.isArray(group?.dishes) ? group.dishes : []).some((dish) => {
+    const dishCategory = normalizeRestaurantCategoryId(dish?.restaurantPrimaryCategory || dish?.restaurantCategory);
+    if (dishCategory) return dishCategory === normalizedCategory;
+    return (Array.isArray(dish?.tags) ? dish.tags : []).some((tag) => normalizeRestaurantCategoryId(tag) === normalizedCategory);
+  });
 }
 
 function getRestaurantTagIconMarkup(tag = "") {
@@ -506,6 +516,7 @@ export default function RestaurantMapView({
   const autocompleteServiceRef = useRef(null);
   const placesServiceRef = useRef(null);
   const requestRef = useRef(0);
+  const centeredOnLocationRef = useRef(false);
   const [mapState, setMapState] = useState("loading");
   const [selectedPlaceId, setSelectedPlaceId] = useState("");
   const [query, setQuery] = useState("");
@@ -520,6 +531,8 @@ export default function RestaurantMapView({
   const [carouselDragX, setCarouselDragX] = useState(0);
   const [carouselDragging, setCarouselDragging] = useState(false);
   const [restaurantFilter, setRestaurantFilter] = useState("all");
+  const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
+  const [restaurantCategoryFilter, setRestaurantCategoryFilter] = useState("");
   const swipeStartRef = useRef(null);
   const carouselTapRef = useRef(null);
   const carouselDragRef = useRef(null);
@@ -531,11 +544,12 @@ export default function RestaurantMapView({
   const followingIdSet = useMemo(() => normalizeUserIds(followingIds), [followingIds]);
   const ownIdSet = useMemo(() => normalizeUserIds([user?.uid, user?.id, user?.userId]), [user?.id, user?.uid, user?.userId]);
   const displayedGroups = useMemo(() => {
-    if (!enableFollowingFilter || restaurantFilter !== "following") return groups;
-    return groups.filter((group) =>
+    const categoryFiltered = groups.filter((group) => groupMatchesRestaurantCategory(group, restaurantCategoryFilter));
+    if (!enableFollowingFilter || restaurantFilter !== "following") return categoryFiltered;
+    return categoryFiltered.filter((group) =>
       (group.users || []).some((groupUser) => mapUserMatchesIdSet(groupUser, followingIdSet))
     );
-  }, [enableFollowingFilter, followingIdSet, groups, restaurantFilter]);
+  }, [enableFollowingFilter, followingIdSet, groups, restaurantCategoryFilter, restaurantFilter]);
 
   const animateMapCamera = (center, zoom, { duration = 520 } = {}) => {
     const map = mapRef.current;
@@ -818,6 +832,9 @@ export default function RestaurantMapView({
 
     if (!displayedGroups.length) {
       setSelectedPlaceId("__none__");
+      if (Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)) {
+        animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, 12);
+      }
       return;
     }
     const bounds = new window.google.maps.LatLngBounds();
@@ -895,6 +912,15 @@ export default function RestaurantMapView({
     mapRef.current.setCenter({ lat: 45.4642, lng: 9.19 });
     mapRef.current.setZoom(5);
   }, [currentLocation?.lat, currentLocation?.lng, displayedGroups, followingIdSet, initialSelectedPlaceId, mapState, ownIdSet, selectedPlaceId, useRestaurantCarousel]);
+
+  useEffect(() => {
+    if (!mapRef.current || mapState !== "ready") return;
+    if (!Number.isFinite(currentLocation?.lat) || !Number.isFinite(currentLocation?.lng)) return;
+    if (centeredOnLocationRef.current) return;
+    if (initialSelectedPlaceId || (selectedPlaceId && selectedPlaceId !== "__none__")) return;
+    centeredOnLocationRef.current = true;
+    animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, 12, { duration: 420 });
+  }, [currentLocation?.lat, currentLocation?.lng, initialSelectedPlaceId, mapState, selectedPlaceId]);
 
   const openDish = (dish) => {
     if (!dish?.id) return;
@@ -1341,7 +1367,7 @@ export default function RestaurantMapView({
       <div className="relative h-full min-h-0 overflow-hidden rounded-[inherit]">
         {showSearch ? (
         <div className="absolute inset-x-3 top-3 z-10">
-          <div className="restaurant-accent-border overflow-hidden rounded-[0.95rem] border bg-white/95 shadow-[0_10px_22px_rgba(0,0,0,0.10)] backdrop-blur-md">
+          <div className="overflow-hidden rounded-[0.95rem] border border-white/60 bg-white/82 shadow-[0_8px_18px_rgba(0,0,0,0.075)] backdrop-blur-md">
             <div className="flex min-h-[2.65rem] items-center gap-2 px-3 py-1.5">
               <Search size={15} className="shrink-0 text-black/35" />
               <input
@@ -1422,7 +1448,18 @@ export default function RestaurantMapView({
         </div>
         ) : null}
         {enableFollowingFilter ? (
-          <div className="absolute right-3 top-[4.2rem] z-[11]">
+          <div className="absolute left-3 right-3 top-[4.2rem] z-[11] flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setCategoryFilterOpen(true)}
+              className="no-accent-border inline-flex h-8 items-center gap-1.5 rounded-full bg-[#050505]/90 px-3 text-[12px] font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+              aria-label="Filter restaurant categories"
+            >
+              <Funnel size={13} strokeWidth={2.4} />
+              {restaurantCategoryFilter
+                ? RESTAURANT_CATEGORY_OPTIONS.find((category) => category.id === restaurantCategoryFilter)?.label || "Filtro"
+                : language === "it" ? "Filtro" : "Filter"}
+            </button>
             <div className="no-accent-border inline-flex h-8 items-center gap-0.5 rounded-full bg-[#050505]/90 p-0.5 text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md">
               <button
                 type="button"
@@ -1443,8 +1480,74 @@ export default function RestaurantMapView({
             </div>
           </div>
         ) : null}
+        <AnimatePresence>
+          {categoryFilterOpen ? (
+            <motion.div
+              className="absolute inset-0 z-[40] bg-black/42 p-3 backdrop-blur-[2px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCategoryFilterOpen(false)}
+            >
+              <motion.div
+                className="absolute left-3 right-3 top-[6.55rem] max-h-[min(24rem,calc(100%-8rem))] overflow-y-auto rounded-[1.35rem] border border-white/18 bg-[#101010]/96 p-3 text-white shadow-[0_18px_50px_rgba(0,0,0,0.34)]"
+                initial={{ y: -8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-black">{language === "it" ? "Categorie" : "Categories"}</div>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilterOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70"
+                    aria-label="Close category filters"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRestaurantCategoryFilter("");
+                      setCategoryFilterOpen(false);
+                    }}
+                    className={`flex min-h-11 items-center gap-2 rounded-[0.95rem] border px-3 text-left text-sm font-bold ${
+                      !restaurantCategoryFilter ? "border-[#F2C94C] bg-[#F2C94C] text-black" : "border-white/10 bg-white/8 text-white"
+                    }`}
+                  >
+                    {language === "it" ? "Tutte" : "All"}
+                  </button>
+                  {RESTAURANT_CATEGORY_OPTIONS.map((category) => {
+                    const Icon = category.icon;
+                    const active = restaurantCategoryFilter === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          setRestaurantCategoryFilter(category.id);
+                          setCategoryFilterOpen(false);
+                          setSelectedPlaceId("__none__");
+                        }}
+                        className={`flex min-h-11 items-center gap-2 rounded-[0.95rem] border px-3 text-left text-sm font-bold ${
+                          active ? "border-[#F2C94C] bg-[#F2C94C] text-black" : category.chip || "border-white/10 bg-white/8 text-white"
+                        }`}
+                      >
+                        {Icon ? <Icon className="h-5 w-5 shrink-0" /> : null}
+                        <span className="min-w-0 truncate">{category.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
-        {mapState === "ready" && displayedGroups.length > 0 ? (
+        {mapState === "ready" ? (
           <div ref={mapNodeRef} className="h-full w-full" />
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center">

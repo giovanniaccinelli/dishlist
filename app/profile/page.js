@@ -88,6 +88,7 @@ import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/Language
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getIngredientPillStyle, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
 import { hapticError, hapticImpact, hapticSuccess } from "../lib/haptics";
+import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 
 const STORY_CHOOSER_STEPS = [
   { label: "Name", color: "#E64646" },
@@ -557,6 +558,7 @@ function collectCalendarDayKeysFromValues(values = []) {
 
 export default function Profile() {
   const { user, loading, deleteAccount } = useAuth();
+  const { location: currentLocation } = usePrivateGeolocation({ enabled: true });
   const { language, setLanguage, darkMode, setDarkMode, t } = useLanguage();
 	  const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
 	  const router = useRouter();
@@ -5782,6 +5784,7 @@ export default function Profile() {
               </div>
               <RestaurantMapView
                 groups={uploadedRestaurantGroups}
+                currentLocation={currentLocation}
                 className="h-full min-h-0 flex-1 max-h-none"
                 emptyTitle="No restaurant dishes yet"
                 emptyText="Restaurant-mode dishes with a selected place will show up here."

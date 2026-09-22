@@ -74,6 +74,10 @@ function getDishOwnerLabel(dish) {
   return String(dish?.ownerName || dish?.userName || dish?.uploadedByName || dish?.createdByName || "Unknown").trim() || "Unknown";
 }
 
+function getDishOwnerPhoto(dish) {
+  return String(dish?.ownerPhotoURL || dish?.userPhotoURL || dish?.uploadedByPhotoURL || dish?.createdByPhotoURL || "").trim();
+}
+
 function SafeDishOpenButton({ href, label, onOpen }) {
   const router = useRouter();
   const pointerStartRef = useRef(null);
@@ -493,7 +497,16 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
       </div>
       <div className="mt-2 min-w-0 px-0.5">
         <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
-        <div className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+          {getDishOwnerPhoto(dish) ? (
+            <img src={getDishOwnerPhoto(dish)} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[8px] font-black text-black/45">
+              {getDishOwnerLabel(dish).slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
+        </div>
       </div>
     </div>
   );
@@ -754,7 +767,16 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }
               </div>
               <div className="mt-2 min-w-0 px-0.5">
                 <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
-                <div className="mt-0.5 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
+                <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                  {getDishOwnerPhoto(dish) ? (
+                    <img src={getDishOwnerPhoto(dish)} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[8px] font-black text-black/45">
+                      {getDishOwnerLabel(dish).slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
+                </div>
               </div>
             </div>
           ))}

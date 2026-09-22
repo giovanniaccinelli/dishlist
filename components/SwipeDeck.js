@@ -1482,7 +1482,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             },
           ]
         : [];
-      const placeholderIngredients = placeholderIsRestaurant ? [] : getDishIngredientItems(dish).slice(0, 8);
       return (
         <div className={`relative h-full w-full overflow-hidden bg-black ${
           placeholderIsRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.76),inset_0_0_42px_rgba(230,70,70,0.18)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.76),inset_0_0_42px_rgba(228,180,63,0.16)]"
@@ -1499,23 +1498,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : placeholderIsRestaurant ? (
             <div className="absolute inset-0 bg-black" />
           ) : (
-            <div className="absolute bottom-[9.4rem] left-5 right-5 z-10 flex max-h-[4.35rem] flex-wrap items-end gap-2 overflow-hidden">
-              {placeholderIngredients.length ? (
-                placeholderIngredients.map((item) => (
-                  <span
-                    key={item.key}
-                    className="inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-[13px] font-bold leading-none"
-                    style={getIngredientPillStyle(item.color, true)}
-                  >
-                    {item.name}
-                  </span>
-                ))
-              ) : (
-                <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-4 py-1.5 text-[13px] font-black text-[#FFE7A6]">
-                  Recipe
-                </span>
-              )}
-            </div>
+            <div className="absolute inset-0 bg-black" />
           )}
           {typeof onImageReady === "function" ? (
             <img alt="" src={DEFAULT_DISH_IMAGE} className="hidden" onLoad={onImageReady} />

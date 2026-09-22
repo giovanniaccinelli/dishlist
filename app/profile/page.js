@@ -406,12 +406,12 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
               style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
               {isRestaurant && restaurantName ? (
-                <span className="absolute bottom-9 left-1.5 right-1.5 z-10 truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-1.5 py-0.5 text-[7px] font-black leading-none text-[#FFD4D0]">
+                <span className="absolute bottom-7 left-1.5 right-1.5 z-10 truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-1.5 py-0.5 text-[7px] font-black leading-none text-[#FFD4D0]">
                   {restaurantName}
                 </span>
               ) : null}
               {!isRestaurant && ingredientItems.length ? (
-                <div className="absolute bottom-9 left-1.5 right-1.5 z-10 flex max-h-8 flex-wrap gap-0.5 overflow-hidden">
+                <div className="absolute bottom-7 left-1.5 right-1.5 z-10 flex max-h-8 flex-wrap gap-0.5 overflow-hidden">
                   {ingredientItems.map((item) => (
                     <span
                       key={item.key}
@@ -3016,7 +3016,7 @@ export default function Profile() {
                           ) : null}
                         </>
                       ) : (
-                        <div className="pointer-events-none absolute bottom-[4rem] left-3 right-3 z-20 flex max-h-[3.1rem] flex-wrap items-end gap-1 overflow-hidden">
+                        <div className="pointer-events-none absolute bottom-[3.9rem] left-3 right-3 z-20 flex max-h-[3.45rem] flex-wrap items-end gap-1 overflow-hidden pb-0.5">
                           {ingredientItems.length ? (
                             ingredientItems.map((item) => (
                               <span

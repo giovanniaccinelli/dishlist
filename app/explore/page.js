@@ -478,8 +478,8 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/78 via-black/42 to-transparent px-2.5 py-2.5 text-white pointer-events-none flex min-h-[54%] flex-col justify-end gap-1">
-        <div className="truncate text-[15px] font-black leading-tight">
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+        <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
           {dish.name || t("Untitled dish")}
         </div>
         <div className="inline-flex items-center gap-1 text-[12px] font-semibold text-white/84">
@@ -730,12 +730,12 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent px-2 py-2.5 text-white pointer-events-none flex min-h-[58%] flex-col justify-end">
-                <div className="text-[11px] font-semibold leading-tight truncate">
+              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                   {dish.name || t("Untitled dish")}
                 </div>
-                <div className="inline-flex items-center gap-1 text-[10px] text-white/80">
-                  <CounterIcon size={10} strokeWidth={2.2} />
+                <div className="inline-flex items-center gap-1 text-[12px] font-semibold text-white/84">
+                  <CounterIcon size={12} strokeWidth={2.25} />
                   <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
                 </div>
               </div>

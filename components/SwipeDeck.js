@@ -3327,7 +3327,6 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 }`}
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
-                <div className="mb-4 text-xl font-bold leading-tight">{currentCard?.name}</div>
                 {recipePanelModal === "ingredients" && currentIngredientItems.length ? (
                   <div className="flex flex-wrap gap-2">
                     {currentIngredientItems.map((item) => {

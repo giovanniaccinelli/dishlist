@@ -85,8 +85,8 @@ export default function DishlistPickerModal({
   dishName = "dish",
   loading = false,
   saving = false,
-  title = "Choose dishlists",
-  eyebrow = "Add To",
+  title = "Salva in",
+  eyebrow = "",
   mode = "multiple",
   selectedIds = [],
   lockedIds = [],
@@ -103,9 +103,12 @@ export default function DishlistPickerModal({
   publicDish = true,
   onTogglePublicDish,
   onDiscard,
+  onShoppingListAdd,
 }) {
   const { darkMode, t, language } = useLanguage();
   const [sortingSearch, setSortingSearch] = useState("");
+  const [shoppingListSaving, setShoppingListSaving] = useState(false);
+  const [shoppingListAdded, setShoppingListAdded] = useState(false);
   const selectedSet = new Set(selectedIds);
   const lockedSet = new Set(lockedIds);
   const resolvedDishData = dishData || dishPreview;
@@ -114,8 +117,16 @@ export default function DishlistPickerModal({
   const isSortingCard = variant === "sorting";
   const orderedLists = isSortingCard ? lists : orderPickerLists(lists, isSwipeCard);
   useEffect(() => {
-    if (!open) setSortingSearch("");
+    if (!open) {
+      setSortingSearch("");
+      setShoppingListSaving(false);
+      setShoppingListAdded(false);
+    }
   }, [open]);
+  useEffect(() => {
+    setShoppingListSaving(false);
+    setShoppingListAdded(false);
+  }, [resolvedDishData?.id, resolvedDishData?.name]);
   const displayedLists = useMemo(() => {
     if (!isSortingCard) return orderedLists;
     const query = sortingSearch.trim().toLowerCase();
@@ -136,6 +147,20 @@ export default function DishlistPickerModal({
     if (dishlist.id === "to_try") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     if (dishlist.id === "uploaded") return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
     return { border: "#2BD36B", bg: "#ECFFF1", darkBg: "#12351F", soft: "rgba(43,211,107,0.16)" };
+  };
+  const handleShoppingListPress = async () => {
+    if (shoppingListSaving) return;
+    if (typeof onShoppingListAdd === "function") {
+      setShoppingListSaving(true);
+      const ok = await Promise.resolve(onShoppingListAdd(resolvedDishData)).catch(() => false);
+      setShoppingListSaving(false);
+      if (ok !== false) {
+        setShoppingListAdded(true);
+        window.setTimeout(() => setShoppingListAdded(false), 1200);
+      }
+      return;
+    }
+    onToggle?.({ id: "shopping_list", name: t("Lista della spesa"), type: "special" });
   };
 
   return (
@@ -167,13 +192,15 @@ export default function DishlistPickerModal({
             <div className={`no-accent-border mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full ${darkMode ? "bg-white/14" : "bg-black/12"}`} />
             <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
               <div>
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                  isSwipeCard || isSortingCard
-                    ? darkMode ? "text-[#76E59E]" : "text-[#179B55]"
-                    : darkMode ? "text-white/42" : "text-black/40"
-                }`}>
-                  {eyebrow}
-                </p>
+                {eyebrow ? (
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                    isSwipeCard || isSortingCard
+                      ? darkMode ? "text-[#76E59E]" : "text-[#179B55]"
+                      : darkMode ? "text-white/42" : "text-black/40"
+                  }`}>
+                    {eyebrow}
+                  </p>
+                ) : null}
                 <h3 className={`mt-1 text-[1.4rem] font-semibold leading-tight ${darkMode ? "text-white" : "text-black"}`}>
                   {title}
                 </h3>
@@ -318,21 +345,26 @@ export default function DishlistPickerModal({
                   {showShoppingListOption ? (
                     <button
                       type="button"
-                      onClick={() => onToggle?.({ id: "shopping_list", name: t("Lista della spesa"), type: "special" })}
+                      onClick={handleShoppingListPress}
+                      disabled={shoppingListSaving}
                       className={`no-accent-border mb-1 flex items-center justify-between rounded-[1.15rem] border px-3.5 py-3 text-left ${
                         darkMode
-                          ? selectedSet.has("shopping_list")
+                          ? shoppingListAdded
                             ? "border-[#2BD36B]/80 bg-[#102817] text-white"
                             : "border-[#2BD36B]/32 bg-[#101B13] text-white"
-                          : selectedSet.has("shopping_list")
+                          : shoppingListAdded
                             ? "border-[#1FA463]/80 bg-[#F2FFF6]"
                             : "border-[#2BD36B]/35 bg-[#F7FFF8]"
-                      }`}
+                      } disabled:opacity-70`}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-[#2BD36B]/12" : "bg-[#2BD36B]/10"}`}>
+                        <motion.span
+                          animate={shoppingListAdded ? { scale: [1, 1.18, 1], rotate: [0, -8, 0] } : { scale: 1, rotate: 0 }}
+                          transition={{ duration: 0.34 }}
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-[#2BD36B]/12" : "bg-[#2BD36B]/10"}`}
+                        >
                           <ShoppingCart size={17} className="text-[#2BD36B]" strokeWidth={2.25} />
-                        </span>
+                        </motion.span>
                         <div className="min-w-0">
                           <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
                             {t("Lista della spesa")}
@@ -341,14 +373,14 @@ export default function DishlistPickerModal({
                       </div>
                       <div
                         className={`no-accent-border ml-4 flex h-7 w-7 items-center justify-center rounded-full border ${
-                          selectedSet.has("shopping_list")
+                          shoppingListAdded
                             ? "border-[#2BD36B] bg-[#2BD36B] text-black"
                             : darkMode
                               ? "border-[#2BD36B]/30 bg-[#152318] text-[#2BD36B]"
                               : "border-[#2BD36B]/35 bg-white text-[#2BD36B]"
                         }`}
                       >
-                        {selectedSet.has("shopping_list") ? <Check size={14} /> : <Plus size={14} />}
+                        {shoppingListSaving ? <span className="dishlist-action-spinner h-3.5 w-3.5" /> : shoppingListAdded ? <Check size={14} /> : <Plus size={14} />}
                       </div>
                     </button>
                   ) : null}

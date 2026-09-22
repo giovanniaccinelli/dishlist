@@ -116,6 +116,7 @@ function getRestaurantGoogleMapsUrl(group = {}) {
 
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
 const RESTAURANT_CATEGORY_ORDER_INDEX = new Map(RESTAURANT_CATEGORY_OPTIONS.map((category, index) => [category.id, index]));
+const USER_LOCATION_MAP_ZOOM = 7;
 const RESTAURANT_TAG_PIN_THEME = {
   fit: { fill: "#1FA463", stroke: "#0B5A36" },
   "high protein": { fill: "#C66A22", stroke: "#70320F" },
@@ -798,7 +799,7 @@ export default function RestaurantMapView({
           : { lat: 45.4642, lng: 9.19 },
       zoom:
         Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)
-          ? 12
+          ? USER_LOCATION_MAP_ZOOM
           : 5,
       disableDefaultUI: true,
       gestureHandling: "greedy",
@@ -833,7 +834,7 @@ export default function RestaurantMapView({
     if (!displayedGroups.length) {
       setSelectedPlaceId("__none__");
       if (Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)) {
-        animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, 12);
+        animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, USER_LOCATION_MAP_ZOOM);
       }
       return;
     }
@@ -905,7 +906,7 @@ export default function RestaurantMapView({
 
     if (Number.isFinite(currentLocation?.lat) && Number.isFinite(currentLocation?.lng)) {
       mapRef.current.setCenter({ lat: currentLocation.lat, lng: currentLocation.lng });
-      mapRef.current.setZoom(12);
+      mapRef.current.setZoom(USER_LOCATION_MAP_ZOOM);
       return;
     }
 
@@ -920,7 +921,7 @@ export default function RestaurantMapView({
     const locationKey = `${currentLocation.lat.toFixed(5)}:${currentLocation.lng.toFixed(5)}`;
     if (centeredOnLocationRef.current === locationKey) return;
     centeredOnLocationRef.current = locationKey;
-    animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, 12, { duration: 420 });
+    animateMapCamera({ lat: currentLocation.lat, lng: currentLocation.lng }, USER_LOCATION_MAP_ZOOM, { duration: 420 });
   }, [currentLocation?.lat, currentLocation?.lng, initialSelectedPlaceId, mapState, selectedPlaceId]);
 
   const openDish = (dish) => {

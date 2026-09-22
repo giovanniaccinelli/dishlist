@@ -20,6 +20,7 @@ import { useAuth } from "../lib/auth";
 import { dispatchPushEvent } from "../lib/pushClient";
 import {
   getAllDishlistsForUser,
+  addDishIngredientsToShoppingList,
   publishCustomStory,
   publishDishAsStory,
   saveDishToFirestore,
@@ -461,7 +462,7 @@ export default function UploadPage() {
             dishName: dishPayload.name || "",
           });
         }
-        const savedTargets = selectedDishlistIds.filter((dishlistId) => dishlistId !== "uploaded");
+        const savedTargets = selectedDishlistIds.filter((dishlistId) => dishlistId !== "uploaded" && dishlistId !== "shopping_list");
         if (dishId && savedTargets.length) {
           const savedDish = { id: dishId, ...dishPayload };
           await Promise.all(
@@ -1935,6 +1936,14 @@ export default function UploadPage() {
               : [...prev, dishlist.id]
           )
         }
+        onShoppingListAdd={async (dish) => {
+          if (!user?.uid) return false;
+          const ok = await addDishIngredientsToShoppingList(user.uid, dish);
+          setToastVariant(ok ? "success" : "error");
+          setToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
+          setTimeout(() => setToast(""), 1200);
+          return ok;
+        }}
         onConfirm={handlePost}
         confirmLabel="Upload dish"
       />

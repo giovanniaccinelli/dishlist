@@ -12,6 +12,7 @@ import { useAuth } from "./lib/auth";
 import {
   createDishForUser,
   getAllDishlistsForUser,
+  addDishIngredientsToShoppingList,
   getCommentsForDish,
   getCommentsForStory,
   getDishesFromFirestore,
@@ -1306,7 +1307,7 @@ export default function Feed() {
     const minimumLoading = new Promise((resolve) => setTimeout(resolve, 650));
     const dishToAdd = dishlistPickerDish;
     try {
-      const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes");
+      const persistDishlistIds = selectedDishlistIds.filter((dishlistId) => dishlistId !== "all_dishes" && dishlistId !== "shopping_list");
       const results = await Promise.all(
         persistDishlistIds.map((dishlistId) => saveDishToSelectedDishlist(userId, dishlistId, dishToAdd))
       );
@@ -1334,6 +1335,18 @@ export default function Feed() {
     } finally {
       setDishlistPickerSaving(false);
     }
+  };
+
+  const handlePickerShoppingListAdd = async (dish = dishlistPickerDish) => {
+    if (!userId || !dish) {
+      setShowAuthPrompt(true);
+      return false;
+    }
+    const ok = await addDishIngredientsToShoppingList(userId, dish);
+    setToastVariant(ok ? "success" : "error");
+    setToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
+    setTimeout(() => setToast(""), 1200);
+    return ok;
   };
 
   const buildActivityItems = async ({ includeExpanded = false } = {}) => {
@@ -2038,6 +2051,7 @@ export default function Feed() {
           )
         }
         onConfirm={handleDishlistSelect}
+        onShoppingListAdd={handlePickerShoppingListAdd}
         confirmLabel="Add dish"
         loading={dishlistsLoading}
         saving={dishlistPickerSaving}

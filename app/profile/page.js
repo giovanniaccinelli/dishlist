@@ -16,6 +16,7 @@ import {
   getDishesFromFirestore,
   getUploadedDishesForUserAliases,
   getAllDishlistsForUser,
+  addDishIngredientsToShoppingList,
   getSavedDishesFromFirestore,
   getToTryDishesFromFirestore,
   removeDishFromAllUsers,
@@ -1565,6 +1566,15 @@ export default function Profile() {
     setStoryMealTagDish(dish);
   };
 
+  const handleAddDishToShoppingList = async (dish) => {
+    if (!user?.uid || !dish || String(dish?.dishMode || "").toLowerCase() === "restaurant") return false;
+    const ok = await addDishIngredientsToShoppingList(user.uid, dish);
+    setToastVariant(ok ? "success" : "error");
+    setToast(ok ? "Aggiunto alla lista della spesa" : "Lista spesa non aggiornata");
+    setTimeout(() => setToast(""), 1200);
+    return ok;
+  };
+
   const publishDishCardToStory = async (storyMealTag) => {
     if (!user?.uid || !storyMealTagDish?.id) return;
     const ok = await publishDishAsStory(user.uid, storyMealTagDish, { storyMealTag });
@@ -2030,7 +2040,7 @@ export default function Profile() {
     if (!user?.uid || !dishlistPickerDish?.id || dishlistPickerSaving) return;
     const selectedSet = new Set(dishlistPickerSelectedIds);
     const persistDishlistIds = dishlistPickerSelectedIds.filter(
-      (dishlistId) => dishlistId !== "all_dishes" && !(dishlistId === "to_try" && selectedSet.has("saved"))
+      (dishlistId) => dishlistId !== "all_dishes" && dishlistId !== "shopping_list" && !(dishlistId === "to_try" && selectedSet.has("saved"))
     );
     const currentIds = new Set(
       dishlistPickerLists
@@ -5337,6 +5347,24 @@ export default function Profile() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
+                {String(dishCardActionTarget.dish?.dishMode || "").toLowerCase() !== "restaurant" ? (
+                  <button
+                    type="button"
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const target = dishCardActionTarget.dish;
+                      setDishCardActionTarget(null);
+                      await handleAddDishToShoppingList(target);
+                    }}
+                    className={`flex items-center justify-between rounded-[1.2rem] border px-4 py-3 text-left text-sm font-semibold ${
+                      darkMode ? "border-[#2BD36B]/45 bg-[#102817] text-white" : "border-[#2BD36B]/45 bg-[#F4FFF7] text-black"
+                    }`}
+                  >
+                    <span>{t("Metti in lista della spesa")}</span>
+                    <ShoppingCart size={16} className="text-[#2BD36B]" />
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={(event) => {
@@ -5610,14 +5638,13 @@ export default function Profile() {
           )
         }
         onConfirm={handleConfirmDishlistPicker}
-        title={dishlistPickerSource === "pending" ? t("Scegli dishlist") : undefined}
-        eyebrow={dishlistPickerSource === "pending" ? t("Salvato") : undefined}
         confirmLabel={dishlistPickerSource === "pending" ? "Salta" : t("Save dish")}
         loading={dishlistPickerLoading}
         saving={dishlistPickerSaving}
         variant={dishlistPickerSource === "pending" ? "sorting" : "sheet"}
         dishPreview={dishlistPickerSource === "pending" ? dishlistPickerDish : null}
         dishData={dishlistPickerDish}
+        onShoppingListAdd={handleAddDishToShoppingList}
       />
       <AnimatePresence>
         {profileCalendarOpen ? (

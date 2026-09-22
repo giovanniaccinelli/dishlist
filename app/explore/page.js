@@ -15,6 +15,7 @@ import {
   Leaf,
   MessageCircle,
   MoonStar,
+  Plus,
   Snowflake,
   Sun,
   Search as SearchIcon,
@@ -465,10 +466,7 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title, t, priority = false, counterKind = "saves", featuredTrophy = false, onOpen }) {
-  const showStoryCounter = counterKind === "stories";
-  const CounterIcon = showStoryCounter ? Camera : Users;
-  const counterValue = showStoryCounter ? dish.storyCount : dish.saves;
+function DishPreview({ dish, title, t, priority = false, featuredTrophy = false, onOpen }) {
   return (
     <div className="w-full">
       <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
@@ -479,10 +477,6 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
             <Trophy size={20} strokeWidth={2.6} />
           </div>
         ) : null}
-        <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
-          <CounterIcon size={13} strokeWidth={2.6} />
-          <span>{Math.max(0, Number(counterValue || 0))}</span>
-        </div>
         <img
           src={getDishImageUrl(dish, "thumb")}
           alt={dish.name}
@@ -531,7 +525,6 @@ function SearchResultsGrid({ dishes, t, onDishOpen }) {
             title="Search"
             t={t}
             priority={index < 4}
-            counterKind="saves"
             featuredTrophy={index === 0}
             onOpen={() => onDishOpen?.(dishes, index, "search")}
           />
@@ -603,7 +596,6 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, onDishOp
   const visible = dishes;
   if (!visible.length) return null;
   const isRestaurantRow = row.key.startsWith("restaurant-");
-  const counterKind = row.key === "trending" ? "stories" : "saves";
 
   return (
     <section className="explore-row no-accent-border mb-6 shadow-none" style={{ contentVisibility: "auto", containIntrinsicSize: "180px", boxShadow: "none" }}>
@@ -649,7 +641,6 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, onDishOp
               title={title}
               t={t}
               priority={rowIndex < 2 && index < 2}
-              counterKind={counterKind}
               onOpen={() => onDishOpen?.(visible, index, row.key)}
             />
           </div>
@@ -660,6 +651,7 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, onDishOp
 }
 
 function LeaderboardRail({ questions = [], t, darkMode = false }) {
+  const [open, setOpen] = useState(false);
   if (!questions.length) return null;
   const accents = {
     red: { border: "border-[#E64646]", text: "text-[#E64646]", glow: "from-[#E64646]/24" },
@@ -669,10 +661,20 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
     pink: { border: "border-[#D96EEA]", text: "text-[#D96EEA]", glow: "from-[#D96EEA]/18" },
   };
   return (
-    <section className="mb-7">
-      <div className="mb-3 flex items-center justify-between">
+    <section className="mb-6">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className={`no-accent-border mb-3 flex w-full items-center justify-between rounded-[1.05rem] px-1 py-1 text-left ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+        aria-expanded={open}
+      >
         <div className="flex items-center gap-2">
           <h2 className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#D7B443] text-black shadow-[0_0_16px_rgba(215,180,67,0.26)]">
+            <Plus size={15} strokeWidth={2.5} />
+          </span>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#D7B443]">
             <path d="M4 11.25H8.35V20H4V11.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
             <path d="M9.85 4H14.15V20H9.85V4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
@@ -680,8 +682,9 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <path d="M3 20H21" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
           </svg>
         </div>
-        <ChevronRight size={22} className={darkMode ? "text-white/70" : "text-black/45"} />
-      </div>
+        <ChevronRight size={22} className={`${darkMode ? "text-white/70" : "text-black/45"} transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open ? (
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {questions.map((question, index) => {
           const accent = accents[question.accent] || accents.red;
@@ -719,15 +722,13 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
           );
         })}
       </div>
+      ) : null}
     </section>
   );
 }
 
 function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }) {
   if (!row) return null;
-  const showStoryCounter = row.key === "trending";
-  const CounterIcon = showStoryCounter ? Camera : Users;
-
   return (
     <div className="fixed inset-0 z-[80] bg-[#F7F2E8]/95 backdrop-blur-md overflow-y-auto">
       <div className="min-h-screen px-5 pt-1 pb-24 text-black">
@@ -760,10 +761,6 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }
                     e.currentTarget.src = DEFAULT_DISH_IMAGE;
                   }}
                 />
-                <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
-                  <CounterIcon size={13} strokeWidth={2.6} />
-                  <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
-                </div>
               </div>
               <div className="mt-2 min-w-0 px-0.5">
                 <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
@@ -1173,12 +1170,12 @@ export default function Explore() {
             <SearchResultsGrid dishes={searchResultDishes} t={t} onDishOpen={openDishDeck} />
           ) : (
             <>
+              <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
               {categoryRows.map((row, index) => (
                 <div key={row.key}>
                   <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} onDishOpen={openDishDeck} />
                 </div>
               ))}
-              <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
             </>
           )}
         </div>

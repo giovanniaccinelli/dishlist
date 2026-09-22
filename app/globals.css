@@ -223,16 +223,16 @@
 
 .dish-card-shell--default {
   box-shadow:
-    inset 0 0 34px rgba(228, 180, 63, 0.18),
-    inset 0 0 10px rgba(228, 180, 63, 0.20),
+    inset 0 0 42px rgba(228, 180, 63, 0.22),
+    inset 0 0 14px rgba(228, 180, 63, 0.24),
     0 28px 64px rgba(0, 0, 0, 0.16),
     0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
 .dish-card-shell--restaurant {
   box-shadow:
-    inset 0 0 34px rgba(230, 70, 70, 0.18),
-    inset 0 0 10px rgba(230, 70, 70, 0.20),
+    inset 0 0 42px rgba(230, 70, 70, 0.22),
+    inset 0 0 14px rgba(230, 70, 70, 0.24),
     0 28px 64px rgba(0, 0, 0, 0.16),
     0 10px 24px rgba(0, 0, 0, 0.08);
 }
@@ -770,44 +770,44 @@ html.dark .dish-card-shell {
 
 html.dark .dish-card-shell--default {
   box-shadow:
-    inset 0 0 38px rgba(228, 180, 63, 0.24),
-    inset 0 0 12px rgba(228, 180, 63, 0.24),
+    inset 0 0 48px rgba(228, 180, 63, 0.29),
+    inset 0 0 16px rgba(228, 180, 63, 0.30),
     0 28px 74px rgba(0, 0, 0, 0.56),
     0 8px 24px rgba(0, 0, 0, 0.42);
 }
 
 html.dark .dish-card-shell--restaurant {
   box-shadow:
-    inset 0 0 38px rgba(230, 70, 70, 0.24),
-    inset 0 0 12px rgba(230, 70, 70, 0.24),
+    inset 0 0 48px rgba(230, 70, 70, 0.29),
+    inset 0 0 16px rgba(230, 70, 70, 0.30),
     0 28px 74px rgba(0, 0, 0, 0.56),
     0 8px 24px rgba(0, 0, 0, 0.42);
 }
 
 .pressable-card.default-accent-border {
   box-shadow:
-    inset 0 0 24px rgba(228, 180, 63, 0.13),
+    inset 0 0 30px rgba(228, 180, 63, 0.17),
     0 14px 34px rgba(0, 0, 0, 0.10),
     0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
 .pressable-card.restaurant-accent-border {
   box-shadow:
-    inset 0 0 24px rgba(230, 70, 70, 0.14),
+    inset 0 0 30px rgba(230, 70, 70, 0.18),
     0 14px 34px rgba(0, 0, 0, 0.10),
     0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
 html.dark .pressable-card.default-accent-border {
   box-shadow:
-    inset 0 0 26px rgba(228, 180, 63, 0.20),
+    inset 0 0 34px rgba(228, 180, 63, 0.25),
     0 14px 34px rgba(0, 0, 0, 0.32),
     0 4px 12px rgba(0, 0, 0, 0.24) !important;
 }
 
 html.dark .pressable-card.restaurant-accent-border {
   box-shadow:
-    inset 0 0 26px rgba(230, 70, 70, 0.22),
+    inset 0 0 34px rgba(230, 70, 70, 0.27),
     0 14px 34px rgba(0, 0, 0, 0.32),
     0 4px 12px rgba(0, 0, 0, 0.24) !important;
 }

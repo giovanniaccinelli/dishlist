@@ -2160,7 +2160,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             ) : null}
             <div className="flex items-center gap-1.5">
               {!darkMode && currentCard?.dishMode ? <DishModeBadge dishMode={currentCard.dishMode} className="h-8 w-8 shrink-0 self-center" /> : null}
-              {showStoryHistoryCounter ? (
+              {showStoryHistoryCounter && !currentCardNoMediaRecipeSide ? (
                 <button
                   type="button"
                   data-no-drag="true"
@@ -2211,23 +2211,46 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             </button>
           ) : null}
           {!visibleRestaurantMap ? (
-            <button
-              type="button"
-              data-no-drag="true"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                if (typeof onSavesPress === "function") onSavesPress(currentCard);
-              }}
-              className={darkMode
-                ? `no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md`
-                : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
-              }
-              style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
-            >
-              <Users size={13} strokeWidth={2.25} />
-              <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
-            </button>
+            <>
+              {currentCardNoMediaRecipeSide && showStoryHistoryCounter ? (
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setStoryHistoryOpen(true);
+                  }}
+                  className={darkMode
+                    ? "no-accent-border absolute right-[5.65rem] top-4 z-30 inline-flex h-8 items-center gap-1 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md"
+                    : `absolute right-[5.65rem] top-4 z-30 inline-flex h-8 items-center gap-1 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
+                  }
+                  style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+                  aria-label="Open story push history"
+                >
+                  <StoryStatIcon size={12} />
+                  <span>:</span>
+                  <span>{currentStoryPushCount}</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                data-no-drag="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (typeof onSavesPress === "function") onSavesPress(currentCard);
+                }}
+                className={darkMode
+                  ? `no-accent-border absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/70 px-3 text-xs font-semibold leading-none text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-md`
+                  : `absolute top-4 right-4 z-30 inline-flex h-8 items-center gap-1.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 px-3 text-xs font-semibold leading-none text-white`
+                }
+                style={{ backfaceVisibility: "hidden", transform: "translateZ(0)", willChange: "transform, opacity" }}
+              >
+                <Users size={13} strokeWidth={2.25} />
+                <span>{Math.max(0, Number(currentCard.saves || 0))}</span>
+              </button>
+            </>
           ) : null}
           {shouldMovePrimaryActionTop ? (
             <button

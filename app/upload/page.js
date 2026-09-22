@@ -1018,8 +1018,8 @@ export default function UploadPage() {
                         setNoPhotoConfirmOpen(false);
                         openLibraryPicker();
                       }}
-                      className="w-full rounded-full border px-5 py-3 text-[0.98rem] font-black text-white shadow-[0_14px_32px_rgba(0,0,0,0.24),0_0_18px_rgba(56,189,248,0.16),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition active:scale-[0.985]"
-                      style={{ backgroundColor: "rgba(8,32,51,0.96)", borderColor: "rgba(56,189,248,0.62)" }}
+                      className="w-full rounded-full border px-5 py-3 text-[0.98rem] font-black text-white shadow-[0_14px_32px_rgba(0,0,0,0.24),0_0_16px_rgba(52,211,153,0.12),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition active:scale-[0.985]"
+                      style={{ backgroundColor: "rgba(15,52,38,0.94)", borderColor: "rgba(52,211,153,0.58)" }}
                     >
                       {language === "it" ? "Carica foto o video" : "Add photo or video"}
                     </button>
@@ -1030,8 +1030,8 @@ export default function UploadPage() {
                         setNoPhotoConfirmOpen(false);
                         openCameraPicker();
                       }}
-                      className="w-full rounded-full border px-5 py-3 text-[0.96rem] font-bold text-white shadow-[0_12px_26px_rgba(0,0,0,0.18),0_0_18px_rgba(167,139,250,0.16)] backdrop-blur-md transition active:scale-[0.985]"
-                      style={{ backgroundColor: "rgba(33,20,60,0.96)", borderColor: "rgba(167,139,250,0.62)" }}
+                      className="w-full rounded-full border px-5 py-3 text-[0.96rem] font-bold text-white shadow-[0_12px_26px_rgba(0,0,0,0.18),0_0_16px_rgba(251,146,60,0.12)] backdrop-blur-md transition active:scale-[0.985]"
+                      style={{ backgroundColor: "rgba(55,34,16,0.94)", borderColor: "rgba(251,146,60,0.58)" }}
                     >
                       {language === "it" ? "Scatta" : "Shoot"}
                     </button>
@@ -1348,16 +1348,16 @@ export default function UploadPage() {
                       setNoPhotoConfirmOpen(false);
                       openLibraryPicker();
                     }}
-                    className="rounded-full border px-4 py-2.5 text-[0.92rem] font-black text-white shadow-[0_0_18px_rgba(56,189,248,0.16)] transition active:scale-[0.985]"
-                    style={{ backgroundColor: "rgba(8,32,51,0.96)", borderColor: "rgba(56,189,248,0.62)" }}
+                    className="rounded-full border px-4 py-2.5 text-[0.92rem] font-black text-white shadow-[0_0_16px_rgba(52,211,153,0.12)] transition active:scale-[0.985]"
+                    style={{ backgroundColor: "rgba(15,52,38,0.94)", borderColor: "rgba(52,211,153,0.58)" }}
                   >
                     {language === "it" ? "carica foto" : "upload photo"}
                   </button>
                   <button
                     type="button"
                     onClick={continueWithoutPhoto}
-                    className="rounded-full border px-4 py-2.5 text-[0.92rem] font-bold text-white shadow-[0_0_18px_rgba(167,139,250,0.16)] transition active:scale-[0.985]"
-                    style={{ backgroundColor: "rgba(33,20,60,0.96)", borderColor: "rgba(167,139,250,0.62)" }}
+                    className="rounded-full border px-4 py-2.5 text-[0.92rem] font-bold text-white shadow-[0_0_16px_rgba(251,146,60,0.12)] transition active:scale-[0.985]"
+                    style={{ backgroundColor: "rgba(55,34,16,0.94)", borderColor: "rgba(251,146,60,0.58)" }}
                   >
                     {language === "it" ? "si" : "yes"}
                   </button>

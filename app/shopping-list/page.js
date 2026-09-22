@@ -273,6 +273,30 @@ export default function ShoppingListPage() {
             {language === "it" ? "Aggiungi ingredienti a mano o scegli una ricetta." : "Add ingredients manually or choose a recipe."}
           </div>
         )}
+
+        {sourceDishes.length ? (
+          <div className={`mt-4 space-y-2 border-t pt-4 ${darkMode ? "border-white/10" : "border-[#2BD36B]/18"}`}>
+            {sourceDishes.map((dish) => (
+              <Link
+                key={dish.id}
+                href={`/dish/${dish.id}?source=all_dishes`}
+                className={`flex items-center gap-3 rounded-[1.2rem] border p-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
+              >
+                <img
+                  src={getDishImageUrl(dish, "thumb")}
+                  alt={dish.name || ""}
+                  className="h-16 w-16 rounded-[0.95rem] object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+                <div className="min-w-0">
+                  <div className="truncate text-base font-bold">{dish.name || "Dish"}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-5">
@@ -326,40 +350,6 @@ export default function ShoppingListPage() {
             </div>
           )}
         </div>
-      </section>
-
-      <section className="mt-6 pb-6">
-        <h2 className="mb-3 text-lg font-bold">{language === "it" ? "Piatti in lista" : "Dishes in list"}</h2>
-        {sourceDishes.length ? (
-          <div className="space-y-3">
-            {sourceDishes.map((dish) => (
-              <Link
-                key={dish.id}
-                href={`/dish/${dish.id}?source=all_dishes`}
-                className={`flex items-center gap-3 rounded-[1.2rem] border p-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
-              >
-                <img
-                  src={getDishImageUrl(dish, "thumb")}
-                  alt={dish.name || ""}
-                  className="h-16 w-16 rounded-[0.95rem] object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
-                <div className="min-w-0">
-                  <div className="truncate text-base font-bold">{dish.name || "Dish"}</div>
-                  <div className={`mt-1 text-xs ${darkMode ? "text-white/48" : "text-black/45"}`}>
-                    {getDishIngredientItems(dish).length} {language === "it" ? "ingredienti" : "ingredients"}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className={`rounded-[1.2rem] px-4 py-8 text-center text-sm ${darkMode ? "bg-white/8 text-white/58" : "bg-white/72 text-black/55"}`}>
-            {language === "it" ? "Gli ingredienti aggiunti da ricette compariranno qui." : "Ingredients added from recipes will appear here."}
-          </div>
-        )}
       </section>
 
       {selectedDish ? (

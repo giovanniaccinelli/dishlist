@@ -296,18 +296,19 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
 }
 
 function DishModeChoiceLine({ choice, onClick, selected = false, fixed = false }) {
+  const fixedSelected = selected && fixed;
   return (
     <button
       type="button"
       onClick={onClick}
       className={`relative h-[5.35rem] w-full text-left transition active:scale-[0.985] ${
-        selected ? "drop-shadow-[0_0_18px_rgba(247,215,107,0.42)]" : ""
+        fixed && !selected ? "opacity-55" : ""
       }`}
     >
-      {selected ? (
-        <span className={`pointer-events-none absolute inset-1.5 z-[2] rounded-[1.25rem] border-2 ${
-          fixed ? "border-[#F7D76B]" : "border-white/70"
-        }`} />
+      {fixedSelected ? (
+        <span className="pointer-events-none absolute -left-1.5 top-1/2 z-[4] flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#F7D76B] text-black shadow-[0_8px_22px_rgba(0,0,0,0.38)]">
+          <Pin size={17} fill="currentColor" strokeWidth={2.4} />
+        </span>
       ) : null}
       <svg
         viewBox={`150 ${choice.cropY} 670 150`}
@@ -320,12 +321,11 @@ function DishModeChoiceLine({ choice, onClick, selected = false, fixed = false }
       <span className="absolute left-[1.42rem] top-[53%] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#050505]">
         {choice.icon}
       </span>
-      <span className={`absolute inset-y-0 left-[7.15rem] flex items-center ${selected && fixed ? "right-[7.4rem]" : "right-8"}`}>
+      <span className={`absolute inset-y-0 left-[7.15rem] flex items-center ${fixedSelected ? "right-[7.4rem]" : "right-8"}`}>
         <span className="translate-y-[0.2rem] truncate text-[1.34rem] font-bold leading-[0.95] text-[#17110A] antialiased [text-shadow:0_1px_0_rgba(255,255,255,0.18),0_1.5px_2px_rgba(0,0,0,0.12)]">{choice.label}</span>
       </span>
-      {selected && fixed ? (
+      {fixedSelected ? (
         <span className="pointer-events-none absolute right-5 top-1/2 z-[3] flex -translate-y-1/2 items-center gap-1 rounded-full bg-[#F7D76B] px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.04em] text-black shadow-[0_6px_14px_rgba(0,0,0,0.22)]">
-          <Pin size={11} fill="currentColor" strokeWidth={2.4} />
           Fissata
         </span>
       ) : null}

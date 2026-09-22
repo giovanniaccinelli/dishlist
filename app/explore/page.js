@@ -29,8 +29,9 @@ import {
 import { useAuth } from "../lib/auth";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
 import BottomNav from "../../components/BottomNav";
+import SwipeDeck from "../../components/SwipeDeck";
 import { CategoryRowsLoading } from "../../components/AppLoadingState";
-import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes } from "../lib/firebaseHelpers";
+import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes, saveDishToUserList } from "../lib/firebaseHelpers";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
@@ -69,7 +70,7 @@ function toTitleCase(value = "") {
     .join(" ");
 }
 
-function SafeDishOpenButton({ href, label }) {
+function SafeDishOpenButton({ href, label, onOpen }) {
   const router = useRouter();
   const pointerStartRef = useRef(null);
   const movedRef = useRef(false);
@@ -107,7 +108,8 @@ function SafeDishOpenButton({ href, label }) {
         resetPointer();
         return;
       }
-      router.push(href);
+      if (typeof onOpen === "function") onOpen();
+      else router.push(href);
     }
     resetPointer();
   };
@@ -124,7 +126,8 @@ function SafeDishOpenButton({ href, label }) {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          router.push(href);
+          if (typeof onOpen === "function") onOpen();
+          else router.push(href);
         }
       }}
     />
@@ -454,21 +457,21 @@ function SearchBar({ value, onChange, placeholder }) {
   );
 }
 
-function DishPreview({ dish, title, t, priority = false, counterKind = "saves", featuredTrophy = false }) {
+function DishPreview({ dish, title, t, priority = false, counterKind = "saves", featuredTrophy = false, onOpen }) {
   const showStoryCounter = counterKind === "stories";
   const CounterIcon = showStoryCounter ? Camera : Users;
   const counterValue = showStoryCounter ? dish.storyCount : dish.saves;
   return (
     <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+      <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={onOpen} />
       <DishRatingBadge dish={dish} />
       {featuredTrophy ? (
-        <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/62 text-[#F7D76B] shadow-[0_8px_20px_rgba(0,0,0,0.26)] backdrop-blur-md">
-          <Trophy size={17} strokeWidth={2.35} />
+        <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex items-center justify-center text-[#F7D76B] drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]">
+          <Trophy size={20} strokeWidth={2.6} />
         </div>
       ) : null}
-      <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex h-8 items-center gap-1 rounded-full border border-white/22 bg-black/58 px-2.5 text-[12px] font-bold text-white/92 shadow-[0_8px_20px_rgba(0,0,0,0.24)] backdrop-blur-md">
-        <CounterIcon size={12} strokeWidth={2.3} />
+      <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
+        <CounterIcon size={13} strokeWidth={2.6} />
         <span>{Math.max(0, Number(counterValue || 0))}</span>
       </div>
       <img
@@ -482,7 +485,7 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/56 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex h-[42%] flex-col justify-end bg-gradient-to-t from-black/82 via-black/44 via-55% to-transparent px-3 py-2.5 text-white pointer-events-none">
         <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
           {dish.name || t("Untitled dish")}
         </div>
@@ -491,7 +494,7 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
   );
 }
 
-function SearchResultsGrid({ dishes, t }) {
+function SearchResultsGrid({ dishes, t, onDishOpen }) {
   if (!dishes.length) {
     return (
       <div className="rounded-[1.35rem] border border-black/8 bg-white/72 px-4 py-10 text-center text-sm font-semibold text-black/48">
@@ -512,6 +515,7 @@ function SearchResultsGrid({ dishes, t }) {
             priority={index < 4}
             counterKind="saves"
             featuredTrophy={index === 0}
+            onOpen={() => onDishOpen?.(dishes, index, "search")}
           />
         ))}
       </div>
@@ -576,7 +580,7 @@ function CategoryTitle({ row, t, darkMode = false }) {
   );
 }
 
-function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
+function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0, onDishOpen }) {
   const { title, dishes } = row;
   const visible = dishes;
   if (!visible.length) return null;
@@ -622,7 +626,14 @@ function ExploreRow({ row, onExpand, t, darkMode = false, rowIndex = 0 }) {
       <div className="no-accent-border flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory shadow-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((dish, index) => (
           <div key={`${title}-${dish.id}`} className="snap-start basis-[48%] min-w-[48%] shrink-0">
-            <DishPreview dish={dish} title={title} t={t} priority={rowIndex < 2 && index < 2} counterKind={counterKind} />
+            <DishPreview
+              dish={dish}
+              title={title}
+              t={t}
+              priority={rowIndex < 2 && index < 2}
+              counterKind={counterKind}
+              onOpen={() => onDishOpen?.(visible, index, row.key)}
+            />
           </div>
         ))}
       </div>
@@ -694,7 +705,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
   );
 }
 
-function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
+function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }) {
   if (!row) return null;
   const showStoryCounter = row.key === "trending";
   const CounterIcon = showStoryCounter ? Camera : Users;
@@ -716,9 +727,9 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
           </button>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {row.dishes.map((dish) => (
+          {row.dishes.map((dish, index) => (
             <div key={`${row.key}-${dish.id}`} className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
+              <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={() => onDishOpen?.(row.dishes, index, row.key)} />
               <DishRatingBadge dish={dish} />
               <img
                 src={getDishImageUrl(dish, "thumb")}
@@ -730,11 +741,11 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex h-8 items-center gap-1 rounded-full border border-white/22 bg-black/58 px-2.5 text-[12px] font-bold text-white/92 shadow-[0_8px_20px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                <CounterIcon size={12} strokeWidth={2.3} />
+              <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 text-[12px] font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
+                <CounterIcon size={13} strokeWidth={2.6} />
                 <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
               </div>
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/56 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
+              <div className="absolute inset-x-0 bottom-0 z-20 flex h-[42%] flex-col justify-end bg-gradient-to-t from-black/82 via-black/44 via-55% to-transparent px-3 py-2.5 text-white pointer-events-none">
                 <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                   {dish.name || t("Untitled dish")}
                 </div>
@@ -762,6 +773,7 @@ export default function Explore() {
   const [selectedTagsDraft, setSelectedTagsDraft] = useState([]);
   const [selectedTagsApplied, setSelectedTagsApplied] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [deckModal, setDeckModal] = useState(null);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:explore", DISH_MODE_ALL);
   const { location: currentLocation } = usePrivateGeolocation({
@@ -1004,6 +1016,22 @@ export default function Explore() {
     setExpandedRow(null);
     router.replace(buildExploreUrl({ category: "" }), { scroll: false });
   };
+  const openDishDeck = (dishes, initialIndex = 0, key = "explore") => {
+    const deckDishes = Array.isArray(dishes) ? dishes.filter(Boolean) : [];
+    if (!deckDishes.length) return;
+    setDeckModal({
+      dishes: deckDishes,
+      initialIndex: Math.max(0, Math.min(initialIndex, deckDishes.length - 1)),
+      key: `${key}:${deckDishes.map((dish) => dish?.id || dish?.name || "").join("|")}`,
+    });
+  };
+  const handleDeckSave = async (dish) => {
+    if (!user?.uid || !dish?.id) {
+      router.push("/?auth=1");
+      return false;
+    }
+    return saveDishToUserList(user.uid, dish.id, dish);
+  };
   const isSearching = search.trim().length > 0;
 
   return (
@@ -1114,12 +1142,12 @@ export default function Explore() {
       ) : (
         <div>
           {isSearching ? (
-            <SearchResultsGrid dishes={searchResultDishes} t={t} />
+            <SearchResultsGrid dishes={searchResultDishes} t={t} onDishOpen={openDishDeck} />
           ) : (
             <>
               {categoryRows.map((row, index) => (
                 <div key={row.key}>
-                  <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} />
+                  <ExploreRow row={row} onExpand={() => openExpandedRow(row)} t={t} darkMode={darkMode} rowIndex={index} onDishOpen={openDishDeck} />
                 </div>
               ))}
               <LeaderboardRail questions={visibleLeaderboardQuestions} t={t} darkMode={darkMode} />
@@ -1128,7 +1156,46 @@ export default function Explore() {
         </div>
       )}
 
-      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} t={t} darkMode={darkMode} />
+      <ExpandedCategoryModal row={expandedRow} onClose={closeExpandedRow} t={t} darkMode={darkMode} onDishOpen={openDishDeck} />
+      {deckModal ? (
+        <div
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/76 px-4 py-[calc(var(--app-top-nav-offset)+0.75rem)] backdrop-blur-sm"
+          onClick={() => setDeckModal(null)}
+        >
+          <div
+            className="flex w-full max-w-md flex-col"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setDeckModal(null)}
+              className="no-accent-border mb-3 flex h-11 w-11 items-center justify-center self-end rounded-full bg-white/12 text-white shadow-[0_10px_28px_rgba(0,0,0,0.28)] backdrop-blur-md"
+              aria-label="Close dish deck"
+            >
+              <X size={19} />
+            </button>
+            <div className="relative h-[min(78dvh,42rem)] w-full">
+              <SwipeDeck
+                key={deckModal.key}
+                dishes={deckModal.dishes}
+                initialIndex={deckModal.initialIndex}
+                fitHeight
+                currentUser={user}
+                onAction={handleDeckSave}
+                onRightSwipe={handleDeckSave}
+                actionOnRightSwipe={false}
+                dismissOnAction={false}
+                actionLabel="+"
+                actionClassName="add-action-btn w-14 h-14 text-[36px]"
+                actionToast="Added to DishList"
+                rightSwipeToast="Aggiunto al profilo"
+                onDeckEmpty={() => setDeckModal(null)}
+                onAuthRequired={() => router.push("/?auth=1")}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
       <DishModeFilterModal
         open={dishModeFilterOpen}
         value={selectedDishMode}

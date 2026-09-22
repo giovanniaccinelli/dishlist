@@ -54,6 +54,10 @@ import { useLanguage } from "../../components/LanguageProvider";
 const BASE_LIMIT = 20;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
+const DISH_PREVIEW_BOTTOM_SHADE = {
+  height: "46%",
+  background: "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.62) 34%, rgba(0,0,0,0.2) 68%, rgba(0,0,0,0) 100%)",
+};
 
 function stableHash(value = "") {
   return String(value || "").split("").reduce((hash, char) => {
@@ -485,7 +489,7 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 flex h-[42%] flex-col justify-end bg-gradient-to-t from-black/82 via-black/44 via-55% to-transparent px-3 py-2.5 text-white pointer-events-none">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-3 py-2.5 text-white pointer-events-none" style={DISH_PREVIEW_BOTTOM_SHADE}>
         <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
           {dish.name || t("Untitled dish")}
         </div>
@@ -745,7 +749,7 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }
                 <CounterIcon size={13} strokeWidth={2.6} />
                 <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
               </div>
-              <div className="absolute inset-x-0 bottom-0 z-20 flex h-[42%] flex-col justify-end bg-gradient-to-t from-black/82 via-black/44 via-55% to-transparent px-3 py-2.5 text-white pointer-events-none">
+              <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-3 py-2.5 text-white pointer-events-none" style={DISH_PREVIEW_BOTTOM_SHADE}>
                 <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                   {dish.name || t("Untitled dish")}
                 </div>

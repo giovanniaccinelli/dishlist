@@ -554,11 +554,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   useEffect(() => {
     const upcoming = deck
       .slice(currentIndex, currentIndex + 6)
-      .filter((dish) => dish && !isDishVideo(dish))
-      .map((dish) => getDishImageUrl(dish))
+      .filter(Boolean)
+      .flatMap((dish) => {
+        const mediaItems = getDishMediaItems(dish);
+        const imageItems = mediaItems
+          .filter((item) => item.mediaType !== "video" && !item.mediaMimeType?.startsWith("video/"))
+          .flatMap((item) => [item.cardURL, item.imageURL, item.thumbURL]);
+        return imageItems.length ? imageItems : [getDishImageUrl(dish)];
+      })
       .filter(Boolean);
 
-    upcoming.forEach((src) => {
+    Array.from(new Set(upcoming)).forEach((src) => {
       void preloadDeckImage(src);
     });
   }, [deck, currentIndex]);

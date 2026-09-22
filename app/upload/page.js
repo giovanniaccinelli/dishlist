@@ -398,13 +398,6 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1400);
       return;
     }
-    if (isRestaurantUpload && !normalizeRestaurantCategoryId(restaurantPrimaryCategory)) {
-      void hapticError();
-      setToastVariant("error");
-      setToast("Scegli una categoria ristorante");
-      setTimeout(() => setToast(""), 1400);
-      return;
-    }
     if ((storyMode || uploadToStory) && !storyMealTag) {
       void hapticImpact("light");
       setDishlistPickerOpen(false);

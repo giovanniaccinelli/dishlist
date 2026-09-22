@@ -397,15 +397,33 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
         const borderColor = isRestaurant ? "#E64646" : "#E4B43F";
         const accentClass = isRestaurant ? "restaurant-accent-border" : "default-accent-border";
         if (!hasDishMedia(dish)) {
+          const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+          const ingredientItems = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, 3);
           return (
             <div
               key={`${dishlist.id}-${dish.id}-${index}`}
-              className={`no-accent-border flex aspect-square w-full items-end overflow-hidden rounded-[0.85rem] border-2 p-2 text-left text-[10px] font-bold leading-tight ${accentClass} ${
-                darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"
-              }`}
-              style={{ borderColor }}
+              className={`no-accent-border relative aspect-square w-full overflow-hidden rounded-[0.85rem] border-2 bg-black text-white ${accentClass}`}
+              style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
-              <span className="line-clamp-3">{dish.name || t("Untitled dish")}</span>
+              {isRestaurant && restaurantName ? (
+                <span className="absolute bottom-7 left-1.5 right-1.5 z-10 truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-1.5 py-0.5 text-[7px] font-black leading-none text-[#FFD4D0]">
+                  {restaurantName}
+                </span>
+              ) : null}
+              {!isRestaurant && ingredientItems.length ? (
+                <div className="absolute bottom-7 left-1.5 right-1.5 z-10 flex max-h-8 flex-wrap gap-0.5 overflow-hidden">
+                  {ingredientItems.map((item) => (
+                    <span
+                      key={item.key}
+                      className="inline-flex min-h-4 items-center rounded-full border px-1 py-0.5 text-[7px] font-bold leading-none"
+                      style={getIngredientPillStyle(item.color, true)}
+                    >
+                      {item.name}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <span className="absolute bottom-1.5 left-1.5 right-1.5 z-10 truncate text-left text-[9px] font-bold leading-tight text-white">{dish.name || t("Untitled dish")}</span>
             </div>
           );
         }
@@ -2918,7 +2936,7 @@ export default function Profile() {
 	      <div className="grid grid-cols-2 gap-3">
           <AnimatePresence initial={false}>
             {dishes.map((dish, index) => {
-              const textOnly = isTextOnlyDish(dish);
+              const textOnly = false;
               const canEditTextOnly = profileIdCandidates.includes(dish?.owner);
               if (textOnly) {
                 return (
@@ -2982,33 +3000,38 @@ export default function Profile() {
                   const isRestaurantPreview = String(dish?.dishMode || "").toLowerCase() === "restaurant";
                   const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
                   const ingredientItems = isRestaurantPreview ? [] : getDishIngredientItems(dish).slice(0, 5);
+                  const accentColor = isRestaurantPreview ? "#E64646" : "#E4B43F";
                   return (
-                    <div className={`relative flex h-40 w-full flex-col items-center justify-center gap-2 overflow-hidden bg-black px-3 text-center ${
-                      isRestaurantPreview ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.7),inset_0_0_30px_rgba(230,70,70,0.2)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.18)]"
-                    }`}>
+                    <div className="relative h-40 w-full overflow-hidden bg-black">
+                      <div
+                        className="pointer-events-none absolute inset-0 rounded-[0.95rem]"
+                        style={{ boxShadow: `inset 0 0 0 2px ${accentColor}, inset 0 0 30px ${isRestaurantPreview ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}
+                      />
                       {isRestaurantPreview ? (
                         <>
-                          <RatingStars value={dish.rating} size="text-[0.98rem]" readOnly />
+                          <div className="pointer-events-none absolute left-2.5 top-2.5 z-20">
+                            <RatingStars value={dish.rating} size="text-[0.95rem]" readOnly />
+                          </div>
                           {restaurantName ? (
-                            <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-3 py-1 text-[11px] font-black text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.16)]">
+                            <div className="pointer-events-none absolute bottom-[3.15rem] left-3 right-3 z-20 max-w-[calc(100%-1.5rem)] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFD4D0] shadow-[0_0_16px_rgba(230,70,70,0.16)]">
                               {restaurantName}
                             </div>
                           ) : null}
                         </>
                       ) : (
-                        <div className="flex max-h-[6.2rem] flex-wrap items-center justify-center gap-1.5 overflow-hidden">
+                        <div className="pointer-events-none absolute bottom-[3.05rem] left-3 right-3 z-20 flex max-h-[3.85rem] flex-wrap items-end gap-1 overflow-hidden">
                           {ingredientItems.length ? (
                             ingredientItems.map((item) => (
                               <span
                                 key={item.key}
-                                className="inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none"
+                                className="inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none"
                                 style={getIngredientPillStyle(item.color, true)}
                               >
                                 {item.name}
                               </span>
                             ))
                           ) : (
-                            <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-3 py-1 text-[11px] font-black text-[#FFE7A6]">
+                            <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFE7A6]">
                               Ricetta
                             </span>
                           )}

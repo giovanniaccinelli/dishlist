@@ -471,6 +471,36 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
   const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
   const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
   const ingredientItems = !isRestaurant ? getDishIngredientItems(dish).slice(0, 5) : [];
+  const accentColor = isRestaurant ? "#E64646" : "#E4B43F";
+  const renderNoPhotoMetadata = () => (
+    <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex min-h-7 items-end">
+      {isRestaurant ? (
+        restaurantName ? (
+          <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFD4D0] shadow-[0_0_16px_rgba(230,70,70,0.16)]">
+            {restaurantName}
+          </div>
+        ) : null
+      ) : (
+        <div className="flex max-h-[3.85rem] flex-wrap items-end gap-1 overflow-hidden">
+          {ingredientItems.length ? (
+            ingredientItems.map((item) => (
+              <span
+                key={item.key}
+                className="inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none"
+                style={getIngredientPillStyle(item.color, true)}
+              >
+                {item.name}
+              </span>
+            ))
+          ) : (
+            <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFE7A6]">
+              Ricetta
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
   return (
     <div className="w-full">
       <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
@@ -494,37 +524,17 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
             }}
           />
         ) : (
-          <div className={`relative flex h-36 w-full flex-col items-center justify-center gap-2 overflow-hidden bg-black px-3 text-center ${
-            isRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.7),inset_0_0_28px_rgba(230,70,70,0.2)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_28px_rgba(228,180,63,0.18)]"
-          }`}>
+          <div className="relative h-36 w-full overflow-hidden bg-black">
+            <div
+              className="pointer-events-none absolute inset-0 rounded-[0.95rem]"
+              style={{ boxShadow: `inset 0 0 0 2px ${accentColor}, inset 0 0 28px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}
+            />
             {isRestaurant ? (
-              <>
-                <RatingStars value={dish.rating} size="text-[0.95rem]" readOnly />
-                {restaurantName ? (
-                  <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-3 py-1 text-[11px] font-black text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.16)]">
-                    {restaurantName}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <div className="flex max-h-[5.5rem] flex-wrap items-center justify-center gap-1.5 overflow-hidden">
-                {ingredientItems.length ? (
-                  ingredientItems.map((item) => (
-                    <span
-                      key={item.key}
-                      className="inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none"
-                      style={getIngredientPillStyle(item.color, true)}
-                    >
-                      {item.name}
-                    </span>
-                  ))
-                ) : (
-                  <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-3 py-1 text-[11px] font-black text-[#FFE7A6]">
-                    Ricetta
-                  </span>
-                )}
+              <div className="pointer-events-none absolute left-2.5 top-2.5 z-20">
+                <RatingStars value={dish.rating} size="text-[0.9rem]" readOnly />
               </div>
-            )}
+            ) : null}
+            {renderNoPhotoMetadata()}
           </div>
         )}
       </div>
@@ -718,7 +728,7 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <path d="M3 20H21" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
           </svg>
         </div>
-        <ChevronRight size={22} className={`${darkMode ? "text-white/70" : "text-black/45"} transition-transform ${open ? "rotate-90" : ""}`} />
+        <ChevronRight size={22} className={`mr-2 ${darkMode ? "text-white/70" : "text-black/45"} transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open ? (
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -783,35 +793,14 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false, onDishOpen }
         </div>
         <div className="grid grid-cols-2 gap-3">
           {row.dishes.map((dish, index) => (
-            <div key={`${row.key}-${dish.id}`} className="min-w-0">
-              <div className={`relative bg-white rounded-2xl overflow-hidden shadow-md border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
-                <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" onOpen={() => onDishOpen?.(row.dishes, index, row.key)} />
-                <DishRatingBadge dish={dish} />
-                <img
-                  src={getDishImageUrl(dish, "thumb")}
-                  alt={dish.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
-              </div>
-              <div className="mt-2 min-w-0 px-0.5">
-                <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
-                <div className="mt-1 flex min-w-0 items-center gap-1.5">
-                  {getDishOwnerPhoto(dish) ? (
-                    <img src={getDishOwnerPhoto(dish)} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[8px] font-black text-black/45">
-                      {getDishOwnerLabel(dish).slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
-                  <div className="min-w-0 truncate text-[12px] font-semibold leading-tight text-black/48">{getDishOwnerLabel(dish)}</div>
-                </div>
-              </div>
-            </div>
+            <DishPreview
+              key={`${row.key}-${dish.id}`}
+              dish={dish}
+              title={row.title}
+              t={t}
+              priority={index < 4}
+              onOpen={() => onDishOpen?.(row.dishes, index, row.key)}
+            />
           ))}
         </div>
       </div>

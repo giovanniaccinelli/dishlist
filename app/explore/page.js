@@ -463,10 +463,14 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
       <SafeDishOpenButton href={`/dish/${dish.id}?source=public&mode=single`} label="Open dish card" />
       <DishRatingBadge dish={dish} />
       {featuredTrophy ? (
-        <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/62 text-[#F7D76B] shadow-[0_8px_20px_rgba(0,0,0,0.26)] backdrop-blur-md">
+        <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/45 bg-black/62 text-[#F7D76B] shadow-[0_8px_20px_rgba(0,0,0,0.26)] backdrop-blur-md">
           <Trophy size={17} strokeWidth={2.35} />
         </div>
       ) : null}
+      <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex h-8 items-center gap-1 rounded-full border border-white/22 bg-black/58 px-2.5 text-[12px] font-bold text-white/92 shadow-[0_8px_20px_rgba(0,0,0,0.24)] backdrop-blur-md">
+        <CounterIcon size={12} strokeWidth={2.3} />
+        <span>{Math.max(0, Number(counterValue || 0))}</span>
+      </div>
       <img
         src={getDishImageUrl(dish, "thumb")}
         alt={dish.name}
@@ -478,13 +482,9 @@ function DishPreview({ dish, title, t, priority = false, counterKind = "saves", 
           e.currentTarget.src = DEFAULT_DISH_IMAGE;
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/56 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
         <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
           {dish.name || t("Untitled dish")}
-        </div>
-        <div className="inline-flex items-center gap-1 text-[12px] font-semibold text-white/84">
-          <CounterIcon size={12} strokeWidth={2.25} />
-          <span>{Math.max(0, Number(counterValue || 0))}</span>
         </div>
       </div>
     </div>
@@ -730,13 +730,13 @@ function ExpandedCategoryModal({ row, onClose, t, darkMode = false }) {
                   e.currentTarget.src = DEFAULT_DISH_IMAGE;
                 }}
               />
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+              <div className="pointer-events-none absolute right-2.5 top-2.5 z-20 inline-flex h-8 items-center gap-1 rounded-full border border-white/22 bg-black/58 px-2.5 text-[12px] font-bold text-white/92 shadow-[0_8px_20px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                <CounterIcon size={12} strokeWidth={2.3} />
+                <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/56 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end">
                 <div className="truncate text-[17px] font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                   {dish.name || t("Untitled dish")}
-                </div>
-                <div className="inline-flex items-center gap-1 text-[12px] font-semibold text-white/84">
-                  <CounterIcon size={12} strokeWidth={2.25} />
-                  <span>{Math.max(0, Number((showStoryCounter ? dish.storyCount : dish.saves) || 0))}</span>
                 </div>
               </div>
             </div>

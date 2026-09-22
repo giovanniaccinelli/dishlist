@@ -810,7 +810,7 @@ export default function UploadPage() {
 
           {showGhostModeStep ? (
             <>
-              <div className="absolute left-5 right-5 top-[6.35rem] z-[14] text-center">
+              <div className="absolute inset-x-5 top-1/2 z-[14] -translate-y-1/2 text-center">
                 <div className="mb-4 text-[1.2rem] font-semibold leading-tight text-white/88">
                   {language === "it" ? "Che piatto vuoi aggiungere?" : "What dish do you want to add?"}
                 </div>
@@ -835,7 +835,7 @@ export default function UploadPage() {
                       }`}>
                         <CookingHomeIcon className="h-[3.15rem] w-[3.15rem]" strokeWidth={2} />
                       </span>
-                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Casa</div>
+                      <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Ricetta</div>
                     </div>
                   </button>
                   <button
@@ -858,50 +858,6 @@ export default function UploadPage() {
                       <div className="w-full truncate text-center text-[1.24rem] font-semibold leading-none">Ristorante</div>
                     </div>
                   </button>
-                </div>
-              </div>
-
-              <div className="absolute left-5 right-5 z-[13]" style={{ bottom: "5.8rem", color: "rgba(141,141,148,0.56)" }}>
-                <div className="text-left text-2xl font-bold leading-tight" style={{ color: "rgba(141,141,148,0.56)" }}>
-                  {language === "it" ? "Nome piatto" : "Dish name"}
-                </div>
-                <p className="mt-0.5 line-clamp-2 text-sm font-medium" style={{ color: "rgba(141,141,148,0.48)" }}>
-                  {language === "it" ? "Descrizione" : "Description"}
-                </p>
-                {isRestaurantUpload ? (
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="inline-flex items-center gap-1" style={{ color: "rgba(141,141,148,0.5)" }}>
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <span key={index} className="text-[1.05rem] leading-none">☆</span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                <div className="mt-2 flex flex-col items-start gap-1">
-                  <span
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md"
-                    style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
-                  >
-                    <span>Link</span>
-                    <CornerUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
-                  </span>
-                  <span
-                    className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-semibold backdrop-blur-md"
-                    style={{ backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.62)" }}
-                  >
-                    @tag utente
-                  </span>
-                </div>
-              </div>
-
-              <div className="pointer-events-none absolute left-5 z-[24]" style={{ bottom: "2.25rem" }}>
-                <div className="inline-flex h-8 items-center gap-1">
-                  <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
-                    piatto
-                  </span>
-                  <span className="inline-flex h-7 items-center rounded-full border px-2.5 text-[13px] font-semibold leading-none" style={{ borderColor: "rgba(141,141,148,0.24)", backgroundColor: "rgba(0,0,0,0.14)", color: "rgba(141,141,148,0.56)" }}>
-                    {isRestaurantUpload ? "ristorante" : "ricetta"}
-                  </span>
                 </div>
               </div>
             </>
@@ -1277,7 +1233,7 @@ export default function UploadPage() {
                           <CookingHomeIcon className="h-5 w-5" strokeWidth={2.35} />
                         </span>
                         <div className="min-w-0">
-	                        <div className="truncate text-[14px] font-black leading-none">Casa</div>
+	                        <div className="truncate text-[14px] font-black leading-none">Ricetta</div>
                         </div>
                       </div>
                     </button>

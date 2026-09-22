@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Shuffle, Utensils, X } from "lucide-react";
+import { Pin, Shuffle, Utensils, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { hapticImpact, hapticSelection } from "../app/lib/haptics";
 
@@ -10,6 +10,7 @@ export const DISH_MODE_COOKING = "cooking";
 export const DISH_MODE_RESTAURANT = "restaurant";
 const GLOBAL_DISH_MODE_KEY = "dish-mode:global";
 const OPENING_CHOICE_KEY = "dish-mode:opening-choice-shown";
+const FIXED_DISH_MODE_KEY = "dish-mode:fixed";
 let openingChoiceShownThisRuntime = false;
 
 export function setGlobalDishMode(mode) {
@@ -24,6 +25,7 @@ export function setGlobalDishMode(mode) {
 export function hasChosenOpeningDishMode() {
   if (typeof window === "undefined") return true;
   try {
+    if (window.localStorage.getItem(FIXED_DISH_MODE_KEY) === "1") return true;
     return window.sessionStorage.getItem(OPENING_CHOICE_KEY) === "1";
   } catch {
     return true;
@@ -35,6 +37,27 @@ export function markOpeningDishModeChosen() {
   try {
     openingChoiceShownThisRuntime = true;
     window.sessionStorage.setItem(OPENING_CHOICE_KEY, "1");
+  } catch {}
+}
+
+function isDishModeFixed() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(FIXED_DISH_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setDishModeFixed(fixed) {
+  if (typeof window === "undefined") return;
+  try {
+    if (fixed) {
+      window.localStorage.setItem(FIXED_DISH_MODE_KEY, "1");
+      markOpeningDishModeChosen();
+    } else {
+      window.localStorage.removeItem(FIXED_DISH_MODE_KEY);
+    }
   } catch {}
 }
 
@@ -140,6 +163,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
   useEffect(() => {
     if (typeof window === "undefined" || openingChoiceShownThisRuntime) return;
+    if (isDishModeFixed()) {
+      openingChoiceShownThisRuntime = true;
+      return;
+    }
     const alreadyShown = window.sessionStorage.getItem(OPENING_CHOICE_KEY) === "1";
     openingChoiceShownThisRuntime = true;
     if (!alreadyShown) {
@@ -177,11 +204,24 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 }
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
+  const [fixedMode, setFixedMode] = useState(false);
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
     { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.55rem] w-[1.55rem]" strokeWidth={2.35} /> },
   ];
+
+  useEffect(() => {
+    if (!open) return;
+    setFixedMode(isDishModeFixed());
+  }, [open]);
+
+  const toggleFixedMode = () => {
+    const next = !fixedMode;
+    void hapticSelection();
+    setFixedMode(next);
+    setDishModeFixed(next);
+  };
 
   return (
     <AnimatePresence>
@@ -226,6 +266,27 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 );
               })}
             </div>
+            <button
+              type="button"
+              onClick={toggleFixedMode}
+              className={`mt-5 flex w-full items-center gap-3 rounded-[1.1rem] border px-4 py-3 text-left transition active:scale-[0.985] ${
+                fixedMode
+                  ? "border-[#F7D76B]/65 bg-[#F7D76B]/14 text-[#F7D76B]"
+                  : "border-white/12 bg-white/7 text-white/70"
+              }`}
+            >
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${fixedMode ? "bg-[#F7D76B] text-black" : "bg-white/10 text-white/70"}`}>
+                <Pin size={16} fill={fixedMode ? "currentColor" : "none"} strokeWidth={2.35} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[0.98rem] font-bold leading-tight">
+                  {fixedMode ? "Modalita fissata" : "Fissa questa modalita"}
+                </span>
+                <span className="mt-0.5 block text-[0.76rem] font-semibold leading-tight opacity-72">
+                  {fixedMode ? "DishList non te lo chiedera all'apertura." : "Apri sempre con la modalita scelta."}
+                </span>
+              </span>
+            </button>
           </motion.div>
         </motion.div>
       ) : null}

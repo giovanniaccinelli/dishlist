@@ -35,6 +35,7 @@ import { getDishesPage, getLeaderboardQuestions, getTrendingStoryDishes, saveDis
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
+import { getDishIngredientItems, getIngredientPillStyle } from "../lib/ingredients";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "../lib/restaurants";
 import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
@@ -466,6 +467,10 @@ function SearchBar({ value, onChange, placeholder }) {
 }
 
 function DishPreview({ dish, title, t, priority = false, featuredTrophy = false, onOpen }) {
+  const hasMedia = hasDishMedia(dish);
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredientItems = !isRestaurant ? getDishIngredientItems(dish).slice(0, 5) : [];
   return (
     <div className="w-full">
       <div className={`explore-dish-preview pressable-card relative w-full bg-white rounded-2xl overflow-hidden cursor-pointer border-2 shadow-none ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
@@ -476,17 +481,52 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
             <Trophy size={20} strokeWidth={2.6} />
           </div>
         ) : null}
-        <img
-          src={getDishImageUrl(dish, "thumb")}
-          alt={dish.name}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          decoding="async"
-          className="w-full h-36 object-cover"
-          onError={(e) => {
-            e.currentTarget.src = DEFAULT_DISH_IMAGE;
-          }}
-        />
+        {hasMedia ? (
+          <img
+            src={getDishImageUrl(dish, "thumb")}
+            alt={dish.name}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
+            decoding="async"
+            className="w-full h-36 object-cover"
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_DISH_IMAGE;
+            }}
+          />
+        ) : (
+          <div className={`relative flex h-36 w-full flex-col items-center justify-center gap-2 overflow-hidden bg-black px-3 text-center ${
+            isRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.7),inset_0_0_28px_rgba(230,70,70,0.2)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_28px_rgba(228,180,63,0.18)]"
+          }`}>
+            {isRestaurant ? (
+              <>
+                <RatingStars value={dish.rating} size="text-[0.95rem]" readOnly />
+                {restaurantName ? (
+                  <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-3 py-1 text-[11px] font-black text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.16)]">
+                    {restaurantName}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="flex max-h-[5.5rem] flex-wrap items-center justify-center gap-1.5 overflow-hidden">
+                {ingredientItems.length ? (
+                  ingredientItems.map((item) => (
+                    <span
+                      key={item.key}
+                      className="inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none"
+                      style={getIngredientPillStyle(item.color, true)}
+                    >
+                      {item.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-3 py-1 text-[11px] font-black text-[#FFE7A6]">
+                    Ricetta
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="mt-2 min-w-0 px-0.5">
         <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
@@ -867,7 +907,7 @@ export default function Explore() {
     const term = search.trim().toLowerCase();
     if (!term) return [];
     return allDishes
-      .filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish))
+      .filter((dish) => dishModeMatches(dish, selectedDishMode))
       .filter((dish) => {
         if (!normalizedAppliedTags.length) return true;
         if (!Array.isArray(dish.tags)) return false;
@@ -964,7 +1004,7 @@ export default function Explore() {
             const dishTags = dish.tags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean);
             return normalizedSelectedTags.every((tag) => dishTags.includes(tag));
           });
-    const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish));
+    const modePool = basePool.filter((dish) => dishModeMatches(dish, selectedDishMode));
 
     const rows = [];
     rows.push({
@@ -980,7 +1020,7 @@ export default function Explore() {
           return name.includes(term) || tags.some((tag) => tag.includes(term));
         })
       : trendingDishes;
-    const filteredTrendingPool = trendingPool.filter((dish) => dishModeMatches(dish, selectedDishMode) && hasDishMedia(dish));
+    const filteredTrendingPool = trendingPool.filter((dish) => dishModeMatches(dish, selectedDishMode));
     rows.push({
       key: "trending",
       title: "Trending Now",

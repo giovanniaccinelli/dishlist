@@ -1,4 +1,12 @@
 export function hasDishMedia(dish) {
+  const mediaItems = Array.isArray(dish?.mediaItems) ? dish.mediaItems : [];
+  if (mediaItems.some((item) => {
+    const itemValue = item?.cardURL || item?.imageURL || item?.url || item?.thumbURL || item?.thumbnailURL || "";
+    const normalizedItem = String(itemValue || "").trim();
+    return Boolean(normalizedItem && normalizedItem !== "undefined" && normalizedItem !== "null");
+  })) {
+    return true;
+  }
   const value =
     dish?.cardURL ||
     dish?.imageURL ||

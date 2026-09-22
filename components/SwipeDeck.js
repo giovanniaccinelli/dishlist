@@ -17,7 +17,7 @@ import AppToast from "./AppToast";
 import RestaurantMapView from "./RestaurantMapView";
 import { addCommentToDish, deleteCommentThread, getCommentsForDish, getDishLikeState, toggleDishLike } from "../app/lib/firebaseHelpers";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl, getDishMediaItems, isDishVideo } from "../app/lib/dishImage";
-import { isRecipeOnlyDish } from "../app/lib/dishContent";
+import { hasDishMedia, isRecipeOnlyDish } from "../app/lib/dishContent";
 import { dispatchPushEvent } from "../app/lib/pushClient";
 import { DishModeBadge, RestaurantMapIcon } from "./DishModeControls";
 import { useLanguage } from "./LanguageProvider";
@@ -576,7 +576,21 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     const savedSide = currentCardStableKey ? cardSidePreferenceRef.current.get(currentCardStableKey) : undefined;
-    setShowRecipe(typeof savedSide === "boolean" ? savedSide || isRecipeOnlyDish(currentCard) : isRecipeOnlyDish(currentCard));
+    const restaurant = currentCard?.restaurant || null;
+    const lat = Number(restaurant?.lat);
+    const lng = Number(restaurant?.lng);
+    const noPhotoBackOnly =
+      !hasDishMedia(currentCard) &&
+      (
+        isRecipeOnlyDish(currentCard) ||
+        (
+          isRestaurantDish(currentCard) &&
+          Boolean(getSafeRestaurantPlaceId(currentCard) && getSafeRestaurantLabel(currentCard)) &&
+          Number.isFinite(lat) &&
+          Number.isFinite(lng)
+        )
+      );
+    setShowRecipe(typeof savedSide === "boolean" ? savedSide || noPhotoBackOnly : noPhotoBackOnly);
     setRecipePanelModal(null);
     setDescriptionModalOpen(false);
     setDescriptionTruncated(false);
@@ -755,7 +769,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       ]
     : [];
   const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
-  const visibleRecipe = currentCardRecipeOnly || showRecipe;
+  const currentCardNoMediaBackOnly = !hasDishMedia(currentCard) && hasCardBackView;
+  const visibleRecipe = currentCardRecipeOnly || currentCardNoMediaBackOnly || showRecipe;
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const showShoppingListAction = Boolean(onShoppingListAction) && !currentCardIsRestaurant && !visibleRestaurantMap;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
@@ -1445,6 +1460,49 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     dish,
     { active = false, preview = false, onVideoRef = null, onImageReady = null, carousel = true, zoomable = true, onPlainTap = null } = {}
   ) => {
+    const dishHasMedia = hasDishMedia(dish);
+    if (!dishHasMedia) {
+      const placeholderIsRestaurant = isRestaurantDish(dish);
+      const placeholderRestaurantLabel = getSafeRestaurantLabel(dish);
+      const placeholderIngredients = placeholderIsRestaurant ? [] : getDishIngredientItems(dish).slice(0, 7);
+      return (
+        <div className={`relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden bg-black px-6 text-center ${
+          placeholderIsRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.76),inset_0_0_42px_rgba(230,70,70,0.18)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.76),inset_0_0_42px_rgba(228,180,63,0.16)]"
+        }`}>
+          {placeholderIsRestaurant ? (
+            <>
+              <RatingStars value={dish?.rating} size="text-[1.05rem]" readOnly />
+              {placeholderRestaurantLabel ? (
+                <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-4 py-1.5 text-[13px] font-black text-[#FFD4D0] shadow-[0_0_22px_rgba(230,70,70,0.16)]">
+                  {placeholderRestaurantLabel}
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex max-h-[9rem] flex-wrap items-center justify-center gap-2 overflow-hidden">
+              {placeholderIngredients.length ? (
+                placeholderIngredients.map((item) => (
+                  <span
+                    key={item.key}
+                    className="inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-[13px] font-bold leading-none"
+                    style={getIngredientPillStyle(item.color, true)}
+                  >
+                    {item.name}
+                  </span>
+                ))
+              ) : (
+                <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-4 py-1.5 text-[13px] font-black text-[#FFE7A6]">
+                  Recipe
+                </span>
+              )}
+            </div>
+          )}
+          {typeof onImageReady === "function" ? (
+            <img alt="" src={DEFAULT_DISH_IMAGE} className="hidden" onLoad={onImageReady} />
+          ) : null}
+        </div>
+      );
+    }
     const mediaItems = getDishMediaItems(dish);
     const fallbackMedia = {
       cardURL: getDishImageUrl(dish),
@@ -2013,7 +2071,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
             >
-              {hasAnyRecipeText && !currentCardRecipeOnly ? (
+              {hasAnyRecipeText && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
                 <div className={`no-accent-border flex h-8 items-center gap-0.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 p-0.5 text-white`}>
                   <button
                     data-no-drag="true"
@@ -2214,7 +2272,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
           ) : null}
-          {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly ? (
+          {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
             <div
               data-no-drag="true"
               className={`absolute left-5 z-40`}
@@ -2267,7 +2325,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className={`absolute inset-0 ${visibleRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!visibleRecipe && hasCardBackView && !currentCardRecipeOnly ? (
+              {!visibleRecipe && hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -2319,7 +2377,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       onVideoRef: (node) => {
                         currentVideoRef.current = node;
                       },
-                      onPlainTap: hasCardBackView && !currentCardRecipeOnly ? () => setCardBackVisible(true) : null,
+                      onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? () => setCardBackVisible(true) : null,
                     })}
                   </div>
                 </div>
@@ -2329,7 +2387,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onVideoRef: (node) => {
                     currentVideoRef.current = node;
                   },
-                  onPlainTap: hasCardBackView && !currentCardRecipeOnly ? () => setCardBackVisible(true) : null,
+                  onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? () => setCardBackVisible(true) : null,
                 })
               )}
               {!visibleRecipe && isDishVideo(currentCard) ? (

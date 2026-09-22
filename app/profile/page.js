@@ -77,6 +77,7 @@ import StoryViewerModal from "../../components/StoryViewerModal";
 import RestaurantMapView from "../../components/RestaurantMapView";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
+import { RatingStars } from "../../components/RatingStars";
 import ProfileTakesStrip from "../../components/ProfileTakesStrip";
 import MapPreview from "../../components/MapPreview";
 import SwipeDeck from "../../components/SwipeDeck";
@@ -95,7 +96,7 @@ import {
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 import { clearSessionPageCache, getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
-import { getIngredientPillStyle, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
+import { getDishIngredientItems, getIngredientPillStyle, inferIngredientColorId, normalizeIngredientItems, normalizeIngredientKey, normalizeIngredientName } from "../lib/ingredients";
 import { hapticError, hapticImpact, hapticSuccess } from "../lib/haptics";
 import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 
@@ -2963,7 +2964,7 @@ export default function Profile() {
                   <span className="sr-only">Open dish</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
-                {(() => {
+                {hasDishMedia(dish) ? (() => {
                   const imageSrc = getDishImageUrl(dish, "thumb");
                   return (
                     <img
@@ -2976,6 +2977,44 @@ export default function Profile() {
                         e.currentTarget.src = DEFAULT_DISH_IMAGE;
                       }}
                     />
+                  );
+                })() : (() => {
+                  const isRestaurantPreview = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+                  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+                  const ingredientItems = isRestaurantPreview ? [] : getDishIngredientItems(dish).slice(0, 5);
+                  return (
+                    <div className={`relative flex h-40 w-full flex-col items-center justify-center gap-2 overflow-hidden bg-black px-3 text-center ${
+                      isRestaurantPreview ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.7),inset_0_0_30px_rgba(230,70,70,0.2)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.18)]"
+                    }`}>
+                      {isRestaurantPreview ? (
+                        <>
+                          <RatingStars value={dish.rating} size="text-[0.98rem]" readOnly />
+                          {restaurantName ? (
+                            <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-3 py-1 text-[11px] font-black text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.16)]">
+                              {restaurantName}
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <div className="flex max-h-[6.2rem] flex-wrap items-center justify-center gap-1.5 overflow-hidden">
+                          {ingredientItems.length ? (
+                            ingredientItems.map((item) => (
+                              <span
+                                key={item.key}
+                                className="inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none"
+                                style={getIngredientPillStyle(item.color, true)}
+                              >
+                                {item.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="rounded-full border border-[#E4B43F]/36 bg-[#241B08]/82 px-3 py-1 text-[11px] font-black text-[#FFE7A6]">
+                              Ricetta
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   );
                 })()}
                 <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">

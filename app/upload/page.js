@@ -59,6 +59,8 @@ function UploadBlockingOverlay({ label = "Caricamento..." }) {
 }
 
 const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
+const getPointerDistance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const getPointerCenter = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
 function loadImageElement(url) {
   return new Promise((resolve, reject) => {
@@ -141,6 +143,7 @@ export default function UploadPage() {
   const [dishMediaPreviews, setDishMediaPreviews] = useState([]);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [dishMediaFrames, setDishMediaFrames] = useState([]);
+  const [dishMediaImageSizes, setDishMediaImageSizes] = useState([]);
   const [noPhotoConfirmOpen, setNoPhotoConfirmOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -175,6 +178,7 @@ export default function UploadPage() {
   const dishMediaPreviewsRef = useRef([]);
   const mediaFrameRef = useRef(null);
   const mediaFrameGestureRef = useRef(null);
+  const mediaFramePointersRef = useRef(new Map());
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -353,6 +357,10 @@ export default function UploadPage() {
     setDishMediaFrames((previousFrames) => {
       const nextFrames = usableFiles.map(() => ({ x: 0, y: 0, zoom: 1 }));
       return append ? [...previousFrames, ...nextFrames].slice(0, 5) : nextFrames;
+    });
+    setDishMediaImageSizes((previousSizes) => {
+      const nextSizes = usableFiles.map(() => ({ width: 0, height: 0 }));
+      return append ? [...previousSizes, ...nextSizes].slice(0, 5) : nextSizes;
     });
   };
 
@@ -669,17 +677,35 @@ export default function UploadPage() {
       return [];
     });
     setDishMediaFrames([]);
+    setDishMediaImageSizes([]);
     setNoPhotoConfirmOpen(false);
     setActiveMediaIndex(0);
   };
 
-  const clampMediaFrame = (frame = {}) => {
-    const zoom = clampNumber(Number(frame.zoom || 1), 1, 3.2);
-    const frameSize = mediaFrameRef.current?.getBoundingClientRect?.()?.width || 320;
-    const maxOffset = Math.max(0, (frameSize * (zoom - 1)) / 2);
+  const getMediaFrameBounds = (zoom = 1, index = activeMediaIndex) => {
+    const frameRect = mediaFrameRef.current?.getBoundingClientRect?.();
+    const frameWidth = frameRect?.width || 320;
+    const frameHeight = frameRect?.height || frameWidth;
+    const imageSize = dishMediaImageSizes[index] || {};
+    const imageWidth = imageSize.width || frameWidth;
+    const imageHeight = imageSize.height || frameHeight;
+    const coverScale = Math.max(frameWidth / imageWidth, frameHeight / imageHeight);
+    const displayWidth = imageWidth * coverScale * zoom;
+    const displayHeight = imageHeight * coverScale * zoom;
     return {
-      x: clampNumber(Number(frame.x || 0), -maxOffset, maxOffset),
-      y: clampNumber(Number(frame.y || 0), -maxOffset, maxOffset),
+      x: Math.max(0, (displayWidth - frameWidth) / 2),
+      y: Math.max(0, (displayHeight - frameHeight) / 2),
+      displayWidth,
+      displayHeight,
+    };
+  };
+
+  const clampMediaFrame = (frame = {}, index = activeMediaIndex) => {
+    const zoom = clampNumber(Number(frame.zoom || 1), 1, 3.2);
+    const bounds = getMediaFrameBounds(zoom, index);
+    return {
+      x: clampNumber(Number(frame.x || 0), -bounds.x, bounds.x),
+      y: clampNumber(Number(frame.y || 0), -bounds.y, bounds.y),
       zoom,
     };
   };
@@ -688,16 +714,9 @@ export default function UploadPage() {
     setDishMediaFrames((previousFrames) => {
       const nextFrames = [...previousFrames];
       const currentFrame = nextFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 };
-      nextFrames[activeMediaIndex] = clampMediaFrame(typeof updater === "function" ? updater(currentFrame) : updater);
+      nextFrames[activeMediaIndex] = clampMediaFrame(typeof updater === "function" ? updater(currentFrame) : updater, activeMediaIndex);
       return nextFrames;
     });
-  };
-
-  const adjustActiveMediaZoom = (delta) => {
-    updateActiveMediaFrame((frame) => ({
-      ...frame,
-      zoom: Number(frame.zoom || 1) + delta,
-    }));
   };
 
   const showPreviousMedia = () => {
@@ -710,26 +729,92 @@ export default function UploadPage() {
     setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1));
   };
 
+  const getFramePoint = (point) => {
+    const rect = mediaFrameRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: point.x - rect.left - rect.width / 2,
+      y: point.y - rect.top - rect.height / 2,
+    };
+  };
+
+  const startMediaPanGesture = (pointer) => {
+    mediaFrameGestureRef.current = {
+      type: "pan",
+      pointerId: pointer.id,
+      startX: pointer.x,
+      startY: pointer.y,
+      moved: false,
+      startFrame: dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 },
+    };
+  };
+
+  const startMediaPinchGesture = () => {
+    const pointers = Array.from(mediaFramePointersRef.current.values()).slice(0, 2);
+    if (pointers.length < 2) return;
+    const center = getPointerCenter(pointers[0], pointers[1]);
+    mediaFrameGestureRef.current = {
+      type: "pinch",
+      pointerIds: [pointers[0].id, pointers[1].id],
+      startCenter: getFramePoint(center),
+      startDistance: Math.max(1, getPointerDistance(pointers[0], pointers[1])),
+      moved: true,
+      startFrame: dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 },
+    };
+  };
+
   const handleMediaFramePointerDown = (event) => {
     const activePreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
     if (!activePreview || activePreview.type?.startsWith("video/")) return;
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    mediaFrameGestureRef.current = {
-      pointerId: event.pointerId,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      moved: false,
-      startFrame: dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 },
-    };
+    mediaFramePointersRef.current.set(event.pointerId, {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    });
+    if (mediaFramePointersRef.current.size >= 2) {
+      startMediaPinchGesture();
+    } else {
+      startMediaPanGesture({ id: event.pointerId, x: event.clientX, y: event.clientY });
+    }
   };
 
   const handleMediaFramePointerMove = (event) => {
+    if (!mediaFramePointersRef.current.has(event.pointerId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    mediaFramePointersRef.current.set(event.pointerId, {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    });
+
     const gesture = mediaFrameGestureRef.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-    const deltaX = event.clientX - gesture.clientX;
-    const deltaY = event.clientY - gesture.clientY;
+    if (!gesture) return;
+
+    if (gesture.type === "pinch") {
+      const [firstId, secondId] = gesture.pointerIds;
+      const first = mediaFramePointersRef.current.get(firstId);
+      const second = mediaFramePointersRef.current.get(secondId);
+      if (!first || !second) return;
+      const currentDistance = Math.max(1, getPointerDistance(first, second));
+      const currentCenter = getFramePoint(getPointerCenter(first, second));
+      const startZoom = Math.max(1, Number(gesture.startFrame.zoom || 1));
+      const nextZoom = clampNumber(startZoom * (currentDistance / gesture.startDistance), 1, 3.2);
+      const zoomRatio = nextZoom / startZoom;
+      updateActiveMediaFrame({
+        x: currentCenter.x + (Number(gesture.startFrame.x || 0) - gesture.startCenter.x) * zoomRatio,
+        y: currentCenter.y + (Number(gesture.startFrame.y || 0) - gesture.startCenter.y) * zoomRatio,
+        zoom: nextZoom,
+      });
+      return;
+    }
+
+    if (gesture.pointerId !== event.pointerId || mediaFramePointersRef.current.size > 1) return;
+    const deltaX = event.clientX - gesture.startX;
+    const deltaY = event.clientY - gesture.startY;
     if (Math.abs(deltaX) + Math.abs(deltaY) > 4) gesture.moved = true;
     updateActiveMediaFrame({
       ...gesture.startFrame,
@@ -740,15 +825,25 @@ export default function UploadPage() {
 
   const handleMediaFramePointerUp = (event) => {
     const gesture = mediaFrameGestureRef.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
-    if (!gesture.moved && dishMediaPreviews.length > 1) {
+    mediaFramePointersRef.current.delete(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {}
+    if (gesture && !gesture.moved && dishMediaPreviews.length > 1) {
       const rect = mediaFrameRef.current?.getBoundingClientRect?.();
       if (rect) {
         const tapX = event.clientX - rect.left;
         if (tapX < rect.width * 0.35) showPreviousMedia();
         if (tapX > rect.width * 0.65) showNextMedia();
       }
+    }
+    if (mediaFramePointersRef.current.size >= 2) {
+      startMediaPinchGesture();
+      return;
+    }
+    if (mediaFramePointersRef.current.size === 1) {
+      startMediaPanGesture(Array.from(mediaFramePointersRef.current.values())[0]);
+      return;
     }
     mediaFrameGestureRef.current = null;
   };
@@ -757,7 +852,17 @@ export default function UploadPage() {
     const activePreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
     if (!activePreview || activePreview.type?.startsWith("video/")) return;
     event.preventDefault();
-    adjustActiveMediaZoom(event.deltaY > 0 ? -0.08 : 0.08);
+    const currentFrame = dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 };
+    const currentZoom = Math.max(1, Number(currentFrame.zoom || 1));
+    const nextZoom = clampNumber(currentZoom * (1 - event.deltaY * 0.002), 1, 3.2);
+    if (nextZoom === currentZoom) return;
+    const framePoint = getFramePoint({ x: event.clientX, y: event.clientY });
+    const zoomRatio = nextZoom / currentZoom;
+    updateActiveMediaFrame({
+      x: framePoint.x + (Number(currentFrame.x || 0) - framePoint.x) * zoomRatio,
+      y: framePoint.y + (Number(currentFrame.y || 0) - framePoint.y) * zoomRatio,
+      zoom: nextZoom,
+    });
   };
 
   const renderGuidedComposer = () => {
@@ -792,15 +897,38 @@ export default function UploadPage() {
       if (mediaPreview.type?.startsWith("video/")) {
         return <video src={mediaPreview.url} className={className} autoPlay muted loop playsInline controls={false} />;
       }
+      const bounds = frame ? getMediaFrameBounds(Number(frame.zoom || 1), activeMediaIndex) : null;
       const imageStyle = frame
         ? {
-            transform: `translate(calc(-50% + ${Number(frame.x || 0)}px), calc(-50% + ${Number(frame.y || 0)}px)) scale(${Number(frame.zoom || 1)})`,
+            width: bounds?.displayWidth || "100%",
+            height: bounds?.displayHeight || "100%",
+            transform: `translate(calc(-50% + ${Number(frame.x || 0)}px), calc(-50% + ${Number(frame.y || 0)}px))`,
+            objectFit: "fill",
           }
         : undefined;
       const imageClassName = frame
-        ? "absolute left-1/2 top-1/2 h-full w-full max-w-none select-none object-cover will-change-transform"
+        ? "pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none will-change-transform"
         : className;
-      return <img src={mediaPreview.url} alt="Dish preview" className={imageClassName} style={imageStyle} draggable={false} />;
+      return (
+        <img
+          src={mediaPreview.url}
+          alt="Dish preview"
+          className={imageClassName}
+          style={imageStyle}
+          draggable={false}
+          onLoad={(event) => {
+            const image = event.currentTarget;
+            setDishMediaImageSizes((previousSizes) => {
+              const nextSizes = [...previousSizes];
+              nextSizes[activeMediaIndex] = {
+                width: image.naturalWidth || image.width || 0,
+                height: image.naturalHeight || image.height || 0,
+              };
+              return nextSizes;
+            });
+          }}
+        />
+      );
     };
     const cardTopIdentity = (
       <>
@@ -865,6 +993,7 @@ export default function UploadPage() {
                 onPointerMove={handleMediaFramePointerMove}
                 onPointerUp={handleMediaFramePointerUp}
                 onPointerCancel={() => {
+                  mediaFramePointersRef.current.clear();
                   mediaFrameGestureRef.current = null;
                 }}
                 onWheel={handleMediaFrameWheel}
@@ -896,8 +1025,8 @@ export default function UploadPage() {
                         setNoPhotoConfirmOpen(false);
                         openLibraryPicker();
                       }}
-                      className={`w-full rounded-full px-5 py-3 text-[0.98rem] font-black shadow-[0_14px_32px_rgba(0,0,0,0.24)] transition active:scale-[0.985] ${
-                        isRestaurantUpload ? "bg-[#E64646] text-white" : "bg-[#E4B43F] text-black"
+                      className={`w-full rounded-full border px-5 py-3 text-[0.98rem] font-black text-white shadow-[0_14px_32px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.09)] backdrop-blur-md transition active:scale-[0.985] ${
+                        isRestaurantUpload ? "border-[#E64646]/55 bg-[#2A1010]/88" : "border-[#E4B43F]/55 bg-[#231B08]/88"
                       }`}
                     >
                       {language === "it" ? "Carica foto o video" : "Add photo or video"}
@@ -909,7 +1038,7 @@ export default function UploadPage() {
                         setNoPhotoConfirmOpen(false);
                         openCameraPicker();
                       }}
-                      className="w-full rounded-full border border-white/14 bg-white/10 px-5 py-3 text-[0.96rem] font-bold text-white shadow-[0_12px_26px_rgba(0,0,0,0.18)] backdrop-blur-md transition active:scale-[0.985]"
+                      className="w-full rounded-full border border-[#2BD36B]/48 bg-[#092112]/88 px-5 py-3 text-[0.96rem] font-bold text-[#B9F8C9] shadow-[0_12px_26px_rgba(0,0,0,0.18),0_0_18px_rgba(43,211,107,0.12)] backdrop-blur-md transition active:scale-[0.985]"
                     >
                       {language === "it" ? "Scatta" : "Shoot"}
                     </button>
@@ -920,32 +1049,6 @@ export default function UploadPage() {
                     <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={showPreviousMedia} />
                     <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={showNextMedia} />
                   </>
-                ) : null}
-                {activeMediaIsImage ? (
-                  <div className="absolute left-3 top-3 z-[7] flex items-center gap-1.5 rounded-full border border-white/14 bg-black/56 p-1 text-white shadow-[0_10px_24px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        adjustActiveMediaZoom(-0.12);
-                      }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[1.15rem] font-bold leading-none active:scale-95"
-                      aria-label="Zoom out"
-                    >
-                      -
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        adjustActiveMediaZoom(0.12);
-                      }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/16 text-[1.05rem] font-bold leading-none active:scale-95"
-                      aria-label="Zoom in"
-                    >
-                      +
-                    </button>
-                  </div>
                 ) : null}
                 {canAddMoreMedia ? (
                   <button
@@ -1237,7 +1340,9 @@ export default function UploadPage() {
                 initial={{ opacity: 0, y: 16, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 12, scale: 0.98 }}
-                className="absolute left-5 right-5 z-[34] rounded-[1.35rem] border border-white/14 bg-[#111]/94 p-3 text-white shadow-[0_22px_52px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+                className={`absolute left-5 right-5 z-[34] rounded-[1.35rem] border p-3 text-white shadow-[0_22px_52px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl ${
+                  isRestaurantUpload ? "border-[#E64646]/34 bg-[#140909]/95" : "border-[#E4B43F]/34 bg-[#11100B]/95"
+                }`}
                 style={{ bottom: "5.55rem" }}
               >
                 <div className="text-[0.98rem] font-bold leading-tight">
@@ -1247,7 +1352,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={continueWithoutPhoto}
-                    className="rounded-full border border-white/14 bg-white/10 px-4 py-2.5 text-[0.92rem] font-bold text-white/82 transition active:scale-[0.985]"
+                    className="rounded-full border border-white/14 bg-white/8 px-4 py-2.5 text-[0.92rem] font-bold text-white/82 transition active:scale-[0.985]"
                   >
                     {language === "it" ? "si" : "yes"}
                   </button>
@@ -1257,9 +1362,7 @@ export default function UploadPage() {
                       setNoPhotoConfirmOpen(false);
                       openLibraryPicker();
                     }}
-                    className={`rounded-full px-4 py-2.5 text-[0.92rem] font-black transition active:scale-[0.985] ${
-                      isRestaurantUpload ? "bg-[#E64646] text-white" : "bg-[#E4B43F] text-black"
-                    }`}
+                    className="rounded-full border border-[#2BD36B]/48 bg-[#092112] px-4 py-2.5 text-[0.92rem] font-black text-[#B9F8C9] shadow-[0_0_18px_rgba(43,211,107,0.12)] transition active:scale-[0.985]"
                   >
                     {language === "it" ? "carica foto" : "upload photo"}
                   </button>

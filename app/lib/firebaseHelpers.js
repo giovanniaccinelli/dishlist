@@ -1445,13 +1445,64 @@ export async function addShoppingListIngredient(userId, ingredient, options = {}
 
 export async function addDishIngredientsToShoppingList(userId, dishData) {
   if (!userId || String(dishData?.dishMode || "").toLowerCase() === "restaurant") return false;
-  const ingredients = getDishIngredientItems(dishData);
+  const ingredientsByKey = new Map();
+  getDishIngredientItems(dishData).forEach((ingredient) => {
+    const name = normalizeIngredientName(ingredient?.name);
+    const key = normalizeIngredientKey(name);
+    if (!name || !key || ingredientsByKey.has(key)) return;
+    ingredientsByKey.set(key, {
+      key,
+      name,
+      color: ingredient?.color || inferIngredientColorId(name),
+    });
+  });
+  const ingredients = Array.from(ingredientsByKey.values());
   if (!ingredients.length) return true;
-  const sourceDishId = String(dishData?.id || "");
-  const results = await Promise.all(
-    ingredients.map((ingredient) => addShoppingListIngredient(userId, ingredient, { sourceDishId }))
-  );
-  return results.every(Boolean);
+  const sourceDishId = normalizeIngredientKey(dishData?.id || "");
+  try {
+    const refs = ingredients.map((ingredient) => shoppingListItemDoc(userId, ingredient.key));
+    const snaps = await Promise.all(refs.map((itemRef) => getDoc(itemRef)));
+    const batch = writeBatch(db);
+    ingredients.forEach((ingredient, index) => {
+      const itemRef = refs[index];
+      const snap = snaps[index];
+      if (snap.exists()) {
+        const data = snap.data() || {};
+        const existingDishIds = Array.isArray(data.dishIds) ? data.dishIds.map((id) => normalizeIngredientKey(id)).filter(Boolean) : [];
+        const alreadyFromDish = sourceDishId && existingDishIds.includes(sourceDishId);
+        batch.set(
+          itemRef,
+          {
+            name: ingredient.name,
+            key: ingredient.key,
+            color: data.color || ingredient.color,
+            ...(!alreadyFromDish ? { count: Math.max(1, Number(data.count || 1)) + 1 } : {}),
+            ...(sourceDishId && !alreadyFromDish ? { dishIds: arrayUnion(sourceDishId) } : {}),
+            ...(!sourceDishId ? { manualCount: Math.max(0, Number(data.manualCount || 0)) + 1 } : {}),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        return;
+      }
+      batch.set(itemRef, {
+        key: ingredient.key,
+        name: ingredient.name,
+        color: ingredient.color,
+        count: 1,
+        dishIds: sourceDishId ? [sourceDishId] : [],
+        manualCount: sourceDishId ? 0 : 1,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    });
+    await batch.commit();
+    clearReadCache(userId);
+    return true;
+  } catch (err) {
+    console.error("Failed to add dish ingredients to shopping list:", err);
+    return false;
+  }
 }
 
 export async function getShoppingListItems(userId) {

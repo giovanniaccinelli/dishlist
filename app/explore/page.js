@@ -15,7 +15,6 @@ import {
   Leaf,
   MessageCircle,
   MoonStar,
-  Plus,
   Snowflake,
   Sun,
   Search as SearchIcon,
@@ -665,17 +664,14 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`no-accent-border mb-3 flex w-full items-center justify-between rounded-[1.05rem] px-1 py-1 text-left ${
+        className={`no-accent-border mb-3 flex w-full items-center justify-between rounded-[1.05rem] px-0 py-1 text-left ${
           darkMode ? "text-white" : "text-black"
         }`}
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
           <h2 className={`text-[1.28rem] font-bold tracking-tight ${darkMode ? "text-white" : "text-black"}`}>Leaderboard</h2>
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#D7B443] text-black shadow-[0_0_16px_rgba(215,180,67,0.26)]">
-            <Plus size={15} strokeWidth={2.5} />
-          </span>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#D7B443]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#E64646]">
             <path d="M4 11.25H8.35V20H4V11.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
             <path d="M9.85 4H14.15V20H9.85V4Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />
             <path d="M15.65 8.25H20V20H15.65V8.25Z" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round" />

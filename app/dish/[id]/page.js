@@ -213,6 +213,12 @@ export default function DishDetail() {
             });
       const found = items.find((d) => d.id === dishId) || null;
       if (found) {
+        if (found.isPublic === false && found.owner !== userId) {
+          setDish(null);
+          setDeckList([]);
+          setLoadingDish(false);
+          return;
+        }
         setDish(found);
         if (listOwnerId) {
           const stats = await getStoryPushStatsForUser(listOwnerId);
@@ -245,7 +251,7 @@ export default function DishDetail() {
       }
       setLoadingDish(false);
     })();
-  }, [dishId, listOwnerId, source, mode, listId, returnTo, deckIds, orderedDeckIds]);
+  }, [dishId, listOwnerId, source, mode, listId, returnTo, deckIds, orderedDeckIds, userId]);
 
   const orderedList = useMemo(() => {
     if (!dish) return [];
@@ -370,6 +376,12 @@ export default function DishDetail() {
             .sort((a, b) => (b?.createdAt?.seconds || 0) - (a?.createdAt?.seconds || 0));
       const found = items.find((d) => d.id === dishId) || items[0] || null;
       if (found) {
+        if (found.isPublic === false && found.owner !== userId) {
+          setDish(null);
+          setDeckList([]);
+          setLoadingDish(false);
+          return;
+        }
         setDish(found);
         if (mode === "shuffle") {
           const others = items.filter((d) => d.id !== found.id);

@@ -3008,12 +3008,10 @@ export default function Profile() {
                         listId: activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system" ? activeDishlist.id : activeDishlist?.id,
                       });
                     }}
-                    className={`absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition ${
-                      darkMode ? "border-white/12 bg-black/70 text-white" : "border-black/8 bg-white/92 text-black"
-                    }`}
+                    className="no-accent-border absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-white/90 drop-shadow-[0_2px_5px_rgba(0,0,0,0.55)] transition hover:bg-black/10"
                     aria-label="Dish actions"
                   >
-                    <MoreHorizontal size={18} strokeWidth={2.4} />
+                    <MoreHorizontal size={19} strokeWidth={2.35} />
                   </button>
                 )}
               </motion.div>

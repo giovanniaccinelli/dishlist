@@ -519,6 +519,15 @@ export default function PublicProfile() {
 
       const nextProfileUser = { id: userDoc.id, ...userDoc.data() };
       const candidateIds = aliases.length ? aliases : getProfileIdCandidates(routeProfileId, userDoc);
+      const canSeePrivateDishes = candidateIds.some((candidateId) => String(candidateId || "") === String(user?.uid || ""));
+      const publicOnly = (items = []) => canSeePrivateDishes ? items : items.filter((dish) => dish?.isPublic !== false);
+      const publicCustomDishlists = (lists = []) =>
+        canSeePrivateDishes
+          ? lists
+          : lists.map((dishlist) => {
+              const dishes = publicOnly(dishlist.dishes || []);
+              return { ...dishlist, dishes, count: dishes.length };
+            });
       setProfileAliasIds(candidateIds);
       setProfileUser(nextProfileUser);
       setProfileLoadFailed(false);
@@ -535,10 +544,10 @@ export default function PublicProfile() {
       if (cancelled) return;
 
       const [dishesRes, savedRes, toTryRes, customRes, storiesRes, statsRes] = results;
-      setDishes(dishesRes.status === "fulfilled" ? mergeUniqueById([dishesRes.value]) : []);
-      setSavedDishes(savedRes.status === "fulfilled" ? mergeUniqueById(savedRes.value) : []);
-      setToTryDishes(toTryRes.status === "fulfilled" ? mergeUniqueById(toTryRes.value) : []);
-      setCustomDishlists(customRes.status === "fulfilled" ? sanitizeCustomDishlists(mergeUniqueById(customRes.value)) : []);
+      setDishes(dishesRes.status === "fulfilled" ? publicOnly(mergeUniqueById([dishesRes.value])) : []);
+      setSavedDishes(savedRes.status === "fulfilled" ? publicOnly(mergeUniqueById(savedRes.value)) : []);
+      setToTryDishes(toTryRes.status === "fulfilled" ? publicOnly(mergeUniqueById(toTryRes.value)) : []);
+      setCustomDishlists(customRes.status === "fulfilled" ? publicCustomDishlists(sanitizeCustomDishlists(mergeUniqueById(customRes.value))) : []);
       setActiveStories(storiesRes.status === "fulfilled" ? mergeUniqueById(storiesRes.value) : []);
       setStoryPushStats(statsRes.status === "fulfilled" ? mergeStoryStats(statsRes.value) : {});
     })();
@@ -546,7 +555,7 @@ export default function PublicProfile() {
     return () => {
       cancelled = true;
     };
-	  }, [routeProfileId]);
+	  }, [routeProfileId, user?.uid]);
 
   useEffect(() => {
     if (!routeProfileId || profileLoadFailed || !profileUser) return;

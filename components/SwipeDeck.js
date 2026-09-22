@@ -582,21 +582,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
 
   useEffect(() => {
     const savedSide = currentCardStableKey ? cardSidePreferenceRef.current.get(currentCardStableKey) : undefined;
-    const restaurant = currentCard?.restaurant || null;
-    const lat = Number(restaurant?.lat);
-    const lng = Number(restaurant?.lng);
-    const noPhotoBackOnly =
-      !hasDishMedia(currentCard) &&
-      (
-        isRecipeOnlyDish(currentCard) ||
-        (
-          isRestaurantDish(currentCard) &&
-          Boolean(getSafeRestaurantPlaceId(currentCard) && getSafeRestaurantLabel(currentCard)) &&
-          Number.isFinite(lat) &&
-          Number.isFinite(lng)
-        )
-      );
-    setShowRecipe(typeof savedSide === "boolean" ? savedSide || noPhotoBackOnly : noPhotoBackOnly);
+    const recipeOnly = hasDishMedia(currentCard) && isRecipeOnlyDish(currentCard);
+    setShowRecipe(typeof savedSide === "boolean" ? savedSide || recipeOnly : recipeOnly);
     setRecipePanelModal(null);
     setDescriptionModalOpen(false);
     setDescriptionTruncated(false);
@@ -774,9 +761,9 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         },
       ]
     : [];
-  const currentCardRecipeOnly = isRecipeOnlyDish(currentCard);
-  const currentCardNoMediaBackOnly = !hasDishMedia(currentCard) && hasCardBackView;
-  const visibleRecipe = currentCardRecipeOnly || currentCardNoMediaBackOnly || showRecipe;
+  const currentCardNoMediaSingleSide = !hasDishMedia(currentCard);
+  const currentCardRecipeOnly = hasDishMedia(currentCard) && isRecipeOnlyDish(currentCard);
+  const visibleRecipe = currentCardRecipeOnly || (!currentCardNoMediaSingleSide && showRecipe);
   const visibleRestaurantMap = visibleRecipe && hasRestaurantMapView;
   const showShoppingListAction = Boolean(onShoppingListAction) && !currentCardIsRestaurant && !visibleRestaurantMap;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
@@ -1470,22 +1457,47 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (!dishHasMedia) {
       const placeholderIsRestaurant = isRestaurantDish(dish);
       const placeholderRestaurantLabel = getSafeRestaurantLabel(dish);
-      const placeholderIngredients = placeholderIsRestaurant ? [] : getDishIngredientItems(dish).slice(0, 7);
+      const placeholderRestaurant = dish?.restaurant || null;
+      const placeholderRestaurantLat = Number(placeholderRestaurant?.lat);
+      const placeholderRestaurantLng = Number(placeholderRestaurant?.lng);
+      const placeholderRestaurantPlaceId = getSafeRestaurantPlaceId(dish);
+      const placeholderHasRestaurantMap =
+        placeholderIsRestaurant &&
+        Boolean(placeholderRestaurantPlaceId && placeholderRestaurantLabel) &&
+        Number.isFinite(placeholderRestaurantLat) &&
+        Number.isFinite(placeholderRestaurantLng);
+      const placeholderRestaurantGroups = placeholderHasRestaurantMap
+        ? [
+            {
+              placeId: placeholderRestaurantPlaceId,
+              name: placeholderRestaurantLabel,
+              address: placeholderRestaurant?.address || "",
+              lat: placeholderRestaurantLat,
+              lng: placeholderRestaurantLng,
+              googleMapsUrl: getRestaurantGoogleMapsUrl(placeholderRestaurant),
+              dishes: dish ? [dish] : [],
+              users: [],
+            },
+          ]
+        : [];
+      const placeholderIngredients = placeholderIsRestaurant ? [] : getDishIngredientItems(dish).slice(0, 8);
       return (
-        <div className={`relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden bg-black px-6 text-center ${
+        <div className={`relative h-full w-full overflow-hidden bg-black ${
           placeholderIsRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.76),inset_0_0_42px_rgba(230,70,70,0.18)]" : "shadow-[inset_0_0_0_2px_rgba(228,180,63,0.76),inset_0_0_42px_rgba(228,180,63,0.16)]"
         }`}>
-          {placeholderIsRestaurant ? (
-            <>
-              <RatingStars value={dish?.rating} size="text-[1.05rem]" readOnly />
-              {placeholderRestaurantLabel ? (
-                <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/82 px-4 py-1.5 text-[13px] font-black text-[#FFD4D0] shadow-[0_0_22px_rgba(230,70,70,0.16)]">
-                  {placeholderRestaurantLabel}
-                </div>
-              ) : null}
-            </>
+          {placeholderHasRestaurantMap ? (
+            <div className="pointer-events-none absolute inset-0">
+              <RestaurantMapView
+                groups={placeholderRestaurantGroups}
+                initialSelectedPlaceId={placeholderRestaurantPlaceId}
+                showSearch={false}
+                embedded
+              />
+            </div>
+          ) : placeholderIsRestaurant ? (
+            <div className="absolute inset-0 bg-black" />
           ) : (
-            <div className="flex max-h-[9rem] flex-wrap items-center justify-center gap-2 overflow-hidden">
+            <div className="absolute bottom-[9.4rem] left-5 right-5 z-10 flex max-h-[4.35rem] flex-wrap items-end gap-2 overflow-hidden">
               {placeholderIngredients.length ? (
                 placeholderIngredients.map((item) => (
                   <span
@@ -1503,6 +1515,13 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               )}
             </div>
           )}
+          {placeholderRestaurantLabel && placeholderIsRestaurant ? (
+            <div className="pointer-events-none absolute bottom-[9.4rem] left-5 right-5 z-10">
+              <div className="inline-flex max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-4 py-1.5 text-[13px] font-black leading-none text-[#FFD4D0] shadow-[0_0_22px_rgba(230,70,70,0.18)]">
+                {placeholderRestaurantLabel}
+              </div>
+            </div>
+          ) : null}
           {typeof onImageReady === "function" ? (
             <img alt="" src={DEFAULT_DISH_IMAGE} className="hidden" onLoad={onImageReady} />
           ) : null}
@@ -2077,7 +2096,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               onPointerMoveCapture={(e) => e.stopPropagation()}
               onPointerUpCapture={(e) => e.stopPropagation()}
             >
-              {hasAnyRecipeText && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
+              {hasAnyRecipeText && !currentCardRecipeOnly && !currentCardNoMediaSingleSide ? (
                 <div className={`no-accent-border flex h-8 items-center gap-0.5 rounded-full border-2 ${restaurantAccentBorder} bg-black/65 p-0.5 text-white`}>
                   <button
                     data-no-drag="true"
@@ -2278,7 +2297,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               {actionLoading ? <span className="dishlist-action-spinner" /> : actionLabel === "+" ? <Plus size={26} strokeWidth={2.1} /> : actionLabel}
             </button>
           ) : null}
-          {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
+          {((darkMode && hasAnyRecipeText) || hasRestaurantMapView) && !currentCardRecipeOnly && !currentCardNoMediaSingleSide ? (
             <div
               data-no-drag="true"
               className={`absolute left-5 z-40`}
@@ -2331,7 +2350,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               className={`absolute inset-0 ${visibleRecipe ? "pointer-events-none" : "pointer-events-auto"}`}
               style={{ backfaceVisibility: "hidden" }}
             >
-              {!visibleRecipe && hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? (
+              {!visibleRecipe && hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaSingleSide ? (
                 <button
                   type="button"
                   className="absolute inset-0 z-10"
@@ -2383,7 +2402,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                       onVideoRef: (node) => {
                         currentVideoRef.current = node;
                       },
-                      onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? () => setCardBackVisible(true) : null,
+                      onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaSingleSide ? () => setCardBackVisible(true) : null,
                     })}
                   </div>
                 </div>
@@ -2393,7 +2412,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   onVideoRef: (node) => {
                     currentVideoRef.current = node;
                   },
-                  onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaBackOnly ? () => setCardBackVisible(true) : null,
+                  onPlainTap: hasCardBackView && !currentCardRecipeOnly && !currentCardNoMediaSingleSide ? () => setCardBackVisible(true) : null,
                 })
               )}
               {!visibleRecipe && isDishVideo(currentCard) ? (

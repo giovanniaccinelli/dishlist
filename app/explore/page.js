@@ -473,15 +473,15 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
   const ingredientItems = !isRestaurant ? getDishIngredientItems(dish).slice(0, 5) : [];
   const accentColor = isRestaurant ? "#E64646" : "#E4B43F";
   const renderNoPhotoMetadata = () => (
-    <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex min-h-7 items-end">
+    <div className={`pointer-events-none absolute z-20 flex items-end ${isRestaurant ? "inset-x-3 bottom-[3.4rem]" : "inset-x-2 bottom-2 min-h-7"}`}>
       {isRestaurant ? (
         restaurantName ? (
-          <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFD4D0] shadow-[0_0_16px_rgba(230,70,70,0.16)]">
+          <div className="max-w-full truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3.5 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.18)]">
             {restaurantName}
           </div>
         ) : null
       ) : (
-        <div className="flex max-h-[3.85rem] flex-wrap items-end gap-1 overflow-hidden">
+        <div className="flex max-h-[3.1rem] flex-wrap items-end gap-1 overflow-hidden">
           {ingredientItems.length ? (
             ingredientItems.map((item) => (
               <span
@@ -529,11 +529,6 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
               className="pointer-events-none absolute inset-0 rounded-[0.95rem]"
               style={{ boxShadow: `inset 0 0 0 2px ${accentColor}, inset 0 0 28px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}
             />
-            {isRestaurant ? (
-              <div className="pointer-events-none absolute left-2.5 top-2.5 z-20">
-                <RatingStars value={dish.rating} size="text-[0.9rem]" readOnly />
-              </div>
-            ) : null}
             {renderNoPhotoMetadata()}
           </div>
         )}

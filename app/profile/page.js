@@ -3009,17 +3009,14 @@ export default function Profile() {
                       />
                       {isRestaurantPreview ? (
                         <>
-                          <div className="pointer-events-none absolute left-2.5 top-2.5 z-20">
-                            <RatingStars value={dish.rating} size="text-[0.95rem]" readOnly />
-                          </div>
                           {restaurantName ? (
-                            <div className="pointer-events-none absolute bottom-[3.15rem] left-3 right-3 z-20 max-w-[calc(100%-1.5rem)] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-2.5 py-1 text-[10px] font-black leading-none text-[#FFD4D0] shadow-[0_0_16px_rgba(230,70,70,0.16)]">
+                            <div className="pointer-events-none absolute bottom-[3.9rem] left-3 right-3 z-20 max-w-[calc(100%-1.5rem)] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3.5 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0] shadow-[0_0_18px_rgba(230,70,70,0.18)]">
                               {restaurantName}
                             </div>
                           ) : null}
                         </>
                       ) : (
-                        <div className="pointer-events-none absolute bottom-[3.05rem] left-3 right-3 z-20 flex max-h-[3.85rem] flex-wrap items-end gap-1 overflow-hidden">
+                        <div className="pointer-events-none absolute bottom-[3.05rem] left-3 right-3 z-20 flex max-h-[3.1rem] flex-wrap items-end gap-1 overflow-hidden">
                           {ingredientItems.length ? (
                             ingredientItems.map((item) => (
                               <span

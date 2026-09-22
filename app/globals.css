@@ -221,6 +221,22 @@
   border-color: #e64646 !important;
 }
 
+.dish-card-shell--default {
+  box-shadow:
+    inset 0 0 34px rgba(228, 180, 63, 0.18),
+    inset 0 0 10px rgba(228, 180, 63, 0.20),
+    0 28px 64px rgba(0, 0, 0, 0.16),
+    0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.dish-card-shell--restaurant {
+  box-shadow:
+    inset 0 0 34px rgba(230, 70, 70, 0.18),
+    inset 0 0 10px rgba(230, 70, 70, 0.20),
+    0 28px 64px rgba(0, 0, 0, 0.16),
+    0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
 .explore-row,
 .explore-row * {
   box-shadow: none !important;
@@ -750,6 +766,50 @@ html.dark .profile-search-input,
 
 html.dark .dish-card-shell {
   box-shadow: 0 28px 74px rgba(0, 0, 0, 0.56), 0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+html.dark .dish-card-shell--default {
+  box-shadow:
+    inset 0 0 38px rgba(228, 180, 63, 0.24),
+    inset 0 0 12px rgba(228, 180, 63, 0.24),
+    0 28px 74px rgba(0, 0, 0, 0.56),
+    0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+html.dark .dish-card-shell--restaurant {
+  box-shadow:
+    inset 0 0 38px rgba(230, 70, 70, 0.24),
+    inset 0 0 12px rgba(230, 70, 70, 0.24),
+    0 28px 74px rgba(0, 0, 0, 0.56),
+    0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+.pressable-card.default-accent-border {
+  box-shadow:
+    inset 0 0 24px rgba(228, 180, 63, 0.13),
+    0 14px 34px rgba(0, 0, 0, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.pressable-card.restaurant-accent-border {
+  box-shadow:
+    inset 0 0 24px rgba(230, 70, 70, 0.14),
+    0 14px 34px rgba(0, 0, 0, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.dark .pressable-card.default-accent-border {
+  box-shadow:
+    inset 0 0 26px rgba(228, 180, 63, 0.20),
+    0 14px 34px rgba(0, 0, 0, 0.32),
+    0 4px 12px rgba(0, 0, 0, 0.24) !important;
+}
+
+html.dark .pressable-card.restaurant-accent-border {
+  box-shadow:
+    inset 0 0 26px rgba(230, 70, 70, 0.22),
+    0 14px 34px rgba(0, 0, 0, 0.32),
+    0 4px 12px rgba(0, 0, 0, 0.24) !important;
 }
 
 html.dark :where(.shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, [class*="shadow-["]) {

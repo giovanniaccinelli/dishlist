@@ -1466,7 +1466,14 @@ export default function RestaurantMapView({
                 type="button"
                 onClick={() => setRestaurantFilter("all")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "all" ? "" : "text-white"}`}
-                style={restaurantFilter === "all" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "all"
+                  ? {
+                      background: "linear-gradient(135deg,#12351F 0%,#0B2114 100%)",
+                      boxShadow: "inset 0 0 0 1px rgba(43,211,107,0.55), 0 0 16px rgba(43,211,107,0.20)",
+                      color: "#A7F3BE",
+                      WebkitTextFillColor: "#A7F3BE",
+                    }
+                  : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Tutti" : "All"}
               </button>
@@ -1474,7 +1481,14 @@ export default function RestaurantMapView({
                 type="button"
                 onClick={() => setRestaurantFilter("following")}
                 className={`no-accent-border inline-flex h-7 items-center rounded-full px-3 text-[12px] font-semibold leading-none transition-colors ${restaurantFilter === "following" ? "" : "text-white"}`}
-                style={restaurantFilter === "following" ? { backgroundColor: "#F2C94C", color: "#050505", WebkitTextFillColor: "#050505" } : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
+                style={restaurantFilter === "following"
+                  ? {
+                      background: "linear-gradient(135deg,#12351F 0%,#0B2114 100%)",
+                      boxShadow: "inset 0 0 0 1px rgba(43,211,107,0.55), 0 0 16px rgba(43,211,107,0.20)",
+                      color: "#A7F3BE",
+                      WebkitTextFillColor: "#A7F3BE",
+                    }
+                  : { color: "#FFFFFF", WebkitTextFillColor: "#FFFFFF" }}
               >
                 {language === "it" ? "Seguiti" : "Following"}
               </button>
@@ -1484,14 +1498,14 @@ export default function RestaurantMapView({
         <AnimatePresence>
           {categoryFilterOpen ? (
             <motion.div
-              className="absolute inset-0 z-[40] bg-[#F6F1E8] p-3"
+              className="absolute inset-0 z-[40] bg-[#070907] p-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setCategoryFilterOpen(false)}
             >
               <motion.div
-                className="absolute left-3 right-3 top-[6.55rem] max-h-[min(24rem,calc(100%-8rem))] overflow-y-auto rounded-[1.25rem] border border-black/8 bg-white p-3 text-black shadow-[0_16px_42px_rgba(0,0,0,0.16)]"
+                className="absolute left-3 right-3 top-[6.55rem] max-h-[min(24rem,calc(100%-8rem))] overflow-y-auto rounded-[1.25rem] border border-[#2BD36B]/22 bg-[#0D0D0D] p-3 text-white shadow-[0_18px_50px_rgba(0,0,0,0.36),0_0_28px_rgba(43,211,107,0.08)]"
                 initial={{ y: -8, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -8, opacity: 0 }}
@@ -1502,7 +1516,7 @@ export default function RestaurantMapView({
                   <button
                     type="button"
                     onClick={() => setCategoryFilterOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-black/6 text-black/55"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/8 text-white/65"
                     aria-label="Close category filters"
                   >
                     <X size={15} />
@@ -1516,7 +1530,7 @@ export default function RestaurantMapView({
                       setCategoryFilterOpen(false);
                     }}
                     className={`flex min-h-11 items-center gap-2 rounded-[0.95rem] border px-3 text-left text-sm font-bold ${
-                      !restaurantCategoryFilter ? "border-[#F2C94C] bg-[#F2C94C] text-black" : "border-black/8 bg-[#F7F3EA] text-black/72"
+                      !restaurantCategoryFilter ? "border-[#2BD36B] bg-[#0D2117] text-[#A7F3BE] shadow-[inset_0_0_18px_rgba(43,211,107,0.18),0_0_18px_rgba(43,211,107,0.10)]" : "border-white/10 bg-white/6 text-white/72"
                     }`}
                   >
                     {language === "it" ? "Tutte" : "All"}
@@ -1534,8 +1548,13 @@ export default function RestaurantMapView({
                           setSelectedPlaceId("__none__");
                         }}
                         className={`flex min-h-11 items-center gap-2 rounded-[0.95rem] border px-3 text-left text-sm font-bold ${
-                          active ? "border-[#F2C94C] bg-[#F2C94C] text-black" : "border-black/8 bg-[#F7F3EA] text-black/78"
+                          active ? "text-white" : category.chip || "border-white/10 bg-white/8 text-white"
                         }`}
+                        style={active ? {
+                          borderColor: category.fill,
+                          background: `linear-gradient(135deg,${category.stroke} 0%,#101010 100%)`,
+                          boxShadow: `inset 0 0 18px ${category.fill}44, 0 0 18px ${category.fill}22`,
+                        } : undefined}
                       >
                         {Icon ? <Icon className="h-5 w-5 shrink-0" /> : null}
                         <span className="min-w-0 truncate">{category.label}</span>

@@ -48,7 +48,15 @@ import {
   removeShoppingListIngredient,
   normalizeProfilePhotoURL,
 } from "../lib/firebaseHelpers";
-import { dispatchPushEvent } from "../lib/pushClient";
+import {
+  disableNativePushToken,
+  dispatchPushEvent,
+  getLastNativePushToken,
+  isNativePushSupported,
+  registerForNativePush,
+  requestNativePushPermission,
+  saveNativePushToken,
+} from "../lib/pushClient";
 import BottomNav from "../../components/BottomNav";
 import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
@@ -754,14 +762,28 @@ export default function Profile() {
     const next = !notificationsPermissionEnabled;
     window.localStorage.setItem(NOTIFICATIONS_ASKED_KEY, "1");
     if (!next) {
+      if (isNativePushSupported()) {
+        const token = await getLastNativePushToken().catch(() => "");
+        if (token) await disableNativePushToken(user?.uid, token).catch(() => {});
+      }
       window.localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, "0");
       setNotificationsPermissionEnabled(false);
       window.dispatchEvent(new Event("dishlist:notifications-setting-change"));
       return;
     }
-    let granted = true;
-    if ("Notification" in window && Notification.permission !== "granted") {
-      granted = (await Notification.requestPermission()) === "granted";
+    let granted = false;
+    if (isNativePushSupported()) {
+      const result = await requestNativePushPermission();
+      granted = result === "granted";
+      if (granted) {
+        await registerForNativePush().catch(() => {});
+        const token = await getLastNativePushToken().catch(() => "");
+        if (token) await saveNativePushToken(user?.uid, token).catch(() => {});
+      }
+    } else if ("Notification" in window) {
+      granted = Notification.permission === "granted" || (await Notification.requestPermission()) === "granted";
+    } else {
+      granted = true;
     }
     window.localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, granted ? "1" : "0");
     setNotificationsPermissionEnabled(granted);

@@ -10,7 +10,6 @@ import { FullScreenLoading } from "../../components/AppLoadingState";
 import AppToast from "../../components/AppToast";
 import AuthPromptModal from "../../components/AuthPromptModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
-import ImageFramingModal from "../../components/ImageFramingModal";
 import IngredientPillEditor from "../../components/IngredientPillEditor";
 import StoryMealTagModal from "../../components/StoryMealTagModal";
 import { CookingHomeIcon, DISH_MODE_COOKING, DISH_MODE_RESTAURANT, RestaurantForkKnifeIcon } from "../../components/DishModeControls";
@@ -59,6 +58,63 @@ function UploadBlockingOverlay({ label = "Caricamento..." }) {
   );
 }
 
+const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
+
+function loadImageElement(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
+  });
+}
+
+async function cropImageFileToFrame(file, frame = {}, frameSize = 1000) {
+  if (!file?.type?.startsWith("image/")) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await loadImageElement(url);
+    const naturalWidth = image.naturalWidth || image.width;
+    const naturalHeight = image.naturalHeight || image.height;
+    const safeFrameSize = Math.max(1, Number(frameSize || 1000));
+    const zoom = Math.max(1, Number(frame.zoom || 1));
+    const offsetX = Number(frame.x || 0);
+    const offsetY = Number(frame.y || 0);
+    const coverScale = Math.max(safeFrameSize / naturalWidth, safeFrameSize / naturalHeight);
+    const scale = coverScale * zoom;
+    const sourceSize = safeFrameSize / scale;
+    const sourceX = naturalWidth / 2 + (0 - safeFrameSize / 2 - offsetX) / scale;
+    const sourceY = naturalHeight / 2 + (0 - safeFrameSize / 2 - offsetY) / scale;
+    const safeSourceX = clampNumber(sourceX, 0, Math.max(0, naturalWidth - sourceSize));
+    const safeSourceY = clampNumber(sourceY, 0, Math.max(0, naturalHeight - sourceSize));
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 1200;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    ctx.fillStyle = "#0B0B0B";
+    ctx.fillRect(0, 0, 1200, 1200);
+    ctx.drawImage(image, safeSourceX, safeSourceY, sourceSize, sourceSize, 0, 0, 1200, 1200);
+    return await new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          const baseName = file?.name ? file.name.replace(/\.[^.]+$/, "") : "dish";
+          resolve(new File([blob], `${baseName}-framed.jpg`, { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.9
+      );
+    });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export default function UploadPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -84,7 +140,8 @@ export default function UploadPage() {
   const [dishMediaFiles, setDishMediaFiles] = useState([]);
   const [dishMediaPreviews, setDishMediaPreviews] = useState([]);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [imageFramingFile, setImageFramingFile] = useState(null);
+  const [dishMediaFrames, setDishMediaFrames] = useState([]);
+  const [noPhotoConfirmOpen, setNoPhotoConfirmOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -116,6 +173,8 @@ export default function UploadPage() {
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const dishMediaPreviewsRef = useRef([]);
+  const mediaFrameRef = useRef(null);
+  const mediaFrameGestureRef = useRef(null);
 
   const navigateBackToOrigin = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -266,36 +325,10 @@ export default function UploadPage() {
     );
   };
 
-  const applySelectedMediaFile = (file, { append = false } = {}) => {
-    if (!file) return;
-    if (append && dishMediaFiles.length >= 5) return;
-    const nextPreview = { url: URL.createObjectURL(file), type: file.type || "" };
-    setDishMediaFiles((previousFiles) => {
-      const nextFiles = append ? [...previousFiles, file].slice(0, 5) : [file];
-      setDishImage(nextFiles[0] || null);
-      setActiveMediaIndex(append ? nextFiles.length - 1 : 0);
-      return nextFiles;
-    });
-    setDishMediaPreviews((previousPreviews) => {
-      const previewsToRevoke = append ? [] : previousPreviews;
-      previewsToRevoke.forEach((item) => {
-        if (item?.url) URL.revokeObjectURL(item.url);
-      });
-      const nextPreviews = append ? [...previousPreviews, nextPreview].slice(0, 5) : [nextPreview];
-      setPreview(nextPreviews[0]?.url || null);
-      return nextPreviews;
-    });
-    setMediaPickerOpen(false);
-  };
-
   const handleImageFilesChange = (files, { append = false } = {}) => {
     const incomingFiles = Array.from(files || []).filter((file) => file?.type?.startsWith("image/") || file?.type?.startsWith("video/"));
     if (!incomingFiles.length) return;
     setMediaPickerOpen(false);
-    if (incomingFiles.length === 1 && incomingFiles[0].type?.startsWith("image/")) {
-      setImageFramingFile({ file: incomingFiles[0], append });
-      return;
-    }
     const remainingSlots = append ? Math.max(0, 5 - dishMediaFiles.length) : 5;
     if (remainingSlots <= 0) return;
     const usableFiles = incomingFiles[0]?.type?.startsWith("video/")
@@ -317,11 +350,10 @@ export default function UploadPage() {
       setPreview(merged[0]?.url || null);
       return merged;
     });
-  };
-
-  const handleImageChange = (file) => {
-    if (!file) return;
-    handleImageFilesChange([file]);
+    setDishMediaFrames((previousFrames) => {
+      const nextFrames = usableFiles.map(() => ({ x: 0, y: 0, zoom: 1 }));
+      return append ? [...previousFrames, ...nextFrames].slice(0, 5) : nextFrames;
+    });
   };
 
   const handleDrop = (e) => {
@@ -377,8 +409,12 @@ export default function UploadPage() {
       void hapticImpact("medium");
     try {
       let imageFields = { imageURL: "", cardURL: "", thumbURL: "", mediaType: "image", mediaMimeType: "", mediaItems: [] };
-      if (dishMediaFiles.length) {
-        imageFields = await uploadDishMediaItems(dishMediaFiles, user.uid);
+        if (dishMediaFiles.length) {
+          const frameSize = mediaFrameRef.current?.getBoundingClientRect?.()?.width || 1000;
+          const framedMediaFiles = await Promise.all(
+            dishMediaFiles.map((file, index) => cropImageFileToFrame(file, dishMediaFrames[index], frameSize))
+          );
+          imageFields = await uploadDishMediaItems(framedMediaFiles, user.uid);
       }
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
@@ -582,6 +618,10 @@ export default function UploadPage() {
       setTimeout(() => setToast(""), 1200);
       return;
     }
+    if (composerStep === 1 && dishMediaFiles.length === 0) {
+      setNoPhotoConfirmOpen(true);
+      return;
+    }
     if (composerStep === 2 && isRestaurantUpload && !restaurant?.placeId) {
       setToastVariant("error");
       setToast(language === "it" ? "Scegli il ristorante" : "Restaurant is required");
@@ -607,6 +647,12 @@ export default function UploadPage() {
     });
   };
 
+  const continueWithoutPhoto = () => {
+    setNoPhotoConfirmOpen(false);
+    setComposerStep((prev) => Math.min(prev + 1, COMPOSER_STEPS.length - 1));
+    setComposerDetailsOpen(true);
+  };
+
   const closeUploadFlow = () => {
     setShowUploadForm(false);
     setUploadStep(0);
@@ -622,7 +668,96 @@ export default function UploadPage() {
       });
       return [];
     });
+    setDishMediaFrames([]);
+    setNoPhotoConfirmOpen(false);
     setActiveMediaIndex(0);
+  };
+
+  const clampMediaFrame = (frame = {}) => {
+    const zoom = clampNumber(Number(frame.zoom || 1), 1, 3.2);
+    const frameSize = mediaFrameRef.current?.getBoundingClientRect?.()?.width || 320;
+    const maxOffset = Math.max(0, (frameSize * (zoom - 1)) / 2);
+    return {
+      x: clampNumber(Number(frame.x || 0), -maxOffset, maxOffset),
+      y: clampNumber(Number(frame.y || 0), -maxOffset, maxOffset),
+      zoom,
+    };
+  };
+
+  const updateActiveMediaFrame = (updater) => {
+    setDishMediaFrames((previousFrames) => {
+      const nextFrames = [...previousFrames];
+      const currentFrame = nextFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 };
+      nextFrames[activeMediaIndex] = clampMediaFrame(typeof updater === "function" ? updater(currentFrame) : updater);
+      return nextFrames;
+    });
+  };
+
+  const adjustActiveMediaZoom = (delta) => {
+    updateActiveMediaFrame((frame) => ({
+      ...frame,
+      zoom: Number(frame.zoom || 1) + delta,
+    }));
+  };
+
+  const showPreviousMedia = () => {
+    void hapticImpact("light");
+    setActiveMediaIndex((index) => Math.max(0, index - 1));
+  };
+
+  const showNextMedia = () => {
+    void hapticImpact("light");
+    setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1));
+  };
+
+  const handleMediaFramePointerDown = (event) => {
+    const activePreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
+    if (!activePreview || activePreview.type?.startsWith("video/")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    mediaFrameGestureRef.current = {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      moved: false,
+      startFrame: dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 },
+    };
+  };
+
+  const handleMediaFramePointerMove = (event) => {
+    const gesture = mediaFrameGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - gesture.clientX;
+    const deltaY = event.clientY - gesture.clientY;
+    if (Math.abs(deltaX) + Math.abs(deltaY) > 4) gesture.moved = true;
+    updateActiveMediaFrame({
+      ...gesture.startFrame,
+      x: Number(gesture.startFrame.x || 0) + deltaX,
+      y: Number(gesture.startFrame.y || 0) + deltaY,
+    });
+  };
+
+  const handleMediaFramePointerUp = (event) => {
+    const gesture = mediaFrameGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    if (!gesture.moved && dishMediaPreviews.length > 1) {
+      const rect = mediaFrameRef.current?.getBoundingClientRect?.();
+      if (rect) {
+        const tapX = event.clientX - rect.left;
+        if (tapX < rect.width * 0.35) showPreviousMedia();
+        if (tapX > rect.width * 0.65) showNextMedia();
+      }
+    }
+    mediaFrameGestureRef.current = null;
+  };
+
+  const handleMediaFrameWheel = (event) => {
+    const activePreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
+    if (!activePreview || activePreview.type?.startsWith("video/")) return;
+    event.preventDefault();
+    adjustActiveMediaZoom(event.deltaY > 0 ? -0.08 : 0.08);
   };
 
   const renderGuidedComposer = () => {
@@ -642,6 +777,8 @@ export default function UploadPage() {
     const pillShowsFrontSelected = showExtraStep || showReviewStep;
     const hideBaseText = detailPanelOpen || showTagsStep || showExtraStep || showGhostModeStep;
     const activeMediaPreview = dishMediaPreviews[activeMediaIndex] || dishMediaPreviews[0] || null;
+    const activeMediaFrame = dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 };
+    const activeMediaIsImage = Boolean(activeMediaPreview && !activeMediaPreview.type?.startsWith("video/"));
     const hasMediaCarousel = dishMediaPreviews.length > 1;
     const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
     const uploadMediaBounds = {
@@ -650,12 +787,20 @@ export default function UploadPage() {
     };
     const classicBottomShade =
       "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.46) 62%, rgba(0,0,0,0.18) 82%, rgba(0,0,0,0) 100%)";
-    const renderUploadMediaPreview = (mediaPreview, className = "absolute inset-0 h-full w-full object-cover") => {
+    const renderUploadMediaPreview = (mediaPreview, frame = null, className = "absolute inset-0 h-full w-full object-cover") => {
       if (!mediaPreview) return null;
       if (mediaPreview.type?.startsWith("video/")) {
         return <video src={mediaPreview.url} className={className} autoPlay muted loop playsInline controls={false} />;
       }
-      return <img src={mediaPreview.url} alt="Dish preview" className={className} />;
+      const imageStyle = frame
+        ? {
+            transform: `translate(calc(-50% + ${Number(frame.x || 0)}px), calc(-50% + ${Number(frame.y || 0)}px)) scale(${Number(frame.zoom || 1)})`,
+          }
+        : undefined;
+      const imageClassName = frame
+        ? "absolute left-1/2 top-1/2 h-full w-full max-w-none select-none object-cover will-change-transform"
+        : className;
+      return <img src={mediaPreview.url} alt="Dish preview" className={imageClassName} style={imageStyle} draggable={false} />;
     };
     const cardTopIdentity = (
       <>
@@ -715,20 +860,25 @@ export default function UploadPage() {
           {composerStep >= 1 ? (
             <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={uploadMediaBounds}>
               <div
+                ref={mediaFrameRef}
+                onPointerDown={handleMediaFramePointerDown}
+                onPointerMove={handleMediaFramePointerMove}
+                onPointerUp={handleMediaFramePointerUp}
+                onPointerCancel={() => {
+                  mediaFrameGestureRef.current = null;
+                }}
+                onWheel={handleMediaFrameWheel}
                 className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${
                   isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"
                 }`}
+                style={{ touchAction: activeMediaIsImage ? "none" : "auto" }}
               >
                 {activeMediaPreview ? (
-                  renderUploadMediaPreview(activeMediaPreview)
+                  renderUploadMediaPreview(activeMediaPreview, activeMediaIsImage ? activeMediaFrame : null)
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setMediaPickerOpen(true)}
-                    className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 text-white"
-                  >
+                  <div className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-3 px-8 text-white">
                     <div
-                      className={`flex h-[4.85rem] w-[4.85rem] items-center justify-center rounded-[1.4rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
+                      className={`flex h-[4.2rem] w-[4.2rem] items-center justify-center rounded-[1.3rem] border-2 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)] ${
                         isRestaurantUpload ? "restaurant-accent-border" : "default-accent-border"
                       }`}
                       style={{
@@ -739,14 +889,63 @@ export default function UploadPage() {
                     >
                       <Camera size={28} />
                     </div>
-                    <div className="text-[1rem] font-bold">{language === "it" ? "Carica foto o video" : "Add photo or video"}</div>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setNoPhotoConfirmOpen(false);
+                        openLibraryPicker();
+                      }}
+                      className={`w-full rounded-full px-5 py-3 text-[0.98rem] font-black shadow-[0_14px_32px_rgba(0,0,0,0.24)] transition active:scale-[0.985] ${
+                        isRestaurantUpload ? "bg-[#E64646] text-white" : "bg-[#E4B43F] text-black"
+                      }`}
+                    >
+                      {language === "it" ? "Carica foto o video" : "Add photo or video"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setNoPhotoConfirmOpen(false);
+                        openCameraPicker();
+                      }}
+                      className="w-full rounded-full border border-white/14 bg-white/10 px-5 py-3 text-[0.96rem] font-bold text-white shadow-[0_12px_26px_rgba(0,0,0,0.18)] backdrop-blur-md transition active:scale-[0.985]"
+                    >
+                      {language === "it" ? "Scatta" : "Shoot"}
+                    </button>
+                  </div>
                 )}
-                {activeMediaPreview && hasMediaCarousel ? (
+                {activeMediaPreview && hasMediaCarousel && !activeMediaIsImage ? (
                   <>
-                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={() => { void hapticImpact("light"); setActiveMediaIndex((index) => Math.max(0, index - 1)); }} />
-                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={() => { void hapticImpact("light"); setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1)); }} />
+                    <button type="button" className="absolute left-0 top-0 h-full w-1/2" aria-label="Previous image" onClick={showPreviousMedia} />
+                    <button type="button" className="absolute right-0 top-0 h-full w-1/2" aria-label="Next image" onClick={showNextMedia} />
                   </>
+                ) : null}
+                {activeMediaIsImage ? (
+                  <div className="absolute left-3 top-3 z-[7] flex items-center gap-1.5 rounded-full border border-white/14 bg-black/56 p-1 text-white shadow-[0_10px_24px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        adjustActiveMediaZoom(-0.12);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[1.15rem] font-bold leading-none active:scale-95"
+                      aria-label="Zoom out"
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        adjustActiveMediaZoom(0.12);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/16 text-[1.05rem] font-bold leading-none active:scale-95"
+                      aria-label="Zoom in"
+                    >
+                      +
+                    </button>
+                  </div>
                 ) : null}
                 {canAddMoreMedia ? (
                   <button
@@ -973,7 +1172,7 @@ export default function UploadPage() {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.12),transparent_30%),linear-gradient(155deg,#151515_0%,#030303_100%)]" />
                 <div className="absolute left-5 right-5 z-[4] flex items-center justify-center" style={uploadMediaBounds}>
                   <div className={`relative aspect-square max-h-full w-full overflow-hidden rounded-[1.45rem] border bg-black shadow-[0_18px_48px_rgba(0,0,0,0.34)] ${isRestaurantUpload ? "border-[#E64646]/60" : "border-[#E4B43F]/60"}`}>
-                    {activeMediaPreview ? renderUploadMediaPreview(activeMediaPreview) : null}
+                    {activeMediaPreview ? renderUploadMediaPreview(activeMediaPreview, activeMediaIsImage ? activeMediaFrame : null) : null}
                     {canAddMoreMedia ? (
                       <button
                         type="button"
@@ -1031,6 +1230,43 @@ export default function UploadPage() {
               </div>
             </motion.div>
           ) : null}
+
+          <AnimatePresence>
+            {noPhotoConfirmOpen && composerStep === 1 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                className="absolute left-5 right-5 z-[34] rounded-[1.35rem] border border-white/14 bg-[#111]/94 p-3 text-white shadow-[0_22px_52px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+                style={{ bottom: "5.55rem" }}
+              >
+                <div className="text-[0.98rem] font-bold leading-tight">
+                  {language === "it" ? "Sei sicuro di non voler caricare una foto?" : "Are you sure you do not want to upload a photo?"}
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={continueWithoutPhoto}
+                    className="rounded-full border border-white/14 bg-white/10 px-4 py-2.5 text-[0.92rem] font-bold text-white/82 transition active:scale-[0.985]"
+                  >
+                    {language === "it" ? "si" : "yes"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNoPhotoConfirmOpen(false);
+                      openLibraryPicker();
+                    }}
+                    className={`rounded-full px-4 py-2.5 text-[0.92rem] font-black transition active:scale-[0.985] ${
+                      isRestaurantUpload ? "bg-[#E64646] text-white" : "bg-[#E4B43F] text-black"
+                    }`}
+                  >
+                    {language === "it" ? "carica foto" : "upload photo"}
+                  </button>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <div className="absolute right-6 z-[26] flex items-center gap-2" style={{ bottom: "1.25rem" }}>
             {composerStep >= 1 ? (
@@ -1130,8 +1366,8 @@ export default function UploadPage() {
           </div>
         </div>
         
-        <input ref={libraryInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => handleImageChange(e.target.files?.[0])} />
-        <input ref={cameraInputRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={(e) => handleImageChange(e.target.files?.[0])} />
+        <input ref={libraryInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => handleImageFilesChange(e.target.files, { append: Boolean(dishMediaFiles.length) })} />
+        <input ref={cameraInputRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={(e) => handleImageFilesChange(e.target.files, { append: Boolean(dishMediaFiles.length) })} />
       </motion.div>
     );
   };
@@ -1300,7 +1536,7 @@ export default function UploadPage() {
                   <input
                     ref={libraryInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     onChange={(e) => handleImageFilesChange(e.target.files, { append: Boolean(dishMediaFiles.length) })}
                     className="hidden"
@@ -1311,7 +1547,7 @@ export default function UploadPage() {
                     type="file"
                     accept="image/*,video/*"
                     capture="environment"
-                    onChange={(e) => handleImageChange(e.target.files?.[0])}
+                    onChange={(e) => handleImageFilesChange(e.target.files, { append: Boolean(dishMediaFiles.length) })}
                     className="hidden"
                     disabled={loadingUpload}
                   />
@@ -1672,7 +1908,7 @@ export default function UploadPage() {
       <input
         ref={libraryInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         onChange={(event) => handleImageFilesChange(event.target.files, { append: Boolean(dishMediaFiles.length) })}
         className="hidden"
@@ -1683,7 +1919,7 @@ export default function UploadPage() {
         type="file"
         accept="image/*,video/*"
         capture="environment"
-        onChange={(event) => handleImageChange(event.target.files?.[0])}
+        onChange={(event) => handleImageFilesChange(event.target.files, { append: Boolean(dishMediaFiles.length) })}
         className="hidden"
         disabled={loadingUpload}
       />
@@ -1887,18 +2123,6 @@ export default function UploadPage() {
             </motion.div>
           </motion.div>
         ) : null}
-        <ImageFramingModal
-          open={Boolean(imageFramingFile)}
-          file={imageFramingFile?.file || null}
-          dishName={dishName}
-          ownerName={user?.displayName || "You"}
-          onCancel={() => setImageFramingFile(null)}
-          onConfirm={(framedFile) => {
-            const append = Boolean(imageFramingFile?.append);
-            setImageFramingFile(null);
-            applySelectedMediaFile(framedFile, { append });
-          }}
-        />
         {showAuthPrompt && (
           <AuthPromptModal
             open={showAuthPrompt}

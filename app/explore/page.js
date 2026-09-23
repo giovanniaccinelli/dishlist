@@ -737,7 +737,9 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
             <path d="M3 20H21" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
           </svg>
         </div>
-        <ChevronRight size={22} className={`mr-2 ${darkMode ? "text-white/70" : "text-black/45"} transition-transform ${open ? "rotate-90" : ""}`} />
+        <span className="explore-expand-btn no-accent-border flex h-10 w-10 items-center justify-center rounded-[1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)]">
+          <ChevronRight size={18} className={`${darkMode ? "text-white/70" : "text-black/45"} transition-transform ${open ? "rotate-90" : ""}`} />
+        </span>
       </button>
       {open ? (
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

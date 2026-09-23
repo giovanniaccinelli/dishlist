@@ -3333,12 +3333,10 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setProfileMapPreviewOpen((open) => !open)}
-                  className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] border ${
-                    darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"
-                  }`}
+                  className="explore-expand-btn no-accent-border inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] text-black"
                   aria-label={profileMapPreviewOpen ? "Hide map" : "Show map"}
                 >
-                  <ChevronRight size={17} className={profileMapPreviewOpen ? "rotate-90" : ""} />
+                  <ChevronRight size={18} className={`transition-transform ${profileMapPreviewOpen ? "rotate-90" : ""}`} />
                 </button>
               </div>
               {profileMapPreviewOpen ? (

@@ -5,11 +5,36 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Lock, Plus, ShoppingCart, Star, Trash2 } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
+import { hasDishMedia } from "../app/lib/dishContent";
+import { getDishIngredientItems, getIngredientPillStyle } from "../app/lib/ingredients";
 import { TAG_DECOR } from "../app/lib/tagDecor";
 import { getTagForDishlistId, isTagDishlistId } from "../app/lib/tagDishlists";
 import { getDarkTagChipClass, getTagChipClass } from "../app/lib/tags";
 
 const PICKER_ORDER = ["all_dishes", "saved", "uploaded", "to_try"];
+
+function NoPhotoDishPreview({ dish, compact = false }) {
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredients = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, compact ? 3 : 6);
+  return (
+    <div className={`relative flex h-full w-full items-start justify-center overflow-hidden bg-black px-1.5 text-white ${compact ? "pt-3" : "pt-7"}`} style={{ boxShadow: `inset 0 0 0 2px ${isRestaurant ? "#E64646" : "#E4B43F"}, inset 0 0 28px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}>
+      {isRestaurant ? (
+        <span className={`max-w-[88%] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-2 py-1 font-black leading-none text-[#FFD4D0] ${compact ? "text-[7px]" : "text-[11px]"}`}>
+          {restaurantName || "Ristorante"}
+        </span>
+      ) : (
+        <div className={`flex w-full flex-wrap justify-center gap-1 overflow-hidden ${compact ? "max-h-8" : "max-h-[3.5rem]"}`}>
+          {ingredients.map((item) => (
+            <span key={item.key} className={`inline-flex max-w-[92%] items-center rounded-full border font-bold leading-none ${compact ? "min-h-4 px-1 py-0.5 text-[7px]" : "min-h-5 px-2 py-0.5 text-[10px]"}`} style={getIngredientPillStyle(item.color, true)}>
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StoryStatIcon({ size = 18 }) {
   return (
@@ -251,15 +276,19 @@ export default function DishlistPickerModal({
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>
                 <div className={`relative w-full overflow-hidden ${isSortingCard ? "h-40" : "h-52"}`}>
-                  <img
-                    src={getDishImageUrl(dishPreview)}
-                    alt={dishPreview?.name || dishName}
-                    className="h-full w-full object-cover"
-                    onError={(event) => {
-                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                    }}
-                  />
-                  <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/78 via-55% to-transparent px-4 text-white ${isSortingCard ? "min-h-[54%] pb-3 pt-12" : "min-h-[62%] pb-4 pt-16"}`}>
+                  {hasDishMedia(dishPreview) ? (
+                    <img
+                      src={getDishImageUrl(dishPreview)}
+                      alt={dishPreview?.name || dishName}
+                      className="h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <NoPhotoDishPreview dish={dishPreview} />
+                  )}
+                  <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end ${hasDishMedia(dishPreview) ? "bg-gradient-to-t from-black via-black/78 via-55% to-transparent" : "bg-[#151515]"} px-4 text-white ${isSortingCard ? "min-h-[54%] pb-3 pt-12" : "min-h-[62%] pb-4 pt-16"}`}>
                     {!isSortingCard ? (
                       <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/64">
                         {t("Salvato")}
@@ -275,14 +304,20 @@ export default function DishlistPickerModal({
               <div className={`mb-4 flex shrink-0 items-center gap-3 rounded-[1.35rem] border p-2.5 ${
                 darkMode ? "border-white/10 bg-white/6" : "border-black/8 bg-white/85"
               }`}>
-                <img
-                  src={getDishImageUrl(dishPreview, "thumb")}
-                  alt={dishPreview?.name || dishName}
-                  className="h-16 w-16 rounded-[1rem] object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[1rem]">
+                  {hasDishMedia(dishPreview) ? (
+                    <img
+                      src={getDishImageUrl(dishPreview, "thumb")}
+                      alt={dishPreview?.name || dishName}
+                      className="h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <NoPhotoDishPreview dish={dishPreview} compact />
+                  )}
+                </div>
                 <div className="min-w-0">
                   <div className={`text-xs font-semibold uppercase tracking-[0.14em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
                     {t("Just swiped")}
@@ -426,15 +461,20 @@ export default function DishlistPickerModal({
                                 {Array.from({ length: 4 }).map((_, slot) => {
                                   const dish = preview[slot];
                                   return dish ? (
-                                    <img
-                                      key={`${dishlist.id}-${dish.id || slot}`}
-                                      src={getDishImageUrl(dish, "thumb")}
-                                      alt={dish.name || ""}
-                                      className="aspect-square rounded-[0.75rem] object-cover"
-                                      onError={(event) => {
-                                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                      }}
-                                    />
+                                    <div key={`${dishlist.id}-${dish.id || slot}`} className="aspect-square overflow-hidden rounded-[0.75rem]">
+                                      {hasDishMedia(dish) ? (
+                                        <img
+                                          src={getDishImageUrl(dish, "thumb")}
+                                          alt={dish.name || ""}
+                                          className="h-full w-full object-cover"
+                                          onError={(event) => {
+                                            event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                          }}
+                                        />
+                                      ) : (
+                                        <NoPhotoDishPreview dish={dish} compact />
+                                      )}
+                                    </div>
                                   ) : (
                                     <div key={`${dishlist.id}-empty-${slot}`} className={`aspect-square rounded-[0.75rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`} />
                                   );

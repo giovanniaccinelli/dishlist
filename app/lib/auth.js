@@ -158,18 +158,60 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user?.uid) return undefined;
     const userRef = doc(db, "users", user.uid);
+    const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const sessionRef = doc(db, "users", user.uid, "accessSessions", sessionId);
+    const startedAtMs = Date.now();
+    setDoc(
+      sessionRef,
+      {
+        startedAt: serverTimestamp(),
+        startedAtMs,
+        lastSeenAt: serverTimestamp(),
+        lastSeenAtMs: startedAtMs,
+        durationMs: 0,
+        path: typeof window !== "undefined" ? window.location.pathname : "",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      },
+      { merge: true }
+    ).catch(() => {});
     const touchPresence = () => {
-      setDoc(userRef, { lastActiveAt: serverTimestamp() }, { merge: true }).catch(() => {});
+      const now = Date.now();
+      setDoc(userRef, { lastActiveAt: serverTimestamp(), lastActiveAtMs: now }, { merge: true }).catch(() => {});
+      setDoc(
+        sessionRef,
+        {
+          lastSeenAt: serverTimestamp(),
+          lastSeenAtMs: now,
+          durationMs: Math.max(0, now - startedAtMs),
+        },
+        { merge: true }
+      ).catch(() => {});
+    };
+    const finishSession = () => {
+      const now = Date.now();
+      setDoc(
+        sessionRef,
+        {
+          endedAt: serverTimestamp(),
+          endedAtMs: now,
+          lastSeenAt: serverTimestamp(),
+          lastSeenAtMs: now,
+          durationMs: Math.max(0, now - startedAtMs),
+        },
+        { merge: true }
+      ).catch(() => {});
     };
     touchPresence();
     const intervalId = window.setInterval(touchPresence, 60000);
     const handleVisibility = () => {
       if (!document.hidden) touchPresence();
+      else finishSession();
     };
-    const handlePageHide = () => touchPresence();
+    const handlePageHide = () => finishSession();
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("pagehide", handlePageHide);
     return () => {
+      finishSession();
       window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("pagehide", handlePageHide);

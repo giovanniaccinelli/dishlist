@@ -37,6 +37,7 @@ import { CalendarDays, ChevronLeft, ListChecks, NotebookText, Plus, Search, Send
 import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
+import { getDishIngredientItems, getIngredientPillStyle } from "../../lib/ingredients";
 import { resolveRepresentativeTags } from "../../lib/profileTags";
 import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import { TAG_DECOR } from "../../lib/tagDecor";
@@ -231,15 +232,33 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
         const borderColor = isRestaurant ? "#E64646" : "#E4B43F";
         const accentClass = isRestaurant ? "restaurant-accent-border" : "default-accent-border";
         if (!hasDishMedia(dish)) {
+          const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+          const ingredientItems = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, 3);
           return (
             <div
               key={`${dishlist.id}-${dish.id}-${index}`}
-              className={`no-accent-border flex aspect-square w-full items-end overflow-hidden rounded-[0.85rem] border-2 p-2 text-left text-[10px] font-bold leading-tight ${accentClass} ${
-                darkMode ? "bg-[#171717] text-white" : "bg-[#FBF8F1] text-black"
-              }`}
-              style={{ borderColor }}
+              className={`no-accent-border relative aspect-square w-full overflow-hidden rounded-[0.85rem] border-2 bg-black text-white ${accentClass}`}
+              style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
-              <span className="line-clamp-3">{dish.name || t("Untitled dish")}</span>
+              {isRestaurant && restaurantName ? (
+                <span className="absolute bottom-7 left-1.5 right-1.5 z-10 truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/86 px-1.5 py-0.5 text-[7px] font-black leading-none text-[#FFD4D0]">
+                  {restaurantName}
+                </span>
+              ) : null}
+              {!isRestaurant && ingredientItems.length ? (
+                <div className="absolute bottom-7 left-1.5 right-1.5 z-10 flex max-h-8 flex-wrap gap-0.5 overflow-hidden">
+                  {ingredientItems.map((item) => (
+                    <span
+                      key={item.key}
+                      className="inline-flex min-h-4 items-center rounded-full border px-1 py-0.5 text-[7px] font-bold leading-none"
+                      style={getIngredientPillStyle(item.color, true)}
+                    >
+                      {item.name}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <span className="absolute bottom-1.5 left-1.5 right-1.5 z-10 truncate text-left text-[9px] font-bold leading-tight text-white">{dish.name || t("Untitled dish")}</span>
             </div>
           );
         }
@@ -259,6 +278,27 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function MiniNoPhotoDishPreview({ dish }) {
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredients = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, 5);
+  return (
+    <div className="relative flex h-40 w-full items-start justify-center overflow-hidden bg-black px-3 pt-8 text-white" style={{ boxShadow: `inset 0 0 0 2px ${isRestaurant ? "#E64646" : "#E4B43F"}, inset 0 0 30px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}>
+      {isRestaurant ? (
+        <span className="max-w-[86%] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0]">{restaurantName || "Ristorante"}</span>
+      ) : (
+        <div className="flex max-h-[3.55rem] w-full flex-wrap justify-center gap-1 overflow-hidden">
+          {ingredients.map((item) => (
+            <span key={item.key} className="inline-flex min-h-6 max-w-[92%] items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none" style={getIngredientPillStyle(item.color, true)}>
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1504,17 +1544,21 @@ export default function PublicProfile() {
                   <span className="sr-only">Open dish card</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
-                <img
-                  src={getDishImageUrl(dish, "thumb")}
-                  alt={dish.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-40 object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                {hasDishMedia(dish) ? (
+                  <img
+                    src={getDishImageUrl(dish, "thumb")}
+                    alt={dish.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-40 object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
+                ) : (
+                  <MiniNoPhotoDishPreview dish={dish} />
+                )}
+                <div className={`${hasDishMedia(dish) ? "absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent" : "relative bg-[#151515]"} px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1`}>
                   <div className="text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
                     {dish.name || "Untitled dish"}
                   </div>

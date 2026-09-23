@@ -21,6 +21,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CircleUserRound, Plus, Send, Users } from "lucide-react";
 import { TAG_OPTIONS, getTagChipClass } from "../lib/tags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
+import { hasDishMedia } from "../lib/dishContent";
+import { getDishIngredientItems, getIngredientPillStyle } from "../lib/ingredients";
 import SaversModal from "../../components/SaversModal";
 import DishlistPickerModal from "../../components/DishlistPickerModal";
 import DishRatingBadge from "../../components/DishRatingBadge";
@@ -31,6 +33,27 @@ import { dishModeMatches, DISH_MODE_ALL, DishModeFilterButton, DishModeFilterMod
 const DISHES_PAGE_SIZE = 24;
 const DISHES_SCROLL_BATCH = 3;
 const DISH_ROW_ESTIMATE_PX = 148;
+
+function NoPhotoDishPreview({ dish }) {
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredients = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, 5);
+  return (
+    <div className="relative flex h-40 w-full items-start justify-center overflow-hidden bg-black px-3 pt-8 text-white" style={{ boxShadow: `inset 0 0 0 2px ${isRestaurant ? "#E64646" : "#E4B43F"}, inset 0 0 30px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}>
+      {isRestaurant ? (
+        <span className="max-w-[86%] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0]">{restaurantName || "Ristorante"}</span>
+      ) : (
+        <div className="flex max-h-[3.55rem] w-full flex-wrap justify-center gap-1 overflow-hidden">
+          {ingredients.map((item) => (
+            <span key={item.key} className="inline-flex min-h-6 max-w-[92%] items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none" style={getIngredientPillStyle(item.color, true)}>
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const normalizeTag = (tag) => String(tag || "").trim().toLowerCase();
 const normalizeSearchText = (value) =>
@@ -711,16 +734,20 @@ export default function Dishes() {
                   <span className="sr-only">Open dish card</span>
                 </Link>
                 <DishRatingBadge dish={dish} />
-                <img
-                  src={imageSrc}
-                  alt={dish.name}
-                  className="w-full h-40 object-cover"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
+                {hasDishMedia(dish) ? (
+                  <img
+                    src={imageSrc}
+                    alt={dish.name}
+                    className="w-full h-40 object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
+                ) : (
+                  <NoPhotoDishPreview dish={dish} />
+                )}
+                <div className={`${hasDishMedia(dish) ? "absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent" : "relative bg-[#151515]"} px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1`}>
                   <button
                     type="button"
                     onClick={(e) => {

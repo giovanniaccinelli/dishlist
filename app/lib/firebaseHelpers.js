@@ -1975,6 +1975,42 @@ export async function getLeaderboardAnswersForUser(userIds = [], includeAnonymou
   }
 }
 
+export async function getAdminUserAccessAnalytics({ maxUsers = 80, maxSessionsPerUser = 25 } = {}) {
+  try {
+    const usersSnap = await getDocs(query(collection(db, "users"), orderBy("lastActiveAtMs", "desc"), limitResults(maxUsers)));
+    const users = await Promise.all(
+      usersSnap.docs.map(async (userDoc) => {
+        const data = userDoc.data() || {};
+        let sessions = [];
+        try {
+          const sessionsSnap = await getDocs(
+            query(collection(db, "users", userDoc.id, "accessSessions"), orderBy("startedAtMs", "desc"), limitResults(maxSessionsPerUser))
+          );
+          sessions = sessionsSnap.docs.map((sessionDoc) => ({
+            id: sessionDoc.id,
+            ...sessionDoc.data(),
+          }));
+        } catch (sessionErr) {
+          console.warn("Failed to load access sessions:", sessionErr);
+        }
+        return {
+          id: userDoc.id,
+          displayName: data.displayName || data.name || "User",
+          email: data.email || "",
+          photoURL: normalizeProfilePhotoURL(data.photoURL || ""),
+          lastActiveAt: data.lastActiveAt || null,
+          lastActiveAtMs: Number(data.lastActiveAtMs || data.lastActiveAt?.seconds * 1000 || 0),
+          sessions,
+        };
+      })
+    );
+    return users.sort((a, b) => (b.lastActiveAtMs || 0) - (a.lastActiveAtMs || 0));
+  } catch (err) {
+    console.error("Failed to load admin user access analytics:", err);
+    return [];
+  }
+}
+
 export async function getCommentsForDish(dishId, max = 20, scope = "dish", direction = "desc") {
   if (!dishId) return [];
   try {

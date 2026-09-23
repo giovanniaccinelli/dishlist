@@ -61,8 +61,8 @@ function sortShoppingItems(items = []) {
 function NoPhotoRecipePreview({ dish, darkMode, compact = false }) {
   const ingredients = getDishIngredientItems(dish).slice(0, compact ? 4 : 8);
   return (
-    <div className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-[0.95rem] border-2 bg-black px-2 py-2 text-white shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.16)] ${compact ? "" : "aspect-square"}`} style={{ borderColor: "#E4B43F" }}>
-      <div className={`flex w-full flex-wrap justify-center gap-1 overflow-hidden ${compact ? "max-h-[2.55rem]" : "max-h-[4.9rem]"}`}>
+    <div className={`relative flex h-full w-full items-start justify-center overflow-hidden rounded-[0.95rem] border-2 bg-black px-2 text-white shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.16)] ${compact ? "py-2" : "aspect-square pt-7"}`} style={{ borderColor: "#E4B43F" }}>
+      <div className={`flex w-full flex-wrap justify-center gap-1 overflow-hidden ${compact ? "max-h-[2.55rem]" : "max-h-[3.55rem]"}`}>
         {ingredients.length ? (
           ingredients.map((item) => (
             <span
@@ -399,15 +399,16 @@ export default function ShoppingListPage() {
             visibleDishes.map((dish) => {
               const ingredients = getDishIngredientItems(dish);
               const addedCount = ingredients.filter((ingredient) => ingredientKeys.has(ingredient.key)).length;
+              const noMedia = !hasDishMedia(dish);
               return (
                 <button
                   key={dish.id}
                   type="button"
                   onClick={() => setSelectedDish(dish)}
                   disabled={Boolean(savingKey)}
-                  className={`overflow-hidden rounded-[1.2rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
+                  className={`overflow-hidden rounded-[1.2rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${darkMode || noMedia ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white text-black"}`}
                 >
-                  {hasDishMedia(dish) ? (
+                  {!noMedia ? (
                     <img
                       src={getDishImageUrl(dish, "thumb")}
                       alt={dish.name || ""}
@@ -419,9 +420,9 @@ export default function ShoppingListPage() {
                   ) : (
                     <NoPhotoRecipePreview dish={dish} darkMode={darkMode} />
                   )}
-                  <div className="p-3">
-                    <div className="truncate text-sm font-black">{dish.name || "Dish"}</div>
-                    <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                  <div className={`${noMedia ? "bg-[#151515] text-white" : ""} p-3`}>
+                    <div className={`truncate text-sm font-black ${noMedia ? "text-white" : ""}`}>{dish.name || "Dish"}</div>
+                    <div className={`mt-1 text-xs font-semibold ${darkMode || noMedia ? "text-white/48" : "text-black/45"}`}>
                       {addedCount}/{ingredients.length} {language === "it" ? "in lista" : "in list"}
                     </div>
                   </div>
@@ -445,18 +446,24 @@ export default function ShoppingListPage() {
             className={`max-h-[82dvh] w-full max-w-md overflow-hidden rounded-[1.75rem] border shadow-[0_24px_70px_rgba(0,0,0,0.34)] ${darkMode ? "border-white/12 bg-[#101010] text-white" : "border-black/10 bg-white text-black"}`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={getDishImageUrl(selectedDish)}
-                alt={selectedDish.name || ""}
-                className="h-full w-full object-cover"
-                onError={(event) => {
-                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                }}
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-4 pb-4 pt-14 text-white">
-                <div className="text-[1.55rem] font-black leading-none">{selectedDish.name || "Dish"}</div>
-              </div>
+            <div className={hasDishMedia(selectedDish) ? "relative h-48 overflow-hidden" : "relative px-4 pb-3 pt-5"}>
+              {hasDishMedia(selectedDish) ? (
+                <>
+                  <img
+                    src={getDishImageUrl(selectedDish)}
+                    alt={selectedDish.name || ""}
+                    className="h-full w-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                    }}
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-4 pb-4 pt-14 text-white">
+                    <div className="text-[1.55rem] font-black leading-none">{selectedDish.name || "Dish"}</div>
+                  </div>
+                </>
+              ) : (
+                <div className="pr-12 text-[1.55rem] font-black leading-none">{selectedDish.name || "Dish"}</div>
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedDish(null)}

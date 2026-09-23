@@ -11,11 +11,36 @@ import BottomNav from "../../../components/BottomNav";
 import AuthPromptModal from "../../../components/AuthPromptModal";
 import AppBackButton from "../../../components/AppBackButton";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
+import { hasDishMedia } from "../../lib/dishContent";
+import { getDishIngredientItems, getIngredientPillStyle } from "../../lib/ingredients";
 import { deleteMessageForSender, getAllDishlistsForUser, markConversationAsRead, sendMessage } from "../../lib/firebaseHelpers";
 import { ArrowLeft, Check, CheckCheck, Plus, Search, SendHorizonal, Trash2, Users, X } from "lucide-react";
 import { useLanguage } from "../../../components/LanguageProvider";
 
 const readMarksKey = (userId) => `directs:readMarks:${userId}`;
+
+function NoPhotoDishPreview({ dish, compact = false }) {
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredients = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, compact ? 4 : 6);
+  return (
+    <div className={`relative flex h-full w-full items-start justify-center overflow-hidden bg-black px-2 pt-6 text-white shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.16)] ${isRestaurant ? "shadow-[inset_0_0_0_2px_rgba(230,70,70,0.72),inset_0_0_30px_rgba(230,70,70,0.16)]" : ""}`}>
+      {isRestaurant ? (
+        <span className="max-w-[86%] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-3 py-1.5 text-[12px] font-black leading-none text-[#FFD4D0]">
+          {restaurantName || "Ristorante"}
+        </span>
+      ) : (
+        <div className="flex max-h-[3.5rem] w-full flex-wrap justify-center gap-1 overflow-hidden">
+          {ingredients.map((item) => (
+            <span key={item.key} className="inline-flex min-h-5 max-w-[92%] items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none" style={getIngredientPillStyle(item.color, true)}>
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const toDate = (value) => {
   if (!value) return null;
@@ -312,6 +337,7 @@ export default function DirectChat() {
           if (m.type === "dish") {
             const dish = dishMap[m.dishId];
             const imageSrc = getDishImageUrl(dish, "thumb");
+            const noMedia = !hasDishMedia(dish);
             return (
               <div key={m.id}>
                 {showDayDivider && dayLabel ? (
@@ -369,15 +395,21 @@ export default function DirectChat() {
                               : "border-black/10 bg-white"
                         }`}
                       >
-                        <img
-                          src={imageSrc}
-                          alt={dish?.name || "Dish"}
-                          className="w-full h-28 object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                          }}
-                        />
-                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent px-3 py-2 text-white pointer-events-none flex h-[56%] flex-col justify-end gap-0.5">
+                        {noMedia ? (
+                          <div className="h-28 w-full">
+                            <NoPhotoDishPreview dish={dish} />
+                          </div>
+                        ) : (
+                          <img
+                            src={imageSrc}
+                            alt={dish?.name || "Dish"}
+                            className="w-full h-28 object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                            }}
+                          />
+                        )}
+                        <div className={`${noMedia ? "relative bg-[#151515]" : "absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/55 via-55% to-transparent"} px-3 py-2 text-white pointer-events-none flex ${noMedia ? "" : "h-[56%]"} flex-col justify-end gap-0.5`}>
                           <div className="flex min-w-0 items-center gap-1.5">
                             <div className="min-w-0 flex-1 truncate text-[12px] font-semibold leading-tight">
                               {dish?.name || "Dish"}
@@ -606,6 +638,7 @@ export default function DirectChat() {
                   <div className="grid grid-cols-2 gap-3 content-start">
                     {visiblePickerDishes.map((dish) => {
                       const imageSrc = getDishImageUrl(dish, "thumb");
+                      const noMedia = !hasDishMedia(dish);
                       return (
                         <button
                           key={dish.id}
@@ -613,15 +646,19 @@ export default function DirectChat() {
                           onClick={() => setConfirmDish(dish)}
                           className={`relative block w-full aspect-[0.82] overflow-hidden rounded-[22px] border-2 ${isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border"} bg-white text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)]`}
                         >
-                          <img
-                            src={imageSrc}
-                            alt={dish.name || "Dish"}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                            }}
-                          />
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white">
+                            {noMedia ? (
+                              <NoPhotoDishPreview dish={dish} />
+                            ) : (
+                              <img
+                                src={imageSrc}
+                                alt={dish.name || "Dish"}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                }}
+                              />
+                            )}
+                            <div className={`${noMedia ? "absolute inset-x-0 bottom-0 bg-[#151515]" : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent"} px-2 py-2 text-white`}>
                             <div className="truncate text-xs font-semibold">{dish.name || "Dish"}</div>
                           </div>
                         </button>
@@ -648,15 +685,21 @@ export default function DirectChat() {
           >
             <div className="mb-4 text-lg font-bold">Send this dish?</div>
             <div className={`relative overflow-hidden rounded-[22px] border-2 ${isRestaurantDish(confirmDish) ? "restaurant-accent-border" : "default-accent-border"} bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)]`}>
-              <img
-                src={getDishImageUrl(confirmDish, "thumb")}
-                alt={confirmDish.name || "Dish"}
-                className="h-36 w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_DISH_IMAGE;
-                }}
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-3 text-white">
+              {hasDishMedia(confirmDish) ? (
+                <img
+                  src={getDishImageUrl(confirmDish, "thumb")}
+                  alt={confirmDish.name || "Dish"}
+                  className="h-36 w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_DISH_IMAGE;
+                  }}
+                />
+              ) : (
+                <div className="h-36 w-full">
+                  <NoPhotoDishPreview dish={confirmDish} />
+                </div>
+              )}
+              <div className={`pointer-events-none absolute inset-x-0 bottom-0 px-4 py-3 text-white ${hasDishMedia(confirmDish) ? "" : "bg-[#151515]"}`}>
                 <div className="font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
                   {confirmDish.name || "Dish"}
                 </div>

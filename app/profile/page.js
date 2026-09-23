@@ -35,6 +35,7 @@ import {
   getPendingDishlistSorting,
   getLeaderboardAnswersForUser,
   getLeaderboardQuestions,
+  getAdminUserAccessAnalytics,
   createLeaderboardQuestion,
   updateLeaderboardQuestion,
   deleteLeaderboardQuestion,
@@ -64,7 +65,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { Bell, CalendarDays, ChevronDown, ChevronLeft, ListChecks, MapPin, Minus, MoreHorizontal, MousePointerClick, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, ChevronLeft, ListChecks, Lock, MapPin, Minus, MoreHorizontal, MousePointerClick, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -449,6 +450,29 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
   );
 }
 
+function MiniNoPhotoDishPreview({ dish, darkMode = false, className = "" }) {
+  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
+  const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
+  const ingredients = isRestaurant ? [] : getDishIngredientItems(dish).slice(0, 4);
+  return (
+    <div className={`relative flex h-full w-full items-start justify-center overflow-hidden bg-black px-2 pt-5 text-white ${className}`} style={{ boxShadow: `inset 0 0 0 2px ${isRestaurant ? "#E64646" : "#E4B43F"}, inset 0 0 28px ${isRestaurant ? "rgba(230,70,70,0.18)" : "rgba(228,180,63,0.16)"}` }}>
+      {isRestaurant ? (
+        <span className="max-w-[86%] truncate rounded-full border border-[#E64646]/38 bg-[#2A1010]/88 px-2 py-1 text-[10px] font-black leading-none text-[#FFD4D0]">
+          {restaurantName || "Ristorante"}
+        </span>
+      ) : (
+        <div className="flex max-h-[3rem] w-full flex-wrap justify-center gap-1 overflow-hidden">
+          {ingredients.map((item) => (
+            <span key={item.key} className="inline-flex min-h-5 max-w-[92%] items-center rounded-full border px-2 py-0.5 text-[9px] font-bold leading-none" style={getIngredientPillStyle(item.color, darkMode)}>
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function getProfileIdCandidates(routeId, userDoc) {
   const data = userDoc?.data?.() || userDoc || {};
   const rawAppleSub = String(data.appleSub || "").trim();
@@ -694,6 +718,9 @@ export default function Profile() {
   const [leaderboardQuestionEditingId, setLeaderboardQuestionEditingId] = useState("");
   const [leaderboardAdminQuestions, setLeaderboardAdminQuestions] = useState([]);
   const [leaderboardQuestionSaving, setLeaderboardQuestionSaving] = useState(false);
+  const [adminAnalyticsUsers, setAdminAnalyticsUsers] = useState([]);
+  const [adminAnalyticsLoading, setAdminAnalyticsLoading] = useState(false);
+  const [adminSelectedUserId, setAdminSelectedUserId] = useState("");
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [profileMapDish, setProfileMapDish] = useState(null);
@@ -1747,9 +1774,27 @@ export default function Profile() {
     setLeaderboardAdminQuestions(questions);
   };
 
+  const loadAdminAnalytics = async () => {
+    if (leaderboardAdminPassword !== "cravy1723") {
+      setToastVariant("error");
+      setToast(t("Wrong password"));
+      setTimeout(() => setToast(""), 1400);
+      return;
+    }
+    setAdminAnalyticsLoading(true);
+    try {
+      const users = await getAdminUserAccessAnalytics({ maxUsers: 100, maxSessionsPerUser: 30 });
+      setAdminAnalyticsUsers(users);
+      setAdminSelectedUserId((prev) => prev || users[0]?.id || "");
+    } finally {
+      setAdminAnalyticsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!leaderboardAdminOpen || leaderboardAdminPassword !== "cravy1723") return;
     loadLeaderboardAdminQuestions();
+    loadAdminAnalytics();
   }, [leaderboardAdminOpen, leaderboardAdminPassword]);
 
   const handleCreateLeaderboardQuestion = async () => {
@@ -2487,6 +2532,28 @@ export default function Profile() {
     }),
     [allDishesCount, profileMeta.followers, profileMeta.following, uploadedDishes.length]
   );
+  const adminSelectedUser = adminAnalyticsUsers.find((item) => item.id === adminSelectedUserId) || adminAnalyticsUsers[0] || null;
+  const formatAdminDate = (value) => {
+    const ms =
+      Number(value?.lastActiveAtMs || value?.startedAtMs || value?.lastSeenAtMs || value?.endedAtMs || 0) ||
+      Number(value?.lastActiveAt?.seconds || value?.startedAt?.seconds || value?.lastSeenAt?.seconds || value?.endedAt?.seconds || 0) * 1000;
+    if (!ms) return "Mai";
+    return new Intl.DateTimeFormat("it-IT", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(ms));
+  };
+  const formatAdminDuration = (ms) => {
+    const totalSeconds = Math.max(0, Math.round(Number(ms || 0) / 1000));
+    if (totalSeconds < 60) return `${totalSeconds}s`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes < 60) return `${minutes}m ${seconds}s`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${minutes % 60}m`;
+  };
   
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(uploadedDishes),
@@ -3977,14 +4044,19 @@ export default function Profile() {
                 <div className={`mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                   darkMode ? "text-white/45" : "text-black/40"
                 }`}>
-                  {t("Leaderboard")}
+                  Admin
                 </div>
                 <div className={`no-accent-border rounded-[1.45rem] p-4 ${darkMode ? "bg-[#141414]" : "bg-white"}`}>
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{t("Question manager")}</div>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${darkMode ? "bg-white/8 text-white" : "bg-black/6 text-black"}`}>
+                        <Lock size={17} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="font-semibold">Admin Dashboard</div>
                       <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
-                        {t("Create the questions shown in Explore.")}
+                          Analytics e gestione leaderboard.
+                        </div>
                       </div>
                     </div>
                     <button
@@ -4056,7 +4128,7 @@ export default function Profile() {
               >
                 <X size={19} />
               </button>
-              <h2 className="text-[1.25rem] font-bold leading-none">{t("Question manager")}</h2>
+              <h2 className="text-[1.25rem] font-bold leading-none">Admin Dashboard</h2>
               <div className="h-11 w-11" />
             </div>
 
@@ -4073,6 +4145,80 @@ export default function Profile() {
 
               {leaderboardAdminPassword === "cravy1723" ? (
                 <div className="space-y-4">
+                  <section className={`rounded-[1.35rem] border p-4 ${darkMode ? "border-white/10 bg-[#111111]" : "border-black/10 bg-white"}`}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-[1rem] font-black">Analytics</div>
+                        <div className={`mt-1 text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>
+                          Utenti ordinati per ultimo accesso
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={loadAdminAnalytics}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-black ${darkMode ? "border-white/12 text-white" : "border-black/12 text-black"}`}
+                      >
+                        {adminAnalyticsLoading ? t("Loading...") : t("Refresh")}
+                      </button>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-[0.95fr_1.05fr]">
+                      <div className="max-h-80 space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {adminAnalyticsUsers.length ? adminAnalyticsUsers.map((adminUser) => {
+                          const active = adminSelectedUser?.id === adminUser.id;
+                          return (
+                            <button
+                              key={adminUser.id}
+                              type="button"
+                              onClick={() => setAdminSelectedUserId(adminUser.id)}
+                              className={`flex w-full items-center gap-3 rounded-[1rem] border p-3 text-left ${
+                                active
+                                  ? "border-[#2BD36B] bg-[#102817] text-white"
+                                  : darkMode ? "border-white/10 bg-[#080808] text-white" : "border-black/10 bg-[#F5F2EA] text-black"
+                              }`}
+                            >
+                              <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 text-sm font-black">
+                                {adminUser.photoURL ? <img src={adminUser.photoURL} alt="" className="h-full w-full object-cover" /> : (adminUser.displayName || "U").slice(0, 1).toUpperCase()}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-black">{adminUser.displayName || "User"}</span>
+                                <span className="mt-0.5 block truncate text-[11px] opacity-58">{formatAdminDate(adminUser)}</span>
+                              </span>
+                            </button>
+                          );
+                        }) : (
+                          <div className={`rounded-[1rem] border border-dashed p-4 text-sm ${darkMode ? "border-white/10 text-white/45" : "border-black/10 text-black/45"}`}>
+                            {adminAnalyticsLoading ? t("Loading...") : "Nessun accesso ancora."}
+                          </div>
+                        )}
+                      </div>
+                      <div className={`rounded-[1rem] border p-3 ${darkMode ? "border-white/10 bg-[#080808]" : "border-black/10 bg-[#F5F2EA]"}`}>
+                        {adminSelectedUser ? (
+                          <>
+                            <div className="mb-3">
+                              <div className="truncate text-base font-black">{adminSelectedUser.displayName}</div>
+                              <div className={`mt-1 truncate text-xs ${darkMode ? "text-white/45" : "text-black/45"}`}>{adminSelectedUser.email || adminSelectedUser.id}</div>
+                            </div>
+                            <div className="space-y-2">
+                              {(adminSelectedUser.sessions || []).map((session) => (
+                                <div key={session.id} className={`rounded-[0.9rem] px-3 py-2 text-xs ${darkMode ? "bg-white/7" : "bg-white"}`}>
+                                  <div className="font-black">{formatAdminDate(session)}</div>
+                                  <div className={`mt-1 ${darkMode ? "text-white/48" : "text-black/48"}`}>
+                                    Durata: {formatAdminDuration(session.durationMs)} · Ultimo ping: {formatAdminDate({ lastSeenAtMs: session.lastSeenAtMs, lastSeenAt: session.lastSeenAt })}
+                                  </div>
+                                  {session.path ? <div className={`mt-1 truncate ${darkMode ? "text-white/36" : "text-black/36"}`}>{session.path}</div> : null}
+                                </div>
+                              ))}
+                              {!adminSelectedUser.sessions?.length ? (
+                                <div className={`text-sm ${darkMode ? "text-white/45" : "text-black/45"}`}>Nessuna sessione registrata.</div>
+                              ) : null}
+                            </div>
+                          </>
+                        ) : (
+                          <div className={`text-sm ${darkMode ? "text-white/45" : "text-black/45"}`}>Seleziona un utente.</div>
+                        )}
+                      </div>
+                    </div>
+                  </section>
                   <section className={`rounded-[1.35rem] border p-4 ${darkMode ? "border-white/10 bg-[#111111]" : "border-black/10 bg-white"}`}>
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div className="text-[1rem] font-black">{t("Edit existing questions")}</div>
@@ -4859,18 +5005,24 @@ export default function Profile() {
                                 }`}
                                 style={selected ? { borderColor: "#45C47A", boxShadow: "0 0 0 3px rgba(31,164,99,0.26)" } : undefined}
                               >
-                                <img
-                                  src={getDishImageUrl(dish, "thumb")}
-                                  alt={dish.name}
-                                  className="h-28 w-full object-cover"
-                                  loading="lazy"
-                                  fetchPriority="low"
-                                  decoding="async"
-                                  onError={(event) => {
-                                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                                  }}
-                                />
-                                <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode ? "bg-[#151515] text-white" : "text-black"}`}>
+                                {hasDishMedia(dish) ? (
+                                  <img
+                                    src={getDishImageUrl(dish, "thumb")}
+                                    alt={dish.name}
+                                    className="h-28 w-full object-cover"
+                                    loading="lazy"
+                                    fetchPriority="low"
+                                    decoding="async"
+                                    onError={(event) => {
+                                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="h-28 w-full">
+                                    <MiniNoPhotoDishPreview dish={dish} darkMode={darkMode} />
+                                  </div>
+                                )}
+                                <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode || !hasDishMedia(dish) ? "bg-[#151515] text-white" : "text-black"}`}>
                                   {dish.name || t("Untitled dish")}
                                 </div>
                               </button>
@@ -5022,18 +5174,24 @@ export default function Profile() {
                             }`}
                             style={selected ? { borderColor: "#45C47A", boxShadow: "0 0 0 3px rgba(31,164,99,0.26)" } : undefined}
                           >
-                            <img
-                              src={getDishImageUrl(dish, "thumb")}
-                              alt={dish.name}
-                              className="h-28 w-full object-cover"
-                              loading="lazy"
-                              fetchPriority="low"
-                              decoding="async"
-                              onError={(event) => {
-                                event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                              }}
-                            />
-                            <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode ? "bg-[#151515] text-white" : "text-black"}`}>
+                            {hasDishMedia(dish) ? (
+                              <img
+                                src={getDishImageUrl(dish, "thumb")}
+                                alt={dish.name}
+                                className="h-28 w-full object-cover"
+                                loading="lazy"
+                                fetchPriority="low"
+                                decoding="async"
+                                onError={(event) => {
+                                  event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                                }}
+                              />
+                            ) : (
+                              <div className="h-28 w-full">
+                                <MiniNoPhotoDishPreview dish={dish} darkMode={darkMode} />
+                              </div>
+                            )}
+                            <div className={`px-2 py-1.5 text-[11px] font-semibold truncate ${darkMode || !hasDishMedia(dish) ? "bg-[#151515] text-white" : "text-black"}`}>
                               {dish.name || "Untitled dish"}
                             </div>
                           </button>
@@ -5387,14 +5545,20 @@ export default function Profile() {
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-3 flex items-center gap-3">
-                <img
-                  src={getDishImageUrl(dishCardActionTarget.dish, "thumb")}
-                  alt={dishCardActionTarget.dish?.name || "Dish"}
-                  className="h-14 w-14 rounded-[1rem] object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[1rem]">
+                  {hasDishMedia(dishCardActionTarget.dish) ? (
+                    <img
+                      src={getDishImageUrl(dishCardActionTarget.dish, "thumb")}
+                      alt={dishCardActionTarget.dish?.name || "Dish"}
+                      className="h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <MiniNoPhotoDishPreview dish={dishCardActionTarget.dish} darkMode={darkMode} />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-base font-bold">{dishCardActionTarget.dish?.name || "Untitled dish"}</div>
                   <div className={`text-xs ${darkMode ? "text-white/50" : "text-black/50"}`}>{t("Dish actions")}</div>
@@ -5857,7 +6021,7 @@ export default function Profile() {
                             <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-[1rem] ${darkMode ? "bg-white/10 text-white" : "bg-black/8 text-black"}`}>
                               <CalendarDays size={28} />
                             </div>
-                          ) : (
+                          ) : hasDishMedia(item.imageDish) ? (
                             <img
                               src={getDishImageUrl(item.imageDish, "thumb")}
                               alt={item.name}
@@ -5866,6 +6030,10 @@ export default function Profile() {
                                 event.currentTarget.src = DEFAULT_DISH_IMAGE;
                               }}
                             />
+                          ) : (
+                            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[1rem]">
+                              <MiniNoPhotoDishPreview dish={item.imageDish} darkMode={darkMode} />
+                            </div>
                           )}
                           <div className="min-w-0">
                             <div className={`truncate text-base font-semibold ${darkMode ? "text-white" : "text-black"}`}>{item.name}</div>

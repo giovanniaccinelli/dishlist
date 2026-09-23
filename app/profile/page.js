@@ -372,6 +372,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           alt={dishlist.name || t("Dishlist cover")}
           className="h-full w-full object-cover"
           loading="lazy"
+          fetchPriority="low"
           decoding="async"
           onError={(event) => {
             event.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -435,6 +436,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
               className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${accentClass} object-cover`}
               style={{ borderColor }}
               loading="lazy"
+              fetchPriority="low"
               decoding="async"
               onError={(event) => {
                 event.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -2989,6 +2991,7 @@ export default function Profile() {
                       src={imageSrc}
                       alt={dish.name}
                       loading="lazy"
+                      fetchPriority="low"
                       decoding="async"
                       className="w-full h-40 object-cover"
                       onError={(e) => {
@@ -4861,6 +4864,7 @@ export default function Profile() {
                                   alt={dish.name}
                                   className="h-28 w-full object-cover"
                                   loading="lazy"
+                                  fetchPriority="low"
                                   decoding="async"
                                   onError={(event) => {
                                     event.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -5023,6 +5027,7 @@ export default function Profile() {
                               alt={dish.name}
                               className="h-28 w-full object-cover"
                               loading="lazy"
+                              fetchPriority="low"
                               decoding="async"
                               onError={(event) => {
                                 event.currentTarget.src = DEFAULT_DISH_IMAGE;

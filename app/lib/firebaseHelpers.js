@@ -28,9 +28,9 @@ import { normalizeRestaurant } from "./restaurants";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "./tagDishlists";
 import { getDishIngredientItems, inferIngredientColorId, normalizeIngredientKey, normalizeIngredientName } from "./ingredients";
 
-const OWNER_PHOTO_CACHE_TTL = 2 * 60 * 1000;
+const OWNER_PHOTO_CACHE_TTL = 15 * 60 * 1000;
 const ownerPhotoCache = new Map();
-const DATA_CACHE_TTL = 45 * 1000;
+const DATA_CACHE_TTL = 10 * 60 * 1000;
 const dataCache = new Map();
 const pendingCache = new Map();
 const SYSTEM_DISHLIST_IDS = new Set(["saved", "to_try", "uploaded", "all_dishes"]);
@@ -623,7 +623,7 @@ export async function uploadDishImageVariants(file, userId) {
   }
   const [cardFile, thumbFile] = await Promise.all([
     resizeImageFile(file, 1400, 0.82),
-    resizeImageFile(file, 420, 0.72),
+    resizeImageFile(file, 320, 0.7),
   ]);
   const [cardURL, thumbURL] = await Promise.all([
     uploadImage(cardFile, userId),

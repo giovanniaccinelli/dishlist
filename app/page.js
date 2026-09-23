@@ -229,7 +229,7 @@ export default function Feed() {
   const followingDeckRef = useRef(null);
   const viewedDishIdsRef = useRef([]);
   const initialFeedCache = getSessionPageCache(getFeedCacheKey(userId, "guest"))?.value;
-  const initialHasCompleteFeedCache = Boolean(initialFeedCache?.forYouDeck?.length && (!userId || initialFeedCache?.followingDeck?.length));
+  const initialHasCompleteFeedCache = Boolean(initialFeedCache?.forYouDeck?.length);
 
 		  const [activeFeed, setActiveFeed] = useState(() => initialFeedCache?.activeFeed || "for_you");
   const [forYouDeck, setForYouDeck] = useState(() => initialFeedCache?.forYouDeck || []);
@@ -264,7 +264,7 @@ export default function Feed() {
   const [followingSeenAt, setFollowingSeenAt] = useState(() => initialFeedCache?.followingSeenAt || 0);
   const [followingHasUpdate, setFollowingHasUpdate] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(() => !initialHasCompleteFeedCache && Boolean(userId));
-  const [followingResolved, setFollowingResolved] = useState(() => Boolean(!userId || initialFeedCache?.followingDeck?.length));
+  const [followingResolved, setFollowingResolved] = useState(() => Boolean(!userId || initialFeedCache));
   const [followingResetting, setFollowingResetting] = useState(false);
   const [viewedDishIds, setViewedDishIds] = useState([]);
   const [viewedDishCounts, setViewedDishCounts] = useState({});
@@ -288,8 +288,8 @@ export default function Feed() {
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
   const [feedClientReady, setFeedClientReady] = useState(false);
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
-  const [firstFeedCardReady, setFirstFeedCardReady] = useState(false);
-  const [feedHasRendered, setFeedHasRendered] = useState(false);
+  const [firstFeedCardReady, setFirstFeedCardReady] = useState(() => initialHasCompleteFeedCache);
+  const [feedHasRendered, setFeedHasRendered] = useState(() => initialHasCompleteFeedCache);
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(userId);
   const { location: currentLocation, status: currentLocationStatus } = usePrivateGeolocation({
@@ -662,7 +662,7 @@ export default function Feed() {
     let cancelled = false;
     const cachedFeed = getSessionPageCache(feedCacheKey)?.value;
 	    if (cachedFeed) {
-      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length && (!userId || cachedFeed?.followingDeck?.length));
+      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length);
 	      setActiveFeed(cachedFeed.activeFeed || "for_you");
 	      setForYouDeck(Array.isArray(cachedFeed.forYouDeck) ? cachedFeed.forYouDeck : []);
 	      setFollowingDeck(Array.isArray(cachedFeed.followingDeck) ? cachedFeed.followingDeck : []);
@@ -674,7 +674,7 @@ export default function Feed() {
 	      setFollowingSinceById(cachedFeed.followingSinceById || {});
 	      setFollowingSeenAt(Number(cachedFeed.followingSeenAt || 0));
 	      setAddedDishIds(new Set(Array.isArray(cachedFeed.addedDishIds) ? cachedFeed.addedDishIds : []));
-      setFollowingResolved(Boolean(!userId || cachedFeed?.followingDeck?.length));
+      setFollowingResolved(Boolean(!userId || cachedFeed));
       setFollowingLoading(Boolean(userId && !cachedHasBothDecks));
       setLoadingDishes(!cachedHasBothDecks);
     }
@@ -727,10 +727,10 @@ export default function Feed() {
 
     setAddedDishIds(new Set());
     (async () => {
-      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length && (!userId || cachedFeed?.followingDeck?.length));
+      const cachedHasBothDecks = Boolean(cachedFeed?.forYouDeck?.length);
       setLoadingDishes(!cachedHasBothDecks);
-      setFollowingLoading(Boolean(userId));
-      setFollowingResolved(false);
+      setFollowingLoading(Boolean(userId && !cachedHasBothDecks));
+      setFollowingResolved(Boolean(!userId || cachedFeed));
       try {
         const feedPagePromise = getDishesPage({ pageSize: FEED_INITIAL_PAGE_SIZE, enrichOwners: false });
         const currentUserPromise = userId ? getDoc(doc(db, "users", userId)) : null;

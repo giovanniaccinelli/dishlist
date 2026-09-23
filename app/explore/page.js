@@ -55,6 +55,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 const BASE_LIMIT = 20;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
+const EXPLORE_PAGE_SIZE = 720;
 
 function stableHash(value = "") {
   return String(value || "").split("").reduce((hash, char) => {
@@ -77,6 +78,19 @@ function getDishOwnerLabel(dish) {
 
 function getDishOwnerPhoto(dish) {
   return String(dish?.ownerPhotoURL || dish?.userPhotoURL || dish?.uploadedByPhotoURL || dish?.createdByPhotoURL || "").trim();
+}
+
+function preloadExploreImages(dishes = [], limit = 48) {
+  if (typeof window === "undefined") return;
+  dishes
+    .slice(0, limit)
+    .map((dish) => getDishImageUrl(dish, "thumb"))
+    .filter((src) => src && src !== DEFAULT_DISH_IMAGE)
+    .forEach((src) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+    });
 }
 
 function SafeDishOpenButton({ href, label, onOpen }) {
@@ -855,7 +869,7 @@ export default function Explore() {
     (async () => {
       setLoading(true);
       const [all, trending, questions] = await Promise.all([
-        getDishesPage({ pageSize: 420, enrichOwners: false }).then((result) => result.items || []),
+        getDishesPage({ pageSize: EXPLORE_PAGE_SIZE, enrichOwners: false }).then((result) => result.items || []),
         getTrendingStoryDishes(20),
         getLeaderboardQuestions(8),
       ]);
@@ -869,12 +883,17 @@ export default function Explore() {
         trendingDishes: trending,
         leaderboardQuestions: questions,
       });
+      preloadExploreImages(publicDishes);
       setLoading(false);
     })();
     return () => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (allDishes.length) preloadExploreImages(allDishes);
+  }, [allDishes]);
 
   const visibleLeaderboardQuestions = useMemo(() => {
     return leaderboardQuestions.filter((question) => {

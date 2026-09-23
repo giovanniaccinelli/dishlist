@@ -3029,7 +3029,7 @@ export default function Profile() {
               return (
               <motion.div
                 key={`${dish.id}-${index}`}
-                className="pressable-card relative group"
+                className="relative group"
               >
                 <div className={`relative overflow-hidden rounded-2xl border-2 bg-white shadow-md ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
                   <Link
@@ -3273,7 +3273,7 @@ export default function Profile() {
                 <p className="mt-2 line-clamp-2 text-sm leading-5 text-black/68 whitespace-pre-wrap">{profileMeta.bio}</p>
               ) : null}
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-6">
+            <div className="mt-2 grid grid-cols-3 gap-4">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>
                 <button

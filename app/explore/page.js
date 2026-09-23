@@ -719,11 +719,11 @@ function LeaderboardRail({ questions = [], t, darkMode = false }) {
     pink: { border: "border-[#D96EEA]", text: "text-[#D96EEA]", glow: "from-[#D96EEA]/18" },
   };
   return (
-    <section className="mb-6">
+    <section className="mb-3">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`no-accent-border mb-3 flex w-full items-center justify-between rounded-[1.05rem] px-0 py-1 text-left ${
+        className={`no-accent-border mb-2 flex w-full items-center justify-between rounded-[1.05rem] px-0 py-1 text-left ${
           darkMode ? "text-white" : "text-black"
         }`}
         aria-expanded={open}
@@ -1127,12 +1127,12 @@ export default function Explore() {
             setSelectedTagsDraft(selectedTagsApplied);
             setShowTagsPicker(true);
           }}
-          className="inline-flex h-[2.75rem] shrink-0 items-center justify-center rounded-full border border-black bg-black px-4 text-xs font-medium leading-none text-white shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-black bg-black px-3 text-xs font-medium leading-none text-white shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
         >
           {t("Add filters")}
         </button>
       </div>
-      <div className={`relative ${selectedTagsApplied.length ? "mb-6" : showTagsPicker ? "mb-2" : "mb-0"}`}>
+      <div className={`relative ${selectedTagsApplied.length ? "mb-6" : showTagsPicker ? "mb-2" : "mb-3"}`}>
         {selectedTagsApplied.length ? (
           <div className="flex flex-wrap gap-2 items-center">
             {selectedTagsApplied.map((tag) => (

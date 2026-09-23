@@ -1069,6 +1069,7 @@ export default function PublicProfile() {
     () => getRestaurantDishGroups(dishes),
     [dishes]
   );
+  const hasPinnedRestaurantDishes = uploadedRestaurantGroups.length > 0;
   const storyCalendarDays = useMemo(() => {
     const dishById = new Map();
     allDishlists.forEach((dishlist) => {
@@ -1174,8 +1175,8 @@ export default function PublicProfile() {
     changeProfileCalendarMonth(dx < 0 ? 1 : -1);
   };
 
-  const renderDishCounters = (dish) => (
-    <div className="flex items-center gap-3.5 text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+  const renderDishCounters = (dish, className = "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]") => (
+    <div className={`flex items-center gap-3.5 text-[13px] font-bold ${className}`}>
       <div className="inline-flex items-center gap-1.5">
         <StoryStatIcon size={14} />
         <span>: {getStoryPushCount(dish)}</span>
@@ -1304,6 +1305,9 @@ export default function PublicProfile() {
           <div className="flex-1 min-h-16 flex flex-col justify-start py-0.5">
             <div className="ml-2">
               <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
+              {profileUser.bio ? (
+                <p className="mt-2 line-clamp-2 text-sm leading-5 text-black/68 whitespace-pre-wrap">{profileUser.bio}</p>
+              ) : null}
             </div>
             <div className="mt-2 grid grid-cols-3 gap-6">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -1337,13 +1341,9 @@ export default function PublicProfile() {
           </div>
         </div>
 
-        {profileUser.bio ? (
-          <p className="mt-4 max-w-xl text-sm leading-6 text-black/68 whitespace-pre-wrap">{profileUser.bio}</p>
-        ) : null}
-
       </div>
 
-      {showingDishlistOverview ? (
+      {showingDishlistOverview && hasPinnedRestaurantDishes ? (
         <div className="mx-auto mb-4 w-full max-w-3xl px-2">
           <div className="mb-2 flex items-center gap-2 leading-none">
             <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
@@ -1363,7 +1363,7 @@ export default function PublicProfile() {
         </div>
       ) : null}
 
-      {showingDishlistOverview ? (
+      {showingDishlistOverview && hasPinnedRestaurantDishes ? (
         <ProfileTakesStrip takes={leaderboardTakes} darkMode={darkMode} t={t} />
       ) : null}
 
@@ -1501,52 +1501,54 @@ export default function PublicProfile() {
               return (
               <motion.div
                 key={`${activeDishlist?.id || "list"}-${dish.id || index}`}
-                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer relative border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
+                className="pressable-card relative cursor-pointer"
               >
-                <Link
-                  href={(() => {
+                <div className={`relative overflow-hidden rounded-2xl border-2 bg-white shadow-md ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+                  <Link
+                    href={(() => {
 	                    const deckParam = encodeURIComponent(searchedActiveDishlistDishes.map((item) => item.id).filter(Boolean).join(","));
-                    const returnParam = encodeURIComponent(buildProfileReturnTo());
-                    return activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`
-                      : `/dish/${dish.id}?source=${activeDishlist?.id || "all_dishes"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
-                  })()}
-                  className="absolute inset-0 z-10"
-                >
-                  <span className="sr-only">Open dish card</span>
-                </Link>
-                <DishRatingBadge dish={dish} />
-                {hasDishMedia(dish) ? (
-                  <img
-                    src={getDishImageUrl(dish, "thumb")}
-                    alt={dish.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-40 object-cover"
-                    onError={(event) => {
-                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      const returnParam = encodeURIComponent(buildProfileReturnTo());
+                      return activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system"
+                        ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist.id}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`
+                        : `/dish/${dish.id}?source=${activeDishlist?.id || "all_dishes"}&mode=single&profileId=${encodeURIComponent(profileDocId)}&returnTo=${returnParam}&deckIds=${deckParam}`;
+                    })()}
+                    className="absolute inset-0 z-10"
+                  >
+                    <span className="sr-only">Open dish card</span>
+                  </Link>
+                  <DishRatingBadge dish={dish} />
+                  {hasDishMedia(dish) ? (
+                    <img
+                      src={getDishImageUrl(dish, "thumb")}
+                      alt={dish.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-40 object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <MiniNoPhotoDishPreview dish={dish} />
+                  )}
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      handleSaveDish(dish);
                     }}
-                  />
-                ) : (
-                  <MiniNoPhotoDishPreview dish={dish} />
-                )}
-                <div className={`${hasDishMedia(dish) ? "absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent" : "relative bg-[#151515]"} px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1`}>
-                  <div className="text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+                    className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
+                    aria-label="Add to dishlist"
+                  >
+                    <Plus size={16} strokeWidth={2.1} />
+                  </button>
+                </div>
+                <div className={`mt-1.5 px-0.5 ${darkMode ? "text-white" : "text-black"}`}>
+                  <div className="truncate text-[17px] font-bold leading-tight">
                     {dish.name || "Untitled dish"}
                   </div>
-                  {renderDishCounters(dish)}
+                  {renderDishCounters(dish, darkMode ? "text-white/70 drop-shadow-none" : "text-black/52 drop-shadow-none")}
                 </div>
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    handleSaveDish(dish);
-                  }}
-                  className="add-action-btn absolute top-2 right-2 z-30 w-9 h-9 text-[24px]"
-                  aria-label="Add to dishlist"
-                >
-                  <Plus size={16} strokeWidth={2.1} />
-                </button>
               </motion.div>
               );
             })}

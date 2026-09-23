@@ -467,7 +467,7 @@ function TopActionButton({ href, icon: Icon, label, highlighted = false }) {
 
 function SearchBar({ value, onChange, placeholder }) {
   return (
-    <div className="relative mb-5">
+    <div className="relative">
       <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-black/40" />
       <input
         type="text"
@@ -1111,7 +1111,7 @@ export default function Explore() {
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
         </div>
       </div>
-      <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-2">
+      <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
         <SearchBar
           value={search}
           onChange={(e) => {
@@ -1119,7 +1119,7 @@ export default function Explore() {
             setSearch(nextValue);
             router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
           }}
-          placeholder={t("Search dishes or filters")}
+          placeholder={t("Search dishes")}
         />
         <button
           type="button"
@@ -1127,30 +1127,32 @@ export default function Explore() {
             setSelectedTagsDraft(selectedTagsApplied);
             setShowTagsPicker(true);
           }}
-          className="h-[2.75rem] shrink-0 rounded-[0.95rem] border border-black bg-black px-3 text-xs font-medium text-white shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
+          className="inline-flex h-[2.75rem] shrink-0 items-center justify-center rounded-full border border-black bg-black px-4 text-xs font-medium leading-none text-white shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
         >
           {t("Add filters")}
         </button>
       </div>
-      <div className="relative mb-6">
-        <div className="flex flex-wrap gap-2 items-center">
-          {selectedTagsApplied.map((tag) => (
-            <span
-              key={tag}
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
-            >
-              {t(tag)}
-              <button
-                type="button"
-                onClick={() => removeAppliedTag(tag)}
-                className="text-black/70 hover:text-black leading-none"
-                aria-label={`Remove ${tag} filter`}
+      <div className={`relative ${selectedTagsApplied.length ? "mb-6" : showTagsPicker ? "mb-2" : "mb-0"}`}>
+        {selectedTagsApplied.length ? (
+          <div className="flex flex-wrap gap-2 items-center">
+            {selectedTagsApplied.map((tag) => (
+              <span
+                key={tag}
+                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)}`}
               >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
+                {t(tag)}
+                <button
+                  type="button"
+                  onClick={() => removeAppliedTag(tag)}
+                  className="text-black/70 hover:text-black leading-none"
+                  aria-label={`Remove ${tag} filter`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
         {showTagsPicker && (
           <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">
             <div className="flex items-center justify-between mb-2">

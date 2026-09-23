@@ -65,7 +65,7 @@ import AppToast from "../../components/AppToast";
 import { auth, db } from "../lib/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { Bell, CalendarDays, ChevronDown, ChevronLeft, ListChecks, Lock, MapPin, Minus, MoreHorizontal, MousePointerClick, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ListChecks, Lock, MapPin, Minus, MoreHorizontal, MousePointerClick, NotebookText, Pencil, Plus, Search, Send, Settings, ShoppingCart, Shuffle, Trophy, Trash2, Upload, Users, X } from "lucide-react";
 import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
@@ -723,6 +723,7 @@ export default function Profile() {
   const [adminSelectedUserId, setAdminSelectedUserId] = useState("");
   const [dishCardActionTarget, setDishCardActionTarget] = useState(null);
   const [profileMapOpen, setProfileMapOpen] = useState(false);
+  const [profileMapPreviewOpen, setProfileMapPreviewOpen] = useState(false);
   const [profileMapDish, setProfileMapDish] = useState(null);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
@@ -2945,8 +2946,8 @@ export default function Profile() {
     setTimeout(() => setToast(""), 1200);
   };
 
-  const renderDishCounters = (dish) => (
-    <div className="flex items-center gap-3.5 text-[13px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+  const renderDishCounters = (dish, className = "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]") => (
+    <div className={`flex items-center gap-3.5 text-[13px] font-bold ${className}`}>
       <div className="inline-flex items-center gap-1.5">
         <StoryStatIcon size={14} />
         <span>: {getStoryPushCount(dish)}</span>
@@ -3028,21 +3029,22 @@ export default function Profile() {
               return (
               <motion.div
                 key={`${dish.id}-${index}`}
-                className={`pressable-card bg-white rounded-2xl overflow-hidden shadow-md relative group border-2 ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}
+                className="pressable-card relative group"
               >
-                <Link
-                  href={(() => {
-                    const deckParam = encodeURIComponent(dishes.map((item) => item.id).filter(Boolean).join(","));
-                    const returnParam = encodeURIComponent(buildProfileReturnTo());
-                    return source === "dishlist" || activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system"
-                      ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`
-                      : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`;
-                  })()}
-                  className="absolute inset-0 z-10"
-                >
-                  <span className="sr-only">Open dish</span>
-                </Link>
-                <DishRatingBadge dish={dish} />
+                <div className={`relative overflow-hidden rounded-2xl border-2 bg-white shadow-md ${String(dish?.dishMode || "").toLowerCase() === "restaurant" ? "restaurant-accent-border" : "default-accent-border"}`}>
+                  <Link
+                    href={(() => {
+                      const deckParam = encodeURIComponent(dishes.map((item) => item.id).filter(Boolean).join(","));
+                      const returnParam = encodeURIComponent(buildProfileReturnTo());
+                      return source === "dishlist" || activeDishlist?.type === "custom" || activeDishlist?.type === "tag_system"
+                        ? `/dish/${dish.id}?source=dishlist&listId=${activeDishlist?.id}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`
+                        : `/dish/${dish.id}?source=${source}&mode=single&returnTo=${returnParam}&deckIds=${deckParam}`;
+                    })()}
+                    className="absolute inset-0 z-10"
+                  >
+                    <span className="sr-only">Open dish</span>
+                  </Link>
+                  <DishRatingBadge dish={dish} />
                 {hasDishMedia(dish) ? (() => {
                   const imageSrc = getDishImageUrl(dish, "thumb");
                   return (
@@ -3099,12 +3101,6 @@ export default function Profile() {
                     </div>
                   );
                 })()}
-                <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-3 py-2.5 text-white pointer-events-none flex flex-col justify-end gap-1">
-                  <div className="text-[17px] font-bold leading-tight truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
-                    {dish.name || "Untitled dish"}
-                  </div>
-                  {renderDishCounters(dish)}
-                </div>
                 {(allowDelete || onRemovePreview || profileIdCandidates.includes(dish?.owner)) && (
                   <button
                     type="button"
@@ -3135,6 +3131,13 @@ export default function Profile() {
                     <MoreHorizontal size={19} strokeWidth={2.35} />
                   </button>
                 )}
+                </div>
+                <div className={`mt-1.5 px-0.5 ${darkMode ? "text-white" : "text-black"}`}>
+                  <div className="truncate text-[17px] font-bold leading-tight">
+                    {dish.name || "Untitled dish"}
+                  </div>
+                  {renderDishCounters(dish, darkMode ? "text-white/70 drop-shadow-none" : "text-black/52 drop-shadow-none")}
+                </div>
               </motion.div>
               );
             })}
@@ -3266,6 +3269,9 @@ export default function Profile() {
           <div className="flex-1 min-h-16 flex flex-col justify-start py-0.5">
             <div className="ml-2">
               <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
+              {profileMeta.bio ? (
+                <p className="mt-2 line-clamp-2 text-sm leading-5 text-black/68 whitespace-pre-wrap">{profileMeta.bio}</p>
+              ) : null}
             </div>
             <div className="mt-2 grid grid-cols-3 gap-6">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
@@ -3299,9 +3305,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {profileMeta.bio ? (
-          <p className="mt-4 max-w-xl text-sm leading-6 text-black/68 whitespace-pre-wrap">{profileMeta.bio}</p>
-        ) : null}
       </div>
 
       {!profileContentReady ? (
@@ -3321,22 +3324,36 @@ export default function Profile() {
       ) : (
         <>
           {showingDishlistOverview ? (
-            <div className="mx-auto mb-4 w-full max-w-3xl px-2">
-              <div className="mb-2 flex items-center gap-2 leading-none">
-                <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
-                <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+            <div className={`mx-auto w-full max-w-3xl px-2 ${profileMapPreviewOpen ? "mb-4" : "mb-2"}`}>
+              <div className="flex items-center justify-between gap-3 leading-none">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className={`truncate text-[1.02rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{t("Restaurant map")}</span>
+                  <RestaurantMapIcon className="h-[1.05rem] w-[1.05rem] shrink-0 text-[#E64646]" strokeWidth={2.05} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfileMapPreviewOpen((open) => !open)}
+                  className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] border ${
+                    darkMode ? "border-white/12 bg-white/8 text-white" : "border-black/10 bg-white text-black"
+                  }`}
+                  aria-label={profileMapPreviewOpen ? "Hide map" : "Show map"}
+                >
+                  <ChevronRight size={17} className={profileMapPreviewOpen ? "rotate-90" : ""} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setProfileMapOpen(true)}
-                className={`relative block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
-                  darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
-                }`}
-                aria-label="Open map"
-              >
-                <MapPreview groups={uploadedRestaurantGroups} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-              </button>
+              {profileMapPreviewOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setProfileMapOpen(true)}
+                  className={`relative mt-2 block h-[7.25rem] w-full overflow-hidden rounded-[1.35rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.12)] transition active:scale-[0.98] ${
+                    darkMode ? "border-white/10 bg-[#121212]" : "border-black/10 bg-[#F2EFE8]"
+                  }`}
+                  aria-label="Open map"
+                >
+                  <MapPreview groups={uploadedRestaurantGroups} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                </button>
+              ) : null}
             </div>
           ) : null}
 

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Pin, Shuffle, Utensils, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { hapticImpact, hapticSelection } from "../app/lib/haptics";
+import { useLanguage } from "./LanguageProvider";
 
 export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
@@ -205,9 +206,10 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const [fixedMode, setFixedMode] = useState(false);
+  const { t, language } = useLanguage();
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
-    { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
+    { mode: DISH_MODE_RESTAURANT, label: t("Restaurants"), cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_COOKING, label: t("Recipes"), cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
     { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.55rem] w-[1.55rem]" strokeWidth={2.35} /> },
   ];
 
@@ -281,10 +283,12 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
               </span>
               <span className="min-w-0">
                 <span className="block text-[0.98rem] font-bold leading-tight">
-                  {fixedMode ? "Modalita fissata" : "Fissa una modalita"}
+                  {fixedMode ? (language === "it" ? "Modalita fissata" : "Mode fixed") : (language === "it" ? "Fissa una modalita" : "Fix a mode")}
                 </span>
                 <span className="mt-0.5 block text-[0.76rem] font-semibold leading-tight opacity-72">
-                  {fixedMode ? "Tocca Ristoranti, Ricette o Mix per fissarla." : "Poi scegli quale: Ristoranti, Ricette o Mix."}
+                  {fixedMode
+                    ? (language === "it" ? "Tocca Ristoranti, Ricette o Mix per fissarla." : "Tap Restaurants, Recipes, or Mix to fix it.")
+                    : (language === "it" ? "Poi scegli quale: Ristoranti, Ricette o Mix." : "Then choose Restaurants, Recipes, or Mix.")}
                 </span>
               </span>
             </button>
@@ -334,12 +338,13 @@ function DishModeChoiceLine({ choice, onClick, selected = false, fixed = false }
 }
 
 export function DiningModeOpeningSelection({ className = "", onSelect, intro = false }) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const [introVisible, setIntroVisible] = useState(Boolean(intro));
   const [closingMode, setClosingMode] = useState(null);
   const choices = [
-    { mode: DISH_MODE_RESTAURANT, label: "Ristoranti", cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
-    { mode: DISH_MODE_COOKING, label: "Ricette", cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
+    { mode: DISH_MODE_RESTAURANT, label: t("Restaurants"), cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
+    { mode: DISH_MODE_COOKING, label: t("Recipes"), cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
     { mode: DISH_MODE_ALL, label: "Mix", cropY: 497, icon: <UnknownDishModeIcon className="h-[1.55rem] w-[1.55rem]" strokeWidth={2.35} /> },
   ];
 

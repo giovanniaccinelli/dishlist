@@ -583,7 +583,7 @@ function SearchResultsGrid({ dishes, t, onDishOpen }) {
             title="Search"
             t={t}
             priority={index < 4}
-            featuredTrophy={index === 0}
+            featuredTrophy={false}
             onOpen={() => onDishOpen?.(dishes, index, "search")}
           />
         ))}
@@ -1111,15 +1111,27 @@ export default function Explore() {
           <TopActionButton href={user ? "/directs" : "/?auth=1"} icon={Send} label="Open directs" highlighted={hasUnreadDirects} />
         </div>
       </div>
-      <SearchBar
-        value={search}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          setSearch(nextValue);
-          router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
-        }}
-        placeholder={t("Search dishes or tags")}
-      />
+      <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-2">
+        <SearchBar
+          value={search}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            setSearch(nextValue);
+            router.replace(buildExploreUrl({ search: nextValue }), { scroll: false });
+          }}
+          placeholder={t("Search dishes or filters")}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedTagsDraft(selectedTagsApplied);
+            setShowTagsPicker(true);
+          }}
+          className="h-[2.75rem] shrink-0 rounded-[0.95rem] border border-black bg-black px-3 text-xs font-medium text-white shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
+        >
+          {t("Add filters")}
+        </button>
+      </div>
       <div className="relative mb-6">
         <div className="flex flex-wrap gap-2 items-center">
           {selectedTagsApplied.map((tag) => (
@@ -1138,19 +1150,6 @@ export default function Explore() {
               </button>
             </span>
           ))}
-          {selectedTagsApplied.length === 0 && (
-            <span className="text-xs text-black/50">{t("No tag filters selected")}</span>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedTagsDraft(selectedTagsApplied);
-              setShowTagsPicker(true);
-            }}
-            className="px-3 py-1 rounded-full border border-black bg-black text-white text-xs font-medium"
-          >
-            {t("Add filters")}
-          </button>
         </div>
         {showTagsPicker && (
           <div className="absolute z-40 mt-2 w-full bg-white border border-black/10 rounded-2xl p-3 shadow-lg">

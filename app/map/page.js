@@ -15,7 +15,7 @@ import { usePrivateGeolocation } from "../lib/usePrivateGeolocation";
 
 const MAP_CACHE_KEY = "map:restaurants";
 
-function MapPageLoading({ title = "Mappa ristoranti" }) {
+function MapPageLoading({ title = "Restaurant map" }) {
   return (
     <div className="relative h-[100dvh] overflow-hidden bg-[#000000] text-white">
       <div className="bottom-nav-spacer h-full overflow-hidden px-4 pt-1">
@@ -111,12 +111,12 @@ function MapPageContent() {
   return (
     <div className="bottom-nav-spacer h-[100dvh] overflow-hidden overscroll-none bg-transparent px-4 pt-1 text-black relative">
       <div className="app-top-nav -mx-4 px-4 pb-1.5 mb-2 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("Mappa ristoranti")}</h1>
+        <h1 className="text-2xl font-bold">{t("Restaurant map")}</h1>
         <button
           type="button"
           onClick={() => router.push(user ? "/shopping-list" : "/?auth=1")}
           className="top-action-btn relative"
-          aria-label="Lista della spesa"
+          aria-label={t("Shopping list")}
         >
           <ShoppingCart size={18} />
         </button>

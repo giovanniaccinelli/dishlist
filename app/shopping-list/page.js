@@ -259,9 +259,9 @@ export default function ShoppingListPage() {
       <div className="app-top-nav -mx-4 mb-2 flex items-center justify-between px-4 pb-1.5">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2BD36B]">Shopping</p>
-          <h1 className="text-2xl font-bold">{t("Lista della spesa")}</h1>
+          <h1 className="text-2xl font-bold">{t("Shopping list")}</h1>
         </div>
-        <Link href="/map" className="top-action-btn" aria-label="Mappa ristoranti">
+        <Link href="/map" className="top-action-btn" aria-label={t("Restaurant map")}>
           <MapIcon size={19} />
         </Link>
       </div>

@@ -1186,7 +1186,7 @@ export default function UploadPage() {
               animate={{ rotateY: 0, opacity: 1 }}
               transition={{ duration: 0.34, ease: "easeInOut" }}
             >
-              <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(38,29,7,0.98)_0%,rgba(12,11,8,0.98)_100%)]"}`}>
+              <div className={`absolute inset-0 overflow-y-auto p-5 pb-24 text-white ${isRestaurantUpload ? "bg-[linear-gradient(180deg,rgba(49,15,15,0.98)_0%,rgba(15,10,10,0.98)_100%)]" : "bg-[linear-gradient(180deg,rgba(74,52,11,0.98)_0%,rgba(27,20,8,0.98)_100%)]"}`}>
                 <div className="space-y-3 pt-16">
                     <div className="mb-2">
                       <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
@@ -1882,7 +1882,7 @@ export default function UploadPage() {
                     {storyMode ? "Review and publish" : "Review and upload"}
                   </h2>
                 </div>
-	                <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? "bg-[#171717] text-white" : dishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#F7F2E8_0%,#FFF5E0_55%,#F3FFE8_100%)]"} border-2 p-4 mb-5`}>
+	                <div className={`rounded-[2rem] ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"} ${darkMode ? (dishMode === DISH_MODE_RESTAURANT ? "bg-[#171717] text-white" : "bg-[linear-gradient(180deg,#3A2A08_0%,#171309_100%)] text-white") : dishMode === DISH_MODE_RESTAURANT ? "bg-[linear-gradient(180deg,#FFF3F3_0%,#FFF0E8_55%,#FFF8F1_100%)]" : "bg-[linear-gradient(180deg,#FFF1B8_0%,#FFE59A_52%,#FFF8DE_100%)]"} border-2 p-4 mb-5`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/5 shrink-0 border-2 ${dishMode === DISH_MODE_RESTAURANT ? "restaurant-accent-border" : "default-accent-border"}`}>
                       {preview ? (

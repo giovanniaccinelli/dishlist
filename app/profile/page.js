@@ -70,7 +70,7 @@ import { TAG_OPTIONS, getDarkTagChipClass, getTagChipClass } from "../lib/tags";
 import { TAG_DECOR } from "../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../lib/tagDishlists";
 import { suggestDishTagsFromName } from "../lib/dishTagSuggestions";
-import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags, resolveRepresentativeTags } from "../lib/profileTags";
+import { PROFILE_REPRESENTATIVE_TAG_LIMIT, normalizeRepresentativeTags } from "../lib/profileTags";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../lib/dishContent";
 import SaversModal from "../../components/SaversModal";
@@ -2481,12 +2481,6 @@ export default function Profile() {
     || allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.id
     || allDishlists[0]?.id
     || "all_dishes";
-  const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
-  const profileRepresentativeTags =
-    profileMeta.representativeTags === null
-      ? []
-      : resolveRepresentativeTags(profileMeta.representativeTags, allDishesForRepresentativeTags);
-
   const showingDishlistOverview = activeDishlistId === "overview";
   const dishlistSearchTerm = dishlistSearch.trim().toLowerCase();
   const dishMatchesSearch = (dish) => {
@@ -2522,15 +2516,13 @@ export default function Profile() {
     return mode === selectedDishMode;
   });
   const searchedActiveDishlistDishes = activeDishlist?.dishes?.filter(dishMatchesSearch) || [];
-  const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const profileCounts = useMemo(
     () => ({
       followers: profileMeta.followers?.length || 0,
       following: profileMeta.following?.length || 0,
       uploaded: uploadedDishes.length,
-      dishes: allDishesCount,
     }),
-    [allDishesCount, profileMeta.followers, profileMeta.following, uploadedDishes.length]
+    [profileMeta.followers, profileMeta.following, uploadedDishes.length]
   );
   const adminSelectedUser = adminAnalyticsUsers.find((item) => item.id === adminSelectedUserId) || adminAnalyticsUsers[0] || null;
   const formatAdminDate = (value) => {
@@ -3271,25 +3263,11 @@ export default function Profile() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
+          <div className="flex-1 min-h-16 flex flex-col justify-start py-0.5">
             <div className="ml-2">
               <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{effectiveDisplayName || t("My Profile")}</h1>
-              {profileRepresentativeTags.length ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {profileRepresentativeTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
-                        darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
-                      }`}
-                    >
-                      {t(tag)}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-1.5">
+            <div className="mt-2 grid grid-cols-3 gap-6">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>
                 <button
@@ -3315,15 +3293,6 @@ export default function Profile() {
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Uploaded")}
-                </button>
-              </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div key={`dishes-${profileCounts.dishes}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.dishes) || 0)}</div>
-                <button
-                  onClick={() => selectDishlist("all_dishes")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
-                >
-                  {t("Dishes")}
                 </button>
               </div>
             </div>
@@ -6294,7 +6263,7 @@ export default function Profile() {
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2BD36B]">Shopping</p>
-                  <h3 className="mt-1 text-[1.45rem] font-semibold leading-tight">{t("Lista della spesa")}</h3>
+                  <h3 className="mt-1 text-[1.45rem] font-semibold leading-tight">{t("Shopping list")}</h3>
                 </div>
                 <button
                   type="button"

@@ -185,7 +185,7 @@ export default function DishlistPickerModal({
       }
       return;
     }
-    onToggle?.({ id: "shopping_list", name: t("Lista della spesa"), type: "special" });
+    onToggle?.({ id: "shopping_list", name: t("Shopping list"), type: "special" });
   };
 
   return (
@@ -402,7 +402,7 @@ export default function DishlistPickerModal({
                         </motion.span>
                         <div className="min-w-0">
                           <div className={`truncate text-sm font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-                            {t("Lista della spesa")}
+                            {t("Shopping list")}
                           </div>
                         </div>
                       </div>

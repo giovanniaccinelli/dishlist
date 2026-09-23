@@ -38,7 +38,6 @@ import SaversModal from "../../../components/SaversModal";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../../lib/dishImage";
 import { hasDishMedia, isTextOnlyDish, orderDishesForProfileList } from "../../lib/dishContent";
 import { getDishIngredientItems, getIngredientPillStyle } from "../../lib/ingredients";
-import { resolveRepresentativeTags } from "../../lib/profileTags";
 import { getDarkTagChipClass, getTagChipClass } from "../../lib/tags";
 import { TAG_DECOR } from "../../lib/tagDecor";
 import { buildDefaultTagDishlists, getTagForDishlistId, isTagDishlistId } from "../../lib/tagDishlists";
@@ -1039,9 +1038,6 @@ export default function PublicProfile() {
       return aRank - bRank || a.fallbackRank - b.fallbackRank;
     })
     .map(({ fallbackRank, ...dishlist }) => dishlist);
-  const allDishesForRepresentativeTags = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.dishes || [];
-  const profileRepresentativeTags = resolveRepresentativeTags(profileUser?.representativeTags, allDishesForRepresentativeTags);
-
   const showingDishlistOverview = activeDishlistId === "overview";
   const dishlistSearchTerm = dishlistSearch.trim().toLowerCase();
   const dishMatchesSearch = (dish) => {
@@ -1069,7 +1065,6 @@ export default function PublicProfile() {
       }
     : null;
   const searchedActiveDishlistDishes = activeDishlist?.dishes?.filter(dishMatchesSearch) || [];
-  const allDishesCount = allDishlists.find((dishlist) => dishlist.id === "all_dishes")?.count || 0;
   const uploadedRestaurantGroups = useMemo(
     () => getRestaurantDishGroups(dishes),
     [dishes]
@@ -1306,25 +1301,11 @@ export default function PublicProfile() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-20 flex flex-col justify-start py-0.5">
+          <div className="flex-1 min-h-16 flex flex-col justify-start py-0.5">
             <div className="ml-2">
               <h1 className="text-[1.8rem] leading-none font-bold tracking-tight">{profileUser.displayName || "User Profile"}</h1>
-              {profileRepresentativeTags.length ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {profileRepresentativeTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold leading-none ${
-                        darkMode ? getDarkTagChipClass(tag, true) : getTagChipClass(tag, true)
-                      }`}
-                    >
-                      {t(tag)}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-1.5">
+            <div className="mt-2 grid grid-cols-3 gap-6">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.followers?.length || 0))}</div>
                 <button
@@ -1350,15 +1331,6 @@ export default function PublicProfile() {
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Uploaded")}
-                </button>
-              </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(allDishesCount || 0))}</div>
-                <button
-                  onClick={() => selectDishlist("all_dishes")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
-                >
-                  {t("dishes")}
                 </button>
               </div>
             </div>

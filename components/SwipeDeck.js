@@ -732,8 +732,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const hasCardBackView = hasAnyRecipeText || hasRestaurantMapView;
   const cardBackAccent = hasRestaurantMapView ? "#B93A32" : "#FFC247";
   const cardBackSelectedTextColor = hasRestaurantMapView ? "#FFE7C7" : "#050505";
-  const cardFrontLabel = hasRestaurantMapView ? "piatto" : "dish";
-  const cardBackLabel = hasRestaurantMapView ? "ristorante" : "recipe";
+  const cardFrontLabel = t("dish");
+  const cardBackLabel = hasRestaurantMapView ? t("restaurant") : t("recipe");
   const currentRestaurantMapGroups = hasRestaurantMapView
     ? [
         {
@@ -1715,10 +1715,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                 className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none"
                 style={{ backgroundColor: previewBackAccent, color: previewSelectedTextColor, WebkitTextFillColor: previewSelectedTextColor }}
               >
-                {previewHasRestaurantMap ? "piatto" : "dish"}
+                {t("dish")}
               </div>
               <div className="no-accent-border inline-flex h-7 items-center rounded-full px-2.5 text-[13px] font-semibold leading-none text-white/95">
-                {previewHasRestaurantMap ? "ristorante" : "recipe"}
+                {previewHasRestaurantMap ? t("restaurant") : t("recipe")}
               </div>
             </div>
           </div>

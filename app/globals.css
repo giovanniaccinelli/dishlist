@@ -240,11 +240,13 @@
 .dish-card-shell--colored-default {
   background: linear-gradient(180deg, #FFF1B8 0%, #FFE59A 52%, #FFF8DE 100%) !important;
   color: #050505;
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.16), 0 10px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .dish-card-shell--colored-restaurant {
   background: linear-gradient(180deg, #FFF3F3 0%, #FFF0E8 55%, #FFF8F1 100%) !important;
   color: #050505;
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.16), 0 10px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .explore-row,
@@ -797,11 +799,13 @@ html.dark .dish-card-shell--restaurant {
 html.dark .dish-card-shell--colored-default {
   background: linear-gradient(180deg, #3A2A08 0%, #171309 100%) !important;
   color: #ffffff;
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.56), 0 8px 24px rgba(0, 0, 0, 0.42) !important;
 }
 
 html.dark .dish-card-shell--colored-restaurant {
   background: linear-gradient(180deg, #3A1111 0%, #170909 100%) !important;
   color: #ffffff;
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.56), 0 8px 24px rgba(0, 0, 0, 0.42) !important;
 }
 
 .pressable-card.default-accent-border {

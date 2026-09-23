@@ -343,31 +343,38 @@ export default function ShoppingListPage() {
 
         {sourceDishes.length ? (
           <div className={`mt-4 space-y-2 border-t pt-4 ${darkMode ? "border-white/10" : "border-[#2BD36B]/18"}`}>
-            {sourceDishes.map((dish) => (
-              <Link
-                key={dish.id}
-                href={`/dish/${dish.id}?source=all_dishes`}
-                className={`flex items-center gap-3 rounded-[1.2rem] border p-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
-              >
-                <div className="h-16 w-16 shrink-0">
-                  {hasDishMedia(dish) ? (
-                    <img
-                      src={getDishImageUrl(dish, "thumb")}
-                      alt={dish.name || ""}
-                      className="h-16 w-16 rounded-[0.95rem] object-cover"
-                      onError={(event) => {
-                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                      }}
-                    />
-                  ) : (
-                    <NoPhotoRecipePreview dish={dish} darkMode={darkMode} compact />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-base font-bold">{dish.name || "Dish"}</div>
-                </div>
-              </Link>
-            ))}
+            {sourceDishes.map((dish) => {
+              const ingredients = getDishIngredientItems(dish);
+              const addedCount = ingredients.filter((ingredient) => ingredientKeys.has(ingredient.key)).length;
+              return (
+                <Link
+                  key={dish.id}
+                  href={`/dish/${dish.id}?source=all_dishes`}
+                  className={`flex items-center gap-3 rounded-[1.2rem] border p-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
+                >
+                  <div className="h-16 w-16 shrink-0">
+                    {hasDishMedia(dish) ? (
+                      <img
+                        src={getDishImageUrl(dish, "thumb")}
+                        alt={dish.name || ""}
+                        className="h-16 w-16 rounded-[0.95rem] object-cover"
+                        onError={(event) => {
+                          event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                        }}
+                      />
+                    ) : (
+                      <NoPhotoRecipePreview dish={dish} darkMode={darkMode} compact />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-base font-bold">{dish.name || "Dish"}</div>
+                    <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/45"}`}>
+                      {addedCount}/{ingredients.length} {language === "it" ? "in lista" : "in list"}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : null}
       </section>

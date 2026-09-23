@@ -6,6 +6,7 @@ import { Funnel, MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
+import { hasDishMedia } from "../app/lib/dishContent";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../app/lib/dishImage";
 import { getFollowingForUser } from "../app/lib/firebaseHelpers";
 import { getRestaurantDistanceMeters } from "../app/lib/restaurants";
@@ -1264,6 +1265,8 @@ export default function RestaurantMapView({
         >
           {cardDishUsers.map((dishUser) => {
             const userDishes = (dishUser.dishes || []).filter((dish) => dish?.id);
+            const noMediaDishes = userDishes.filter((dish) => !hasDishMedia(dish));
+            const mediaDishes = userDishes.filter((dish) => hasDishMedia(dish));
             if (!userDishes.length) return null;
             return (
               <div key={`${group.placeId}-${dishUser.id}`} className="min-w-0">
@@ -1277,60 +1280,76 @@ export default function RestaurantMapView({
                     {dishUser.name || "User"}
                   </span>
                 </button>
-                <div
-                  className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                  style={{ WebkitOverflowScrolling: "touch", touchAction: "auto" }}
-                  onPointerDown={(event) => {
-                    carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
-                  }}
-                  onPointerMove={(event) => {
-                    const start = carouselTapRef.current;
-                    if (!start || start.moved) return;
-                    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
-                      start.moved = true;
-                    }
-                  }}
-                  onClickCapture={(event) => {
-                    if (!carouselTapRef.current?.moved) return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                  onPointerUp={(event) => {
-                    if (carouselTapRef.current?.moved) event.stopPropagation();
-                    window.setTimeout(() => {
-                      carouselTapRef.current = null;
-                    }, 0);
-                  }}
-                  data-restaurant-card-scroll="true"
-                >
-                  {userDishes.map((dish) => (
-                    <button
-                      key={`${group.placeId}-${dishUser.id}-${dish.id}`}
-                      type="button"
-                      onClick={() => openDish(dish)}
-                  className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
-                    embedded ? "h-32 w-32 rounded-[1rem]" : "h-40 w-40 rounded-[1.25rem]"
-                  }`}
-                    >
-                      <div className="relative h-full w-full overflow-hidden">
-                        <DishRatingBadge dish={dish} className="text-[10px]" />
-                        <img
-                          src={getDishImageUrl(dish, "thumb")}
-                          alt={dish.name || "Dish"}
-                          className="h-full w-full object-cover"
-                          onError={(event) => {
-                            event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                          }}
-                        />
-                        <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
-                          <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
-                            {dish.name || "Untitled dish"}
+                {noMediaDishes.length ? (
+                  <div className="mb-2 space-y-1.5">
+                    {noMediaDishes.map((dish) => (
+                      <button
+                        key={`${group.placeId}-${dishUser.id}-${dish.id}-text`}
+                        type="button"
+                        onClick={() => openDish(dish)}
+                        className="block max-w-full truncate rounded-full bg-black/6 px-3 py-2 text-left text-[13px] font-black leading-none text-black"
+                      >
+                        {dish.name || "Untitled dish"}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {mediaDishes.length ? (
+                  <div
+                    className="flex max-w-full touch-pan-x snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    style={{ WebkitOverflowScrolling: "touch", touchAction: "auto" }}
+                    onPointerDown={(event) => {
+                      carouselTapRef.current = { x: event.clientX, y: event.clientY, moved: false };
+                    }}
+                    onPointerMove={(event) => {
+                      const start = carouselTapRef.current;
+                      if (!start || start.moved) return;
+                      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 14) {
+                        start.moved = true;
+                      }
+                    }}
+                    onClickCapture={(event) => {
+                      if (!carouselTapRef.current?.moved) return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onPointerUp={(event) => {
+                      if (carouselTapRef.current?.moved) event.stopPropagation();
+                      window.setTimeout(() => {
+                        carouselTapRef.current = null;
+                      }, 0);
+                    }}
+                    data-restaurant-card-scroll="true"
+                  >
+                    {mediaDishes.map((dish) => (
+                      <button
+                        key={`${group.placeId}-${dishUser.id}-${dish.id}`}
+                        type="button"
+                        onClick={() => openDish(dish)}
+                        className={`restaurant-accent-border flex shrink-0 snap-start overflow-hidden border-2 text-left shadow-[0_10px_24px_rgba(0,0,0,0.08)] ${
+                          embedded ? "h-32 w-32 rounded-[1rem]" : "h-40 w-40 rounded-[1.25rem]"
+                        }`}
+                      >
+                        <div className="relative h-full w-full overflow-hidden">
+                          <DishRatingBadge dish={dish} className="text-[10px]" />
+                          <img
+                            src={getDishImageUrl(dish, "thumb")}
+                            alt={dish.name || "Dish"}
+                            className="h-full w-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                            }}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 z-20 flex min-h-[58%] flex-col justify-end bg-gradient-to-t from-black via-black/86 via-58% to-transparent px-2.5 pb-2.5 pt-14 text-white pointer-events-none">
+                            <div className="truncate text-sm font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                              {dish.name || "Untitled dish"}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             );
           })}

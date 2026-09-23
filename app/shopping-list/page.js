@@ -17,6 +17,7 @@ import {
   getAllDishlistsForUser,
   removeShoppingListIngredient,
 } from "../lib/firebaseHelpers";
+import { hasDishMedia } from "../lib/dishContent";
 import { DEFAULT_DISH_IMAGE, getDishImageUrl } from "../lib/dishImage";
 import {
   getDishIngredientItems,
@@ -55,6 +56,29 @@ function stableHash(value = "") {
 
 function sortShoppingItems(items = []) {
   return [...items].sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")));
+}
+
+function NoPhotoRecipePreview({ dish, darkMode, compact = false }) {
+  const ingredients = getDishIngredientItems(dish).slice(0, compact ? 4 : 8);
+  return (
+    <div className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-[0.95rem] border-2 bg-black px-2 py-2 text-white shadow-[inset_0_0_0_2px_rgba(228,180,63,0.72),inset_0_0_30px_rgba(228,180,63,0.16)] ${compact ? "" : "aspect-square"}`} style={{ borderColor: "#E4B43F" }}>
+      <div className={`flex w-full flex-wrap justify-center gap-1 overflow-hidden ${compact ? "max-h-[2.55rem]" : "max-h-[4.9rem]"}`}>
+        {ingredients.length ? (
+          ingredients.map((item) => (
+            <span
+              key={item.key}
+              className={`inline-flex items-center rounded-full border font-bold leading-none ${compact ? "min-h-4 max-w-full px-1.5 py-0.5 text-[8px]" : "min-h-6 max-w-[92%] px-2 py-1 text-[11px]"}`}
+              style={getIngredientPillStyle(item.color, darkMode)}
+            >
+              <span className="truncate">{item.name}</span>
+            </span>
+          ))
+        ) : (
+          <span className="rounded-full border border-[#E4B43F]/34 bg-[#2A220C]/84 px-2 py-1 text-[10px] font-black text-[#FFE4A3]">Ricetta</span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function ShoppingListPage() {
@@ -325,14 +349,20 @@ export default function ShoppingListPage() {
                 href={`/dish/${dish.id}?source=all_dishes`}
                 className={`flex items-center gap-3 rounded-[1.2rem] border p-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.05)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
               >
-                <img
-                  src={getDishImageUrl(dish, "thumb")}
-                  alt={dish.name || ""}
-                  className="h-16 w-16 rounded-[0.95rem] object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                  }}
-                />
+                <div className="h-16 w-16 shrink-0">
+                  {hasDishMedia(dish) ? (
+                    <img
+                      src={getDishImageUrl(dish, "thumb")}
+                      alt={dish.name || ""}
+                      className="h-16 w-16 rounded-[0.95rem] object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <NoPhotoRecipePreview dish={dish} darkMode={darkMode} compact />
+                  )}
+                </div>
                 <div className="min-w-0">
                   <div className="truncate text-base font-bold">{dish.name || "Dish"}</div>
                 </div>
@@ -370,14 +400,18 @@ export default function ShoppingListPage() {
                   disabled={Boolean(savingKey)}
                   className={`overflow-hidden rounded-[1.2rem] border text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${darkMode ? "border-white/10 bg-[#151515] text-white" : "border-black/8 bg-white"}`}
                 >
-                  <img
-                    src={getDishImageUrl(dish, "thumb")}
-                    alt={dish.name || ""}
-                    className="aspect-square w-full object-cover"
-                    onError={(event) => {
-                      event.currentTarget.src = DEFAULT_DISH_IMAGE;
-                    }}
-                  />
+                  {hasDishMedia(dish) ? (
+                    <img
+                      src={getDishImageUrl(dish, "thumb")}
+                      alt={dish.name || ""}
+                      className="aspect-square w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.src = DEFAULT_DISH_IMAGE;
+                      }}
+                    />
+                  ) : (
+                    <NoPhotoRecipePreview dish={dish} darkMode={darkMode} />
+                  )}
                   <div className="p-3">
                     <div className="truncate text-sm font-black">{dish.name || "Dish"}</div>
                     <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/45"}`}>

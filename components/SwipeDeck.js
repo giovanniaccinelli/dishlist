@@ -614,7 +614,8 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   }, [currentCard?._key, currentCard?.description, showRecipe]);
 
   useEffect(() => {
-    if (!showRecipe) {
+    const shouldMeasureRecipePanels = showRecipe || (!hasDishMedia(currentCard) && !isRestaurantDish(currentCard));
+    if (!shouldMeasureRecipePanels) {
       setRecipePanelOverflow({ ingredients: false, method: false });
       return;
     }
@@ -637,7 +638,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     const observer = new ResizeObserver(measureOverflow);
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-  }, [showRecipe, currentCard?._key]);
+  }, [showRecipe, currentCard?._key, currentCard?.dishMode, currentCard?.restaurantMode, currentCard?.type]);
 
   useEffect(() => {
     if (!currentCard?.id) return;

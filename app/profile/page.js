@@ -111,6 +111,7 @@ const PROFILE_DISHLIST_INITIAL_LIMIT = 10;
 const PROFILE_DISHLIST_LOAD_INCREMENT = 10;
 const SOURCE_DISHLIST_PINNED_IDS = ["saved", "all_dishes"];
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
+const CARD_COLORS_STORAGE_KEY = "dishlist-card-colors";
 const NOTIFICATIONS_ENABLED_KEY = "notifications:enabled";
 const NOTIFICATIONS_ASKED_KEY = "notifications:asked";
 const GEOLOCATION_CACHE_KEY = "dishlist:private-geolocation:v1";
@@ -725,6 +726,7 @@ export default function Profile() {
   const [profileMapOpen, setProfileMapOpen] = useState(false);
   const [profileMapPreviewOpen, setProfileMapPreviewOpen] = useState(false);
   const [profileMapDish, setProfileMapDish] = useState(null);
+  const [coloredCardsEnabled, setColoredCardsEnabled] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
@@ -771,6 +773,7 @@ export default function Profile() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) !== "full");
+    setColoredCardsEnabled(window.localStorage.getItem(CARD_COLORS_STORAGE_KEY) === "1");
     setNotificationsPermissionEnabled(window.localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) === "1");
     setLocationPermissionEnabled(window.localStorage.getItem(GEOLOCATION_ENABLED_KEY) !== "0");
     setHapticsPermissionEnabled(window.localStorage.getItem(HAPTICS_ENABLED_KEY) !== "0");
@@ -781,6 +784,13 @@ export default function Profile() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(CARD_LAYOUT_STORAGE_KEY, enabled ? "square" : "full");
     window.dispatchEvent(new CustomEvent("dishlist-card-layout-change", { detail: enabled ? "square" : "full" }));
+  };
+
+  const updateColoredCardsPreference = (enabled) => {
+    setColoredCardsEnabled(enabled);
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(CARD_COLORS_STORAGE_KEY, enabled ? "1" : "0");
+    window.dispatchEvent(new CustomEvent("dishlist-card-colors-change", { detail: enabled ? "1" : "0" }));
   };
 
   const setPermissionStorageValue = (key, value) => {
@@ -3971,6 +3981,25 @@ export default function Profile() {
                     squareCardLayout ? "bg-[#FFC247]" : "bg-black/14"
                   }`}>
                     <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${squareCardLayout ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateColoredCardsPreference(!coloredCardsEnabled)}
+                  className={`no-accent-border mt-3 flex w-full items-center justify-between rounded-[1.45rem] p-4 text-left ${
+                    darkMode ? "bg-[#141414] text-white" : "bg-white text-black"
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">{t("Card colorate")}</div>
+                    <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                      {t("Sfondo rosso o giallo per le card")}
+                    </div>
+                  </div>
+                  <span className={`no-accent-border flex h-8 w-14 items-center rounded-full p-1 transition ${
+                    coloredCardsEnabled ? "bg-[#FFC247]" : "bg-black/14"
+                  }`}>
+                    <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${coloredCardsEnabled ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
                   </span>
                 </button>
               </section>

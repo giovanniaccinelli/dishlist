@@ -28,6 +28,7 @@ import { getDishIngredientItems, getIngredientPillStyle } from "../app/lib/ingre
 import { hapticError, hapticImpact, hapticSelection, hapticSuccess } from "../app/lib/haptics";
 
 const CARD_LAYOUT_STORAGE_KEY = "dishlist-card-layout";
+const CARD_COLORS_STORAGE_KEY = "dishlist-card-colors";
 
 function DeckAutoplayVideo({
   src,
@@ -332,6 +333,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     if (typeof window === "undefined") return "square";
     return window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) === "full" ? "full" : "square";
   });
+  const [coloredCardsEnabled, setColoredCardsEnabled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(CARD_COLORS_STORAGE_KEY) === "1";
+  });
   const SWIPE_EJECT_THRESHOLD = 88;
   const SWIPE_EJECT_VELOCITY = 680;
   const SWIPE_PROJECTED_THRESHOLD = 128;
@@ -486,6 +491,23 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     return () => {
       window.removeEventListener("dishlist-card-layout-change", handleLayoutChange);
       window.removeEventListener("storage", readLayout);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const readColoredCards = () => {
+      setColoredCardsEnabled(window.localStorage.getItem(CARD_COLORS_STORAGE_KEY) === "1");
+    };
+    readColoredCards();
+    const handleColoredCardsChange = (event) => {
+      setColoredCardsEnabled(event?.detail === "1");
+    };
+    window.addEventListener("dishlist-card-colors-change", handleColoredCardsChange);
+    window.addEventListener("storage", readColoredCards);
+    return () => {
+      window.removeEventListener("dishlist-card-colors-change", handleColoredCardsChange);
+      window.removeEventListener("storage", readColoredCards);
     };
   }, []);
 
@@ -771,6 +793,10 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const showShoppingListAction = Boolean(onShoppingListAction) && !currentCardIsRestaurant && !visibleRestaurantMap;
   const squareCardLayout = cardLayout === "square" && !visibleRecipe && !visibleRestaurantMap;
   const outgoingSwipeSquareLayout = cardLayout === "square" && outgoingSwipe?.card && !isRecipeOnlyDish(outgoingSwipe.card);
+  const getColoredCardClass = (dish) => {
+    if (!coloredCardsEnabled || !dish || visibleRestaurantMap) return "";
+    return isRestaurantDish(dish) ? "dish-card-shell--colored-restaurant" : "dish-card-shell--colored-default";
+  };
   useLayoutEffect(() => {
     if (!squareCardLayout || !currentCardStableKey) {
       setCompactMediaMeasured(false);
@@ -1880,7 +1906,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         {nextCard ? (
           <motion.div
             ref={nextCardShellRef}
-            className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
+            className={`dish-card-shell pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[28px] ${nextCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${getColoredCardClass(nextCard)} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
             style={{ scale: nextCardScale, zIndex: 0, borderColor: nextCardBorderClass === "border-[#E64646]" ? "#E64646" : "#E4B43F" }}
           >
             {squareCardLayout ? (
@@ -1921,7 +1947,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             <motion.div
               layout={false}
               key={outgoingSwipe.key}
-              className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} ${outgoingSwipeSquareLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
+              className={`dish-card-shell pointer-events-none absolute inset-0 z-[70] overflow-hidden rounded-[28px] ${outgoingSwipe.borderClass} ${getColoredCardClass(outgoingSwipe.card)} ${outgoingSwipeSquareLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
               initial={{
                 x: outgoingSwipe.startX,
                 y: outgoingSwipe.startY,
@@ -2022,7 +2048,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           onDrag={updateDragRotation}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={(e, info) => handleSwipeEnd(info, currentCard)}
-          className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
+          className={`dish-card-shell pressable-card relative ${isDragging ? "z-[70]" : "z-30"} overflow-hidden w-full cursor-grab rounded-[28px] ${currentCardBorderClass === "border-[#E64646]" ? "dish-card-shell--restaurant" : "dish-card-shell--default"} ${getColoredCardClass(currentCard)} ${visibleRestaurantMap ? "dish-card-shell--map-open" : ""} ${squareCardLayout ? "bg-black" : "bg-white"} ${fitHeight ? "h-full" : "h-[74vh]"}`}
         >
           {(actionLoading || secondaryActionLoading || tertiaryActionLoading || shoppingActionLoading) && !outgoingSwipe ? (
             <div className="pointer-events-none absolute inset-0 z-[90] flex items-center justify-center bg-black/34 backdrop-blur-[2px]">

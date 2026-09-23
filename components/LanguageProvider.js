@@ -140,6 +140,8 @@ const translations = {
     "Choose a dishlist cover": "Scegli una copertina",
     "No description": "Nessuna descrizione",
     "Light mode": "Modalita chiara",
+    "Card colorate": "Card colorate",
+    "Sfondo rosso o giallo per le card": "Sfondo rosso o giallo per le card",
     "Save profile": "Salva profilo",
     "Display name": "Nome",
     "Profile picture": "Foto profilo",

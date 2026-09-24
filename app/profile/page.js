@@ -333,27 +333,27 @@ function getSystemDishlistNeonStyle(id) {
   const styles = {
     saved: {
       background:
-        "radial-gradient(circle at 88% 13%, rgba(242,212,109,0.42) 0%, rgba(242,212,109,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(242,212,109,0.32) 0%, rgba(75,49,14,0.58) 44%, rgba(19,15,10,0.96) 100%)",
-      borderColor: "rgba(242,212,109,0.42)",
-      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(242,212,109,0.18), 0 0 24px rgba(242,212,109,0.14)",
+        "radial-gradient(circle at 88% 13%, rgba(242,212,109,0.22) 0%, rgba(242,212,109,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(91,68,22,0.40) 0%, rgba(39,30,16,0.62) 46%, rgba(17,14,11,0.98) 100%)",
+      borderColor: "transparent",
+      boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(242,212,109,0.075)",
     },
     all_dishes: {
       background:
-        "radial-gradient(circle at 88% 13%, rgba(43,211,107,0.43) 0%, rgba(43,211,107,0.17) 24%, transparent 42%), linear-gradient(145deg, rgba(43,211,107,0.30) 0%, rgba(11,72,43,0.58) 44%, rgba(5,27,20,0.97) 100%)",
-      borderColor: "rgba(43,211,107,0.42)",
-      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(43,211,107,0.18), 0 0 24px rgba(43,211,107,0.14)",
+        "radial-gradient(circle at 88% 13%, rgba(43,211,107,0.22) 0%, rgba(43,211,107,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(16,81,48,0.40) 0%, rgba(10,47,32,0.62) 46%, rgba(5,22,17,0.98) 100%)",
+      borderColor: "transparent",
+      boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(43,211,107,0.075)",
     },
     uploaded: {
       background:
-        "radial-gradient(circle at 88% 13%, rgba(242,162,58,0.43) 0%, rgba(242,162,58,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(242,126,58,0.32) 0%, rgba(93,29,22,0.62) 45%, rgba(27,12,12,0.97) 100%)",
-      borderColor: "rgba(242,162,58,0.42)",
-      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(242,126,58,0.18), 0 0 24px rgba(242,126,58,0.14)",
+        "radial-gradient(circle at 88% 13%, rgba(242,162,58,0.22) 0%, rgba(242,162,58,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(93,43,24,0.42) 0%, rgba(58,24,20,0.64) 46%, rgba(24,12,12,0.98) 100%)",
+      borderColor: "transparent",
+      boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(242,126,58,0.075)",
     },
     to_try: {
       background:
-        "radial-gradient(circle at 88% 13%, rgba(56,189,248,0.43) 0%, rgba(56,189,248,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(56,189,248,0.30) 0%, rgba(18,65,120,0.62) 45%, rgba(4,18,38,0.98) 100%)",
-      borderColor: "rgba(56,189,248,0.42)",
-      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(56,189,248,0.18), 0 0 24px rgba(56,189,248,0.14)",
+        "radial-gradient(circle at 88% 13%, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(19,64,111,0.42) 0%, rgba(14,38,78,0.64) 46%, rgba(6,17,35,0.98) 100%)",
+      borderColor: "transparent",
+      boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(56,189,248,0.075)",
     },
   };
   return styles[id] || null;
@@ -3475,7 +3475,7 @@ export default function Profile() {
                         }
                         isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
                       }}
-                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "border-white/10 text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "border-transparent text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                       style={neonDishlistStyle || undefined}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">

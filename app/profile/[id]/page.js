@@ -276,7 +276,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
         );
   };
   return (
-    <div className="grid aspect-square grid-cols-2 grid-rows-[1.35fr_1fr] gap-1.5">
+    <div className="grid aspect-square grid-cols-2 grid-rows-[2.35fr_0.72fr] gap-1.5">
       {Array.from({ length: 3 }).map((_, index) => renderPreviewTile(preview[index], index))}
     </div>
   );

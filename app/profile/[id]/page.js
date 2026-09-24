@@ -221,7 +221,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
       return (
         <div
           key={`${dishlist.id}-empty-${index}`}
-          className={`${tileClass} h-full w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
+          className={`${tileClass} h-full w-full rounded-[0.95rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
         />
       );
     }
@@ -234,7 +234,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           return (
             <div
               key={`${dishlist.id}-${dish.id}-${index}`}
-              className={`no-accent-border ${tileClass} relative h-full w-full overflow-hidden rounded-[0.85rem] border-2 bg-black text-white ${accentClass}`}
+              className={`no-accent-border ${tileClass} relative h-full w-full overflow-hidden rounded-[0.95rem] border-2 bg-black text-white ${accentClass}`}
               style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
               {isRestaurant && restaurantName ? (
@@ -260,11 +260,11 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           );
         }
         return (
-          <div key={`${dishlist.id}-${dish.id}-${index}`} className={`${tileClass} relative h-full w-full overflow-hidden rounded-[0.85rem]`}>
+          <div key={`${dishlist.id}-${dish.id}-${index}`} className={`${tileClass} relative h-full w-full overflow-hidden rounded-[0.95rem]`}>
             <img
               src={getDishImageUrl(dish, "thumb")}
               alt={dish.name || dishlist.name}
-              className={`no-accent-border h-full w-full rounded-[0.85rem] border-2 ${accentClass} object-cover`}
+              className={`no-accent-border h-full w-full rounded-[0.95rem] border-2 ${accentClass} object-cover`}
               style={{ borderColor }}
               loading="lazy"
               decoding="async"
@@ -276,7 +276,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
         );
   };
   return (
-    <div className="grid aspect-square grid-cols-2 grid-rows-[1.82fr_0.88fr] gap-1.5">
+    <div className="grid aspect-square grid-cols-2 grid-rows-[1.68fr_0.92fr] gap-1.5">
       {Array.from({ length: 3 }).map((_, index) => renderPreviewTile(preview[index], index))}
     </div>
   );

@@ -329,6 +329,52 @@ function SystemDishlistIcon({ id, className = "h-5 w-5" }) {
   return null;
 }
 
+function getSystemDishlistNeonStyle(id) {
+  const styles = {
+    saved: {
+      background:
+        "radial-gradient(circle at 88% 13%, rgba(242,212,109,0.42) 0%, rgba(242,212,109,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(242,212,109,0.32) 0%, rgba(75,49,14,0.58) 44%, rgba(19,15,10,0.96) 100%)",
+      borderColor: "rgba(242,212,109,0.42)",
+      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(242,212,109,0.18), 0 0 24px rgba(242,212,109,0.14)",
+    },
+    all_dishes: {
+      background:
+        "radial-gradient(circle at 88% 13%, rgba(43,211,107,0.43) 0%, rgba(43,211,107,0.17) 24%, transparent 42%), linear-gradient(145deg, rgba(43,211,107,0.30) 0%, rgba(11,72,43,0.58) 44%, rgba(5,27,20,0.97) 100%)",
+      borderColor: "rgba(43,211,107,0.42)",
+      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(43,211,107,0.18), 0 0 24px rgba(43,211,107,0.14)",
+    },
+    uploaded: {
+      background:
+        "radial-gradient(circle at 88% 13%, rgba(242,162,58,0.43) 0%, rgba(242,162,58,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(242,126,58,0.32) 0%, rgba(93,29,22,0.62) 45%, rgba(27,12,12,0.97) 100%)",
+      borderColor: "rgba(242,162,58,0.42)",
+      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(242,126,58,0.18), 0 0 24px rgba(242,126,58,0.14)",
+    },
+    to_try: {
+      background:
+        "radial-gradient(circle at 88% 13%, rgba(56,189,248,0.43) 0%, rgba(56,189,248,0.18) 24%, transparent 42%), linear-gradient(145deg, rgba(56,189,248,0.30) 0%, rgba(18,65,120,0.62) 45%, rgba(4,18,38,0.98) 100%)",
+      borderColor: "rgba(56,189,248,0.42)",
+      boxShadow: "0 16px 34px rgba(0,0,0,0.24), inset 0 0 30px rgba(56,189,248,0.18), 0 0 24px rgba(56,189,248,0.14)",
+    },
+  };
+  return styles[id] || null;
+}
+
+function getSystemDishlistIconShellStyle(id) {
+  const colors = {
+    saved: "242,212,109",
+    all_dishes: "43,211,107",
+    uploaded: "242,162,58",
+    to_try: "56,189,248",
+  };
+  const color = colors[id];
+  if (!color) return null;
+  return {
+    background: `rgba(${color},0.18)`,
+    borderColor: `rgba(${color},0.34)`,
+    boxShadow: `inset 0 0 16px rgba(${color},0.20), 0 0 18px rgba(${color},0.18)`,
+  };
+}
+
 function PodiumIcon({ className = "h-5 w-5" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
@@ -3389,6 +3435,8 @@ export default function Profile() {
                   const isMap = dishlist.type === "map";
                   const isTagDishlist = dishlist.type === "tag_system";
                   const isTopDishlistPreview = index < 4 && !isTagDishlist && !isMap;
+                  const neonDishlistStyle = isTopDishlistPreview ? getSystemDishlistNeonStyle(dishlist.id) : null;
+                  const neonIconShellStyle = neonDishlistStyle ? getSystemDishlistIconShellStyle(dishlist.id) : null;
                   const hasPendingBadge = dishlist.id === "all_dishes" && pendingQueueCount > 0;
                   const preview = getDishlistPreviewDishes(dishlist);
                   const canManageDishlist = dishlist.type === "custom";
@@ -3427,12 +3475,16 @@ export default function Profile() {
                         }
                         isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
                       }}
-                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "border-white/10 text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                      style={neonDishlistStyle || undefined}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <div className={`min-w-0 truncate text-[1rem] font-bold ${darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
+                        <div className={`min-w-0 truncate text-[1rem] font-bold ${neonDishlistStyle || darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                         {!isTagDishlist ? (
-                          <span className="relative shrink-0">
+                          <span
+                            className={`relative shrink-0 ${neonIconShellStyle ? "grid h-8 w-8 place-items-center rounded-full border" : ""}`}
+                            style={neonIconShellStyle || undefined}
+                          >
                             <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem]" />
                             {hasPendingBadge ? (
                               <span className="absolute -right-2.5 -top-2.5 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-[#151515] bg-[#E64646] px-1 text-[10px] font-black leading-none text-white shadow-[0_6px_14px_rgba(230,70,70,0.45)]">
@@ -3454,7 +3506,7 @@ export default function Profile() {
                       ) : (
                         <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} tall={isTopDishlistPreview} />
                       )}
-                      <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
+                      <div className={`mt-2 text-xs ${neonDishlistStyle ? "text-white/72" : darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                     </button>
                     {dishlistManagementMode && canManageDishlist ? (
                       <>

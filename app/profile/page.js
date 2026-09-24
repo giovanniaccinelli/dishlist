@@ -384,18 +384,16 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
       </div>
     );
   }
-  return (
-    <div className="grid grid-cols-2 gap-1.5">
-      {Array.from({ length: 4 }).map((_, index) => {
-        const dish = preview[index];
-        if (!dish) {
-          return (
-            <div
-              key={`${dishlist.id}-empty-${index}`}
-              className={`aspect-square w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
-            />
-          );
-        }
+  const renderPreviewTile = (dish, index) => {
+    const tileClass = index === 0 ? "col-span-2 row-span-1" : "";
+    if (!dish) {
+      return (
+        <div
+          key={`${dishlist.id}-empty-${index}`}
+          className={`${tileClass} h-full w-full rounded-[0.85rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
+        />
+      );
+    }
         const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
         const borderColor = isRestaurant ? "#E64646" : "#E4B43F";
         const accentClass = isRestaurant ? "restaurant-accent-border" : "default-accent-border";
@@ -405,7 +403,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           return (
             <div
               key={`${dishlist.id}-${dish.id}-${index}`}
-              className={`no-accent-border relative aspect-square w-full overflow-hidden rounded-[0.85rem] border-2 bg-black text-white ${accentClass}`}
+              className={`no-accent-border ${tileClass} relative h-full w-full overflow-hidden rounded-[0.85rem] border-2 bg-black text-white ${accentClass}`}
               style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
               {isRestaurant && restaurantName ? (
@@ -431,7 +429,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           );
         }
         return (
-          <div key={`${dishlist.id}-${dish.id}-${index}`} className="relative aspect-square w-full overflow-hidden rounded-[0.85rem]">
+          <div key={`${dishlist.id}-${dish.id}-${index}`} className={`${tileClass} relative h-full w-full overflow-hidden rounded-[0.85rem]`}>
             <img
               src={getDishImageUrl(dish, "thumb")}
               alt={dish.name || dishlist.name}
@@ -446,7 +444,10 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
             />
           </div>
         );
-      })}
+  };
+  return (
+    <div className="grid aspect-square grid-cols-2 grid-rows-[1.35fr_1fr] gap-1.5">
+      {Array.from({ length: 3 }).map((_, index) => renderPreviewTile(preview[index], index))}
     </div>
   );
 }
@@ -2512,7 +2513,7 @@ export default function Profile() {
     const filteredDishes = sourceDishes.filter((dish) => dishModeMatches(dish, selectedDishMode));
     return orderDishesForProfileList(filteredDishes);
   };
-  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 4);
+  const getDishlistPreviewDishes = (dishlist) => sortDishlistDishes(dishlist?.dishes || [], dishlist?.id || "").slice(0, 3);
   const unfilteredActiveDishlist =
     showingDishlistOverview ? null : allDishlists.find((dishlist) => dishlist.id === activeDishlistId) || allDishlists[0] || null;
   const activeDishlist = unfilteredActiveDishlist

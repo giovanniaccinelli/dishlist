@@ -1395,30 +1395,30 @@ export default function PublicProfile() {
                 <p className="mt-2 line-clamp-2 text-sm leading-5 text-black/68 whitespace-pre-wrap">{profileUser.bio}</p>
               ) : null}
             </div>
-            <div className="ml-2 mt-2 grid max-w-[15.75rem] grid-cols-3 gap-4">
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
+            <div className="ml-2 mt-2 flex items-start justify-start gap-7">
+              <div className="flex min-h-[44px] min-w-[3.65rem] flex-col items-start justify-start text-left">
                 <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(dishes.length || 0))}</div>
                 <button
                   onClick={() => selectDishlist("uploaded")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                  className="mt-1 text-left text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Uploaded")}
                 </button>
               </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
+              <div className="flex min-h-[44px] min-w-[3.65rem] flex-col items-start justify-start text-left">
                 <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.followers?.length || 0))}</div>
                 <button
                   onClick={() => openConnections("followers")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                  className="mt-1 text-left text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Followers")}
                 </button>
               </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
+              <div className="flex min-h-[44px] min-w-[3.65rem] flex-col items-start justify-start text-left">
                 <div data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileUser.following?.length || 0))}</div>
                 <button
                   onClick={() => openConnections("following")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                  className="mt-1 text-left text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Following")}
                 </button>

@@ -56,6 +56,7 @@ const BASE_LIMIT = 20;
 const TAP_MOVE_THRESHOLD = 18;
 const EXPLORE_CACHE_KEY = "explore:main";
 const EXPLORE_PAGE_SIZE = 720;
+const explorePreviewImageCache = new Map();
 
 function stableHash(value = "") {
   return String(value || "").split("").reduce((hash, char) => {
@@ -80,17 +81,26 @@ function getDishOwnerPhoto(dish) {
   return String(dish?.ownerPhotoURL || dish?.userPhotoURL || dish?.uploadedByPhotoURL || dish?.createdByPhotoURL || "").trim();
 }
 
-function preloadExploreImages(dishes = [], limit = 48) {
+function warmExploreImage(src) {
+  if (typeof window === "undefined" || !src || src === DEFAULT_DISH_IMAGE) return;
+  if (explorePreviewImageCache.has(src)) return;
+  const image = new Image();
+  image.decoding = "async";
+  image.loading = "eager";
+  image.src = src;
+  explorePreviewImageCache.set(src, image);
+  if (typeof image.decode === "function") {
+    image.decode().catch(() => {});
+  }
+}
+
+function preloadExploreImages(dishes = [], limit = 120) {
   if (typeof window === "undefined") return;
   dishes
     .slice(0, limit)
     .map((dish) => getDishImageUrl(dish, "thumb"))
     .filter((src) => src && src !== DEFAULT_DISH_IMAGE)
-    .forEach((src) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = src;
-    });
+    .forEach(warmExploreImage);
 }
 
 function SafeDishOpenButton({ href, label, onOpen }) {
@@ -482,10 +492,16 @@ function SearchBar({ value, onChange, placeholder }) {
 
 function DishPreview({ dish, title, t, priority = false, featuredTrophy = false, onOpen }) {
   const hasMedia = hasDishMedia(dish);
+  const imageUrl = hasMedia ? getDishImageUrl(dish, "thumb") : "";
+  const ownerPhoto = getDishOwnerPhoto(dish);
   const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
   const restaurantName = String(dish?.restaurant?.name || dish?.restaurantName || dish?.placeName || "").trim();
   const ingredientItems = !isRestaurant ? getDishIngredientItems(dish).slice(0, 5) : [];
   const accentColor = isRestaurant ? "#E64646" : "#E4B43F";
+  useEffect(() => {
+    warmExploreImage(imageUrl);
+    warmExploreImage(ownerPhoto);
+  }, [imageUrl, ownerPhoto]);
   const renderNoPhotoMetadata = () => (
     <div className={`pointer-events-none absolute z-20 flex items-end ${isRestaurant ? "inset-x-3 bottom-[4.45rem]" : "inset-x-2 bottom-[3.05rem] min-h-7"}`}>
       {isRestaurant ? (
@@ -527,9 +543,9 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
         ) : null}
         {hasMedia ? (
           <img
-            src={getDishImageUrl(dish, "thumb")}
+            src={imageUrl}
             alt={dish.name}
-            loading={priority ? "eager" : "lazy"}
+            loading="eager"
             fetchPriority={priority ? "high" : "auto"}
             decoding="async"
             className="w-full h-36 object-cover"
@@ -550,8 +566,8 @@ function DishPreview({ dish, title, t, priority = false, featuredTrophy = false,
       <div className="mt-2 min-w-0 px-0.5">
         <div className="truncate text-[15px] font-black leading-tight text-black">{dish.name || t("Untitled dish")}</div>
         <div className="mt-1 flex min-w-0 items-center gap-1.5">
-          {getDishOwnerPhoto(dish) ? (
-            <img src={getDishOwnerPhoto(dish)} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+          {ownerPhoto ? (
+            <img src={ownerPhoto} alt="" loading="eager" decoding="async" className="h-4 w-4 shrink-0 rounded-full object-cover" />
           ) : (
             <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[8px] font-black text-black/45">
               {getDishOwnerLabel(dish).slice(0, 1).toUpperCase()}

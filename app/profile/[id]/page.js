@@ -196,11 +196,13 @@ function TagDishlistPreview({ dishlist }) {
   );
 }
 
-function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value }) {
+function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value, tall = false }) {
   const cover = dishlist?.coverThumbURL || dishlist?.coverCardURL || dishlist?.coverURL || "";
+  const previewAspectClass = tall ? "aspect-[1/1.06]" : "aspect-square";
+  const tileRadiusClass = "rounded-[0.72rem]";
   if (cover) {
     return (
-      <div className="relative aspect-square w-full overflow-hidden rounded-[0.95rem]">
+      <div className={`relative ${previewAspectClass} w-full overflow-hidden ${tileRadiusClass}`}>
         <img
           src={cover}
           alt={dishlist.name || t("Dishlist cover")}
@@ -221,7 +223,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
       return (
         <div
           key={`${dishlist.id}-empty-${index}`}
-          className={`${tileClass} h-full w-full rounded-[0.95rem] border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
+          className={`${tileClass} h-full w-full ${tileRadiusClass} border ${darkMode ? "border-white/10 bg-white/6" : "border-black/10 bg-black/6"}`}
         />
       );
     }
@@ -234,7 +236,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           return (
             <div
               key={`${dishlist.id}-${dish.id}-${index}`}
-              className={`no-accent-border ${tileClass} relative h-full w-full overflow-hidden rounded-[0.95rem] border-2 bg-black text-white ${accentClass}`}
+              className={`no-accent-border ${tileClass} relative h-full w-full overflow-hidden ${tileRadiusClass} border-2 bg-black text-white ${accentClass}`}
               style={{ borderColor, boxShadow: `inset 0 0 0 2px ${borderColor}, inset 0 0 22px ${isRestaurant ? "rgba(230,70,70,0.16)" : "rgba(228,180,63,0.14)"}` }}
             >
               {isRestaurant && restaurantName ? (
@@ -260,11 +262,11 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           );
         }
         return (
-          <div key={`${dishlist.id}-${dish.id}-${index}`} className={`${tileClass} relative h-full w-full overflow-hidden rounded-[0.95rem]`}>
+          <div key={`${dishlist.id}-${dish.id}-${index}`} className={`${tileClass} relative h-full w-full overflow-hidden ${tileRadiusClass}`}>
             <img
               src={getDishImageUrl(dish, "thumb")}
               alt={dish.name || dishlist.name}
-              className={`no-accent-border h-full w-full rounded-[0.95rem] border-2 ${accentClass} object-cover`}
+              className={`no-accent-border h-full w-full ${tileRadiusClass} border-2 ${accentClass} object-cover`}
               style={{ borderColor }}
               loading="lazy"
               decoding="async"
@@ -276,7 +278,7 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
         );
   };
   return (
-    <div className="grid aspect-square grid-cols-2 grid-rows-[1.68fr_0.92fr] gap-1.5">
+    <div className={`grid ${previewAspectClass} grid-cols-2 grid-rows-[1.68fr_0.92fr] gap-1.5`}>
       {Array.from({ length: 3 }).map((_, index) => renderPreviewTile(preview[index], index))}
     </div>
   );
@@ -1371,9 +1373,10 @@ export default function PublicProfile() {
       {showingDishlistOverview ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {allDishlists.map((dishlist) => {
+            {allDishlists.map((dishlist, index) => {
               const isMap = dishlist.type === "map";
               const isTagDishlist = dishlist.type === "tag_system";
+              const isTopDishlistPreview = index < 4 && !isTagDishlist && !isMap;
               const preview = getDishlistPreviewDishes(dishlist);
               return (
                 <button
@@ -1396,7 +1399,7 @@ export default function PublicProfile() {
                       <RestaurantMapIcon className="relative h-10 w-10 text-[#E64646]" strokeWidth={2.05} />
                     </div>
                   ) : (
-                    <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} />
+                    <DishlistPreviewGrid dishlist={dishlist} preview={preview} darkMode={darkMode} t={t} tall={isTopDishlistPreview} />
                   )}
                   <div className={`mt-2 text-xs ${darkMode ? "text-white/48" : "text-black/48"}`}>{Number(dishlist.count || 0)} {t("dishes")}</div>
                 </button>

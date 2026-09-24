@@ -3493,7 +3493,7 @@ export default function Profile() {
                         }
                         isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
                       }}
-                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "profile-system-dishlist-card text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
                       style={neonDishlistStyle || undefined}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">

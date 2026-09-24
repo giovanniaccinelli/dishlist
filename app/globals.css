@@ -333,7 +333,7 @@
   div[class*="rounded"][class*="border"],
   span[class*="rounded"][class*="bg"],
   span[class*="rounded"][class*="border"]
-):not(.no-accent-border):not(.dish-card-shell) {
+):not(.no-accent-border):not(.dish-card-shell):not(.profile-system-dishlist-card) {
   border-color: var(--app-accent-border) !important;
   border-width: 2px !important;
   border-style: solid !important;
@@ -347,7 +347,7 @@
   input[class*="rounded"],
   textarea[class*="rounded"],
   select[class*="rounded"]
-):not(.no-accent-border):not(.dish-card-shell) {
+):not(.no-accent-border):not(.dish-card-shell):not(.profile-system-dishlist-card) {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -363,7 +363,7 @@
   div[class*="rounded"][class*="border"],
   span[class*="rounded"][class*="bg"],
   span[class*="rounded"][class*="border"]
-):not(.no-accent-border):not(.dish-card-shell).default-accent-border {
+):not(.no-accent-border):not(.dish-card-shell):not(.profile-system-dishlist-card).default-accent-border {
   border-color: #e4b43f !important;
 }
 
@@ -379,7 +379,7 @@
   div[class*="rounded"][class*="border"],
   span[class*="rounded"][class*="bg"],
   span[class*="rounded"][class*="border"]
-):not(.no-accent-border):not(.dish-card-shell).restaurant-accent-border {
+):not(.no-accent-border):not(.dish-card-shell):not(.profile-system-dishlist-card).restaurant-accent-border {
   border-color: #e64646 !important;
 }
 
@@ -673,7 +673,7 @@ html.dark :where(
   div[class*="rounded"][class*="border"],
   span[class*="rounded"][class*="bg"],
   span[class*="rounded"][class*="border"]
-):not(.no-accent-border):not(.dish-card-shell):not(.dish-mode-control-btn) {
+):not(.no-accent-border):not(.dish-card-shell):not(.dish-mode-control-btn):not(.profile-system-dishlist-card) {
   border-color: rgba(255, 255, 255, 0.10) !important;
 }
 

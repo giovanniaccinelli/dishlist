@@ -401,10 +401,35 @@ function TagDishlistPreview({ dishlist }) {
   );
 }
 
+const profilePreviewImageCache = new Map();
+
+function warmProfilePreviewImages(urls = []) {
+  if (typeof window === "undefined") return;
+  urls.filter(Boolean).forEach((url) => {
+    if (profilePreviewImageCache.has(url)) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.loading = "eager";
+    image.src = url;
+    profilePreviewImageCache.set(url, image);
+    if (typeof image.decode === "function") {
+      image.decode().catch(() => {});
+    }
+  });
+}
+
 function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value, tall = false }) {
   const cover = dishlist?.coverThumbURL || dishlist?.coverCardURL || dishlist?.coverURL || "";
+  const previewImageUrls = [
+    cover,
+    ...preview.filter((dish) => dish && hasDishMedia(dish)).map((dish) => getDishImageUrl(dish, "thumb")),
+  ].filter(Boolean);
+  const previewImageKey = previewImageUrls.join("|");
   const previewAspectClass = tall ? "aspect-[1/1.09]" : "aspect-square";
   const tileRadiusClass = "rounded-[0.72rem]";
+  useEffect(() => {
+    warmProfilePreviewImages(previewImageUrls);
+  }, [previewImageKey]);
   if (cover) {
     return (
       <div className={`relative ${previewAspectClass} w-full overflow-hidden ${tileRadiusClass}`}>
@@ -412,8 +437,8 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
           src={cover}
           alt={dishlist.name || t("Dishlist cover")}
           className="h-full w-full object-cover"
-          loading="lazy"
-          fetchPriority="low"
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
           onError={(event) => {
             event.currentTarget.src = DEFAULT_DISH_IMAGE;
@@ -474,8 +499,8 @@ function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (va
               alt={dish.name || dishlist.name}
               className={`no-accent-border h-full w-full ${tileRadiusClass} border-2 ${accentClass} object-cover`}
               style={{ borderColor }}
-              loading="lazy"
-              fetchPriority="low"
+              loading="eager"
+              fetchPriority="high"
               decoding="async"
               onError={(event) => {
                 event.currentTarget.src = DEFAULT_DISH_IMAGE;

@@ -35,6 +35,27 @@
     @apply text-black antialiased;
     overscroll-behavior: none;
     background-attachment: fixed;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  [data-selectable="true"] {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    -webkit-user-drag: none;
+    user-drag: none;
   }
 
   html:not(.dark) body {

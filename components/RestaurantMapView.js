@@ -805,6 +805,7 @@ export default function RestaurantMapView({
       disableDefaultUI: true,
       gestureHandling: "greedy",
       clickableIcons: false,
+      keyboardShortcuts: false,
       styles: [
         {
           featureType: "poi.business",

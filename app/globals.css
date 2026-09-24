@@ -941,3 +941,20 @@ input, textarea, select {
     transform: rotate(360deg);
   }
 }
+
+.profile-system-dishlist-card {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+.profile-system-dishlist-card::before,
+.profile-system-dishlist-card::after {
+  content: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}

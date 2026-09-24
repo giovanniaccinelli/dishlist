@@ -334,26 +334,18 @@ function getSystemDishlistNeonStyle(id) {
     saved: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(242,212,109,0.22) 0%, rgba(242,212,109,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(91,68,22,0.40) 0%, rgba(39,30,16,0.62) 46%, rgba(17,14,11,0.98) 100%)",
-      borderColor: "rgba(255,255,255,0.10)",
-      boxShadow: "0 12px 26px rgba(0,0,0,0.18), inset 0 0 22px rgba(242,212,109,0.06)",
     },
     all_dishes: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(43,211,107,0.22) 0%, rgba(43,211,107,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(16,81,48,0.40) 0%, rgba(10,47,32,0.62) 46%, rgba(5,22,17,0.98) 100%)",
-      borderColor: "rgba(255,255,255,0.10)",
-      boxShadow: "0 12px 26px rgba(0,0,0,0.18), inset 0 0 22px rgba(43,211,107,0.06)",
     },
     uploaded: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(242,162,58,0.22) 0%, rgba(242,162,58,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(93,43,24,0.42) 0%, rgba(58,24,20,0.64) 46%, rgba(24,12,12,0.98) 100%)",
-      borderColor: "rgba(255,255,255,0.10)",
-      boxShadow: "0 12px 26px rgba(0,0,0,0.18), inset 0 0 22px rgba(242,126,58,0.06)",
     },
     to_try: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(19,64,111,0.42) 0%, rgba(14,38,78,0.64) 46%, rgba(6,17,35,0.98) 100%)",
-      borderColor: "rgba(255,255,255,0.10)",
-      boxShadow: "0 12px 26px rgba(0,0,0,0.18), inset 0 0 22px rgba(56,189,248,0.06)",
     },
   };
   return styles[id] || null;
@@ -3493,7 +3485,7 @@ export default function Profile() {
                         }
                         isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id);
                       }}
-                      className={`relative w-full rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "profile-system-dishlist-card text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                      className={`relative w-full rounded-[1.5rem] p-3 text-left ${isTagDishlist ? `aspect-square border-2 shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "profile-system-dishlist-card text-white" : darkMode ? "border border-white/10 bg-[#151515] shadow-[0_12px_28px_rgba(0,0,0,0.08)]" : "border border-black/10 bg-white shadow-[0_12px_28px_rgba(0,0,0,0.08)]"}`}
                       style={neonDishlistStyle || undefined}
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">

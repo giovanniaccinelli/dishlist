@@ -3283,7 +3283,7 @@ export default function Profile() {
                 <p className="mt-2 line-clamp-2 text-sm leading-5 text-black/68 whitespace-pre-wrap">{profileMeta.bio}</p>
               ) : null}
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-4">
+            <div className="ml-2 mt-2 grid max-w-[15.75rem] grid-cols-3 gap-4">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`uploaded-${profileCounts.uploaded}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.uploaded) || 0)}</div>
                 <button
@@ -3319,7 +3319,13 @@ export default function Profile() {
 
       {!profileContentReady ? (
         <div className="mx-auto w-full max-w-3xl px-2 pb-4">
-          <div className={`mb-4 h-20 animate-pulse rounded-[1.35rem] ${darkMode ? "bg-white/8" : "bg-black/6"}`} />
+          <div className={`mb-2 flex items-center justify-between rounded-[1.1rem] px-0 py-1 ${darkMode ? "text-white" : "text-black"}`}>
+            <div className="flex items-center gap-2">
+              <div className={`h-5 w-32 animate-pulse rounded-full ${darkMode ? "bg-white/10" : "bg-black/6"}`} />
+              <div className="h-4 w-4 animate-pulse rounded-md bg-[#E64646]/40" />
+            </div>
+            <div className={`h-10 w-10 animate-pulse rounded-[1rem] ${darkMode ? "bg-white/10" : "bg-black/6"}`} />
+          </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[0, 1, 2, 3].map((item) => (
               <div

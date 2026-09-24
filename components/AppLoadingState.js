@@ -98,20 +98,35 @@ export function PeopleInlineLoading() {
 
 export function CategoryRowsLoading() {
   return (
-    <div className="space-y-6">
-      {Array.from({ length: 4 }).map((_, idx) => (
-        <div key={idx}>
-          <div className="mb-2.5 flex items-center justify-between">
-            <PulseBlock className="h-5 w-28 rounded-full" />
-            <PulseBlock className="h-10 w-10 rounded-[1rem]" />
+    <div>
+      <div className="mb-3">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <PulseBlock className="h-6 w-32 rounded-full" />
+            <PulseBlock className="h-6 w-6 rounded-md" />
           </div>
-          <div className="flex gap-3 overflow-hidden">
-            {Array.from({ length: 3 }).map((_, cardIdx) => (
-              <PulseBlock key={cardIdx} className="h-28 min-w-[31.5%] rounded-2xl" />
-            ))}
-          </div>
+          <PulseBlock className="h-10 w-10 rounded-[1rem]" />
         </div>
-      ))}
+      </div>
+      <div className="space-y-6">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx}>
+            <div className="mb-2.5 flex items-center justify-between">
+              <PulseBlock className={idx === 0 ? "h-6 w-36 rounded-full" : "h-8 w-28 rounded-full"} />
+              <PulseBlock className="h-10 w-10 rounded-[1rem]" />
+            </div>
+            <div className="flex gap-3 overflow-hidden">
+              {Array.from({ length: 2 }).map((_, cardIdx) => (
+                <div key={cardIdx} className="min-w-[48%]">
+                  <PulseBlock className="aspect-square w-full rounded-2xl" />
+                  <PulseBlock className="mt-2 h-4 w-[82%] rounded-full" />
+                  <PulseBlock className="mt-1.5 h-3 w-[54%] rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

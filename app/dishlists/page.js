@@ -68,11 +68,35 @@ const sortUsersByProfileDishes = (usersList) =>
     return (a.displayName || "").localeCompare(b.displayName || "");
   });
 
-const stampPeopleOrder = (usersList) =>
-  usersList.map((item, index) => ({
-    ...item,
-    _peopleOrder: Number.isFinite(item?._peopleOrder) ? item._peopleOrder : index,
-  }));
+const shufflePeopleOrder = (usersList = []) =>
+  usersList
+    .map((item) => ({
+      ...item,
+      _peopleOrder: Math.random(),
+    }))
+    .sort((a, b) => getPeopleOrder(a) - getPeopleOrder(b));
+
+const applyPeopleOrder = (usersList = [], orderById = new Map()) =>
+  usersList
+    .map((item) => ({
+      ...item,
+      _peopleOrder: orderById.get(item.id) ?? Math.random(),
+    }))
+    .sort((a, b) => getPeopleOrder(a) - getPeopleOrder(b));
+
+const shuffleCachedPeopleForOpen = (cached) => {
+  if (!cached) return null;
+  const users = shufflePeopleOrder(cached.users || []);
+  const orderById = new Map(users.map((item) => [item.id, getPeopleOrder(item)]));
+  const allUsersPool = Array.isArray(cached.allUsersPool)
+    ? applyPeopleOrder(cached.allUsersPool, orderById)
+    : cached.allUsersPool;
+  return {
+    ...cached,
+    users,
+    allUsersPool,
+  };
+};
 
 const mergeStoryStateByUser = (incomingList = [], existingList = []) => {
   const existingById = new Map((existingList || []).map((item) => [item.id, item]));
@@ -94,7 +118,7 @@ export default function Dishlists() {
   const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
-  const cachedPeople = getSessionPageCache(PEOPLE_CACHE_KEY)?.value;
+  const cachedPeople = useMemo(() => shuffleCachedPeopleForOpen(getSessionPageCache(PEOPLE_CACHE_KEY)?.value), []);
   const [users, setUsers] = useState(() => cachedPeople?.users || []);
   const [allUsersPool, setAllUsersPool] = useState(() => cachedPeople?.allUsersPool || null);
   const [search, setSearch] = useState("");
@@ -233,7 +257,7 @@ export default function Dishlists() {
   };
 
   const fetchUsers = async () => {
-    const cached = getSessionPageCache(PEOPLE_CACHE_KEY)?.value;
+    const cached = shuffleCachedPeopleForOpen(getSessionPageCache(PEOPLE_CACHE_KEY)?.value);
     if (cached) {
       setUsers(cached.users || []);
       setAllUsersPool(cached.allUsersPool || cached.users || []);
@@ -255,7 +279,7 @@ export default function Dishlists() {
         id: docSnap.id,
       }));
       const fastPreviewUsers = attachPreviewData(usersList, allDishes);
-      const fastSortedUsers = stampPeopleOrder(sortUsersByProfileDishes(fastPreviewUsers));
+      const fastSortedUsers = shufflePeopleOrder(fastPreviewUsers);
       setUsers(fastSortedUsers);
       setAllUsersPool(fastSortedUsers);
       setVisibleUsersLimit(INITIAL_USERS_LIMIT);

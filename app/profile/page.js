@@ -3285,6 +3285,15 @@ export default function Profile() {
             </div>
             <div className="mt-2 grid grid-cols-3 gap-4">
               <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
+                <div key={`uploaded-${profileCounts.uploaded}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.uploaded) || 0)}</div>
+                <button
+                  onClick={() => selectDishlist("uploaded")}
+                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
+                >
+                  {t("Uploaded")}
+                </button>
+              </div>
+              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
                 <div key={`followers-${profileCounts.followers}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.followers) || 0)}</div>
                 <button
                   onClick={() => openConnections("followers")}
@@ -3300,15 +3309,6 @@ export default function Profile() {
                   className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
                 >
                   {t("Following")}
-                </button>
-              </div>
-              <div className="flex min-h-[44px] flex-col items-center justify-start text-center">
-                <div key={`uploaded-${profileCounts.uploaded}`} data-no-translate="true" className="text-[1.28rem] font-bold leading-none">{Math.max(0, Number(profileCounts.uploaded) || 0)}</div>
-                <button
-                  onClick={() => selectDishlist("uploaded")}
-                  className="mt-1 text-[10px] leading-[1.1] text-black/50 hover:text-black"
-                >
-                  {t("Uploaded")}
                 </button>
               </div>
             </div>

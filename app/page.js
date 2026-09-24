@@ -56,6 +56,7 @@ import { getSessionPageCache, setSessionPageCache } from "./lib/sessionPageCache
 import { getDishRestaurantLocation, getRestaurantDistanceMeters } from "./lib/restaurants";
 import { usePrivateGeolocation } from "./lib/usePrivateGeolocation";
 import { hapticError, hapticImpact, hapticSuccess } from "./lib/haptics";
+import { hasDishMedia } from "./lib/dishContent";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
@@ -1031,7 +1032,7 @@ export default function Feed() {
   };
 
   const orderedForYou = useMemo(() => {
-    const filtered = forYouDeck.filter((d) => !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode));
+    const filtered = forYouDeck.filter((d) => hasDishMedia(d) && !addedDishIds.has(d.id) && isDishAllowedByFilters(d) && dishModeMatches(d, selectedDishMode));
     return selectedDishMode === DISH_MODE_RESTAURANT ? sortRestaurantDishesByDistance(filtered) : filtered;
   }, [forYouDeck, addedDishIds, excludedTagSet, selectedDishMode, currentLocation?.lat, currentLocation?.lng]);
 
@@ -1765,8 +1766,9 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.previous?.()}
-          className="no-accent-border flex h-10 w-11 items-center justify-center rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
+          className="no-accent-border invisible flex h-10 w-11 items-center justify-center rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
           aria-label="Previous dish"
+          tabIndex={-1}
         >
           <ChevronLeft size={21} strokeWidth={2.8} />
         </button>
@@ -1802,8 +1804,9 @@ export default function Feed() {
         <button
           type="button"
           onClick={() => activeDeckRef.current?.next?.()}
-          className="no-accent-border flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
+          className="no-accent-border invisible flex h-10 w-11 items-center justify-center justify-self-end rounded-[1rem] bg-transparent text-black/36 shadow-none transition-transform active:scale-[0.97]"
           aria-label="Next dish"
+          tabIndex={-1}
         >
           <ChevronRight size={21} strokeWidth={2.8} />
         </button>

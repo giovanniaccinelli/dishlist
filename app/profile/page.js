@@ -366,7 +366,7 @@ function TagDishlistPreview({ dishlist }) {
 
 function DishlistPreviewGrid({ dishlist, preview = [], darkMode = false, t = (value) => value, tall = false }) {
   const cover = dishlist?.coverThumbURL || dishlist?.coverCardURL || dishlist?.coverURL || "";
-  const previewAspectClass = tall ? "aspect-[1/1.06]" : "aspect-square";
+  const previewAspectClass = tall ? "aspect-[1/1.09]" : "aspect-square";
   const tileRadiusClass = "rounded-[0.72rem]";
   if (cover) {
     return (

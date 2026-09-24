@@ -177,25 +177,21 @@ function getSystemDishlistNeonStyle(id) {
     saved: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(242,212,109,0.22) 0%, rgba(242,212,109,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(91,68,22,0.40) 0%, rgba(39,30,16,0.62) 46%, rgba(17,14,11,0.98) 100%)",
-      borderColor: "transparent",
       boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(242,212,109,0.075)",
     },
     all_dishes: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(43,211,107,0.22) 0%, rgba(43,211,107,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(16,81,48,0.40) 0%, rgba(10,47,32,0.62) 46%, rgba(5,22,17,0.98) 100%)",
-      borderColor: "transparent",
       boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(43,211,107,0.075)",
     },
     uploaded: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(242,162,58,0.22) 0%, rgba(242,162,58,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(93,43,24,0.42) 0%, rgba(58,24,20,0.64) 46%, rgba(24,12,12,0.98) 100%)",
-      borderColor: "transparent",
       boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(242,126,58,0.075)",
     },
     to_try: {
       background:
         "radial-gradient(circle at 88% 13%, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0.09) 24%, transparent 43%), linear-gradient(145deg, rgba(19,64,111,0.42) 0%, rgba(14,38,78,0.64) 46%, rgba(6,17,35,0.98) 100%)",
-      borderColor: "transparent",
       boxShadow: "0 14px 30px rgba(0,0,0,0.22), inset 0 0 26px rgba(56,189,248,0.075)",
     },
   };
@@ -213,8 +209,7 @@ function getSystemDishlistIconShellStyle(id) {
   if (!color) return null;
   return {
     background: `rgba(${color},0.18)`,
-    borderColor: `rgba(${color},0.34)`,
-    boxShadow: `inset 0 0 16px rgba(${color},0.20), 0 0 18px rgba(${color},0.18)`,
+    boxShadow: `inset 0 0 16px rgba(${color},0.16), 0 0 14px rgba(${color},0.12)`,
   };
 }
 
@@ -1431,14 +1426,14 @@ export default function PublicProfile() {
                   key={dishlist.id}
                   type="button"
                   onClick={() => (isMap ? setProfileMapOpen(true) : selectDishlist(dishlist.id))}
-                  className={`rounded-[1.5rem] border p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "border-transparent text-white" : darkMode ? "border-white/10 bg-[#151515]" : "border-black/10 bg-white"}`}
+                  className={`rounded-[1.5rem] p-3 text-left shadow-[0_12px_28px_rgba(0,0,0,0.08)] ${isTagDishlist ? `aspect-square border-2 ${getTagDishlistCardClass(dishlist, darkMode)}` : neonDishlistStyle ? "text-white" : darkMode ? "border border-white/10 bg-[#151515]" : "border border-black/10 bg-white"}`}
                   style={neonDishlistStyle || undefined}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className={`min-w-0 truncate text-[1rem] font-bold ${neonDishlistStyle || darkMode ? "text-white" : "text-black"}`}>{getDishlistDisplayName(dishlist, t)}</div>
                     {!isTagDishlist ? (
                       <span
-                        className={`shrink-0 ${neonIconShellStyle ? "grid h-8 w-8 place-items-center rounded-full border" : ""}`}
+                        className={`shrink-0 ${neonIconShellStyle ? "grid h-8 w-8 place-items-center rounded-full" : ""}`}
                         style={neonIconShellStyle || undefined}
                       >
                         <SystemDishlistIcon id={dishlist.id} className="h-[1.1rem] w-[1.1rem] shrink-0" />

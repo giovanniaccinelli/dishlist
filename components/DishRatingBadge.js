@@ -2,7 +2,13 @@
 
 export default function DishRatingBadge({ dish, className = "" }) {
   const isRestaurant = String(dish?.dishMode || "").toLowerCase() === "restaurant";
-  const rating = Math.max(0, Math.min(5, Math.round((Number(dish?.rating) || 0) * 2) / 2));
+  const mediaRatings = (Array.isArray(dish?.mediaItems) ? dish.mediaItems : [])
+    .map((item) => Number(item?.rating))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const rawRating = mediaRatings.length
+    ? mediaRatings.reduce((sum, value) => sum + value, 0) / mediaRatings.length
+    : Number(dish?.rating) || 0;
+  const rating = Math.max(0, Math.min(5, Math.round(rawRating * 2) / 2));
   if (!isRestaurant || rating <= 0) return null;
 
   return (

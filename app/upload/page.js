@@ -598,8 +598,6 @@ export default function UploadPage() {
     : null;
   const composerAccent = isRestaurantUpload ? "#E64646" : "#E4B43F";
   const composerAccentSoft = isRestaurantUpload ? "rgba(230,70,70,0.24)" : "rgba(228,180,63,0.24)";
-  const composerPriceSymbol = PRICE_CURRENCIES.find((currency) => currency.code === dishPriceCurrency)?.symbol || "€";
-
   useEffect(() => {
     if (!isRestaurantUpload && dishRating !== 0) setDishRating(0);
     if (!isRestaurantUpload) {
@@ -969,6 +967,12 @@ export default function UploadPage() {
     const activeDishNameValue = hasMediaCarousel
       ? (dishMediaNames[activeMediaIndex] ?? (activeMediaIndex === 0 ? dishName : ""))
       : dishName;
+    const activePreviewName = String(activeDishNameValue || dishName).trim() || previewName;
+    const activeRestaurantDetails = mediaRestaurantDetailsOpen ? dishMediaRestaurantDetails[activeMediaIndex] || null : null;
+    const activeRestaurantRating = isRestaurantUpload ? Number(activeRestaurantDetails?.rating ?? dishRating ?? 0) : 0;
+    const activeRestaurantPrice = isRestaurantUpload ? String(activeRestaurantDetails?.price ?? dishPrice ?? "").trim() : "";
+    const activeRestaurantCurrency = activeRestaurantDetails?.priceCurrency || dishPriceCurrency;
+    const activeRestaurantPriceSymbol = PRICE_CURRENCIES.find((currency) => currency.code === activeRestaurantCurrency)?.symbol || "€";
     const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
     const uploadMediaBounds = {
       top: showNameInputs ? "5rem" : "6.85rem",
@@ -1303,9 +1307,14 @@ export default function UploadPage() {
                               <button
                                 type="button"
                                 onClick={openMediaRestaurantDetails}
-                                className="w-full rounded-full border border-[#E64646]/30 bg-[#E64646]/14 px-4 py-3 text-[13px] font-black uppercase tracking-[0.08em] text-white shadow-[0_14px_30px_rgba(0,0,0,0.18),0_0_18px_rgba(230,70,70,0.1)] transition active:scale-[0.985]"
+                                className="group flex w-full items-center justify-between rounded-[1rem] border border-[#E64646]/24 bg-[linear-gradient(135deg,rgba(230,70,70,0.16),rgba(255,255,255,0.06))] px-4 py-3 text-left text-white shadow-[0_14px_30px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition active:scale-[0.985]"
                               >
-                                {language === "it" ? "Dettagli per foto" : "Details per photo"}
+                                <span className="text-[13px] font-black uppercase tracking-[0.08em]">
+                                  {language === "it" ? "Voti e prezzi separati" : "Separate ratings and prices"}
+                                </span>
+                                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/70 group-active:bg-white/14">
+                                  {dishMediaPreviews.length}
+                                </span>
                               </button>
                             ) : null}
                           </>
@@ -1313,14 +1322,14 @@ export default function UploadPage() {
                           <div className="space-y-3">
                             <div className="flex items-center justify-between gap-3">
                               <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/42">
-                                {language === "it" ? "Dettagli per foto" : "Details per photo"}
+                                {language === "it" ? "Voti e prezzi separati" : "Separate ratings and prices"}
                               </div>
                               <button
                                 type="button"
                                 onClick={() => setMediaRestaurantDetailsOpen(false)}
-                                className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.06em] text-white/72"
+                                className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.06em] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                               >
-                                {language === "it" ? "Semplice" : "Simple"}
+                                {language === "it" ? "Unifica" : "Unify"}
                               </button>
                             </div>
                             {dishMediaPreviews.map((mediaPreview, index) => {
@@ -1459,12 +1468,12 @@ export default function UploadPage() {
                 </div>
                 <div className="pointer-events-none absolute inset-x-0 top-0 z-[12] h-32 bg-gradient-to-b from-black/50 via-black/22 via-55% to-transparent" />
                 <div className="absolute left-5 right-5 z-[13] text-white" style={{ bottom: "5.8rem" }}>
-                  <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
+                  <div className="text-left text-2xl font-bold leading-tight">{activePreviewName}</div>
                   {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
                   {isRestaurantUpload ? (
                     <div className="mt-1 flex items-center gap-2">
-                      <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
-                      {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
+                      <RatingStars value={activeRestaurantRating} size="text-[1.05rem]" readOnly />
+                      {activeRestaurantPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{activeRestaurantPriceSymbol}{activeRestaurantPrice}</span> : null}
                     </div>
                   ) : null}
                   <div className="mt-3 space-y-2">
@@ -1610,7 +1619,7 @@ export default function UploadPage() {
               </>
             ) : !hideBaseText ? (
               <>
-                <div className="text-left text-2xl font-bold leading-tight">{previewName}</div>
+                <div className="text-left text-2xl font-bold leading-tight">{activePreviewName}</div>
                 {previewDescription ? <p className="mt-0.5 line-clamp-2 text-sm font-medium text-white/80">{previewDescription}</p> : null}
                 {showReviewStep && (storyTaggedUser || dishLink) ? (
                   <div className="mt-2 flex flex-col items-start gap-1">
@@ -1632,8 +1641,8 @@ export default function UploadPage() {
 
             {!hideBaseText && composerStep >= 1 && isRestaurantUpload ? (
               <div className="mt-1 flex items-center gap-2">
-                <RatingStars value={dishRating} size="text-[1.05rem]" readOnly />
-                {dishPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{composerPriceSymbol}{dishPrice}</span> : null}
+                <RatingStars value={activeRestaurantRating} size="text-[1.05rem]" readOnly />
+                {activeRestaurantPrice ? <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/90">{activeRestaurantPriceSymbol}{activeRestaurantPrice}</span> : null}
               </div>
             ) : null}
 

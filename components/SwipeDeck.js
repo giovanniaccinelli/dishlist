@@ -738,7 +738,30 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   const currentRestaurant = currentCard?.restaurant || null;
   const currentRestaurantLat = Number(currentRestaurant?.lat);
   const currentRestaurantLng = Number(currentRestaurant?.lng);
-  const currentDishPriceLabel = formatDishPrice(currentCard);
+  const getSelectedMediaIndexForDish = (dish) => {
+    const mediaItems = getDishMediaItems(dish);
+    if (!mediaItems.length) return 0;
+    const cardKey = String(dish?._key || dish?.id || dish?.cardURL || dish?.imageURL || "");
+    return Math.min(Math.max(0, Number(mediaIndexByCardKey[cardKey] || 0)), Math.max(0, mediaItems.length - 1));
+  };
+  const getActiveMediaItemForDish = (dish) => {
+    const mediaItems = getDishMediaItems(dish);
+    return mediaItems[getSelectedMediaIndexForDish(dish)] || null;
+  };
+  const mergeDishWithActiveMediaDetails = (dish, mediaItem) => {
+    if (!mediaItem) return dish || {};
+    const details = {};
+    ["name", "rating", "price", "priceAmount", "restaurantPrice", "priceCurrency", "currency"].forEach((key) => {
+      if (mediaItem[key] !== undefined && mediaItem[key] !== null && mediaItem[key] !== "") {
+        details[key] = mediaItem[key];
+      }
+    });
+    return { ...(dish || {}), ...details };
+  };
+  const currentActiveMediaItem = getActiveMediaItemForDish(currentCard);
+  const currentActiveDishName = currentActiveMediaItem?.name || currentCard?.name || "";
+  const currentActiveRating = currentActiveMediaItem?.rating ?? currentCard?.rating;
+  const currentDishPriceLabel = formatDishPrice(mergeDishWithActiveMediaDetails(currentCard, currentActiveMediaItem));
   const uploadDateLabel = getRelativeUploadTime(currentCard?.createdAt);
   const restaurantAccentBorder = isRestaurantDish(currentCard) ? "restaurant-accent-border" : "default-accent-border";
   const currentCardIsRestaurant = isRestaurantDish(currentCard);
@@ -1669,19 +1692,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   };
 
   const getActiveMediaDisplayName = (dish) => {
-    const mediaItems = getDishMediaItems(dish);
-    if (!mediaItems.length) return dish?.name || "";
-    const cardKey = String(dish?._key || dish?.id || dish?.cardURL || dish?.imageURL || "");
-    const selectedIndex = Math.min(Math.max(0, Number(mediaIndexByCardKey[cardKey] || 0)), Math.max(0, mediaItems.length - 1));
-    return mediaItems[selectedIndex]?.name || dish?.name || "";
+    return getActiveMediaItemForDish(dish)?.name || dish?.name || "";
   };
 
   const renderPreviewChrome = (dish, { compact = false, topRef = null, bottomRef = null } = {}) => {
     if (!dish) return null;
     const activeDishName = getActiveMediaDisplayName(dish);
+    const activeMediaItem = getActiveMediaItemForDish(dish);
+    const activeRating = activeMediaItem?.rating ?? dish?.rating;
     const previewAccentBorder = isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border";
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
-    const previewPriceLabel = formatDishPrice(dish);
+    const previewPriceLabel = formatDishPrice(mergeDishWithActiveMediaDetails(dish, activeMediaItem));
     const previewUploadDate = getRelativeUploadTime(dish.createdAt);
     const previewStoryStats = dish?.id ? storyPushStatsByDish?.[dish.id] || null : null;
     const previewStoryPushCount = Number(previewStoryStats?.count || 0);
@@ -1828,7 +1849,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
           ) : null}
           {dish?.dishMode === "restaurant" ? (
             <div className="mt-1 flex flex-col items-start gap-1">
-              <RatingStars value={dish.rating} size="text-[1.05rem]" readOnly />
+              <RatingStars value={activeRating} size="text-[1.05rem]" readOnly />
               {previewPriceLabel ? (
                 <span
                   className={darkMode
@@ -2522,11 +2543,11 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      router.push(`/dishes?q=${encodeURIComponent(currentCard.name || "")}`);
+                      router.push(`/dishes?q=${encodeURIComponent(currentActiveDishName || "")}`);
                     }}
                     className="m-0 block w-full appearance-none bg-transparent p-0 text-left text-2xl font-bold leading-[2rem] text-white"
                   >
-                    {currentCard.name}
+                    {currentActiveDishName}
                   </button>
                     {currentCard.description || normalizedDishLink ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
@@ -2598,7 +2619,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   ) : null}
                   {currentCard?.dishMode === "restaurant" ? (
                     <div className="mt-1 flex flex-col items-start gap-1">
-                      <RatingStars value={currentCard.rating} size="text-[1.05rem]" readOnly />
+                      <RatingStars value={currentActiveRating} size="text-[1.05rem]" readOnly />
                       {currentDishPriceLabel ? (
                         <span
                           className={darkMode
@@ -2654,7 +2675,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
                   <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${darkMode ? "text-white/42" : "text-black/40"}`}>
                     Recipe
                   </div>
-                  <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentCard.name}</h2>
+                  <h2 className="mt-2 text-[2rem] leading-none font-bold tracking-tight">{currentActiveDishName}</h2>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-4">
                   {!hasAnyRecipeText ? (

@@ -145,6 +145,8 @@ export default function UploadPage() {
   const [dishMediaFrames, setDishMediaFrames] = useState([]);
   const [dishMediaImageSizes, setDishMediaImageSizes] = useState([]);
   const [dishMediaNames, setDishMediaNames] = useState([]);
+  const [dishMediaRestaurantDetails, setDishMediaRestaurantDetails] = useState([]);
+  const [mediaRestaurantDetailsOpen, setMediaRestaurantDetailsOpen] = useState(false);
   const [noPhotoConfirmOpen, setNoPhotoConfirmOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -368,6 +370,14 @@ export default function UploadPage() {
       const nextNames = usableFiles.map(() => defaultName);
       return append ? [...previousNames, ...nextNames].slice(0, 5) : nextNames;
     });
+    setDishMediaRestaurantDetails((previousDetails) => {
+      const nextDetails = usableFiles.map(() => ({
+        rating: dishRating,
+        price: dishPrice,
+        priceCurrency: dishPriceCurrency,
+      }));
+      return append ? [...previousDetails, ...nextDetails].slice(0, 5) : nextDetails;
+    });
   };
 
   const handleDrop = (e) => {
@@ -425,10 +435,23 @@ export default function UploadPage() {
           const fallbackName = dishName.trim();
           imageFields = {
             ...imageFields,
-            mediaItems: (imageFields.mediaItems || []).map((item, index) => ({
-              ...item,
-              name: String(dishMediaNames[index] || "").trim() || fallbackName,
-            })),
+            mediaItems: (imageFields.mediaItems || []).map((item, index) => {
+              const details = mediaRestaurantDetailsOpen ? dishMediaRestaurantDetails[index] || null : null;
+              const rawPrice = details?.price;
+              const normalized = Number(String(rawPrice ?? "").replace(/[^\d.,]/g, "").replace(",", "."));
+              const mediaPrice = Number.isFinite(normalized) && normalized > 0 ? normalized : dishPricePayload;
+              const mediaCurrency = details?.priceCurrency || dishPriceCurrency;
+              return {
+                ...item,
+                name: String(dishMediaNames[index] || "").trim() || fallbackName,
+                rating: isRestaurantUpload ? Number(details?.rating ?? dishRating ?? 0) : 0,
+                price: isRestaurantUpload ? mediaPrice : null,
+                priceAmount: isRestaurantUpload ? mediaPrice : null,
+                restaurantPrice: isRestaurantUpload ? mediaPrice : null,
+                priceCurrency: isRestaurantUpload ? mediaCurrency : "",
+                currency: isRestaurantUpload ? mediaCurrency : "",
+              };
+            }),
           };
       }
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
@@ -579,6 +602,10 @@ export default function UploadPage() {
 
   useEffect(() => {
     if (!isRestaurantUpload && dishRating !== 0) setDishRating(0);
+    if (!isRestaurantUpload) {
+      setMediaRestaurantDetailsOpen(false);
+      setDishMediaRestaurantDetails([]);
+    }
   }, [dishRating, isRestaurantUpload]);
 
   const goToNextStep = () => {
@@ -686,6 +713,8 @@ export default function UploadPage() {
     setDishMediaFrames([]);
     setDishMediaImageSizes([]);
     setDishMediaNames([]);
+    setDishMediaRestaurantDetails([]);
+    setMediaRestaurantDetailsOpen(false);
     setNoPhotoConfirmOpen(false);
     setActiveMediaIndex(0);
   };
@@ -753,6 +782,32 @@ export default function UploadPage() {
     if (!name) return;
     setDishName(name);
     setDishMediaNames(dishMediaPreviews.map(() => name).slice(0, 5));
+  };
+
+  const syncRestaurantDetailsForCarousel = () => {
+    setDishMediaRestaurantDetails((previousDetails) =>
+      dishMediaPreviews.map((_, index) => ({
+        rating: previousDetails[index]?.rating ?? dishRating,
+        price: previousDetails[index]?.price ?? dishPrice,
+        priceCurrency: previousDetails[index]?.priceCurrency || dishPriceCurrency,
+      })).slice(0, 5)
+    );
+  };
+
+  const openMediaRestaurantDetails = () => {
+    syncRestaurantDetailsForCarousel();
+    setMediaRestaurantDetailsOpen(true);
+  };
+
+  const updateMediaRestaurantDetail = (index, patch) => {
+    setDishMediaRestaurantDetails((previousDetails) =>
+      dishMediaPreviews.map((_, detailIndex) => ({
+        rating: previousDetails[detailIndex]?.rating ?? dishRating,
+        price: previousDetails[detailIndex]?.price ?? dishPrice,
+        priceCurrency: previousDetails[detailIndex]?.priceCurrency || dishPriceCurrency,
+        ...(detailIndex === index ? patch : null),
+      })).slice(0, 5)
+    );
   };
 
   const getFramePoint = (point) => {
@@ -1232,16 +1287,91 @@ export default function UploadPage() {
                     {isRestaurantUpload ? (
                       <>
                         <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
-                        <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
-                          <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
-                          <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
-                        </div>
-                        <div className="grid grid-cols-[1fr_auto] gap-2">
-                          <input type="text" inputMode="decimal" placeholder={language === "it" ? "Prezzo" : "Price"} value={dishPrice} onChange={(e) => setDishPrice(e.target.value)} className="min-w-0 rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} />
-                          <select value={dishPriceCurrency} onChange={(e) => setDishPriceCurrency(e.target.value)} className="rounded-full border border-white/10 bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload}>
-                            {PRICE_CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.symbol}</option>)}
-                          </select>
-                        </div>
+                        {!mediaRestaurantDetailsOpen ? (
+                          <>
+                            <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
+                              <div className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/42">{language === "it" ? "Valutazione" : "Rating"}</div>
+                              <RatingStars value={dishRating} onChange={setDishRating} size="text-[1.45rem]" />
+                            </div>
+                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                              <input type="text" inputMode="decimal" placeholder={language === "it" ? "Prezzo" : "Price"} value={dishPrice} onChange={(e) => setDishPrice(e.target.value)} className="min-w-0 rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] text-black focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload} />
+                              <select value={dishPriceCurrency} onChange={(e) => setDishPriceCurrency(e.target.value)} className="rounded-full border border-white/10 bg-white px-3 py-3 text-[16px] font-semibold text-black focus:outline-none" style={{ fontSize: 16 }} disabled={loadingUpload}>
+                                {PRICE_CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.symbol}</option>)}
+                              </select>
+                            </div>
+                            {hasMediaCarousel ? (
+                              <button
+                                type="button"
+                                onClick={openMediaRestaurantDetails}
+                                className="w-full rounded-full border border-[#E64646]/30 bg-[#E64646]/14 px-4 py-3 text-[13px] font-black uppercase tracking-[0.08em] text-white shadow-[0_14px_30px_rgba(0,0,0,0.18),0_0_18px_rgba(230,70,70,0.1)] transition active:scale-[0.985]"
+                              >
+                                {language === "it" ? "Dettagli per foto" : "Details per photo"}
+                              </button>
+                            ) : null}
+                          </>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/42">
+                                {language === "it" ? "Dettagli per foto" : "Details per photo"}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setMediaRestaurantDetailsOpen(false)}
+                                className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.06em] text-white/72"
+                              >
+                                {language === "it" ? "Semplice" : "Simple"}
+                              </button>
+                            </div>
+                            {dishMediaPreviews.map((mediaPreview, index) => {
+                              const details = dishMediaRestaurantDetails[index] || {};
+                              return (
+                                <div key={`${mediaPreview.url}-${index}`} className="rounded-[1.05rem] border border-white/10 bg-white/8 p-2.5">
+                                  <div className="flex gap-3">
+                                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/60">
+                                      {mediaPreview.type?.startsWith("video/") ? (
+                                        <video src={mediaPreview.url} className="h-full w-full object-cover" muted playsInline />
+                                      ) : (
+                                        <img src={mediaPreview.url} alt="" className="h-full w-full object-cover" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="mb-1 truncate text-[13px] font-bold text-white/90">
+                                        {dishMediaNames[index] || dishName || (language === "it" ? `Foto ${index + 1}` : `Photo ${index + 1}`)}
+                                      </div>
+                                      <RatingStars
+                                        value={details.rating ?? dishRating}
+                                        onChange={(value) => updateMediaRestaurantDetail(index, { rating: value })}
+                                        size="text-[1.22rem]"
+                                      />
+                                      <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          placeholder={language === "it" ? "Prezzo" : "Price"}
+                                          value={details.price ?? dishPrice}
+                                          onChange={(event) => updateMediaRestaurantDetail(index, { price: event.target.value })}
+                                          className="min-w-0 rounded-full border border-white/10 bg-white px-3 py-2 text-[16px] text-black focus:outline-none"
+                                          style={{ fontSize: 16 }}
+                                          disabled={loadingUpload}
+                                        />
+                                        <select
+                                          value={details.priceCurrency || dishPriceCurrency}
+                                          onChange={(event) => updateMediaRestaurantDetail(index, { priceCurrency: event.target.value })}
+                                          className="rounded-full border border-white/10 bg-white px-2.5 py-2 text-[16px] font-semibold text-black focus:outline-none"
+                                          style={{ fontSize: 16 }}
+                                          disabled={loadingUpload}
+                                        >
+                                          {PRICE_CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.symbol}</option>)}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </>
                     ) : (
                       <>

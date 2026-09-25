@@ -27,6 +27,12 @@ export function getDishMediaItems(dish) {
       if (!cardURL || cardURL === "undefined" || cardURL === "null") return null;
       return {
         name: item?.name || item?.title || "",
+        rating: item?.rating,
+        price: item?.price ?? item?.priceAmount ?? item?.restaurantPrice,
+        priceAmount: item?.priceAmount ?? item?.price ?? item?.restaurantPrice,
+        restaurantPrice: item?.restaurantPrice ?? item?.price ?? item?.priceAmount,
+        priceCurrency: item?.priceCurrency || item?.currency || "",
+        currency: item?.currency || item?.priceCurrency || "",
         imageURL: item?.imageURL || cardURL,
         cardURL,
         thumbURL,
@@ -43,6 +49,12 @@ export function getDishMediaItems(dish) {
   return [
     {
       name: dish?.name || "",
+      rating: dish?.rating,
+      price: dish?.price,
+      priceAmount: dish?.priceAmount,
+      restaurantPrice: dish?.restaurantPrice,
+      priceCurrency: dish?.priceCurrency,
+      currency: dish?.currency,
       imageURL: fallback,
       cardURL: fallback,
       thumbURL: dish?.thumbURL || fallback,

@@ -144,6 +144,7 @@ export default function UploadPage() {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [dishMediaFrames, setDishMediaFrames] = useState([]);
   const [dishMediaImageSizes, setDishMediaImageSizes] = useState([]);
+  const [dishMediaNames, setDishMediaNames] = useState([]);
   const [noPhotoConfirmOpen, setNoPhotoConfirmOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -362,6 +363,10 @@ export default function UploadPage() {
       const nextSizes = usableFiles.map(() => ({ width: 0, height: 0 }));
       return append ? [...previousSizes, ...nextSizes].slice(0, 5) : nextSizes;
     });
+    setDishMediaNames((previousNames) => {
+      const nextNames = usableFiles.map(() => "");
+      return append ? [...previousNames, ...nextNames].slice(0, 5) : nextNames;
+    });
   };
 
   const handleDrop = (e) => {
@@ -416,6 +421,14 @@ export default function UploadPage() {
             dishMediaFiles.map((file, index) => cropImageFileToFrame(file, dishMediaFrames[index], frameSize))
           );
           imageFields = await uploadDishMediaItems(framedMediaFiles, user.uid);
+          const fallbackName = dishName.trim();
+          imageFields = {
+            ...imageFields,
+            mediaItems: (imageFields.mediaItems || []).map((item, index) => ({
+              ...item,
+              name: String(dishMediaNames[index] || "").trim() || fallbackName,
+            })),
+          };
       }
       const normalizedIngredientItems = isRestaurantUpload ? [] : normalizeIngredientItems(dishRecipeIngredientItems);
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
@@ -671,6 +684,7 @@ export default function UploadPage() {
     });
     setDishMediaFrames([]);
     setDishMediaImageSizes([]);
+    setDishMediaNames([]);
     setNoPhotoConfirmOpen(false);
     setActiveMediaIndex(0);
   };
@@ -720,6 +734,23 @@ export default function UploadPage() {
   const showNextMedia = () => {
     void hapticImpact("light");
     setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1));
+  };
+
+  const setActiveMediaName = (value) => {
+    setDishMediaNames((previousNames) => {
+      const nextNames = [...previousNames];
+      nextNames[activeMediaIndex] = value;
+      return nextNames.slice(0, 5);
+    });
+  };
+
+  const pasteDishNameToActiveMedia = () => {
+    setActiveMediaName(dishName.trim());
+  };
+
+  const pasteDishNameToAllMedia = () => {
+    const name = dishName.trim();
+    setDishMediaNames(dishMediaPreviews.map(() => name).slice(0, 5));
   };
 
   const getFramePoint = (point) => {
@@ -1067,6 +1098,39 @@ export default function UploadPage() {
                   </div>
                 ) : null}
               </div>
+              {hasMediaCarousel && showNameInputs ? (
+                <div className="mt-2 w-full rounded-[1rem] border border-white/14 bg-black/72 p-2.5 text-white shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/54">
+                      {language === "it" ? `Nome foto ${activeMediaIndex + 1}` : `Photo ${activeMediaIndex + 1} name`}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={pasteDishNameToActiveMedia}
+                        className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-white/82"
+                      >
+                        {language === "it" ? "stesso" : "same"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={pasteDishNameToAllMedia}
+                        className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-white/82"
+                      >
+                        {language === "it" ? "tutte" : "all"}
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={dishMediaNames[activeMediaIndex] || ""}
+                    onChange={(event) => setActiveMediaName(event.target.value)}
+                    placeholder={dishName.trim() || (language === "it" ? "Usa il nome del piatto" : "Use dish name")}
+                    className="w-full rounded-[0.8rem] border border-white/12 bg-white/8 px-3 py-2 text-[15px] font-semibold text-white placeholder:text-white/42 focus:outline-none focus:ring-2 focus:ring-white/18"
+                    disabled={loadingUpload}
+                  />
+                </div>
+              ) : null}
             </div>
           ) : null}
 

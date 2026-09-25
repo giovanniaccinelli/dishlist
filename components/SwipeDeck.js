@@ -1535,6 +1535,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     }
     const mediaItems = getDishMediaItems(dish);
     const fallbackMedia = {
+      name: dish?.name || "",
       cardURL: getDishImageUrl(dish),
       thumbURL: getDishImageUrl(dish, "thumb"),
       mediaType: isDishVideo(dish) ? "video" : "image",
@@ -1555,7 +1556,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       if (mediaIsVideo || !zoomable) return;
       mediaPinchRef.current.opened = true;
       mediaPinchRef.current.suppressClickUntil = Date.now() + 520;
-      setZoomMedia({ dishName: dish?.name || "Dish", items, index: selectedIndex, cardKey });
+      setZoomMedia({ dishName: media?.name || dish?.name || "Dish", items, index: selectedIndex, cardKey });
       setZoomTransform({ scale: 1, x: 0, y: 0 });
     };
     const getTouchDistance = (touches) => {
@@ -1573,7 +1574,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
       ) : (
       <img
         src={imageSrc}
-        alt={dish.name}
+        alt={media?.name || dish.name}
         decoding="async"
         fetchPriority={active || preview ? "high" : "auto"}
         className="block w-full h-full object-cover"
@@ -1667,8 +1668,17 @@ const SwipeDeck = forwardRef(function SwipeDeck({
     );
   };
 
+  const getActiveMediaDisplayName = (dish) => {
+    const mediaItems = getDishMediaItems(dish);
+    if (!mediaItems.length) return dish?.name || "";
+    const cardKey = String(dish?._key || dish?.id || dish?.cardURL || dish?.imageURL || "");
+    const selectedIndex = Math.min(Math.max(0, Number(mediaIndexByCardKey[cardKey] || 0)), Math.max(0, mediaItems.length - 1));
+    return mediaItems[selectedIndex]?.name || dish?.name || "";
+  };
+
   const renderPreviewChrome = (dish, { compact = false, topRef = null, bottomRef = null } = {}) => {
     if (!dish) return null;
+    const activeDishName = getActiveMediaDisplayName(dish);
     const previewAccentBorder = isRestaurantDish(dish) ? "restaurant-accent-border" : "default-accent-border";
     const previewRestaurantLabel = getSafeRestaurantLabel(dish);
     const previewPriceLabel = formatDishPrice(dish);
@@ -1787,7 +1797,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
               <p className="text-lg font-semibold leading-none">{dish.ownerName || "Unknown"}</p>
             </div>
           ) : null}
-          <div className="m-0 block w-full p-0 text-left text-2xl font-bold leading-[2rem] text-white">{dish.name}</div>
+          <div className="m-0 block w-full p-0 text-left text-2xl font-bold leading-[2rem] text-white">{activeDishName}</div>
           {dish.description || previewDishLink ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80">
               {dish.description ? (

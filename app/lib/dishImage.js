@@ -26,6 +26,7 @@ export function getDishMediaItems(dish) {
       const thumbURL = item?.thumbURL || item?.thumbnailURL || cardURL;
       if (!cardURL || cardURL === "undefined" || cardURL === "null") return null;
       return {
+        name: item?.name || item?.title || "",
         imageURL: item?.imageURL || cardURL,
         cardURL,
         thumbURL,
@@ -41,6 +42,7 @@ export function getDishMediaItems(dish) {
   if (!fallback || fallback === DEFAULT_DISH_IMAGE) return [];
   return [
     {
+      name: dish?.name || "",
       imageURL: fallback,
       cardURL: fallback,
       thumbURL: dish?.thumbURL || fallback,

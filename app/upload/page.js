@@ -1098,39 +1098,6 @@ export default function UploadPage() {
                   </div>
                 ) : null}
               </div>
-              {hasMediaCarousel && showNameInputs ? (
-                <div className="mt-2 w-full rounded-[1rem] border border-white/14 bg-black/72 p-2.5 text-white shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/54">
-                      {language === "it" ? `Nome foto ${activeMediaIndex + 1}` : `Photo ${activeMediaIndex + 1} name`}
-                    </span>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={pasteDishNameToActiveMedia}
-                        className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-white/82"
-                      >
-                        {language === "it" ? "stesso" : "same"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={pasteDishNameToAllMedia}
-                        className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-bold text-white/82"
-                      >
-                        {language === "it" ? "tutte" : "all"}
-                      </button>
-                    </div>
-                  </div>
-                  <input
-                    type="text"
-                    value={dishMediaNames[activeMediaIndex] || ""}
-                    onChange={(event) => setActiveMediaName(event.target.value)}
-                    placeholder={dishName.trim() || (language === "it" ? "Usa il nome del piatto" : "Use dish name")}
-                    className="w-full rounded-[0.8rem] border border-white/12 bg-white/8 px-3 py-2 text-[15px] font-semibold text-white placeholder:text-white/42 focus:outline-none focus:ring-2 focus:ring-white/18"
-                    disabled={loadingUpload}
-                  />
-                </div>
-              ) : null}
             </div>
           ) : null}
 
@@ -1486,6 +1453,32 @@ export default function UploadPage() {
                     </svg>
                   </div>
                 </div>
+                {hasMediaCarousel ? (
+                  <div className="mt-1.5 flex items-center gap-1.5 rounded-[0.95rem] border border-white/12 bg-black/52 p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                    <input
+                      type="text"
+                      value={dishMediaNames[activeMediaIndex] || ""}
+                      onChange={(event) => setActiveMediaName(event.target.value)}
+                      placeholder={language === "it" ? `Nome foto ${activeMediaIndex + 1}` : `Photo ${activeMediaIndex + 1} name`}
+                      className="min-w-0 flex-1 rounded-[0.75rem] border border-white/10 bg-white/8 px-3 py-2 text-[14px] font-semibold text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/16"
+                      disabled={loadingUpload}
+                    />
+                    <button
+                      type="button"
+                      onClick={pasteDishNameToActiveMedia}
+                      className="shrink-0 rounded-full border border-white/14 bg-white/10 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.04em] text-white/84"
+                    >
+                      {language === "it" ? "stesso" : "same"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={pasteDishNameToAllMedia}
+                      className="shrink-0 rounded-full border border-white/14 bg-white/10 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.04em] text-white/84"
+                    >
+                      {language === "it" ? "tutte" : "all"}
+                    </button>
+                  </div>
+                ) : null}
                 <textarea
                   placeholder={descriptionPlaceholder}
                   value={dishDescription}

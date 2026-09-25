@@ -364,7 +364,8 @@ export default function UploadPage() {
       return append ? [...previousSizes, ...nextSizes].slice(0, 5) : nextSizes;
     });
     setDishMediaNames((previousNames) => {
-      const nextNames = usableFiles.map(() => "");
+      const defaultName = dishName.trim();
+      const nextNames = usableFiles.map(() => defaultName);
       return append ? [...previousNames, ...nextNames].slice(0, 5) : nextNames;
     });
   };
@@ -736,7 +737,10 @@ export default function UploadPage() {
     setActiveMediaIndex((index) => Math.min(dishMediaPreviews.length - 1, index + 1));
   };
 
-  const setActiveMediaName = (value) => {
+  const updateActiveDishName = (value) => {
+    if (activeMediaIndex === 0 || dishMediaPreviews.length <= 1) {
+      setDishName(value);
+    }
     setDishMediaNames((previousNames) => {
       const nextNames = [...previousNames];
       nextNames[activeMediaIndex] = value;
@@ -744,12 +748,10 @@ export default function UploadPage() {
     });
   };
 
-  const pasteDishNameToActiveMedia = () => {
-    setActiveMediaName(dishName.trim());
-  };
-
-  const pasteDishNameToAllMedia = () => {
-    const name = dishName.trim();
+  const applyActiveDishNameToAllMedia = () => {
+    const name = String(dishMediaNames[activeMediaIndex] || dishName).trim();
+    if (!name) return;
+    setDishName(name);
     setDishMediaNames(dishMediaPreviews.map(() => name).slice(0, 5));
   };
 
@@ -909,6 +911,9 @@ export default function UploadPage() {
     const activeMediaFrame = dishMediaFrames[activeMediaIndex] || { x: 0, y: 0, zoom: 1 };
     const activeMediaIsImage = Boolean(activeMediaPreview && !activeMediaPreview.type?.startsWith("video/"));
     const hasMediaCarousel = dishMediaPreviews.length > 1;
+    const activeDishNameValue = hasMediaCarousel
+      ? (dishMediaNames[activeMediaIndex] ?? (activeMediaIndex === 0 ? dishName : ""))
+      : dishName;
     const canAddMoreMedia = dishMediaFiles.length > 0 && dishMediaFiles.length < 5 && !dishImage?.type?.startsWith("video/");
     const uploadMediaBounds = {
       top: showNameInputs ? "5rem" : "6.85rem",
@@ -1434,10 +1439,10 @@ export default function UploadPage() {
                   <input
                     type="text"
                     placeholder={namePlaceholder}
-                    value={dishName}
-                    onChange={(e) => setDishName(e.target.value)}
+                    value={activeDishNameValue}
+                    onChange={(e) => updateActiveDishName(e.target.value)}
                     enterKeyHint="next"
-                    className="w-full rounded-[1.15rem] border-[3px] px-5 py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none"
+                    className={`w-full rounded-[1.15rem] border-[3px] py-3.5 pl-11 text-left text-[21px] font-bold leading-tight text-white placeholder:text-white/76 focus:outline-none ${hasMediaCarousel ? "pr-28" : "pr-5"}`}
                     style={{
                       fontSize: 21,
                       borderColor: composerAccent,
@@ -1452,33 +1457,17 @@ export default function UploadPage() {
                       <path d="M13 6.5L17 10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
+                  {hasMediaCarousel ? (
+                    <button
+                      type="button"
+                      onClick={applyActiveDishNameToAllMedia}
+                      className="absolute right-2 top-1/2 z-[3] -translate-y-1/2 rounded-full border border-white/14 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.04em] text-white/84 shadow-[0_8px_18px_rgba(0,0,0,0.18)] backdrop-blur-md transition active:scale-[0.98]"
+                      disabled={loadingUpload || !String(activeDishNameValue || dishName).trim()}
+                    >
+                      {language === "it" ? "Usa su tutte" : "Use on all"}
+                    </button>
+                  ) : null}
                 </div>
-                {hasMediaCarousel ? (
-                  <div className="mt-1.5 flex items-center gap-1.5 rounded-[0.95rem] border border-white/12 bg-black/52 p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-md">
-                    <input
-                      type="text"
-                      value={dishMediaNames[activeMediaIndex] || ""}
-                      onChange={(event) => setActiveMediaName(event.target.value)}
-                      placeholder={language === "it" ? `Nome foto ${activeMediaIndex + 1}` : `Photo ${activeMediaIndex + 1} name`}
-                      className="min-w-0 flex-1 rounded-[0.75rem] border border-white/10 bg-white/8 px-3 py-2 text-[14px] font-semibold text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/16"
-                      disabled={loadingUpload}
-                    />
-                    <button
-                      type="button"
-                      onClick={pasteDishNameToActiveMedia}
-                      className="shrink-0 rounded-full border border-white/14 bg-white/10 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.04em] text-white/84"
-                    >
-                      {language === "it" ? "stesso" : "same"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={pasteDishNameToAllMedia}
-                      className="shrink-0 rounded-full border border-white/14 bg-white/10 px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.04em] text-white/84"
-                    >
-                      {language === "it" ? "tutte" : "all"}
-                    </button>
-                  </div>
-                ) : null}
                 <textarea
                   placeholder={descriptionPlaceholder}
                   value={dishDescription}

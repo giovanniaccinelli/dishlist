@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Keyboard } from "@capacitor/keyboard";
+import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 
 const EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
 const KEYBOARD_VISIBLE_MARGIN = 18;
@@ -99,15 +99,23 @@ export default function KeyboardDismissManager() {
     const configureNativeKeyboard = () => {
       if (Capacitor.getPlatform() !== "ios") return;
       Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
+      Keyboard.setResizeMode({ mode: KeyboardResize.None }).catch(() => {});
     };
 
-    const markKeyboardOpen = () => {
+    const setKeyboardHeight = (keyboardHeight = 0) => {
+      const height = Math.max(0, Number(keyboardHeight || 0));
+      document.documentElement.style.setProperty("--keyboard-height", `${height}px`);
+    };
+
+    const markKeyboardOpen = (keyboardHeight = 0) => {
+      setKeyboardHeight(keyboardHeight);
       document.documentElement.classList.add("native-keyboard-open");
-      keepTypingSurfaceVisible();
+      keepTypingSurfaceVisible(keyboardHeight);
     };
 
     const markKeyboardClosed = () => {
       document.documentElement.classList.remove("native-keyboard-open");
+      document.documentElement.style.removeProperty("--keyboard-height");
     };
 
     const handleFocusIn = (event) => {
@@ -160,9 +168,10 @@ export default function KeyboardDismissManager() {
     let keyboardHideListener;
     if (Capacitor.isNativePlatform()) {
       Keyboard.addListener("keyboardWillShow", (info) => {
-        markKeyboardOpen();
-        keepTypingSurfaceVisible(Number(info?.keyboardHeight || 0));
-        window.requestAnimationFrame(() => keepTypingSurfaceVisible(Number(info?.keyboardHeight || 0)));
+        const keyboardHeight = Number(info?.keyboardHeight || 0);
+        markKeyboardOpen(keyboardHeight);
+        keepTypingSurfaceVisible(keyboardHeight);
+        window.requestAnimationFrame(() => keepTypingSurfaceVisible(keyboardHeight));
       }).then((listener) => {
         keyboardShowListener = listener;
       }).catch(() => {});

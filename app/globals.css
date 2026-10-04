@@ -75,6 +75,7 @@
     );
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
+    --keyboard-height: 0px;
     --app-accent-border: #e4b43f;
     --app-accent-border-strong: #cf9a17;
   }
@@ -524,14 +525,15 @@ html.native-keyboard-open .bottom-nav-shell {
 }
 
 html.native-keyboard-open .bottom-nav-spacer {
-  padding-bottom: 0.35rem !important;
+  padding-bottom: calc(var(--keyboard-height, 0px) + 0.35rem) !important;
   transition: none !important;
 }
 
 html.native-keyboard-open .screen-between-navs-center,
 html.native-keyboard-open .bottom-nav-chat-bar,
 html.native-keyboard-open .bottom-nav-floating-action,
-html.native-keyboard-open .bottom-nav-chat-scroll {
+html.native-keyboard-open .bottom-nav-chat-scroll,
+html.native-keyboard-open .keyboard-lift-surface {
   transition: none !important;
 }
 
@@ -899,7 +901,7 @@ html.dark .map-restaurant-card-solid {
 }
 
 html.native-keyboard-open .bottom-nav-floating-action {
-  bottom: 1rem;
+  bottom: calc(var(--keyboard-height, 0px) + 1rem);
 }
 
 .bottom-nav-chat-bar {
@@ -907,7 +909,7 @@ html.native-keyboard-open .bottom-nav-floating-action {
 }
 
 html.native-keyboard-open .bottom-nav-chat-bar {
-  bottom: 0.65rem;
+  bottom: calc(var(--keyboard-height, 0px) + 0.65rem);
 }
 
 .bottom-nav-chat-scroll {
@@ -915,7 +917,7 @@ html.native-keyboard-open .bottom-nav-chat-bar {
 }
 
 html.native-keyboard-open .bottom-nav-chat-scroll {
-  padding-bottom: 4.85rem;
+  padding-bottom: calc(var(--keyboard-height, 0px) + 4.85rem);
 }
 
 .screen-between-navs-center {
@@ -927,6 +929,18 @@ html.native-keyboard-open .bottom-nav-chat-scroll {
   justify-content: center;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+html.native-keyboard-open .screen-between-navs-center {
+  transform: translateY(calc(var(--keyboard-height, 0px) * -1));
+}
+
+.keyboard-lift-surface {
+  transform: translateY(0);
+}
+
+html.native-keyboard-open .keyboard-lift-surface {
+  transform: translateY(calc(var(--keyboard-height, 0px) * -1));
 }
 
 .swipe-deck-layer {

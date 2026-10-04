@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { Keyboard } from "@capacitor/keyboard";
 
 const EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
 
@@ -23,7 +23,6 @@ export default function KeyboardDismissManager() {
     const hideNativeAccessoryBar = () => {
       if (Capacitor.getPlatform() !== "ios") return;
       Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
-      Keyboard.setResizeMode({ mode: KeyboardResize.None }).catch(() => {});
     };
 
     const markKeyboardOpen = () => {

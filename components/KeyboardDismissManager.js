@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Keyboard } from "@capacitor/keyboard";
+import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 
 const EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
 
@@ -18,11 +18,36 @@ function shouldBlurOnEnter(element) {
   return !["button", "checkbox", "file", "hidden", "image", "radio", "range", "reset", "submit"].includes(type);
 }
 
+function isFocusableInput(element) {
+  if (!isEditableElement(element)) return false;
+  if (element.disabled || element.readOnly) return false;
+  if (element.tagName === "INPUT") {
+    const type = String(element.type || "text").toLowerCase();
+    return !["button", "checkbox", "file", "hidden", "image", "radio", "range", "reset", "submit"].includes(type);
+  }
+  return true;
+}
+
+function getKeyboardInputs() {
+  return [...document.querySelectorAll(EDITABLE_SELECTOR)].filter((element) => {
+    if (!isFocusableInput(element)) return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+}
+
+function getNextKeyboardInput(element) {
+  const inputs = getKeyboardInputs();
+  const currentIndex = inputs.indexOf(element);
+  return currentIndex >= 0 ? inputs[currentIndex + 1] : null;
+}
+
 export default function KeyboardDismissManager() {
   useEffect(() => {
     const hideNativeAccessoryBar = () => {
       if (Capacitor.getPlatform() !== "ios") return;
       Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
+      Keyboard.setResizeMode({ mode: KeyboardResize.Body }).catch(() => {});
     };
 
     const markKeyboardOpen = () => {
@@ -38,9 +63,8 @@ export default function KeyboardDismissManager() {
       const target = event.target;
       if (isEditableElement(target)) markKeyboardOpen();
       if (!shouldBlurOnEnter(target)) return;
-      if (!target.getAttribute("enterkeyhint")) {
-        target.setAttribute("enterkeyhint", "done");
-      }
+      const nextInput = getNextKeyboardInput(target);
+      target.setAttribute("enterkeyhint", nextInput ? "next" : "done");
     };
 
     const handleFocusOut = (event) => {
@@ -55,7 +79,14 @@ export default function KeyboardDismissManager() {
       if (event.key !== "Enter" || event.isComposing) return;
       const target = event.target;
       if (!shouldBlurOnEnter(target)) return;
-      window.requestAnimationFrame(() => target.blur?.());
+      const nextInput = getNextKeyboardInput(target);
+      window.requestAnimationFrame(() => {
+        if (nextInput) {
+          nextInput.focus?.();
+          return;
+        }
+        target.blur?.();
+      });
     };
 
     const handlePointerDown = (event) => {

@@ -329,6 +329,10 @@
   -webkit-backdrop-filter: blur(18px);
 }
 
+html.native-keyboard-open .bottom-nav-shell {
+  display: none !important;
+}
+
 .bottom-nav-item {
   width: 20%;
   height: 100%;
@@ -517,6 +521,18 @@
 
 .bottom-nav-spacer {
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.35rem);
+}
+
+html.native-keyboard-open .bottom-nav-spacer {
+  padding-bottom: 0.35rem !important;
+  transition: none !important;
+}
+
+html.native-keyboard-open .screen-between-navs-center,
+html.native-keyboard-open .bottom-nav-chat-bar,
+html.native-keyboard-open .bottom-nav-floating-action,
+html.native-keyboard-open .bottom-nav-chat-scroll {
+  transition: none !important;
 }
 
 html.dark,
@@ -882,12 +898,24 @@ html.dark .map-restaurant-card-solid {
   bottom: calc(var(--app-bottom-nav-height) + 1rem);
 }
 
+html.native-keyboard-open .bottom-nav-floating-action {
+  bottom: 1rem;
+}
+
 .bottom-nav-chat-bar {
   bottom: calc(var(--app-bottom-nav-height) + 0.65rem);
 }
 
+html.native-keyboard-open .bottom-nav-chat-bar {
+  bottom: 0.65rem;
+}
+
 .bottom-nav-chat-scroll {
   padding-bottom: calc(var(--app-bottom-nav-height) + 4.85rem);
+}
+
+html.native-keyboard-open .bottom-nav-chat-scroll {
+  padding-bottom: 4.85rem;
 }
 
 .screen-between-navs-center {

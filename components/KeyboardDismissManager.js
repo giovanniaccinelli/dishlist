@@ -49,11 +49,28 @@ export default function KeyboardDismissManager() {
       Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
     };
 
+    const markKeyboardOpen = () => {
+      document.documentElement.classList.add("native-keyboard-open");
+    };
+
+    const markKeyboardClosed = () => {
+      document.documentElement.classList.remove("native-keyboard-open");
+    };
+
     const handleFocusIn = (event) => {
       const target = event.target;
+      if (isEditableElement(target)) markKeyboardOpen();
       if (!shouldBlurOnEnter(target)) return;
       const nextInput = getNextKeyboardInput(target);
       target.setAttribute("enterkeyhint", nextInput ? "next" : "done");
+    };
+
+    const handleFocusOut = (event) => {
+      const target = event.target;
+      if (!isEditableElement(target)) return;
+      window.setTimeout(() => {
+        if (!isEditableElement(document.activeElement)) markKeyboardClosed();
+      }, 60);
     };
 
     const handleKeyDown = (event) => {
@@ -76,14 +93,30 @@ export default function KeyboardDismissManager() {
       const target = event.target;
       if (target?.closest?.(`${EDITABLE_SELECTOR}, [data-keep-keyboard='true']`)) return;
       activeElement.blur?.();
+      markKeyboardClosed();
     };
 
     configureNativeKeyboard();
+    let keyboardShowListener;
+    let keyboardHideListener;
+    if (Capacitor.isNativePlatform()) {
+      Keyboard.addListener("keyboardWillShow", markKeyboardOpen).then((listener) => {
+        keyboardShowListener = listener;
+      }).catch(() => {});
+      Keyboard.addListener("keyboardWillHide", markKeyboardClosed).then((listener) => {
+        keyboardHideListener = listener;
+      }).catch(() => {});
+    }
     document.addEventListener("focusin", handleFocusIn, true);
+    document.addEventListener("focusout", handleFocusOut, true);
     document.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("pointerdown", handlePointerDown, true);
     return () => {
+      markKeyboardClosed();
+      keyboardShowListener?.remove?.();
+      keyboardHideListener?.remove?.();
       document.removeEventListener("focusin", handleFocusIn, true);
+      document.removeEventListener("focusout", handleFocusOut, true);
       document.removeEventListener("keydown", handleKeyDown, true);
       document.removeEventListener("pointerdown", handlePointerDown, true);
     };

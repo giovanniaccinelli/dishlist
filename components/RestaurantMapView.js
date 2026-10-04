@@ -1469,7 +1469,7 @@ export default function RestaurantMapView({
           </div>
         </div>
         ) : null}
-        {enableFollowingFilter ? (
+        {enableFollowingFilter && !showPredictions && !loadingPredictions ? (
           <div className="absolute left-3 right-3 top-[4.2rem] z-[11] flex items-center justify-between gap-2">
             <button
               type="button"

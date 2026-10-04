@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Keyboard } from "@capacitor/keyboard";
 
 const EDITABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
 
@@ -18,7 +20,13 @@ function shouldBlurOnEnter(element) {
 
 export default function KeyboardDismissManager() {
   useEffect(() => {
+    const hideNativeAccessoryBar = () => {
+      if (Capacitor.getPlatform() !== "ios") return;
+      Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
+    };
+
     const handleFocusIn = (event) => {
+      hideNativeAccessoryBar();
       const target = event.target;
       if (!shouldBlurOnEnter(target)) return;
       if (!target.getAttribute("enterkeyhint")) {
@@ -41,6 +49,7 @@ export default function KeyboardDismissManager() {
       activeElement.blur?.();
     };
 
+    hideNativeAccessoryBar();
     document.addEventListener("focusin", handleFocusIn, true);
     document.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("pointerdown", handlePointerDown, true);

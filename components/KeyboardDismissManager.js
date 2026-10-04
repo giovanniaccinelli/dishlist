@@ -47,7 +47,7 @@ export default function KeyboardDismissManager() {
     const hideNativeAccessoryBar = () => {
       if (Capacitor.getPlatform() !== "ios") return;
       Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {});
-      Keyboard.setResizeMode({ mode: KeyboardResize.Body }).catch(() => {});
+      Keyboard.setResizeMode({ mode: KeyboardResize.Native }).catch(() => {});
     };
 
     const markKeyboardOpen = () => {

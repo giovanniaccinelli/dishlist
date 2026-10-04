@@ -3273,7 +3273,7 @@ export default function Profile() {
       <div className="app-top-nav -mx-4 mb-1 grid grid-cols-[152px_1fr_152px] items-center px-4 pb-1.5 relative">
         <div className="flex min-w-[152px] items-center justify-start gap-2">
           <Link
-            href="/dishlists"
+            href="/dishlists?search=1"
             className="top-action-btn"
             aria-label={t("People")}
           >

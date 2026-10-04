@@ -1672,7 +1672,7 @@ export default function Feed() {
       <div className="app-top-nav mt-1 px-4 pb-0 grid grid-cols-[1fr_auto_1fr] items-center shrink-0 relative">
         <div className="justify-self-start flex items-center gap-1.5">
           <Link
-            href="/dishlists"
+            href="/dishlists?search=1"
             className="top-action-btn"
             aria-label={t("People")}
           >

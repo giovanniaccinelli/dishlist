@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -118,6 +118,7 @@ export default function Dishlists() {
   const { t, darkMode } = useLanguage();
   const { hasUnread: hasUnreadDirects } = useUnreadDirects(user?.uid);
   const router = useRouter();
+  const searchInputRef = useRef(null);
   const cachedPeople = useMemo(() => shuffleCachedPeopleForOpen(getSessionPageCache(PEOPLE_CACHE_KEY)?.value), []);
   const [users, setUsers] = useState(() => cachedPeople?.users || []);
   const [allUsersPool, setAllUsersPool] = useState(() => cachedPeople?.allUsersPool || null);
@@ -131,6 +132,15 @@ export default function Dishlists() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search") !== "1") return;
+    const timer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const attachPreviewData = (usersList, allDishes, storyStatsByUser = new Map()) => {
     const dishById = new Map(allDishes.map((dish) => [dish.id, dish]));
@@ -475,6 +485,7 @@ export default function Dishlists() {
       </div>
       <div className="relative mb-6">
         <input
+          ref={searchInputRef}
           type="text"
           placeholder={t("Search users...")}
           value={search}

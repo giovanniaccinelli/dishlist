@@ -56,15 +56,39 @@ export default function ShareIntakePage() {
     if (shared.url) params.set("sharedUrl", shared.url);
     if (shared.text) params.set("sharedText", shared.text);
     if (draft?.title) params.set("sharedTitle", draft.title);
+    if (draft?.description) params.set("sharedDescription", draft.description);
+    if (draft?.servings) params.set("sharedServings", draft.servings);
+    if (draft?.prepTime) params.set("sharedPrepTime", draft.prepTime);
+    if (draft?.cookTime) params.set("sharedCookTime", draft.cookTime);
+    if (draft?.totalTime) params.set("sharedTotalTime", draft.totalTime);
     if (Array.isArray(draft?.ingredients) && draft.ingredients.length) {
       params.set("sharedIngredients", draft.ingredients.join("\n"));
     }
     if (draft?.method) params.set("sharedMethod", draft.method);
+    if (Array.isArray(draft?.tags) && draft.tags.length) {
+      params.set("sharedTags", draft.tags.join(","));
+    }
     return `/upload?${params.toString()}`;
   }, [draft, shared.text, shared.url]);
 
   const title = draft?.title || shared.text || shared.url || (language === "it" ? "Nuovo piatto" : "New dish");
   const hasRecipeShape = Array.isArray(draft?.ingredients) && draft.ingredients.length > 0;
+  const methodSteps = draft?.method ? draft.method.split("\n").filter(Boolean).length : 0;
+  const statusLabel = extracting
+    ? language === "it"
+      ? "Leggo il link"
+      : "Reading link"
+    : draft?.aiUsed
+      ? language === "it"
+        ? "Bozza AI pronta"
+        : "AI draft ready"
+      : hasRecipeShape
+        ? language === "it"
+          ? "Ricetta trovata"
+          : "Recipe found"
+        : language === "it"
+          ? "Bozza pronta"
+          : "Draft ready";
 
   return (
     <main className={`min-h-screen pb-[calc(var(--app-bottom-nav-height)+2rem)] pt-[calc(var(--safe-area-top)+1.5rem)] ${darkMode ? "bg-black text-white" : "bg-[#F9F4EA] text-black"}`}>
@@ -95,7 +119,7 @@ export default function ShareIntakePage() {
               </div>
               <div className="min-w-0">
                 <div className="text-[12px] font-black uppercase tracking-[0.16em] text-white/42">
-                  {extracting ? (language === "it" ? "Leggo il link" : "Reading link") : hasRecipeShape ? "Recipe found" : "Ready"}
+                  {statusLabel}
                 </div>
                 <div className="truncate text-[1.22rem] font-black">{title}</div>
               </div>
@@ -108,13 +132,28 @@ export default function ShareIntakePage() {
             ) : null}
 
             {hasRecipeShape ? (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {draft.ingredients.slice(0, 8).map((ingredient) => (
-                  <span key={ingredient} className="rounded-full bg-[#FFBF3C]/16 px-3 py-1.5 text-[12px] font-black text-[#FFE6A0]">
-                    {ingredient}
-                  </span>
-                ))}
-              </div>
+              <>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {draft.ingredients.slice(0, 8).map((ingredient) => (
+                    <span key={ingredient} className="rounded-full bg-[#FFBF3C]/16 px-3 py-1.5 text-[12px] font-black text-[#FFE6A0]">
+                      {ingredient}
+                    </span>
+                  ))}
+                </div>
+                <div className="mb-4 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-white/52">
+                  {methodSteps ? (
+                    <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">
+                      {methodSteps} {language === "it" ? "passaggi" : "steps"}
+                    </span>
+                  ) : null}
+                  {draft?.totalTime ? (
+                    <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">{draft.totalTime}</span>
+                  ) : null}
+                  {Array.isArray(draft?.tags) && draft.tags.length ? (
+                    <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">{draft.tags.slice(0, 3).join(" · ")}</span>
+                  ) : null}
+                </div>
+              </>
             ) : (
               <p className="mb-4 text-[0.95rem] font-semibold leading-6 text-white/62">
                 {language === "it"

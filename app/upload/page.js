@@ -205,8 +205,13 @@ export default function UploadPage() {
     const sharedUrl = String(params.get("sharedUrl") || "").trim();
     const sharedTitle = String(params.get("sharedTitle") || "").trim();
     const sharedText = String(params.get("sharedText") || "").trim();
+    const sharedDescription = String(params.get("sharedDescription") || "").trim();
     const sharedIngredients = String(params.get("sharedIngredients") || "").trim();
     const sharedMethod = String(params.get("sharedMethod") || "").trim();
+    const sharedTags = String(params.get("sharedTags") || "").trim();
+    const sharedTotalTime = String(params.get("sharedTotalTime") || "").trim();
+    const sharedPrepTime = String(params.get("sharedPrepTime") || "").trim();
+    const sharedCookTime = String(params.get("sharedCookTime") || "").trim();
     setStoryMode(nextStoryMode);
     setDirectEntryMode(nextDirectMode);
     setShowUploadForm(nextStoryMode || nextDirectMode || isSharedDraft);
@@ -219,6 +224,13 @@ export default function UploadPage() {
       setDishMediaNames(draftName ? [draftName] : []);
       setDishLink(sharedUrl);
       setShowLinkField(Boolean(sharedUrl));
+      const timingNote = [sharedTotalTime && `Tempo totale: ${sharedTotalTime}`, sharedPrepTime && `Prep: ${sharedPrepTime}`, sharedCookTime && `Cottura: ${sharedCookTime}`]
+        .filter(Boolean)
+        .join(" · ");
+      const nextDescription = [sharedDescription, timingNote].filter(Boolean).join("\n");
+      if (nextDescription) {
+        setDishDescription(nextDescription);
+      }
       if (sharedIngredients) {
         const items = normalizeIngredientItems(sharedIngredients.split("\n").map((name) => ({ name })));
         setDishRecipeIngredientItems(items);
@@ -226,6 +238,15 @@ export default function UploadPage() {
       }
       if (sharedMethod) {
         setDishRecipeMethod(sharedMethod);
+      }
+      if (sharedTags) {
+        const allowedTags = new Set(TAG_OPTIONS);
+        const nextTags = sharedTags
+          .split(",")
+          .map((tag) => tag.trim().toLowerCase())
+          .filter((tag, index, tags) => allowedTags.has(tag) && tags.indexOf(tag) === index)
+          .slice(0, 6);
+        if (nextTags.length) setDishTags(nextTags);
       }
       setComposerStep(2);
       setComposerDetailsOpen(true);

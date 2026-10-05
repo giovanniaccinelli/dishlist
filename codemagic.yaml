@@ -50,6 +50,10 @@ workflows:
           MATCHED_APPLE_SIGN_IN_PROFILE=0
           MAIN_APP_GROUP_PROFILE_COUNT=0
           SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=0
+          MAIN_APP_GROUP_PROFILE_NAME=""
+          MAIN_APP_GROUP_PROFILE_UUID=""
+          SHARE_EXTENSION_APP_GROUP_PROFILE_NAME=""
+          SHARE_EXTENSION_APP_GROUP_PROFILE_UUID=""
           FOUND_PROFILE=0
           for profile_dir in \
             "$HOME/Library/MobileDevice/Provisioning Profiles" \
@@ -79,9 +83,13 @@ workflows:
                 echo "App Group: YES"
                 if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ]; then
                   MAIN_APP_GROUP_PROFILE_COUNT=$((MAIN_APP_GROUP_PROFILE_COUNT + 1))
+                  MAIN_APP_GROUP_PROFILE_NAME="$PROFILE_NAME"
+                  MAIN_APP_GROUP_PROFILE_UUID="$PROFILE_UUID"
                 fi
                 if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist.ShareExtension" ]; then
                   SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=$((SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT + 1))
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_NAME="$PROFILE_NAME"
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_UUID="$PROFILE_UUID"
                 fi
               else
                 echo "App Group: NO"
@@ -110,8 +118,44 @@ workflows:
             echo "Look above for the exact profile Name/UUID/Bundle ID that Codemagic installed."
             exit 1
           fi
-          echo "Reconfiguring signing after removing stale profiles..."
-          xcode-project use-profiles
+          echo "Forcing App Group provisioning profiles into Xcode project..."
+          export MAIN_APP_GROUP_PROFILE_NAME MAIN_APP_GROUP_PROFILE_UUID SHARE_EXTENSION_APP_GROUP_PROFILE_NAME SHARE_EXTENSION_APP_GROUP_PROFILE_UUID
+          ruby - <<'RUBY'
+          path = "ios/App/App.xcodeproj/project.pbxproj"
+          text = File.read(path)
+          profiles = {
+            "com.giovanniaccinelli.dishlist" => [ENV.fetch("MAIN_APP_GROUP_PROFILE_NAME"), ENV.fetch("MAIN_APP_GROUP_PROFILE_UUID")],
+            "com.giovanniaccinelli.dishlist.ShareExtension" => [ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"), ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_UUID")],
+          }
+          text = text.gsub(/buildSettings = \{.*?\n\t\t\t\};/m) do |block|
+            bundle_id = block[/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/, 1]
+            next block unless bundle_id && profiles.key?(bundle_id)
+            profile_name, profile_uuid = profiles.fetch(bundle_id)
+            next block if profile_name.empty? || profile_uuid.empty?
+            updated = block
+            {
+              "CODE_SIGN_STYLE" => "Manual",
+              "DEVELOPMENT_TEAM" => "6G5LUUC32R",
+              "PROVISIONING_PROFILE_SPECIFIER" => "\"#{profile_name}\"",
+              "PROVISIONING_PROFILE" => profile_uuid,
+            }.each do |key, value|
+              if updated.include?("#{key} =")
+                updated = updated.gsub(/#{Regexp.escape(key)} = [^;]+;/, "#{key} = #{value};")
+              else
+                updated = updated.sub(/\n\t\t\t\};/, "\n\t\t\t\t#{key} = #{value};\n\t\t\t};")
+              end
+            end
+            updated
+          end
+          File.write(path, text)
+          RUBY
+          echo "Forced main app profile: $MAIN_APP_GROUP_PROFILE_NAME ($MAIN_APP_GROUP_PROFILE_UUID)"
+          echo "Forced share extension profile: $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME ($SHARE_EXTENSION_APP_GROUP_PROFILE_UUID)"
+          grep -n "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || true
+          if [ -f /Users/builder/export_options.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist $MAIN_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
+            /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist.ShareExtension $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
+          fi
       - name: Build signed IPA
         script: |
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {

@@ -23,13 +23,14 @@ import {
 import { db } from "../lib/firebase";
 import { getDishImageUrl } from "../lib/dishImage";
 import { hasDishMedia } from "../lib/dishContent";
-import { deleteFollowActivity, getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, markStoryViewed, normalizeProfilePhotoURL, recordFollowActivity } from "../lib/firebaseHelpers";
+import { deleteFollowActivity, getActiveStoriesForUser, getAllDishesFromFirestore, getAllDishlistsForUser, getAvatarTone, getStoryPushStatsForUser, getUsersByContactHashes, markStoryViewed, normalizeProfilePhotoURL, recordFollowActivity } from "../lib/firebaseHelpers";
 import { useUnreadDirects } from "../lib/useUnreadDirects";
-import { CalendarDays, ChevronDown, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
+import { CalendarDays, ChevronDown, ContactRound, Plus, Search, Send, UserCheck, UserPlus } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { resolveRepresentativeTags } from "../lib/profileTags";
 import { getSessionPageCache, setSessionPageCache } from "../lib/sessionPageCache";
 import { getDarkTagChipClass, getTagChipClass } from "../lib/tags";
+import { getNativeContactHashes } from "../lib/contactSync";
 
 const PEOPLE_CACHE_KEY = "people:main";
 
@@ -132,6 +133,9 @@ export default function Dishlists() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [storyGroupIndex, setStoryGroupIndex] = useState(0);
   const [storyActionOpen, setStoryActionOpen] = useState(false);
+  const [contactSyncing, setContactSyncing] = useState(false);
+  const [contactSyncMessage, setContactSyncMessage] = useState("");
+  const [contactMatchedIds, setContactMatchedIds] = useState([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -370,11 +374,49 @@ export default function Dishlists() {
   const filteredUsers = useMemo(() => {
     const term = search.trim().toLowerCase();
     const source = term ? allUsersPool || [] : allUsersPool || users;
+    const matchedSet = new Set(contactMatchedIds);
     const filtered = term
       ? source.filter((u) => u.displayName?.toLowerCase().includes(term))
       : source;
-    return sortUsersByProfileDishes(filtered);
-  }, [users, allUsersPool, search]);
+    return sortUsersByProfileDishes(filtered).sort((a, b) => {
+      const aMatched = matchedSet.has(a.id) || a._contactMatch ? 1 : 0;
+      const bMatched = matchedSet.has(b.id) || b._contactMatch ? 1 : 0;
+      if (aMatched !== bMatched) return bMatched - aMatched;
+      return 0;
+    });
+  }, [users, allUsersPool, contactMatchedIds, search]);
+
+  const syncContacts = async () => {
+    if (!user?.uid || contactSyncing) return;
+    setContactSyncing(true);
+    setContactSyncMessage("");
+    try {
+      const hashes = await getNativeContactHashes();
+      if (!hashes.length) {
+        setContactSyncMessage("No contacts found.");
+        return;
+      }
+      const matches = await getUsersByContactHashes(hashes, user.uid);
+      const matchedIds = matches.map((match) => match.id).filter(Boolean);
+      setContactMatchedIds(matchedIds);
+      if (matches.length) {
+        const mergeMatches = (list = []) => {
+          const byId = new Map((Array.isArray(list) ? list : []).map((item) => [item.id, item]));
+          matches.forEach((match) => {
+            byId.set(match.id, { ...(byId.get(match.id) || {}), ...match, _contactMatch: true });
+          });
+          return Array.from(byId.values());
+        };
+        setUsers((prev) => mergeMatches(prev));
+        setAllUsersPool((prev) => mergeMatches(prev || users));
+      }
+      setContactSyncMessage(matches.length ? `${matches.length} from contacts` : "No DishList contacts yet.");
+    } catch (error) {
+      setContactSyncMessage(error?.message || "Contact sync failed.");
+    } finally {
+      setContactSyncing(false);
+    }
+  };
 
   const visibleUsers = useMemo(() => {
     if (search.trim()) return filteredUsers;
@@ -492,6 +534,22 @@ export default function Dishlists() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-4 pr-4 py-3.5 rounded-[1.15rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,241,232,0.96)_100%)] border border-black/10 text-black shadow-[0_12px_30px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-black/15 placeholder:text-black/38"
         />
+        {user ? (
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={syncContacts}
+              disabled={contactSyncing}
+              className="no-accent-border inline-flex h-9 items-center gap-2 rounded-full bg-white/10 px-3 text-[12px] font-black text-white shadow-[0_8px_22px_rgba(0,0,0,0.20)] transition active:scale-[0.98] disabled:opacity-55"
+            >
+              {contactSyncing ? <span className="dishlist-action-spinner h-3.5 w-3.5" /> : <ContactRound size={14} strokeWidth={2.25} />}
+              {contactSyncing ? "Syncing" : "Sync contacts"}
+            </button>
+            {contactSyncMessage ? (
+              <span className="min-w-0 truncate text-xs font-semibold text-white/52">{contactSyncMessage}</span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {(visibleStoryGroups.length > 0 || user) ? (
         <div className="mb-6">

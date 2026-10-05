@@ -6,6 +6,7 @@ class BridgeViewController: CAPBridgeViewController {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(SignInWithApple())
         bridge?.registerPluginInstance(NativePushBridge())
+        bridge?.registerPluginInstance(NativeContactsBridge())
         enableNativeBackSwipe()
     }
 

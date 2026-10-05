@@ -473,6 +473,27 @@ export async function isDisplayNameTaken(displayName, excludeUid = "") {
   });
 }
 
+export async function getUsersByContactHashes(contactHashes = [], currentUserId = "") {
+  const uniqueHashes = Array.from(new Set((Array.isArray(contactHashes) ? contactHashes : []).map((hash) => String(hash || "").trim()).filter(Boolean)));
+  if (!uniqueHashes.length) return [];
+  const results = new Map();
+  for (let index = 0; index < uniqueHashes.length; index += 30) {
+    const chunk = uniqueHashes.slice(index, index + 30);
+    const snapshot = await getDocs(query(collection(db, "users"), where("contactHashes", "array-contains-any", chunk)));
+    snapshot.docs.forEach((userDoc) => {
+      if (currentUserId && userDoc.id === currentUserId) return;
+      const data = userDoc.data() || {};
+      results.set(userDoc.id, {
+        ...data,
+        id: userDoc.id,
+        photoURL: normalizeProfilePhotoURL(data.photoURL || ""),
+        _contactMatch: true,
+      });
+    });
+  }
+  return Array.from(results.values());
+}
+
 export function getAvatarTone(name = "") {
   const tones = [
     "#F4B942",

@@ -21,6 +21,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
+import { getIdentityContactHashes } from "./contactSync";
 import { deleteUserAccountData } from "./firebaseHelpers";
 
 const AuthContext = createContext();
@@ -108,6 +109,7 @@ export function AuthProvider({ children }) {
     const userRef = doc(db, "users", userData.uid);
     const existing = await getDoc(userRef);
     const cleanedDisplayName = String(userData.displayName || "Unnamed").trim() || "Unnamed";
+    const contactHashes = await getIdentityContactHashes({ email: userData.email || "" });
     if (!existing.exists()) {
       await setDoc(
         userRef,
@@ -119,6 +121,7 @@ export function AuthProvider({ children }) {
           following: [],
           savedDishes: [],
           swipedDishes: [],
+          contactHashes,
         },
         { merge: true }
       );
@@ -130,6 +133,7 @@ export function AuthProvider({ children }) {
         displayName: cleanedDisplayName,
         photoURL: userData.photoURL || "",
         email: userData.email,
+        contactHashes,
       },
       { merge: true }
     );

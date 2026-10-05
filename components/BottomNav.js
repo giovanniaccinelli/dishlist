@@ -62,7 +62,7 @@ export default function BottomNav() {
                 active ? "scale-105" : ""
               }`
             : `no-accent-border w-[4.75rem] h-[3.55rem] rounded-2xl flex items-center justify-center transition-all ${
-                active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/64 dark:text-white/78"
+                active ? "bg-[#E64646]/8 text-[#E64646]" : "bg-transparent text-black/58 dark:text-white/70"
               }`;
           if (item.requiresAuth && !user) {
             return (
@@ -77,10 +77,10 @@ export default function BottomNav() {
                     className={
                       item.prominent
                         ? "bottom-nav-upload-btn no-accent-border w-[3.45rem] h-[2.55rem] rounded-2xl flex items-center justify-center bg-black text-white shadow-md"
-                        : "no-accent-border w-[4.75rem] h-[3.55rem] rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/64 dark:text-white/78"
+                        : "no-accent-border w-[4.75rem] h-[3.55rem] rounded-2xl flex items-center justify-center transition-colors bg-transparent text-black/58 dark:text-white/70"
                     }
                   >
-                    <Icon size={item.prominent ? 25 : 28} strokeWidth={item.prominent ? 2.1 : 2.65} />
+                    <Icon size={item.prominent ? 25 : 28} strokeWidth={item.prominent ? 2.1 : 2.35} />
                   </div>
                 </div>
               </button>
@@ -102,7 +102,7 @@ export default function BottomNav() {
                       className="h-7 w-7 rounded-full object-cover"
                     />
                   ) : (
-                    <Icon size={item.prominent ? 25 : 28} strokeWidth={item.prominent ? 2.1 : 2.65} />
+                    <Icon size={item.prominent ? 25 : 28} strokeWidth={item.prominent ? 2.1 : 2.35} />
                   )}
                 </div>
               </div>

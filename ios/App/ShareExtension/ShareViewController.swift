@@ -116,7 +116,14 @@ final class ShareViewController: UIViewController {
         var components = URLComponents()
         components.scheme = "dishlist"
         components.host = "share"
-        components.queryItems = [URLQueryItem(name: "payloadId", value: sharePayloadId)]
+        var queryItems = [URLQueryItem(name: "payloadId", value: sharePayloadId)]
+        if let sharedURL = url, !sharedURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            queryItems.append(URLQueryItem(name: "url", value: sharedURL))
+        }
+        if let sharedText = text, !sharedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            queryItems.append(URLQueryItem(name: "text", value: sharedText))
+        }
+        components.queryItems = queryItems
 
         guard let shareURL = components.url else {
             finish()
@@ -128,13 +135,11 @@ final class ShareViewController: UIViewController {
             DispatchQueue.main.async {
                 guard let self else { return }
                 if success {
-                    self.finish()
+                    self.finishAfterAppLaunch()
                     return
                 }
                 if self.openURLThroughResponderChain(shareURL) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
-                        self?.finish()
-                    }
+                    self.finishAfterAppLaunch()
                     return
                 }
                 self.statusLabel.text = "Could not open DishList. Open the app once, then try sharing again."
@@ -177,5 +182,11 @@ final class ShareViewController: UIViewController {
 
     private func finish() {
         extensionContext?.completeRequest(returningItems: nil)
+    }
+
+    private func finishAfterAppLaunch() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.finish()
+        }
     }
 }

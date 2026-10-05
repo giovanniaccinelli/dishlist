@@ -4,6 +4,7 @@ import UIKit
 class BridgeViewController: CAPBridgeViewController {
     private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist.share"
     private let sharePayloadKeyPrefix = "DishListSharePayload:"
+    private let latestSharePayloadIdKey = "DishListLatestSharePayloadId"
     private var pendingSharedPath: String?
     private var shareRouteAttempts = 0
 
@@ -46,10 +47,21 @@ class BridgeViewController: CAPBridgeViewController {
 
     private func openPendingSharedURL() {
         guard let rawURL = UserDefaults.standard.string(forKey: AppDelegate.pendingShareURLKey) else {
+            openLatestSharedPayloadIfNeeded()
             return
         }
         UserDefaults.standard.removeObject(forKey: AppDelegate.pendingShareURLKey)
         routeSharedURL(rawURL)
+    }
+
+    private func openLatestSharedPayloadIfNeeded() {
+        guard pendingSharedPath == nil,
+              let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+              let payloadId = sharedDefaults.string(forKey: latestSharePayloadIdKey),
+              !payloadId.isEmpty else {
+            return
+        }
+        routeSharedURL("dishlist://share?payloadId=\(payloadId)")
     }
 
     private func routeSharedURL(_ rawURL: String) {
@@ -134,8 +146,8 @@ class BridgeViewController: CAPBridgeViewController {
         }
 
         sharedDefaults.removeObject(forKey: sharePayloadKeyPrefix + payloadId)
-        if sharedDefaults.string(forKey: "DishListLatestSharePayloadId") == payloadId {
-            sharedDefaults.removeObject(forKey: "DishListLatestSharePayloadId")
+        if sharedDefaults.string(forKey: latestSharePayloadIdKey) == payloadId {
+            sharedDefaults.removeObject(forKey: latestSharePayloadIdKey)
         }
         sharedDefaults.synchronize()
 

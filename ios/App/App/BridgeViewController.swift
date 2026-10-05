@@ -66,16 +66,15 @@ class BridgeViewController: CAPBridgeViewController {
 
     private func routeSharedURL(_ rawURL: String) {
         guard let url = URL(string: rawURL),
-              var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return
         }
-        if let payloadComponents = componentsWithSharedPayload(from: components) {
-            components = payloadComponents
-        }
-        components.scheme = nil
-        components.host = nil
-        components.path = "/share"
-        let path = components.string ?? "/share"
+        let resolvedComponents = componentsWithSharedPayload(from: components) ?? components
+        let label = sharedRecipeLabel(from: resolvedComponents)
+        var profileComponents = URLComponents()
+        profileComponents.path = "/profile"
+        profileComponents.queryItems = [URLQueryItem(name: "sharedRecipe", value: label)]
+        let path = profileComponents.string ?? "/profile"
 
         pendingSharedPath = path
         shareRouteAttempts = 0
@@ -154,13 +153,39 @@ class BridgeViewController: CAPBridgeViewController {
         var resolved = components
         var queryItems: [URLQueryItem] = []
         if let url = payload["url"] as? String, !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            queryItems.append(URLQueryItem(name: "url", value: url))
+            queryItems.append(URLQueryItem(name: "url", value: clipped(url, maxLength: 220)))
         }
         if let text = payload["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            queryItems.append(URLQueryItem(name: "text", value: text))
+            queryItems.append(URLQueryItem(name: "text", value: clipped(text, maxLength: 220)))
         }
         resolved.queryItems = queryItems
         return resolved
+    }
+
+    private func sharedRecipeLabel(from components: URLComponents) -> String {
+        let text = components.queryItems?.first(where: { $0.name == "text" })?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !text.isEmpty {
+            let firstChunk = text
+                .components(separatedBy: CharacterSet(charactersIn: "\n."))
+                .first?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? text
+            return clipped(firstChunk, maxLength: 80)
+        }
+
+        let rawURL = components.queryItems?.first(where: { $0.name == "url" })?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if let url = URL(string: rawURL), let host = url.host, !host.isEmpty {
+            return clipped(host.replacingOccurrences(of: "www.", with: ""), maxLength: 80)
+        }
+        if !rawURL.isEmpty {
+            return clipped(rawURL, maxLength: 80)
+        }
+        return "Recipe"
+    }
+
+    private func clipped(_ value: String, maxLength: Int) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > maxLength else { return trimmed }
+        return String(trimmed.prefix(maxLength))
     }
 }
 

@@ -967,6 +967,22 @@ export default function Profile() {
   const profileAliasKey = profileAliasIds.join("|");
   const canonicalProfileIds = profileAliasIds.length ? profileAliasIds : profileDocId ? [profileDocId] : [];
   const selectedRepresentativeTags = normalizeRepresentativeTags(profileMeta.representativeTags);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sharedRecipeNotice = String(new URLSearchParams(window.location.search).get("sharedRecipe") || "").trim();
+    if (!sharedRecipeNotice) return;
+    setToastVariant("success");
+    setToast(
+      language === LANGUAGE_IT
+        ? `Ricetta salvata: ${sharedRecipeNotice}`
+        : `Recipe saved: ${sharedRecipeNotice}`
+    );
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", pathname || "/profile");
+    }
+  }, [language, pathname]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) !== "full");

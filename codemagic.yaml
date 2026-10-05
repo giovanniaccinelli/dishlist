@@ -127,7 +127,7 @@ workflows:
             "com.giovanniaccinelli.dishlist" => [ENV.fetch("MAIN_APP_GROUP_PROFILE_NAME"), ENV.fetch("MAIN_APP_GROUP_PROFILE_UUID")],
             "com.giovanniaccinelli.dishlist.ShareExtension" => [ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"), ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_UUID")],
           }
-          text = text.gsub(/buildSettings = \{.*?\n\t\t\t\};/m) do |block|
+          text = text.gsub(/\n\t\t\tbuildSettings = \{.*?\n\t\t\t\};/m) do |block|
             bundle_id = block[/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/, 1]
             next block unless bundle_id && profiles.key?(bundle_id)
             profile_name, profile_uuid = profiles.fetch(bundle_id)
@@ -139,8 +139,8 @@ workflows:
               "PROVISIONING_PROFILE_SPECIFIER" => "\"#{profile_name}\"",
               "PROVISIONING_PROFILE" => profile_uuid,
             }.each do |key, value|
-              if updated.include?("#{key} =")
-                updated = updated.gsub(/#{Regexp.escape(key)} = [^;]+;/, "#{key} = #{value};")
+              if updated.match?(/^\t\t\t\t#{Regexp.escape(key)}(?:\[[^\]]+\])? = /)
+                updated = updated.gsub(/^\t\t\t\t#{Regexp.escape(key)}(?:\[[^\]]+\])? = [^;]+;/, "\t\t\t\t#{key} = #{value};")
               else
                 updated = updated.sub(/\n\t\t\t\};/, "\n\t\t\t\t#{key} = #{value};\n\t\t\t};")
               end
@@ -151,7 +151,14 @@ workflows:
           RUBY
           echo "Forced main app profile: $MAIN_APP_GROUP_PROFILE_NAME ($MAIN_APP_GROUP_PROFILE_UUID)"
           echo "Forced share extension profile: $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME ($SHARE_EXTENSION_APP_GROUP_PROFILE_UUID)"
-          grep -n "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || true
+          echo "----- FORCED PROJECT SIGNING SETTINGS -----"
+          grep -n -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE" ios/App/App.xcodeproj/project.pbxproj || true
+          ruby -e 'File.write("/tmp/dishlist-signing-profiles.env", {
+            "MAIN_APP_GROUP_PROFILE_NAME" => ENV.fetch("MAIN_APP_GROUP_PROFILE_NAME"),
+            "MAIN_APP_GROUP_PROFILE_UUID" => ENV.fetch("MAIN_APP_GROUP_PROFILE_UUID"),
+            "SHARE_EXTENSION_APP_GROUP_PROFILE_NAME" => ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"),
+            "SHARE_EXTENSION_APP_GROUP_PROFILE_UUID" => ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"),
+          }.map { |key, value| "#{key}=#{value.dump}" }.join("\n") + "\n")'
           if [ -f /Users/builder/export_options.plist ]; then
             /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist $MAIN_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
             /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist.ShareExtension $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
@@ -164,7 +171,31 @@ workflows:
           rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
           mkdir -p "$(dirname "$ARCHIVE_PATH")" "$EXPORT_PATH"
           echo "----- FINAL SIGNING BUILD SETTINGS -----"
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -showBuildSettings | grep -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE|CODE_SIGN_ENTITLEMENTS" || true
+          if [ ! -f /tmp/dishlist-signing-profiles.env ]; then
+            echo "ERROR: Missing selected signing profile file from setup step."
+            exit 1
+          fi
+          # shellcheck disable=SC1091
+          . /tmp/dishlist-signing-profiles.env
+          MAIN_FINAL_SIGNING_SETTINGS="$(xcodebuild -project "$XCODE_PROJECT" -target App -configuration Release -showBuildSettings)"
+          SHARE_FINAL_SIGNING_SETTINGS="$(xcodebuild -project "$XCODE_PROJECT" -target DishListShareExtension -configuration Release -showBuildSettings)"
+          printf '%s\n%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" "$SHARE_FINAL_SIGNING_SETTINGS" | grep -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE|CODE_SIGN_ENTITLEMENTS" || true
+          if ! printf '%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE_SPECIFIER = $MAIN_APP_GROUP_PROFILE_NAME"; then
+            echo "ERROR: Xcode is not using the selected main app App Group profile: $MAIN_APP_GROUP_PROFILE_NAME"
+            exit 1
+          fi
+          if ! printf '%s\n' "$SHARE_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE_SPECIFIER = $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"; then
+            echo "ERROR: Xcode is not using the selected share extension App Group profile: $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"
+            exit 1
+          fi
+          if ! printf '%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE = $MAIN_APP_GROUP_PROFILE_UUID"; then
+            echo "ERROR: Xcode is not using the selected main app App Group profile UUID: $MAIN_APP_GROUP_PROFILE_UUID"
+            exit 1
+          fi
+          if ! printf '%s\n' "$SHARE_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE = $SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"; then
+            echo "ERROR: Xcode is not using the selected share extension App Group profile UUID: $SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"
+            exit 1
+          fi
           xcodebuild \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \

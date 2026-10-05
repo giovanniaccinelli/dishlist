@@ -200,12 +200,36 @@ export default function UploadPage() {
     const params = new URLSearchParams(window.location.search);
     const nextStoryMode = params.get("story") === "1";
     const nextDirectMode = params.get("direct") === "1";
+    const isSharedDraft = params.get("shared") === "1";
     const nextTargetDishlistId = params.get("targetList") || "to_try";
+    const sharedUrl = String(params.get("sharedUrl") || "").trim();
+    const sharedTitle = String(params.get("sharedTitle") || "").trim();
+    const sharedText = String(params.get("sharedText") || "").trim();
+    const sharedIngredients = String(params.get("sharedIngredients") || "").trim();
+    const sharedMethod = String(params.get("sharedMethod") || "").trim();
     setStoryMode(nextStoryMode);
     setDirectEntryMode(nextDirectMode);
-    setShowUploadForm(nextStoryMode || nextDirectMode);
+    setShowUploadForm(nextStoryMode || nextDirectMode || isSharedDraft);
     setUploadStep(0);
     setTargetDishlistId(nextTargetDishlistId);
+    if (isSharedDraft) {
+      const draftName = sharedTitle || sharedText.split(/\n|\. /)[0]?.slice(0, 90) || "";
+      setDishMode(DISH_MODE_COOKING);
+      setDishName(draftName);
+      setDishMediaNames(draftName ? [draftName] : []);
+      setDishLink(sharedUrl);
+      setShowLinkField(Boolean(sharedUrl));
+      if (sharedIngredients) {
+        const items = normalizeIngredientItems(sharedIngredients.split("\n").map((name) => ({ name })));
+        setDishRecipeIngredientItems(items);
+        setDishRecipeIngredients(ingredientItemsToText(items));
+      }
+      if (sharedMethod) {
+        setDishRecipeMethod(sharedMethod);
+      }
+      setComposerStep(2);
+      setComposerDetailsOpen(true);
+    }
   }, []);
 
   useEffect(() => {

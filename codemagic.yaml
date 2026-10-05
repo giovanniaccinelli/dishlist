@@ -15,6 +15,7 @@ workflows:
         bundle_identifier: com.giovanniaccinelli.dishlist
       vars:
         BUNDLE_ID: com.giovanniaccinelli.dishlist
+        SHARE_EXTENSION_BUNDLE_ID: com.giovanniaccinelli.dishlist.ShareExtension
         NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBAos19VBROVcYRMu6I7Wg4tW2LnJbstnw
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: dishlist-7f0ae.firebaseapp.com
         NEXT_PUBLIC_FIREBASE_PROJECT_ID: dishlist-7f0ae
@@ -42,6 +43,9 @@ workflows:
           fi
           echo "Using iOS build number $EFFECTIVE_BUILD_NUMBER"
           agvtool new-version -all "$EFFECTIVE_BUILD_NUMBER"
+      - name: Fetch Share Extension signing files
+        script: |
+          app-store-connect fetch-signing-files "$SHARE_EXTENSION_BUNDLE_ID" --type IOS_APP_STORE --create
       - name: Set up code signing
         script: |
           set -euo pipefail

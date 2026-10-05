@@ -48,7 +48,8 @@ workflows:
           xcode-project use-profiles
           echo "----- INSTALLED PROVISIONING PROFILE ENTITLEMENTS -----"
           MATCHED_APPLE_SIGN_IN_PROFILE=0
-          APP_GROUP_PROFILE_COUNT=0
+          MAIN_APP_GROUP_PROFILE_COUNT=0
+          SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=0
           FOUND_PROFILE=0
           for profile_dir in \
             "$HOME/Library/MobileDevice/Provisioning Profiles" \
@@ -59,13 +60,33 @@ workflows:
               FOUND_PROFILE=1
               echo "$profile"
               security cms -D -i "$profile" > /tmp/profile.plist
+              PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null || echo "")
+              PROFILE_BUNDLE_ID="${PROFILE_APP_ID#*.}"
+              PROFILE_CREATED=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_EXPIRES=$(/usr/libexec/PlistBuddy -c "Print :ExpirationDate" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              echo "Name: $PROFILE_NAME"
+              echo "UUID: $PROFILE_UUID"
+              echo "Bundle ID: $PROFILE_BUNDLE_ID"
+              echo "Created: $PROFILE_CREATED"
+              echo "Expires: $PROFILE_EXPIRES"
               /usr/libexec/PlistBuddy -c "Print :Entitlements" /tmp/profile.plist || true
               if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
                 MATCHED_APPLE_SIGN_IN_PROFILE=1
               fi
               if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist | grep -q "group.com.giovanniaccinelli.dishlist"; then
-                APP_GROUP_PROFILE_COUNT=$((APP_GROUP_PROFILE_COUNT + 1))
+                echo "App Group: YES"
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ]; then
+                  MAIN_APP_GROUP_PROFILE_COUNT=$((MAIN_APP_GROUP_PROFILE_COUNT + 1))
+                fi
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist.ShareExtension" ]; then
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=$((SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT + 1))
+                fi
+              else
+                echo "App Group: NO"
               fi
+              echo "-----"
             done
           done
           if [ "$FOUND_PROFILE" != "1" ]; then
@@ -78,9 +99,11 @@ workflows:
             echo "Regenerate the App Store provisioning profile after enabling Sign in with Apple on the App ID."
             exit 1
           fi
-          if [ "$APP_GROUP_PROFILE_COUNT" -lt 2 ]; then
-            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist must be present in both the main app and share extension provisioning profiles."
-            echo "Regenerate/download both App Store profiles after enabling the App Group on both identifiers."
+          if [ "$MAIN_APP_GROUP_PROFILE_COUNT" -lt 1 ] || [ "$SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT" -lt 1 ]; then
+            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist must be present in one main app profile and one share extension profile."
+            echo "Main app profiles with App Group: $MAIN_APP_GROUP_PROFILE_COUNT"
+            echo "Share extension profiles with App Group: $SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT"
+            echo "Look above for the exact profile Name/UUID/Bundle ID that Codemagic installed."
             exit 1
           fi
       - name: Build signed IPA

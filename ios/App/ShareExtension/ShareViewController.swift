@@ -131,18 +131,18 @@ final class ShareViewController: UIViewController {
         }
 
         statusLabel.text = "Opening DishList..."
+        if openURLThroughResponderChain(shareURL) {
+            return
+        }
+
         extensionContext?.open(shareURL) { [weak self] success in
             DispatchQueue.main.async {
                 guard let self else { return }
                 if success {
-                    self.finishAfterAppLaunch()
+                    self.statusLabel.text = "DishList should be opening..."
                     return
                 }
-                if self.openURLThroughResponderChain(shareURL) {
-                    self.finishAfterAppLaunch()
-                    return
-                }
-                self.statusLabel.text = "Could not open DishList. Open the app once, then try sharing again."
+                self.statusLabel.text = "Could not open DishList. Open DishList once, then try sharing again."
             }
         }
     }
@@ -184,9 +184,4 @@ final class ShareViewController: UIViewController {
         extensionContext?.completeRequest(returningItems: nil)
     }
 
-    private func finishAfterAppLaunch() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            self?.finish()
-        }
-    }
 }

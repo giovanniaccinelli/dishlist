@@ -88,9 +88,35 @@ final class ShareViewController: UIViewController {
         }
 
         statusLabel.text = "Opening DishList..."
-        extensionContext?.open(shareURL) { [weak self] _ in
-            self?.finish()
+        extensionContext?.open(shareURL) { [weak self] success in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if success {
+                    self.finish()
+                    return
+                }
+                if self.openURLThroughResponderChain(shareURL) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+                        self?.finish()
+                    }
+                    return
+                }
+                self.statusLabel.text = "Could not open DishList. Open the app once, then try sharing again."
+            }
         }
+    }
+
+    private func openURLThroughResponderChain(_ url: URL) -> Bool {
+        let selector = NSSelectorFromString("openURL:")
+        var responder: UIResponder? = self
+        while let currentResponder = responder {
+            if currentResponder.responds(to: selector) {
+                currentResponder.perform(selector, with: url)
+                return true
+            }
+            responder = currentResponder.next
+        }
+        return false
     }
 
     private func finish() {

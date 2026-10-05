@@ -36,9 +36,9 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-17}"
-          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 17 ]; then
-            EFFECTIVE_BUILD_NUMBER=17
+          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-20}"
+          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 20 ]; then
+            EFFECTIVE_BUILD_NUMBER=20
           fi
           echo "Using iOS build number $EFFECTIVE_BUILD_NUMBER"
           agvtool new-version -all "$EFFECTIVE_BUILD_NUMBER"
@@ -48,6 +48,12 @@ workflows:
           xcode-project use-profiles
           echo "----- INSTALLED PROVISIONING PROFILE ENTITLEMENTS -----"
           MATCHED_APPLE_SIGN_IN_PROFILE=0
+          MAIN_APP_GROUP_PROFILE_COUNT=0
+          SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=0
+          MAIN_APP_GROUP_PROFILE_NAME=""
+          MAIN_APP_GROUP_PROFILE_UUID=""
+          SHARE_EXTENSION_APP_GROUP_PROFILE_NAME=""
+          SHARE_EXTENSION_APP_GROUP_PROFILE_UUID=""
           FOUND_PROFILE=0
           for profile_dir in \
             "$HOME/Library/MobileDevice/Provisioning Profiles" \
@@ -58,10 +64,41 @@ workflows:
               FOUND_PROFILE=1
               echo "$profile"
               security cms -D -i "$profile" > /tmp/profile.plist
+              PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null || echo "")
+              PROFILE_BUNDLE_ID="${PROFILE_APP_ID#*.}"
+              PROFILE_CREATED=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              PROFILE_EXPIRES=$(/usr/libexec/PlistBuddy -c "Print :ExpirationDate" /tmp/profile.plist 2>/dev/null || echo "Unknown")
+              echo "Name: $PROFILE_NAME"
+              echo "UUID: $PROFILE_UUID"
+              echo "Bundle ID: $PROFILE_BUNDLE_ID"
+              echo "Created: $PROFILE_CREATED"
+              echo "Expires: $PROFILE_EXPIRES"
               /usr/libexec/PlistBuddy -c "Print :Entitlements" /tmp/profile.plist || true
               if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
                 MATCHED_APPLE_SIGN_IN_PROFILE=1
               fi
+              if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist | grep -q "group.com.giovanniaccinelli.dishlist.share"; then
+                echo "App Group: YES"
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ]; then
+                  MAIN_APP_GROUP_PROFILE_COUNT=$((MAIN_APP_GROUP_PROFILE_COUNT + 1))
+                  MAIN_APP_GROUP_PROFILE_NAME="$PROFILE_NAME"
+                  MAIN_APP_GROUP_PROFILE_UUID="$PROFILE_UUID"
+                fi
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist.ShareExtension" ]; then
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT=$((SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT + 1))
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_NAME="$PROFILE_NAME"
+                  SHARE_EXTENSION_APP_GROUP_PROFILE_UUID="$PROFILE_UUID"
+                fi
+              else
+                echo "App Group: NO"
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ] || [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist.ShareExtension" ]; then
+                  echo "Removing stale profile without required App Group: $PROFILE_NAME ($PROFILE_UUID)"
+                  rm -f "$profile"
+                fi
+              fi
+              echo "-----"
             done
           done
           if [ "$FOUND_PROFILE" != "1" ]; then
@@ -74,9 +111,111 @@ workflows:
             echo "Regenerate the App Store provisioning profile after enabling Sign in with Apple on the App ID."
             exit 1
           fi
+          if [ "$MAIN_APP_GROUP_PROFILE_COUNT" -lt 1 ] || [ "$SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT" -lt 1 ]; then
+            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist.share must be present in one main app profile and one share extension profile."
+            echo "Main app profiles with App Group: $MAIN_APP_GROUP_PROFILE_COUNT"
+            echo "Share extension profiles with App Group: $SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT"
+            echo "Look above for the exact profile Name/UUID/Bundle ID that Codemagic installed."
+            exit 1
+          fi
+          echo "Forcing App Group provisioning profiles into Xcode project..."
+          export MAIN_APP_GROUP_PROFILE_NAME MAIN_APP_GROUP_PROFILE_UUID SHARE_EXTENSION_APP_GROUP_PROFILE_NAME SHARE_EXTENSION_APP_GROUP_PROFILE_UUID
+          ruby - <<'RUBY'
+          path = "ios/App/App.xcodeproj/project.pbxproj"
+          text = File.read(path)
+          profiles = {
+            "com.giovanniaccinelli.dishlist" => [ENV.fetch("MAIN_APP_GROUP_PROFILE_NAME"), ENV.fetch("MAIN_APP_GROUP_PROFILE_UUID")],
+            "com.giovanniaccinelli.dishlist.ShareExtension" => [ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"), ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_UUID")],
+          }
+          text = text.gsub(/\n\t\t\tbuildSettings = \{.*?\n\t\t\t\};/m) do |block|
+            bundle_id = block[/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/, 1]
+            next block unless bundle_id && profiles.key?(bundle_id)
+            profile_name, profile_uuid = profiles.fetch(bundle_id)
+            next block if profile_name.empty? || profile_uuid.empty?
+            updated = block
+            {
+              "CODE_SIGN_STYLE" => "Manual",
+              "DEVELOPMENT_TEAM" => "6G5LUUC32R",
+              "PROVISIONING_PROFILE_SPECIFIER" => "\"#{profile_name}\"",
+              "PROVISIONING_PROFILE" => profile_uuid,
+            }.each do |key, value|
+              if updated.match?(/^\t\t\t\t#{Regexp.escape(key)}(?:\[[^\]]+\])? = /)
+                updated = updated.gsub(/^\t\t\t\t#{Regexp.escape(key)}(?:\[[^\]]+\])? = [^;]+;/, "\t\t\t\t#{key} = #{value};")
+              else
+                updated = updated.sub(/\n\t\t\t\};/, "\n\t\t\t\t#{key} = #{value};\n\t\t\t};")
+              end
+            end
+            updated
+          end
+          File.write(path, text)
+          RUBY
+          echo "Forced main app profile: $MAIN_APP_GROUP_PROFILE_NAME ($MAIN_APP_GROUP_PROFILE_UUID)"
+          echo "Forced share extension profile: $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME ($SHARE_EXTENSION_APP_GROUP_PROFILE_UUID)"
+          echo "----- FORCED PROJECT SIGNING SETTINGS -----"
+          grep -n -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE" ios/App/App.xcodeproj/project.pbxproj || true
+          ruby -e 'File.write("/tmp/dishlist-signing-profiles.env", {
+            "MAIN_APP_GROUP_PROFILE_NAME" => ENV.fetch("MAIN_APP_GROUP_PROFILE_NAME"),
+            "MAIN_APP_GROUP_PROFILE_UUID" => ENV.fetch("MAIN_APP_GROUP_PROFILE_UUID"),
+            "SHARE_EXTENSION_APP_GROUP_PROFILE_NAME" => ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"),
+            "SHARE_EXTENSION_APP_GROUP_PROFILE_UUID" => ENV.fetch("SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"),
+          }.map { |key, value| "#{key}=#{value.dump}" }.join("\n") + "\n")'
+          if [ -f /Users/builder/export_options.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist $MAIN_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
+            /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.giovanniaccinelli.dishlist.ShareExtension $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME" /Users/builder/export_options.plist || true
+          fi
       - name: Build signed IPA
         script: |
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {
+          set -euo pipefail
+          ARCHIVE_PATH="$PWD/build/ios/xcarchive/App.xcarchive"
+          EXPORT_PATH="$PWD/build/ios/ipa"
+          rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
+          mkdir -p "$(dirname "$ARCHIVE_PATH")" "$EXPORT_PATH"
+          echo "----- FINAL SIGNING BUILD SETTINGS -----"
+          if [ ! -f /tmp/dishlist-signing-profiles.env ]; then
+            echo "ERROR: Missing selected signing profile file from setup step."
+            exit 1
+          fi
+          # shellcheck disable=SC1091
+          . /tmp/dishlist-signing-profiles.env
+          MAIN_FINAL_SIGNING_SETTINGS="$(xcodebuild -project "$XCODE_PROJECT" -target App -configuration Release -showBuildSettings)"
+          SHARE_FINAL_SIGNING_SETTINGS="$(xcodebuild -project "$XCODE_PROJECT" -target DishListShareExtension -configuration Release -showBuildSettings)"
+          printf '%s\n%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" "$SHARE_FINAL_SIGNING_SETTINGS" | grep -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE|CODE_SIGN_ENTITLEMENTS" || true
+          if ! printf '%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE_SPECIFIER = $MAIN_APP_GROUP_PROFILE_NAME"; then
+            echo "ERROR: Xcode is not using the selected main app App Group profile: $MAIN_APP_GROUP_PROFILE_NAME"
+            exit 1
+          fi
+          if ! printf '%s\n' "$SHARE_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE_SPECIFIER = $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"; then
+            echo "ERROR: Xcode is not using the selected share extension App Group profile: $SHARE_EXTENSION_APP_GROUP_PROFILE_NAME"
+            exit 1
+          fi
+          if ! printf '%s\n' "$MAIN_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE = $MAIN_APP_GROUP_PROFILE_UUID"; then
+            echo "ERROR: Xcode is not using the selected main app App Group profile UUID: $MAIN_APP_GROUP_PROFILE_UUID"
+            exit 1
+          fi
+          if ! printf '%s\n' "$SHARE_FINAL_SIGNING_SETTINGS" | grep -Fq "PROVISIONING_PROFILE = $SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"; then
+            echo "ERROR: Xcode is not using the selected share extension App Group profile UUID: $SHARE_EXTENSION_APP_GROUP_PROFILE_UUID"
+            exit 1
+          fi
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            archive \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            DEVELOPMENT_TEAM=6G5LUUC32R \
+            "CODE_SIGN_IDENTITY=Apple Distribution" \
+            CODE_SIGN_STYLE=Manual || {
+            echo "----- XCODEBUILD LOGS -----"
+            find /tmp/xcodebuild_logs -maxdepth 1 -type f -print -exec cat {} \;
+            exit 1
+          }
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist /Users/builder/export_options.plist || {
             echo "----- XCODEBUILD LOGS -----"
             find /tmp/xcodebuild_logs -maxdepth 1 -type f -print -exec cat {} \;
             exit 1

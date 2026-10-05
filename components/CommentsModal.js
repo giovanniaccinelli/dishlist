@@ -158,7 +158,7 @@ export default function CommentsModal({
               )}
             </div>
 
-            <div className={`keyboard-lift-surface shrink-0 border-t px-4 py-3 ${darkMode ? "border-white/10 bg-[#141414]" : "border-black/8 bg-white/52"}`}>
+            <div className={`shrink-0 border-t px-4 py-3 ${darkMode ? "border-white/10 bg-[#141414]" : "border-black/8 bg-white/52"}`}>
               {replyTo && (
                 <div className={`mb-2 flex items-center justify-between rounded-full px-3 py-2 text-xs font-medium ${darkMode ? "bg-white/8 text-white/68" : "bg-[#EAF3FF] text-black/68"}`}>
                   <span>{t("Replying to")} {replyName}</span>

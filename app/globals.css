@@ -75,7 +75,6 @@
     );
     --app-bottom-nav-core-height: 4.85rem;
     --app-bottom-nav-height: calc(var(--app-bottom-nav-core-height) + env(safe-area-inset-bottom, 0px));
-    --keyboard-height: 0px;
     --app-accent-border: #e4b43f;
     --app-accent-border-strong: #cf9a17;
   }
@@ -330,10 +329,6 @@
   -webkit-backdrop-filter: blur(18px);
 }
 
-html.native-keyboard-open .bottom-nav-shell {
-  display: none !important;
-}
-
 .bottom-nav-item {
   width: 20%;
   height: 100%;
@@ -522,19 +517,6 @@ html.native-keyboard-open .bottom-nav-shell {
 
 .bottom-nav-spacer {
   padding-bottom: calc(var(--app-bottom-nav-height) + 0.35rem);
-}
-
-html.native-keyboard-open .bottom-nav-spacer {
-  padding-bottom: calc(var(--keyboard-height, 0px) + 0.35rem) !important;
-  transition: none !important;
-}
-
-html.native-keyboard-open .screen-between-navs-center,
-html.native-keyboard-open .bottom-nav-chat-bar,
-html.native-keyboard-open .bottom-nav-floating-action,
-html.native-keyboard-open .bottom-nav-chat-scroll,
-html.native-keyboard-open .keyboard-lift-surface {
-  transition: none !important;
 }
 
 html.dark,
@@ -900,24 +882,12 @@ html.dark .map-restaurant-card-solid {
   bottom: calc(var(--app-bottom-nav-height) + 1rem);
 }
 
-html.native-keyboard-open .bottom-nav-floating-action {
-  bottom: calc(var(--keyboard-height, 0px) + 1rem);
-}
-
 .bottom-nav-chat-bar {
   bottom: calc(var(--app-bottom-nav-height) + 0.65rem);
 }
 
-html.native-keyboard-open .bottom-nav-chat-bar {
-  bottom: calc(var(--keyboard-height, 0px) + 0.65rem);
-}
-
 .bottom-nav-chat-scroll {
   padding-bottom: calc(var(--app-bottom-nav-height) + 4.85rem);
-}
-
-html.native-keyboard-open .bottom-nav-chat-scroll {
-  padding-bottom: calc(var(--keyboard-height, 0px) + 4.85rem);
 }
 
 .screen-between-navs-center {
@@ -929,18 +899,6 @@ html.native-keyboard-open .bottom-nav-chat-scroll {
   justify-content: center;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-}
-
-html.native-keyboard-open .screen-between-navs-center {
-  transform: translateY(calc(var(--keyboard-height, 0px) * -1));
-}
-
-.keyboard-lift-surface {
-  transform: translateY(0);
-}
-
-html.native-keyboard-open .keyboard-lift-surface {
-  transform: translateY(calc(var(--keyboard-height, 0px) * -1));
 }
 
 .swipe-deck-layer {

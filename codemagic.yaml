@@ -36,9 +36,9 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-19}"
-          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 19 ]; then
-            EFFECTIVE_BUILD_NUMBER=19
+          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-20}"
+          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 20 ]; then
+            EFFECTIVE_BUILD_NUMBER=20
           fi
           echo "Using iOS build number $EFFECTIVE_BUILD_NUMBER"
           agvtool new-version -all "$EFFECTIVE_BUILD_NUMBER"
@@ -48,6 +48,7 @@ workflows:
           xcode-project use-profiles
           echo "----- INSTALLED PROVISIONING PROFILE ENTITLEMENTS -----"
           MATCHED_APPLE_SIGN_IN_PROFILE=0
+          APP_GROUP_PROFILE_COUNT=0
           FOUND_PROFILE=0
           for profile_dir in \
             "$HOME/Library/MobileDevice/Provisioning Profiles" \
@@ -62,6 +63,9 @@ workflows:
               if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
                 MATCHED_APPLE_SIGN_IN_PROFILE=1
               fi
+              if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist | grep -q "group.com.giovanniaccinelli.dishlist"; then
+                APP_GROUP_PROFILE_COUNT=$((APP_GROUP_PROFILE_COUNT + 1))
+              fi
             done
           done
           if [ "$FOUND_PROFILE" != "1" ]; then
@@ -72,6 +76,11 @@ workflows:
           if [ "$MATCHED_APPLE_SIGN_IN_PROFILE" != "1" ]; then
             echo "ERROR: Installed provisioning profile still does not include com.apple.developer.applesignin."
             echo "Regenerate the App Store provisioning profile after enabling Sign in with Apple on the App ID."
+            exit 1
+          fi
+          if [ "$APP_GROUP_PROFILE_COUNT" -lt 2 ]; then
+            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist must be present in both the main app and share extension provisioning profiles."
+            echo "Regenerate/download both App Store profiles after enabling the App Group on both identifiers."
             exit 1
           fi
       - name: Build signed IPA

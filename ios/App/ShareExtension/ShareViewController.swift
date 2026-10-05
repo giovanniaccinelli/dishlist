@@ -2,6 +2,8 @@ import UIKit
 import UniformTypeIdentifiers
 
 final class ShareViewController: UIViewController {
+    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist"
+    private let sharePayloadKeyPrefix = "DishListSharePayload:"
     private let statusLabel = UILabel()
     private var didStartProcessing = false
 
@@ -106,18 +108,15 @@ final class ShareViewController: UIViewController {
     }
 
     private func openDishList(url: String?, text: String?) {
+        guard let sharePayloadId = persistSharePayload(url: url, text: text) else {
+            statusLabel.text = "Could not prepare this share. Try again."
+            return
+        }
+
         var components = URLComponents()
         components.scheme = "dishlist"
         components.host = "share"
-
-        var queryItems: [URLQueryItem] = []
-        if let url, !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            queryItems.append(URLQueryItem(name: "url", value: url))
-        }
-        if let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            queryItems.append(URLQueryItem(name: "text", value: text))
-        }
-        components.queryItems = queryItems
+        components.queryItems = [URLQueryItem(name: "payloadId", value: sharePayloadId)]
 
         guard let shareURL = components.url else {
             finish()
@@ -141,6 +140,26 @@ final class ShareViewController: UIViewController {
                 self.statusLabel.text = "Could not open DishList. Open the app once, then try sharing again."
             }
         }
+    }
+
+    private func persistSharePayload(url: String?, text: String?) -> String? {
+        guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            return nil
+        }
+        let payloadId = UUID().uuidString
+        let trimmedURL = url?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let trimmedText = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        sharedDefaults.set(
+            [
+                "url": trimmedURL,
+                "text": trimmedText,
+                "createdAt": Date().timeIntervalSince1970,
+            ],
+            forKey: sharePayloadKeyPrefix + payloadId
+        )
+        sharedDefaults.set(payloadId, forKey: "DishListLatestSharePayloadId")
+        sharedDefaults.synchronize()
+        return payloadId
     }
 
     private func openURLThroughResponderChain(_ url: URL) -> Bool {

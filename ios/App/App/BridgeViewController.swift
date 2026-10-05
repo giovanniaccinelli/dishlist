@@ -2,6 +2,8 @@ import Capacitor
 import UIKit
 
 class BridgeViewController: CAPBridgeViewController {
+    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist"
+    private let sharePayloadKeyPrefix = "DishListSharePayload:"
     private var pendingSharedPath: String?
     private var shareRouteAttempts = 0
 
@@ -54,6 +56,9 @@ class BridgeViewController: CAPBridgeViewController {
         guard let url = URL(string: rawURL),
               var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return
+        }
+        if let payloadComponents = componentsWithSharedPayload(from: components) {
+            components = payloadComponents
         }
         components.scheme = nil
         components.host = nil
@@ -118,6 +123,32 @@ class BridgeViewController: CAPBridgeViewController {
         guard let url = URL(string: baseURLString + path) else { return }
         webView?.load(URLRequest(url: url))
         pendingSharedPath = nil
+    }
+
+    private func componentsWithSharedPayload(from components: URLComponents) -> URLComponents? {
+        guard let payloadId = components.queryItems?.first(where: { $0.name == "payloadId" })?.value,
+              !payloadId.isEmpty,
+              let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier),
+              let payload = sharedDefaults.dictionary(forKey: sharePayloadKeyPrefix + payloadId) else {
+            return nil
+        }
+
+        sharedDefaults.removeObject(forKey: sharePayloadKeyPrefix + payloadId)
+        if sharedDefaults.string(forKey: "DishListLatestSharePayloadId") == payloadId {
+            sharedDefaults.removeObject(forKey: "DishListLatestSharePayloadId")
+        }
+        sharedDefaults.synchronize()
+
+        var resolved = components
+        var queryItems: [URLQueryItem] = []
+        if let url = payload["url"] as? String, !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            queryItems.append(URLQueryItem(name: "url", value: url))
+        }
+        if let text = payload["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            queryItems.append(URLQueryItem(name: "text", value: text))
+        }
+        resolved.queryItems = queryItems
+        return resolved
     }
 }
 

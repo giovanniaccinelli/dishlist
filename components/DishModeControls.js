@@ -354,47 +354,90 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
 function SliceDishModeWheel({ choices, value, onSelect }) {
   const configByMode = {
     [DISH_MODE_RESTAURANT]: {
-      className: "left-[1.1rem] top-[1.4rem] h-[10.4rem] w-[9.9rem] rounded-[2.2rem_2.6rem_1.4rem_2.8rem]",
-      gradient: "linear-gradient(145deg,#ff363b 0%,#e9232b 62%,#9d1017 100%)",
-      shadow: "0 22px 38px rgba(255,54,59,0.24), inset 0 -14px 0 rgba(90,0,0,0.16), inset 0 9px 12px rgba(255,255,255,0.16)",
-      clipPath: "polygon(0 0, 100% 0, 84% 100%, 6% 86%)",
+      path: "M 106 58 Q 134 28 170 24 Q 200 22 214 40 L 184 192 Q 178 222 146 213 Q 84 195 50 151 Q 30 125 47 101 Z",
+      fill: "#F63137",
+      dark: "#AA151B",
+      glow: "rgba(246,49,55,0.48)",
+      center: [118, 118],
+      icon: [111, 86],
+      label: [118, 135],
+      hit: "left-[0.6rem] top-[0.6rem] h-[12.4rem] w-[10.8rem]",
     },
     [DISH_MODE_COOKING]: {
-      className: "right-[1.1rem] top-[1.4rem] h-[10.4rem] w-[9.9rem] rounded-[2.6rem_2.2rem_2.8rem_1.4rem]",
-      gradient: "linear-gradient(145deg,#ffd338 0%,#ffba1e 62%,#c87500 100%)",
-      shadow: "0 22px 38px rgba(255,195,35,0.2), inset 0 -14px 0 rgba(128,71,0,0.16), inset 0 9px 12px rgba(255,255,255,0.18)",
-      clipPath: "polygon(0 0, 100% 0, 94% 86%, 16% 100%)",
+      path: "M 246 40 Q 262 22 292 24 Q 328 28 356 58 L 415 101 Q 432 125 412 151 Q 378 195 316 213 Q 284 222 278 192 Z",
+      fill: "#FFC72B",
+      dark: "#C97800",
+      glow: "rgba(255,199,43,0.42)",
+      center: [344, 118],
+      icon: [344, 86],
+      label: [344, 135],
+      hit: "right-[0.6rem] top-[0.6rem] h-[12.4rem] w-[10.8rem]",
     },
     [DISH_MODE_ALL]: {
-      className: "left-1/2 top-[8.1rem] h-[8.8rem] w-[17.6rem] -translate-x-1/2 rounded-[2.1rem_2.1rem_4.4rem_4.4rem]",
-      gradient: "linear-gradient(160deg,#7ee75f 0%,#32bd4c 58%,#108035 100%)",
-      shadow: "0 24px 40px rgba(50,189,76,0.22), inset 0 -14px 0 rgba(0,80,24,0.16), inset 0 9px 12px rgba(255,255,255,0.16)",
-      clipPath: "polygon(50% 0, 100% 42%, 86% 100%, 14% 100%, 0 42%)",
+      path: "M 196 218 Q 231 182 266 218 L 395 289 Q 420 306 409 334 Q 384 395 316 419 Q 231 446 146 419 Q 78 395 53 334 Q 42 306 67 289 Z",
+      fill: "#43CE55",
+      dark: "#11853A",
+      glow: "rgba(67,206,85,0.46)",
+      center: [231, 319],
+      icon: [231, 281],
+      label: [231, 337],
+      hit: "left-1/2 top-[9.25rem] h-[11.6rem] w-[19.1rem] -translate-x-1/2",
     },
   };
 
   return (
-    <div className="relative mx-auto h-[18.4rem] w-full max-w-[22rem]">
+    <div className="relative mx-auto h-[23rem] w-full max-w-[24rem]">
+      <svg viewBox="0 0 462 444" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+        <defs>
+          {choices.map((choice) => {
+            const config = configByMode[choice.mode];
+            return (
+              <linearGradient key={`${choice.mode}-gradient`} id={`slice-mode-gradient-${choice.mode}`} x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stopColor={config.fill} />
+                <stop offset="72%" stopColor={config.fill} />
+                <stop offset="100%" stopColor={config.dark} />
+              </linearGradient>
+            );
+          })}
+          <filter id="slice-mode-soft-shadow" x="-30%" y="-30%" width="160%" height="170%">
+            <feDropShadow dx="0" dy="18" stdDeviation="14" floodColor="#000000" floodOpacity="0.36" />
+          </filter>
+        </defs>
+        {choices.map((choice) => {
+          const config = configByMode[choice.mode];
+          const selected = value === choice.mode;
+          return (
+            <g key={choice.mode} filter="url(#slice-mode-soft-shadow)">
+              <path d={config.path} fill={`url(#slice-mode-gradient-${choice.mode})`} stroke={selected ? "#FFFFFF" : config.fill} strokeWidth={selected ? 9 : 7} strokeLinejoin="round" />
+              <path d={config.path} fill="none" stroke={config.dark} strokeWidth="8" strokeLinejoin="round" opacity="0.32" transform="translate(0 6)" />
+              <path d={config.path} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinejoin="round" transform="translate(0 -5)" />
+            </g>
+          );
+        })}
+      </svg>
       {choices.map((choice) => {
         const config = configByMode[choice.mode];
-        const selected = value === choice.mode;
         return (
           <button
             key={choice.mode}
             type="button"
             onClick={() => onSelect(choice.mode)}
-            className={`absolute flex flex-col items-center justify-center gap-2 text-[#090909] transition active:scale-[0.985] ${config.className} ${selected ? "ring-4 ring-white/80" : ""}`}
-            style={{
-              background: config.gradient,
-              boxShadow: config.shadow,
-              clipPath: config.clipPath,
-            }}
-          >
-            <span className="grid h-12 w-12 place-items-center text-black">
+            className={`absolute z-10 transition active:scale-[0.985] ${config.hit}`}
+            aria-label={choice.label}
+          />
+        );
+      })}
+      {choices.map((choice) => {
+        const config = configByMode[choice.mode];
+        return (
+          <div key={`${choice.mode}-label`} className="pointer-events-none absolute inset-0">
+            <div className="absolute grid h-12 w-12 place-items-center text-black" style={{ left: `${config.icon[0] / 4.62}%`, top: `${config.icon[1] / 4.44}%`, transform: "translate(-50%, -50%)" }}>
               {choice.icon}
-            </span>
-            <span className="text-[1.38rem] font-black leading-none tracking-[-0.01em]">{choice.label}</span>
-          </button>
+            </div>
+            <div className="absolute -translate-x-1/2 text-center text-[1.45rem] font-black leading-none tracking-[-0.01em] text-black" style={{ left: `${config.label[0] / 4.62}%`, top: `${config.label[1] / 4.44}%` }}>
+              {choice.label}
+            </div>
+          </div>
         );
       })}
     </div>

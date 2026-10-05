@@ -179,17 +179,36 @@ const SLICE_WEEK_DAYS = [
   { key: 6, label: "SAT", color: "#7A7A7A", shadow: "rgba(255,255,255,0.16)" },
 ];
 
-const SLICE_WEEK_POSITIONS = [
-  { left: "3.1rem", top: "5.35rem", rotate: "-47deg" },
-  { left: "8.8rem", top: "1.05rem", rotate: "0deg" },
-  { left: "14.5rem", top: "5.35rem", rotate: "47deg" },
-  { left: "15.85rem", top: "12.3rem", rotate: "78deg" },
-  { left: "10.4rem", top: "16.6rem", rotate: "132deg" },
-  { left: "2.15rem", top: "12.3rem", rotate: "-78deg" },
-  { left: "6.25rem", top: "17.1rem", rotate: "180deg" },
-];
+function slicePolarPoint(cx, cy, radius, angleDeg) {
+  const angle = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle),
+  };
+}
+
+function sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle) {
+  const outerStart = slicePolarPoint(cx, cy, outerRadius, startAngle);
+  const outerEnd = slicePolarPoint(cx, cy, outerRadius, endAngle);
+  const innerEnd = slicePolarPoint(cx, cy, innerRadius, endAngle);
+  const innerStart = slicePolarPoint(cx, cy, innerRadius, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
+    "Z",
+  ].join(" ");
+}
 
 function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
+  const cx = 220;
+  const cy = 220;
+  const outerRadius = 164;
+  const innerRadius = 58;
+  const gap = 3.2;
+  const startOffset = -25.7;
   return (
     <section className="mb-5">
       <div className="mb-3 flex items-center justify-between px-1">
@@ -202,46 +221,72 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
         </div>
       </div>
       <div className="relative mx-auto h-[27rem] max-w-[24rem] overflow-hidden rounded-[2rem] bg-black">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(255,255,255,0.08),transparent_34%)]" />
-        <div className="absolute left-1/2 top-[49%] h-[19rem] w-[21rem] -translate-x-1/2 -translate-y-1/2">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_34%)]" />
+        <svg viewBox="0 0 440 440" className="absolute inset-0 h-full w-full overflow-visible" aria-label="Slice weekly streak">
+          <defs>
+            <filter id="slice-week-glow" x="-25%" y="-25%" width="150%" height="150%">
+              <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#ffffff" floodOpacity="0.12" />
+              <feDropShadow dx="0" dy="18" stdDeviation="16" floodColor="#000000" floodOpacity="0.42" />
+            </filter>
+            <linearGradient id="slice-week-empty" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stopColor="#525252" />
+              <stop offset="100%" stopColor="#161616" />
+            </linearGradient>
+            {days.map((day, index) => {
+              const imageUrl = day.dish ? getDishImageUrl(day.dish) : "";
+              return imageUrl ? (
+                <pattern key={`pattern-${day.dateKey}`} id={`slice-week-image-${index}`} patternUnits="userSpaceOnUse" x="34" y="34" width="372" height="372">
+                  <image href={imageUrl} x="34" y="34" width="372" height="372" preserveAspectRatio="xMidYMid slice" />
+                </pattern>
+              ) : null;
+            })}
+          </defs>
           {days.map((day, index) => {
-            const position = SLICE_WEEK_POSITIONS[index];
+            const startAngle = startOffset + index * (360 / 7) + gap;
+            const endAngle = startOffset + (index + 1) * (360 / 7) - gap;
+            const path = sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
+            const midAngle = (startAngle + endAngle) / 2;
+            const labelPoint = slicePolarPoint(cx, cy, 126, midAngle);
+            const plusPoint = slicePolarPoint(cx, cy, 105, midAngle);
             const imageUrl = day.dish ? getDishImageUrl(day.dish) : "";
             const emptyToday = day.isToday && !day.dish;
             return (
-              <button
-                key={day.dateKey}
-                type="button"
-                disabled={!emptyToday}
-                onClick={emptyToday ? onAddToday : undefined}
-                className="absolute h-[8.25rem] w-[7rem] origin-[50%_88%] overflow-hidden rounded-[2.35rem_2.35rem_1.1rem_1.1rem] border-[5px] text-white shadow-[0_18px_34px_rgba(0,0,0,0.45)]"
-                style={{
-                  left: position.left,
-                  top: position.top,
-                  transform: `rotate(${position.rotate})`,
-                  borderColor: day.color,
-                  boxShadow: `0 0 22px ${day.shadow}, inset 0 0 22px ${day.shadow}`,
-                  clipPath: "polygon(50% 0, 100% 18%, 86% 100%, 14% 100%, 0 18%)",
-                  background: emptyToday ? "linear-gradient(160deg,#3D3D3D,#171717)" : "rgba(255,255,255,0.08)",
-                }}
-              >
-                {imageUrl ? (
-                  <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[linear-gradient(160deg,#3F3F3F,#171717)]">
-                    {emptyToday ? (
-                      <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-white/70 text-[2rem] font-light leading-none">+</span>
-                    ) : null}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,transparent_34%,rgba(0,0,0,0.38)_100%)]" />
-                <div className="absolute bottom-3 left-0 right-0 text-center text-[0.95rem] font-black tracking-[0.04em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+              <g key={day.dateKey} filter="url(#slice-week-glow)">
+                <path
+                  d={path}
+                  fill={imageUrl ? `url(#slice-week-image-${index})` : "url(#slice-week-empty)"}
+                  stroke={day.color}
+                  strokeWidth="9"
+                  strokeLinejoin="round"
+                  style={{ cursor: emptyToday ? "pointer" : "default" }}
+                  onClick={emptyToday ? onAddToday : undefined}
+                />
+                <path d={path} fill="none" stroke={day.color} strokeWidth="3" strokeLinejoin="round" opacity="0.92" />
+                <path d={path} fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinejoin="round" />
+                {emptyToday ? (
+                  <>
+                    <circle cx={plusPoint.x} cy={plusPoint.y} r="25" fill="rgba(0,0,0,0.24)" stroke="rgba(255,255,255,0.72)" strokeWidth="3" />
+                    <text x={plusPoint.x} y={plusPoint.y + 9} textAnchor="middle" fontSize="44" fontWeight="300" fill="white">+</text>
+                  </>
+                ) : null}
+                <text
+                  x={labelPoint.x}
+                  y={labelPoint.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="20"
+                  fontWeight="900"
+                  letterSpacing="0.04em"
+                  fill="white"
+                  style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.85))" }}
+                >
                   {day.label}
-                </div>
-              </button>
+                </text>
+              </g>
             );
           })}
-        </div>
+          <circle cx={cx} cy={cy} r="41" fill="black" opacity="0.96" />
+        </svg>
       </div>
     </section>
   );

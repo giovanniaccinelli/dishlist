@@ -2,6 +2,9 @@ import Capacitor
 import UIKit
 
 class BridgeViewController: CAPBridgeViewController {
+    private var pendingSharedPath: String?
+    private var shareRouteAttempts = 0
+
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(SignInWithApple())
@@ -57,14 +60,64 @@ class BridgeViewController: CAPBridgeViewController {
         components.path = "/share"
         let path = components.string ?? "/share"
 
-        guard let data = try? JSONSerialization.data(withJSONObject: path),
-              let escapedPath = String(data: data, encoding: .utf8) else {
+        pendingSharedPath = path
+        shareRouteAttempts = 0
+        routePendingSharedPathWhenReady()
+    }
+
+    private func routePendingSharedPathWhenReady() {
+        guard let path = pendingSharedPath else { return }
+        guard let webView = webView else {
+            scheduleShareRouteRetry()
             return
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
-            self?.webView?.evaluateJavaScript("window.location.href = \(escapedPath);")
+        shareRouteAttempts += 1
+        let readyScript = "document.readyState === 'interactive' || document.readyState === 'complete'"
+        webView.evaluateJavaScript(readyScript) { [weak self] result, _ in
+            guard let self else { return }
+            if (result as? Bool) == true {
+                self.openSharedPath(path)
+                return
+            }
+            self.scheduleShareRouteRetry()
         }
+    }
+
+    private func scheduleShareRouteRetry() {
+        guard shareRouteAttempts < 30 else {
+            if let path = pendingSharedPath {
+                loadSharedPathDirectly(path)
+            }
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.routePendingSharedPathWhenReady()
+        }
+    }
+
+    private func openSharedPath(_ path: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: path),
+              let escapedPath = String(data: data, encoding: .utf8) else {
+            loadSharedPathDirectly(path)
+            return
+        }
+
+        webView?.evaluateJavaScript("window.location.assign(\(escapedPath));") { [weak self] _, error in
+            guard let self else { return }
+            if error != nil {
+                self.loadSharedPathDirectly(path)
+                return
+            }
+            self.pendingSharedPath = nil
+        }
+    }
+
+    private func loadSharedPathDirectly(_ path: String) {
+        let baseURLString = "https://dishlist7.vercel.app"
+        guard let url = URL(string: baseURLString + path) else { return }
+        webView?.load(URLRequest(url: url))
+        pendingSharedPath = nil
     }
 }
 

@@ -3,11 +3,20 @@ import UniformTypeIdentifiers
 
 final class ShareViewController: UIViewController {
     private let statusLabel = UILabel()
+    private var didStartProcessing = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureView()
-        processSharedItems()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !didStartProcessing else { return }
+        didStartProcessing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            self?.processSharedItems()
+        }
     }
 
     private func configureView() {
@@ -45,12 +54,12 @@ final class ShareViewController: UIViewController {
             .flatMap { $0.attachments ?? [] } ?? []
 
         loadFirstValue(from: providers, type: UTType.url.identifier) { [weak self] value in
-            if let url = value as? URL {
-                self?.openDishList(url: url.absoluteString, text: nil)
+            if let sharedURL = self?.stringFromSharedURLValue(value) {
+                self?.openDishList(url: sharedURL, text: nil)
                 return
             }
             self?.loadFirstValue(from: providers, type: UTType.plainText.identifier) { textValue in
-                self?.openDishList(url: nil, text: textValue as? String)
+                self?.openDishList(url: nil, text: self?.stringFromSharedTextValue(textValue))
             }
         }
     }
@@ -66,6 +75,34 @@ final class ShareViewController: UIViewController {
                 completion(item)
             }
         }
+    }
+
+    private func stringFromSharedURLValue(_ value: Any?) -> String? {
+        if let url = value as? URL {
+            return url.absoluteString
+        }
+        if let url = value as? NSURL {
+            return url.absoluteString
+        }
+        if let string = value as? String,
+           let parsedURL = URL(string: string),
+           parsedURL.scheme == "http" || parsedURL.scheme == "https" {
+            return parsedURL.absoluteString
+        }
+        return nil
+    }
+
+    private func stringFromSharedTextValue(_ value: Any?) -> String? {
+        if let string = value as? String {
+            return string
+        }
+        if let attributed = value as? NSAttributedString {
+            return attributed.string
+        }
+        if let url = value as? URL {
+            return url.absoluteString
+        }
+        return nil
     }
 
     private func openDishList(url: String?, text: String?) {

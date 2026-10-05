@@ -36,9 +36,9 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-17}"
-          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 17 ]; then
-            EFFECTIVE_BUILD_NUMBER=17
+          EFFECTIVE_BUILD_NUMBER="${BUILD_NUMBER:-19}"
+          if [ "$EFFECTIVE_BUILD_NUMBER" -lt 19 ]; then
+            EFFECTIVE_BUILD_NUMBER=19
           fi
           echo "Using iOS build number $EFFECTIVE_BUILD_NUMBER"
           agvtool new-version -all "$EFFECTIVE_BUILD_NUMBER"

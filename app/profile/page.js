@@ -205,10 +205,10 @@ function sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle) 
 function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
   const cx = 220;
   const cy = 220;
-  const outerRadius = 164;
-  const innerRadius = 58;
-  const gap = 3.2;
-  const startOffset = -25.7;
+  const outerRadius = 166;
+  const innerRadius = 18;
+  const gap = 5.2;
+  const startOffset = -77.1;
   return (
     <section className="mb-5">
       <div className="mb-3 flex items-center justify-between px-1">
@@ -220,8 +220,8 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
           {days.filter((day) => day.dish).length}/7
         </div>
       </div>
-      <div className="relative mx-auto h-[27rem] max-w-[24rem] overflow-hidden rounded-[2rem] bg-black">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_34%)]" />
+      <div className="relative mx-auto h-[24rem] max-w-[24rem] overflow-visible bg-transparent">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05),transparent_33%)]" />
         <svg viewBox="0 0 440 440" className="absolute inset-0 h-full w-full overflow-visible" aria-label="Slice weekly streak">
           <defs>
             <filter id="slice-week-glow" x="-25%" y="-25%" width="150%" height="150%">
@@ -246,8 +246,8 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
             const endAngle = startOffset + (index + 1) * (360 / 7) - gap;
             const path = sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
             const midAngle = (startAngle + endAngle) / 2;
-            const labelPoint = slicePolarPoint(cx, cy, 126, midAngle);
-            const plusPoint = slicePolarPoint(cx, cy, 105, midAngle);
+            const labelPoint = slicePolarPoint(cx, cy, 112, midAngle);
+            const plusPoint = slicePolarPoint(cx, cy, 88, midAngle);
             const imageUrl = day.dish ? getDishImageUrl(day.dish) : "";
             const emptyToday = day.isToday && !day.dish;
             return (
@@ -285,7 +285,7 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
               </g>
             );
           })}
-          <circle cx={cx} cy={cy} r="41" fill="black" opacity="0.96" />
+          <circle cx={cx} cy={cy} r="15" fill="black" opacity="0.96" />
         </svg>
       </div>
     </section>

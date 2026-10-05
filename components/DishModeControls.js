@@ -386,7 +386,7 @@ function SliceDishModeWheel({ choices, value, onSelect }) {
   };
 
   return (
-    <div className="relative mx-auto h-[23rem] w-full max-w-[24rem]">
+    <div className="relative mx-auto h-[18.8rem] w-full max-w-[20.2rem] overflow-visible">
       <svg viewBox="0 0 462 444" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
         <defs>
           {choices.map((choice) => {
@@ -408,7 +408,7 @@ function SliceDishModeWheel({ choices, value, onSelect }) {
           const selected = value === choice.mode;
           return (
             <g key={choice.mode} filter="url(#slice-mode-soft-shadow)">
-              <path d={config.path} fill={`url(#slice-mode-gradient-${choice.mode})`} stroke={selected ? "#FFFFFF" : config.fill} strokeWidth={selected ? 9 : 7} strokeLinejoin="round" />
+              <path d={config.path} fill={`url(#slice-mode-gradient-${choice.mode})`} stroke={config.fill} strokeWidth={selected ? 10 : 7} strokeLinejoin="round" />
               <path d={config.path} fill="none" stroke={config.dark} strokeWidth="8" strokeLinejoin="round" opacity="0.32" transform="translate(0 6)" />
               <path d={config.path} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinejoin="round" transform="translate(0 -5)" />
             </g>
@@ -431,10 +431,10 @@ function SliceDishModeWheel({ choices, value, onSelect }) {
         const config = configByMode[choice.mode];
         return (
           <div key={`${choice.mode}-label`} className="pointer-events-none absolute inset-0">
-            <div className="absolute grid h-12 w-12 place-items-center text-black" style={{ left: `${config.icon[0] / 4.62}%`, top: `${config.icon[1] / 4.44}%`, transform: "translate(-50%, -50%)" }}>
+            <div className="absolute grid h-12 w-12 place-items-center" style={{ left: `${config.icon[0] / 4.62}%`, top: `${config.icon[1] / 4.44}%`, transform: "translate(-50%, -50%)", color: "#050505" }}>
               {choice.icon}
             </div>
-            <div className="absolute -translate-x-1/2 text-center text-[1.45rem] font-black leading-none tracking-[-0.01em] text-black" style={{ left: `${config.label[0] / 4.62}%`, top: `${config.label[1] / 4.44}%` }}>
+            <div className="absolute w-[8rem] -translate-x-1/2 text-center text-[1.18rem] font-black leading-none tracking-[-0.01em]" style={{ left: `${config.label[0] / 4.62}%`, top: `${config.label[1] / 4.44}%`, color: "#050505" }}>
               {choice.label}
             </div>
           </div>

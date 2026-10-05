@@ -9,6 +9,8 @@ import { useLanguage } from "./LanguageProvider";
 export const DISH_MODE_ALL = "all";
 export const DISH_MODE_COOKING = "cooking";
 export const DISH_MODE_RESTAURANT = "restaurant";
+export const SLICE_MODE_STORAGE_KEY = "dishlist:slice-mode";
+export const SLICE_MODE_CHANGE_EVENT = "dishlist:slice-mode-change";
 const GLOBAL_DISH_MODE_KEY = "dish-mode:global";
 const OPENING_CHOICE_KEY = "dish-mode:opening-choice-shown";
 const FIXED_DISH_MODE_KEY = "dish-mode:fixed";
@@ -89,6 +91,44 @@ export function RestaurantForkKnifeIcon({ className = "", strokeWidth = 1.95 }) 
 
 export function UnknownDishModeIcon({ className = "", strokeWidth = 2.15 }) {
   return <Shuffle className={className} strokeWidth={strokeWidth} aria-hidden="true" />;
+}
+
+export function isSliceModeEnabled() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SLICE_MODE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setSliceModeEnabled(enabled) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SLICE_MODE_STORAGE_KEY, enabled ? "1" : "0");
+    window.dispatchEvent(new CustomEvent(SLICE_MODE_CHANGE_EVENT, { detail: enabled ? "1" : "0" }));
+  } catch {}
+}
+
+export function useSliceModeEnabled() {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const read = (event) => {
+      const nextValue = String(event?.detail || window.localStorage.getItem(SLICE_MODE_STORAGE_KEY) || "0") === "1";
+      setEnabled(nextValue);
+    };
+    read();
+    window.addEventListener(SLICE_MODE_CHANGE_EVENT, read);
+    window.addEventListener("storage", read);
+    return () => {
+      window.removeEventListener(SLICE_MODE_CHANGE_EVENT, read);
+      window.removeEventListener("storage", read);
+    };
+  }, []);
+
+  return enabled;
 }
 
 export function dishModeMatches(dish, selectedMode) {
@@ -207,6 +247,7 @@ export function DishModeFilterButton({ value = DISH_MODE_ALL, onClick, onSelect,
 export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSelect }) {
   const [fixedMode, setFixedMode] = useState(false);
   const { t, language } = useLanguage();
+  const sliceModeEnabled = useSliceModeEnabled();
   const choices = [
     { mode: DISH_MODE_RESTAURANT, label: t("Restaurants"), cropY: 176, icon: <RestaurantForkKnifeIcon className="h-[1.5rem] w-[1.5rem]" strokeWidth={2.35} /> },
     { mode: DISH_MODE_COOKING, label: t("Recipes"), cropY: 337, icon: <CookingHomeIcon className="h-[1.88rem] w-[1.88rem]" strokeWidth={2.3} /> },
@@ -252,23 +293,34 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
                 <X size={16} />
               </button>
             </div>
-            <div className="space-y-3">
-              {choices.map((choice) => {
-                const selected = value === choice.mode;
-                return (
-                  <DishModeChoiceLine
-                    key={choice.mode}
-                    choice={choice}
-                    selected={selected}
-                    fixed={fixedMode}
-                    onClick={() => {
-                      void hapticImpact("light");
-                      onSelect(choice.mode);
-                    }}
-                  />
-                );
-              })}
-            </div>
+            {sliceModeEnabled ? (
+              <SliceDishModeWheel
+                choices={choices}
+                value={value}
+                onSelect={(mode) => {
+                  void hapticImpact("light");
+                  onSelect(mode);
+                }}
+              />
+            ) : (
+              <div className="space-y-3">
+                {choices.map((choice) => {
+                  const selected = value === choice.mode;
+                  return (
+                    <DishModeChoiceLine
+                      key={choice.mode}
+                      choice={choice}
+                      selected={selected}
+                      fixed={fixedMode}
+                      onClick={() => {
+                        void hapticImpact("light");
+                        onSelect(choice.mode);
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
             <button
               type="button"
               onClick={toggleFixedMode}
@@ -296,6 +348,56 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function SliceDishModeWheel({ choices, value, onSelect }) {
+  const configByMode = {
+    [DISH_MODE_RESTAURANT]: {
+      className: "left-[1.1rem] top-[1.4rem] h-[10.4rem] w-[9.9rem] rounded-[2.2rem_2.6rem_1.4rem_2.8rem]",
+      gradient: "linear-gradient(145deg,#ff363b 0%,#e9232b 62%,#9d1017 100%)",
+      shadow: "0 22px 38px rgba(255,54,59,0.24), inset 0 -14px 0 rgba(90,0,0,0.16), inset 0 9px 12px rgba(255,255,255,0.16)",
+      clipPath: "polygon(0 0, 100% 0, 84% 100%, 6% 86%)",
+    },
+    [DISH_MODE_COOKING]: {
+      className: "right-[1.1rem] top-[1.4rem] h-[10.4rem] w-[9.9rem] rounded-[2.6rem_2.2rem_2.8rem_1.4rem]",
+      gradient: "linear-gradient(145deg,#ffd338 0%,#ffba1e 62%,#c87500 100%)",
+      shadow: "0 22px 38px rgba(255,195,35,0.2), inset 0 -14px 0 rgba(128,71,0,0.16), inset 0 9px 12px rgba(255,255,255,0.18)",
+      clipPath: "polygon(0 0, 100% 0, 94% 86%, 16% 100%)",
+    },
+    [DISH_MODE_ALL]: {
+      className: "left-1/2 top-[8.1rem] h-[8.8rem] w-[17.6rem] -translate-x-1/2 rounded-[2.1rem_2.1rem_4.4rem_4.4rem]",
+      gradient: "linear-gradient(160deg,#7ee75f 0%,#32bd4c 58%,#108035 100%)",
+      shadow: "0 24px 40px rgba(50,189,76,0.22), inset 0 -14px 0 rgba(0,80,24,0.16), inset 0 9px 12px rgba(255,255,255,0.16)",
+      clipPath: "polygon(50% 0, 100% 42%, 86% 100%, 14% 100%, 0 42%)",
+    },
+  };
+
+  return (
+    <div className="relative mx-auto h-[18.4rem] w-full max-w-[22rem]">
+      {choices.map((choice) => {
+        const config = configByMode[choice.mode];
+        const selected = value === choice.mode;
+        return (
+          <button
+            key={choice.mode}
+            type="button"
+            onClick={() => onSelect(choice.mode)}
+            className={`absolute flex flex-col items-center justify-center gap-2 text-[#090909] transition active:scale-[0.985] ${config.className} ${selected ? "ring-4 ring-white/80" : ""}`}
+            style={{
+              background: config.gradient,
+              boxShadow: config.shadow,
+              clipPath: config.clipPath,
+            }}
+          >
+            <span className="grid h-12 w-12 place-items-center text-black">
+              {choice.icon}
+            </span>
+            <span className="text-[1.38rem] font-black leading-none tracking-[-0.01em]">{choice.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -339,6 +441,7 @@ function DishModeChoiceLine({ choice, onClick, selected = false, fixed = false }
 
 export function DiningModeOpeningSelection({ className = "", onSelect, intro = false }) {
   const { t } = useLanguage();
+  const sliceModeEnabled = useSliceModeEnabled();
   const [mode, setMode] = useState(DISH_MODE_RESTAURANT);
   const [introVisible, setIntroVisible] = useState(Boolean(intro));
   const [closingMode, setClosingMode] = useState(null);
@@ -379,16 +482,20 @@ export function DiningModeOpeningSelection({ className = "", onSelect, intro = f
       transition={{ type: "spring", stiffness: 230, damping: 24, mass: 0.82 }}
       className="w-full"
     >
-      <div className="space-y-3">
-        {choices.map((choice) => (
-          <DishModeChoiceLine
-            key={choice.mode}
-            choice={choice}
-            selected={mode === choice.mode}
-            onClick={() => choose(choice.mode)}
-          />
-        ))}
-      </div>
+      {sliceModeEnabled ? (
+        <SliceDishModeWheel choices={choices} value={mode} onSelect={choose} />
+      ) : (
+        <div className="space-y-3">
+          {choices.map((choice) => (
+            <DishModeChoiceLine
+              key={choice.mode}
+              choice={choice}
+              selected={mode === choice.mode}
+              onClick={() => choose(choice.mode)}
+            />
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 

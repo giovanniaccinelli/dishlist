@@ -93,6 +93,8 @@ import {
   DishModeFilterButton,
   DishModeFilterModal,
   RestaurantMapIcon,
+  SLICE_MODE_STORAGE_KEY,
+  setSliceModeEnabled,
 } from "../../components/DishModeControls";
 import { getRestaurantDishGroups } from "../lib/restaurants";
 import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
@@ -164,6 +166,84 @@ function StoryStatIcon({ size = 10 }) {
       <path d="M23.6 3.55C20.95 4.92 19.65 7.02 19.65 9.68V12.08" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
       <path d="M23.6 3.55V19" stroke="#2BD36B" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
+  );
+}
+
+const SLICE_WEEK_DAYS = [
+  { key: 0, label: "SUN", color: "#8B5CF6", shadow: "rgba(139,92,246,0.42)" },
+  { key: 1, label: "MON", color: "#FF3D4F", shadow: "rgba(255,61,79,0.42)" },
+  { key: 2, label: "TUE", color: "#FF8429", shadow: "rgba(255,132,41,0.42)" },
+  { key: 3, label: "WED", color: "#FFD633", shadow: "rgba(255,214,51,0.36)" },
+  { key: 4, label: "THU", color: "#2BD36B", shadow: "rgba(43,211,107,0.40)" },
+  { key: 5, label: "FRI", color: "#2F8CFF", shadow: "rgba(47,140,255,0.42)" },
+  { key: 6, label: "SAT", color: "#7A7A7A", shadow: "rgba(255,255,255,0.16)" },
+];
+
+const SLICE_WEEK_POSITIONS = [
+  { left: "3.1rem", top: "5.35rem", rotate: "-47deg" },
+  { left: "8.8rem", top: "1.05rem", rotate: "0deg" },
+  { left: "14.5rem", top: "5.35rem", rotate: "47deg" },
+  { left: "15.85rem", top: "12.3rem", rotate: "78deg" },
+  { left: "10.4rem", top: "16.6rem", rotate: "132deg" },
+  { left: "2.15rem", top: "12.3rem", rotate: "-78deg" },
+  { left: "6.25rem", top: "17.1rem", rotate: "180deg" },
+];
+
+function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
+  return (
+    <section className="mb-5">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <div>
+          <div className={`text-[1.05rem] font-black leading-none ${darkMode ? "text-white" : "text-black"}`}>Slice</div>
+          <div className={`mt-1 text-xs font-semibold ${darkMode ? "text-white/48" : "text-black/46"}`}>Weekly streak</div>
+        </div>
+        <div className={`rounded-full px-3 py-1.5 text-[11px] font-black ${darkMode ? "bg-white/8 text-white/62" : "bg-black/6 text-black/54"}`}>
+          {days.filter((day) => day.dish).length}/7
+        </div>
+      </div>
+      <div className="relative mx-auto h-[27rem] max-w-[24rem] overflow-hidden rounded-[2rem] bg-black">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(255,255,255,0.08),transparent_34%)]" />
+        <div className="absolute left-1/2 top-[49%] h-[19rem] w-[21rem] -translate-x-1/2 -translate-y-1/2">
+          {days.map((day, index) => {
+            const position = SLICE_WEEK_POSITIONS[index];
+            const imageUrl = day.dish ? getDishImageUrl(day.dish) : "";
+            const emptyToday = day.isToday && !day.dish;
+            return (
+              <button
+                key={day.dateKey}
+                type="button"
+                disabled={!emptyToday}
+                onClick={emptyToday ? onAddToday : undefined}
+                className="absolute h-[8.25rem] w-[7rem] origin-[50%_88%] overflow-hidden rounded-[2.35rem_2.35rem_1.1rem_1.1rem] border-[5px] text-white shadow-[0_18px_34px_rgba(0,0,0,0.45)]"
+                style={{
+                  left: position.left,
+                  top: position.top,
+                  transform: `rotate(${position.rotate})`,
+                  borderColor: day.color,
+                  boxShadow: `0 0 22px ${day.shadow}, inset 0 0 22px ${day.shadow}`,
+                  clipPath: "polygon(50% 0, 100% 18%, 86% 100%, 14% 100%, 0 18%)",
+                  background: emptyToday ? "linear-gradient(160deg,#3D3D3D,#171717)" : "rgba(255,255,255,0.08)",
+                }}
+              >
+                {imageUrl ? (
+                  <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[linear-gradient(160deg,#3F3F3F,#171717)]">
+                    {emptyToday ? (
+                      <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-white/70 text-[2rem] font-light leading-none">+</span>
+                    ) : null}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,transparent_34%,rgba(0,0,0,0.38)_100%)]" />
+                <div className="absolute bottom-3 left-0 right-0 text-center text-[0.95rem] font-black tracking-[0.04em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                  {day.label}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -815,6 +895,7 @@ export default function Profile() {
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const [shoppingIngredientDraft, setShoppingIngredientDraft] = useState("");
   const [squareCardLayout, setSquareCardLayout] = useState(true);
+  const [sliceModeEnabled, setSliceModeEnabledState] = useState(false);
   const [notificationsPermissionEnabled, setNotificationsPermissionEnabled] = useState(false);
   const [locationPermissionEnabled, setLocationPermissionEnabled] = useState(true);
   const [hapticsPermissionEnabled, setHapticsPermissionEnabled] = useState(true);
@@ -842,6 +923,7 @@ export default function Profile() {
     if (typeof window === "undefined") return;
     setSquareCardLayout(window.localStorage.getItem(CARD_LAYOUT_STORAGE_KEY) !== "full");
     setColoredCardsEnabled(window.localStorage.getItem(CARD_COLORS_STORAGE_KEY) === "1");
+    setSliceModeEnabledState(window.localStorage.getItem(SLICE_MODE_STORAGE_KEY) === "1");
     setNotificationsPermissionEnabled(window.localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) === "1");
     setLocationPermissionEnabled(window.localStorage.getItem(GEOLOCATION_ENABLED_KEY) !== "0");
     setHapticsPermissionEnabled(window.localStorage.getItem(HAPTICS_ENABLED_KEY) !== "0");
@@ -859,6 +941,11 @@ export default function Profile() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(CARD_COLORS_STORAGE_KEY, enabled ? "1" : "0");
     window.dispatchEvent(new CustomEvent("dishlist-card-colors-change", { detail: enabled ? "1" : "0" }));
+  };
+
+  const updateSliceModePreference = (enabled) => {
+    setSliceModeEnabledState(enabled);
+    setSliceModeEnabled(enabled);
   };
 
   const setPermissionStorageValue = (key, value) => {
@@ -2610,6 +2697,34 @@ export default function Profile() {
     const mode = take?.questionDishMode === "home" ? DISH_MODE_COOKING : DISH_MODE_RESTAURANT;
     return mode === selectedDishMode;
   });
+  const sliceWeekDays = useMemo(() => {
+    const now = new Date();
+    const todayKey = getStoryCalendarKey(now.getTime());
+    const weekStart = new Date(now);
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(now.getDate() - now.getDay());
+    const dishesByDate = new Map();
+    (uploadedDishes || []).forEach((dish) => {
+      const ms = getDishTimeMs(dish?.createdAt || dish?.updatedAt || dish?.addedAt);
+      if (!ms) return;
+      const key = getStoryCalendarKey(ms);
+      const existing = dishesByDate.get(key);
+      if (!existing || getDishTimeMs(dish?.createdAt || dish?.updatedAt) > getDishTimeMs(existing?.createdAt || existing?.updatedAt)) {
+        dishesByDate.set(key, dish);
+      }
+    });
+    return SLICE_WEEK_DAYS.map((day, index) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + index);
+      const dateKey = getStoryCalendarKey(date.getTime());
+      return {
+        ...day,
+        dateKey,
+        isToday: dateKey === todayKey,
+        dish: dishesByDate.get(dateKey) || null,
+      };
+    });
+  }, [uploadedDishes]);
   const searchedActiveDishlistDishes = activeDishlist?.dishes?.filter(dishMatchesSearch) || [];
   const profileCounts = useMemo(
     () => ({
@@ -3465,6 +3580,13 @@ export default function Profile() {
                   </button>
                 </div>
               ) : null}
+              {sliceModeEnabled ? (
+                <SliceWeeklyWheel
+                  days={sliceWeekDays}
+                  darkMode={darkMode}
+                  onAddToday={() => router.push("/upload?direct=1&slice=1")}
+                />
+              ) : null}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {visibleProfileDishlists.map((dishlist, index) => {
                   const isMap = dishlist.type === "map";
@@ -4097,6 +4219,25 @@ export default function Profile() {
                     coloredCardsEnabled ? "bg-[#FFC247]" : "bg-black/14"
                   }`}>
                     <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${coloredCardsEnabled ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateSliceModePreference(!sliceModeEnabled)}
+                  className={`no-accent-border mt-3 flex w-full items-center justify-between rounded-[1.45rem] p-4 text-left ${
+                    darkMode ? "bg-[#141414] text-white" : "bg-white text-black"
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">Slice</div>
+                    <div className={`mt-1 text-sm ${darkMode ? "text-white/52" : "text-black/50"}`}>
+                      {language === "it" ? "Selettore e settimana a spicchi" : "Sliced picker and weekly streak"}
+                    </div>
+                  </div>
+                  <span className={`no-accent-border flex h-8 w-14 items-center rounded-full p-1 transition ${
+                    sliceModeEnabled ? "bg-[#2BD36B]" : "bg-black/14"
+                  }`}>
+                    <span className={`no-accent-border h-6 w-6 rounded-full shadow-sm transition ${sliceModeEnabled ? "translate-x-6 bg-black" : "translate-x-0 bg-white"}`} />
                   </span>
                 </button>
               </section>

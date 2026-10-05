@@ -351,42 +351,64 @@ export function DishModeFilterModal({ open, value = DISH_MODE_ALL, onClose, onSe
   );
 }
 
+function sliceModePolarPoint(cx, cy, radius, angleDeg) {
+  const angle = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle),
+  };
+}
+
+function sliceModeWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle) {
+  const outerStart = sliceModePolarPoint(cx, cy, outerRadius, startAngle);
+  const outerEnd = sliceModePolarPoint(cx, cy, outerRadius, endAngle);
+  const innerEnd = sliceModePolarPoint(cx, cy, innerRadius, endAngle);
+  const innerStart = sliceModePolarPoint(cx, cy, innerRadius, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
+    "Z",
+  ].join(" ");
+}
+
 function SliceDishModeWheel({ choices, value, onSelect }) {
+  const cx = 230;
+  const cy = 228;
+  const outerRadius = 178;
+  const innerRadius = 24;
+  const gap = 3.8;
   const configByMode = {
     [DISH_MODE_RESTAURANT]: {
-      path: "M 106 58 Q 134 28 170 24 Q 200 22 214 40 L 184 192 Q 178 222 146 213 Q 84 195 50 151 Q 30 125 47 101 Z",
+      start: -120,
+      end: 0,
       fill: "#F63137",
       dark: "#AA151B",
-      glow: "rgba(246,49,55,0.48)",
-      center: [118, 118],
-      icon: [111, 86],
-      label: [118, 135],
-      hit: "left-[0.6rem] top-[0.6rem] h-[12.4rem] w-[10.8rem]",
+      iconRadius: 82,
+      labelRadius: 121,
     },
     [DISH_MODE_COOKING]: {
-      path: "M 246 40 Q 262 22 292 24 Q 328 28 356 58 L 415 101 Q 432 125 412 151 Q 378 195 316 213 Q 284 222 278 192 Z",
+      start: 0,
+      end: 120,
       fill: "#FFC72B",
       dark: "#C97800",
-      glow: "rgba(255,199,43,0.42)",
-      center: [344, 118],
-      icon: [344, 86],
-      label: [344, 135],
-      hit: "right-[0.6rem] top-[0.6rem] h-[12.4rem] w-[10.8rem]",
+      iconRadius: 82,
+      labelRadius: 121,
     },
     [DISH_MODE_ALL]: {
-      path: "M 196 218 Q 231 182 266 218 L 395 289 Q 420 306 409 334 Q 384 395 316 419 Q 231 446 146 419 Q 78 395 53 334 Q 42 306 67 289 Z",
+      start: 120,
+      end: 240,
       fill: "#43CE55",
       dark: "#11853A",
-      glow: "rgba(67,206,85,0.46)",
-      center: [231, 319],
-      icon: [231, 281],
-      label: [231, 337],
-      hit: "left-1/2 top-[9.25rem] h-[11.6rem] w-[19.1rem] -translate-x-1/2",
+      iconRadius: 74,
+      labelRadius: 116,
     },
   };
 
   return (
-    <div className="relative mx-auto h-[18.8rem] w-full max-w-[20.2rem] overflow-visible">
+    <div className="relative mx-auto h-[23rem] w-full max-w-[23rem] overflow-visible">
       <svg viewBox="0 0 462 444" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
         <defs>
           {choices.map((choice) => {
@@ -405,36 +427,36 @@ function SliceDishModeWheel({ choices, value, onSelect }) {
         </defs>
         {choices.map((choice) => {
           const config = configByMode[choice.mode];
+          const startAngle = config.start + gap;
+          const endAngle = config.end - gap;
+          const midAngle = (startAngle + endAngle) / 2;
+          const path = sliceModeWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
           const selected = value === choice.mode;
+          const offset = selected ? 13 : 9;
+          const offsetPoint = sliceModePolarPoint(0, 0, offset, midAngle);
           return (
-            <g key={choice.mode} filter="url(#slice-mode-soft-shadow)">
-              <path d={config.path} fill={`url(#slice-mode-gradient-${choice.mode})`} stroke={config.fill} strokeWidth={selected ? 10 : 7} strokeLinejoin="round" />
-              <path d={config.path} fill="none" stroke={config.dark} strokeWidth="8" strokeLinejoin="round" opacity="0.32" transform="translate(0 6)" />
-              <path d={config.path} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinejoin="round" transform="translate(0 -5)" />
+            <g key={choice.mode} filter="url(#slice-mode-soft-shadow)" transform={`translate(${offsetPoint.x} ${offsetPoint.y})`}>
+              <path d={path} fill={`url(#slice-mode-gradient-${choice.mode})`} stroke={config.fill} strokeWidth={selected ? 12 : 9} strokeLinejoin="round" />
+              <path d={path} fill="none" stroke={config.dark} strokeWidth="10" strokeLinejoin="round" opacity="0.34" transform="translate(0 7)" />
+              <path d={path} fill="none" stroke="rgba(255,255,255,0.24)" strokeWidth="6" strokeLinejoin="round" transform="translate(0 -5)" />
+              <path d={path} fill="transparent" className="cursor-pointer" onClick={() => onSelect(choice.mode)} />
             </g>
           );
         })}
       </svg>
       {choices.map((choice) => {
         const config = configByMode[choice.mode];
-        return (
-          <button
-            key={choice.mode}
-            type="button"
-            onClick={() => onSelect(choice.mode)}
-            className={`absolute z-10 transition active:scale-[0.985] ${config.hit}`}
-            aria-label={choice.label}
-          />
-        );
-      })}
-      {choices.map((choice) => {
-        const config = configByMode[choice.mode];
+        const midAngle = (config.start + config.end) / 2;
+        const selected = value === choice.mode;
+        const offset = selected ? 13 : 9;
+        const iconPoint = sliceModePolarPoint(cx, cy, config.iconRadius + offset, midAngle);
+        const labelPoint = sliceModePolarPoint(cx, cy, config.labelRadius + offset, midAngle);
         return (
           <div key={`${choice.mode}-label`} className="pointer-events-none absolute inset-0">
-            <div className="absolute grid h-12 w-12 place-items-center" style={{ left: `${config.icon[0] / 4.62}%`, top: `${config.icon[1] / 4.44}%`, transform: "translate(-50%, -50%)", color: "#050505" }}>
+            <div className="absolute grid h-12 w-12 place-items-center" style={{ left: `${iconPoint.x / 4.62}%`, top: `${iconPoint.y / 4.44}%`, transform: "translate(-50%, -50%)", color: "#050505" }}>
               {choice.icon}
             </div>
-            <div className="absolute w-[8rem] -translate-x-1/2 text-center text-[1.18rem] font-black leading-none tracking-[-0.01em]" style={{ left: `${config.label[0] / 4.62}%`, top: `${config.label[1] / 4.44}%`, color: "#050505" }}>
+            <div className="absolute w-[9.5rem] -translate-x-1/2 text-center text-[1.45rem] font-black leading-none tracking-[-0.01em]" style={{ left: `${labelPoint.x / 4.62}%`, top: `${labelPoint.y / 4.44}%`, color: "#050505" }}>
               {choice.label}
             </div>
           </div>

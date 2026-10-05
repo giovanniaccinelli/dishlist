@@ -206,8 +206,9 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
   const cx = 220;
   const cy = 220;
   const outerRadius = 166;
-  const innerRadius = 18;
-  const gap = 5.2;
+  const innerRadius = 36;
+  const gap = 4.8;
+  const explode = 17;
   const startOffset = -77.1;
   return (
     <section className="mb-5">
@@ -244,29 +245,31 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
           {days.map((day, index) => {
             const startAngle = startOffset + index * (360 / 7) + gap;
             const endAngle = startOffset + (index + 1) * (360 / 7) - gap;
-            const path = sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
             const midAngle = (startAngle + endAngle) / 2;
-            const labelPoint = slicePolarPoint(cx, cy, 112, midAngle);
-            const plusPoint = slicePolarPoint(cx, cy, 88, midAngle);
+            const path = sliceWedgePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
+            const offsetPoint = slicePolarPoint(0, 0, explode, midAngle);
+            const labelPoint = slicePolarPoint(cx, cy, 130, midAngle);
+            const plusPoint = slicePolarPoint(cx, cy, 76, midAngle);
             const imageUrl = day.dish ? getDishImageUrl(day.dish) : "";
             const emptyToday = day.isToday && !day.dish;
             return (
-              <g key={day.dateKey} filter="url(#slice-week-glow)">
+              <g key={day.dateKey} filter="url(#slice-week-glow)" transform={`translate(${offsetPoint.x} ${offsetPoint.y})`}>
                 <path
                   d={path}
                   fill={imageUrl ? `url(#slice-week-image-${index})` : "url(#slice-week-empty)"}
                   stroke={day.color}
-                  strokeWidth="9"
+                  strokeWidth="12"
                   strokeLinejoin="round"
+                  strokeLinecap="round"
                   style={{ cursor: emptyToday ? "pointer" : "default" }}
                   onClick={emptyToday ? onAddToday : undefined}
                 />
-                <path d={path} fill="none" stroke={day.color} strokeWidth="3" strokeLinejoin="round" opacity="0.92" />
-                <path d={path} fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinejoin="round" />
+                <path d={path} fill="none" stroke={day.color} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" opacity="0.92" />
+                <path d={path} fill="rgba(0,0,0,0.16)" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
                 {emptyToday ? (
                   <>
-                    <circle cx={plusPoint.x} cy={plusPoint.y} r="25" fill="rgba(0,0,0,0.24)" stroke="rgba(255,255,255,0.72)" strokeWidth="3" />
-                    <text x={plusPoint.x} y={plusPoint.y + 9} textAnchor="middle" fontSize="44" fontWeight="300" fill="white">+</text>
+                    <circle cx={plusPoint.x} cy={plusPoint.y} r="22" fill="rgba(0,0,0,0.24)" stroke="rgba(255,255,255,0.72)" strokeWidth="3" />
+                    <text x={plusPoint.x} y={plusPoint.y + 8} textAnchor="middle" fontSize="38" fontWeight="300" fill="white">+</text>
                   </>
                 ) : null}
                 <text
@@ -274,7 +277,7 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
                   y={labelPoint.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="20"
+                  fontSize="19"
                   fontWeight="900"
                   letterSpacing="0.04em"
                   fill="white"
@@ -285,7 +288,7 @@ function SliceWeeklyWheel({ days, darkMode, onAddToday }) {
               </g>
             );
           })}
-          <circle cx={cx} cy={cy} r="15" fill="black" opacity="0.96" />
+          <circle cx={cx} cy={cy} r="21" fill="black" opacity="0.96" />
         </svg>
       </div>
     </section>

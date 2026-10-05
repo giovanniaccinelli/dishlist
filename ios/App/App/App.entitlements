@@ -10,7 +10,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.giovanniaccinelli.dishlist</string>
+		<string>group.com.giovanniaccinelli.dishlist.share</string>
 	</array>
 </dict>
 </plist>

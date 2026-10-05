@@ -79,7 +79,7 @@ workflows:
               if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist >/dev/null 2>&1; then
                 MATCHED_APPLE_SIGN_IN_PROFILE=1
               fi
-              if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist | grep -q "group.com.giovanniaccinelli.dishlist"; then
+              if /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist | grep -q "group.com.giovanniaccinelli.dishlist.share"; then
                 echo "App Group: YES"
                 if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ]; then
                   MAIN_APP_GROUP_PROFILE_COUNT=$((MAIN_APP_GROUP_PROFILE_COUNT + 1))
@@ -112,7 +112,7 @@ workflows:
             exit 1
           fi
           if [ "$MAIN_APP_GROUP_PROFILE_COUNT" -lt 1 ] || [ "$SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT" -lt 1 ]; then
-            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist must be present in one main app profile and one share extension profile."
+            echo "ERROR: App Group group.com.giovanniaccinelli.dishlist.share must be present in one main app profile and one share extension profile."
             echo "Main app profiles with App Group: $MAIN_APP_GROUP_PROFILE_COUNT"
             echo "Share extension profiles with App Group: $SHARE_EXTENSION_APP_GROUP_PROFILE_COUNT"
             echo "Look above for the exact profile Name/UUID/Bundle ID that Codemagic installed."

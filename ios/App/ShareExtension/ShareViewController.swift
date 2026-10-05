@@ -2,7 +2,7 @@ import UIKit
 import UniformTypeIdentifiers
 
 final class ShareViewController: UIViewController {
-    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist"
+    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist.share"
     private let sharePayloadKeyPrefix = "DishListSharePayload:"
     private let statusLabel = UILabel()
     private var didStartProcessing = false

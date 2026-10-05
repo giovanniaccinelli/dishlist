@@ -2,7 +2,7 @@ import Capacitor
 import UIKit
 
 class BridgeViewController: CAPBridgeViewController {
-    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist"
+    private let appGroupIdentifier = "group.com.giovanniaccinelli.dishlist.share"
     private let sharePayloadKeyPrefix = "DishListSharePayload:"
     private var pendingSharedPath: String?
     private var shareRouteAttempts = 0

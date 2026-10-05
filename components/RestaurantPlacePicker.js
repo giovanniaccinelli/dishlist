@@ -13,10 +13,6 @@ function buildRestaurantFromPlace(place) {
     addressComponents: place.address_components,
     lat: place.geometry?.location?.lat?.(),
     lng: place.geometry?.location?.lng?.(),
-    websiteUrl: place.website,
-    phone: place.formatted_phone_number || place.international_phone_number,
-    supportsReservation: place.reservable,
-    supportsOrder: Boolean(place.takeout || place.delivery),
     reservationUrl: place.reservationUrl || place.reservation_url || place.bookingUrl || place.booking_url,
     orderUrl: place.orderUrl || place.order_url || place.foodOrderingUrl || place.food_ordering_url,
     googleMapsUrl:
@@ -125,7 +121,7 @@ export default function RestaurantPlacePicker({
     placesServiceRef.current.getDetails(
       {
         placeId: prediction.place_id,
-        fields: ["place_id", "name", "formatted_address", "address_components", "geometry", "url", "website", "formatted_phone_number", "international_phone_number", "reservable", "takeout", "delivery"],
+        fields: ["place_id", "name", "formatted_address", "address_components", "geometry", "url"],
       },
       (place, status) => {
         setDetailsLoading(false);

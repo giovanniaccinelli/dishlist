@@ -168,6 +168,8 @@ export default function UploadPage() {
   const [showLinkField, setShowLinkField] = useState(false);
   const [dishMode, setDishMode] = useState(DISH_MODE_COOKING);
   const [restaurant, setRestaurant] = useState(null);
+  const [restaurantReservationUrl, setRestaurantReservationUrl] = useState("");
+  const [restaurantOrderUrl, setRestaurantOrderUrl] = useState("");
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [tagUserPickerOpen, setTagUserPickerOpen] = useState(false);
   const [taggableUsers, setTaggableUsers] = useState([]);
@@ -303,6 +305,48 @@ export default function UploadPage() {
   };
 
   const selectedRestaurantCategory = RESTAURANT_CATEGORY_OPTIONS.find((category) => category.id === restaurantPrimaryCategory) || null;
+
+  const handleRestaurantChange = (nextRestaurant) => {
+    setRestaurant(nextRestaurant);
+    setRestaurantReservationUrl(nextRestaurant?.reservationUrl || "");
+    setRestaurantOrderUrl(nextRestaurant?.orderUrl || "");
+  };
+
+  const updateRestaurantActionUrl = (field, value) => {
+    if (field === "reservationUrl") {
+      setRestaurantReservationUrl(value);
+    } else {
+      setRestaurantOrderUrl(value);
+    }
+    setRestaurant((prev) => (prev ? { ...prev, [field]: value.trim() } : prev));
+  };
+
+  const renderRestaurantActionLinkFields = () => {
+    if (!isRestaurantUpload || !restaurant) return null;
+    const inputClass = "w-full rounded-full border border-white/10 bg-white px-4 py-3 text-[16px] font-semibold text-black placeholder:text-black/34 focus:outline-none focus:ring-2 focus:ring-[#E64646]/25";
+    return (
+      <div className="mt-3 grid gap-2">
+        <input
+          type="url"
+          inputMode="url"
+          value={restaurantReservationUrl}
+          onChange={(event) => updateRestaurantActionUrl("reservationUrl", event.target.value)}
+          placeholder={language === "it" ? "Link prenotazione (opzionale)" : "Reservation link (optional)"}
+          className={inputClass}
+          disabled={loadingUpload}
+        />
+        <input
+          type="url"
+          inputMode="url"
+          value={restaurantOrderUrl}
+          onChange={(event) => updateRestaurantActionUrl("orderUrl", event.target.value)}
+          placeholder={language === "it" ? "Link ordine (opzionale)" : "Order link (optional)"}
+          className={inputClass}
+          disabled={loadingUpload}
+        />
+      </div>
+    );
+  };
 
   const renderRestaurantCategoryField = () => {
     if (!isRestaurantUpload) return null;
@@ -458,6 +502,13 @@ export default function UploadPage() {
       const recipeIngredientsText = isRestaurantUpload ? "" : ingredientItemsToText(normalizedIngredientItems);
       const primaryRestaurantCategory = isRestaurantUpload ? normalizeRestaurantCategoryId(restaurantPrimaryCategory) : "";
       const secondaryRestaurantCategory = "";
+      const restaurantPayload = isRestaurantUpload && restaurant
+        ? {
+            ...restaurant,
+            reservationUrl: restaurantReservationUrl.trim(),
+            orderUrl: restaurantOrderUrl.trim(),
+          }
+        : null;
       if (storyMode) {
         const storyId = `story-${Date.now()}`;
         const ok = await publishCustomStory(user.uid, {
@@ -484,7 +535,7 @@ export default function UploadPage() {
           ownerName: user.displayName || "Anonymous",
           ownerPhotoURL: user.photoURL || "",
           taggedUserName: storyTaggedUser.trim(),
-          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
+          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurantPayload : null,
           storyMealTag,
         });
         if (!ok) throw new Error("Failed to publish story.");
@@ -502,7 +553,7 @@ export default function UploadPage() {
           description: dishDescription.trim(),
           dishLink: getNormalizedDishLink(),
           dishMode,
-          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurant : null,
+          restaurant: dishMode === DISH_MODE_RESTAURANT ? restaurantPayload : null,
           recipeIngredients: recipeIngredientsText,
           recipeIngredientItems: normalizedIngredientItems,
           recipeMethod: isRestaurantUpload ? "" : dishRecipeMethod.trim(),
@@ -699,6 +750,8 @@ export default function UploadPage() {
     setComposerStep(0);
     setComposerDetailsOpen(true);
     setRestaurant(null);
+    setRestaurantReservationUrl("");
+    setRestaurantOrderUrl("");
     setDishImage(null);
     setPreview(null);
     setDishMediaFiles([]);
@@ -1211,6 +1264,8 @@ export default function UploadPage() {
                     onClick={() => {
                       setDishMode(DISH_MODE_COOKING);
                       setRestaurant(null);
+                      setRestaurantReservationUrl("");
+                      setRestaurantOrderUrl("");
                     }}
                     className={`h-[13rem] rounded-[1.15rem] border px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition active:scale-[0.985] ${
                       dishMode === DISH_MODE_COOKING
@@ -1290,7 +1345,8 @@ export default function UploadPage() {
                     </div>
                     {isRestaurantUpload ? (
                       <>
-                        <RestaurantPlacePicker value={restaurant} onChange={setRestaurant} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
+                        <RestaurantPlacePicker value={restaurant} onChange={handleRestaurantChange} placeholder={language === "it" ? "Cerca ristorante" : "Search restaurant"} label="" accent="restaurant" />
+                        {renderRestaurantActionLinkFields()}
                         {!mediaRestaurantDetailsOpen ? (
                           <>
                             <div className="rounded-[1rem] border border-white/10 bg-white/8 px-3 py-3">
@@ -1745,6 +1801,8 @@ export default function UploadPage() {
                       onClick={() => {
                         setDishMode(DISH_MODE_COOKING);
                         setRestaurant(null);
+                        setRestaurantReservationUrl("");
+                        setRestaurantOrderUrl("");
                       }}
                     className={`rounded-[1.05rem] border px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.07)] transition active:scale-[0.985] ${dishMode === DISH_MODE_COOKING ? "border-[#FFBF3C] bg-[#4A340B] text-[#FFF0BC]" : darkMode ? "border-white/12 bg-[#181818] text-white/70" : "border-black/10 bg-[#FFFDFC] text-black/70"}`}
                   >
@@ -1777,10 +1835,11 @@ export default function UploadPage() {
                   <div className="mb-4">
                     <RestaurantPlacePicker
                       value={restaurant}
-                      onChange={setRestaurant}
+                      onChange={handleRestaurantChange}
                       placeholder="Search where you ate it"
                       accent="restaurant"
                     />
+                    {renderRestaurantActionLinkFields()}
                   </div>
                 ) : null}
                 <input

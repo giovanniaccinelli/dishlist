@@ -115,10 +115,6 @@ function getRestaurantGoogleMapsUrl(group = {}) {
   return "";
 }
 
-function getRestaurantWebsiteUrl(group = {}) {
-  return String(group.websiteUrl || group.website || group.websiteUri || "").trim();
-}
-
 function getRestaurantReservationUrl(group = {}) {
   return String(group.reservationUrl || group.reserveUrl || group.bookingUrl || group.diningReservationUrl || "").trim();
 }
@@ -1205,7 +1201,6 @@ export default function RestaurantMapView({
           return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
         })();
     const googleMapsUrl = getRestaurantGoogleMapsUrl(group);
-    const websiteUrl = getRestaurantWebsiteUrl(group);
     const reservationUrl = getRestaurantReservationUrl(group);
     const orderUrl = getRestaurantOrderUrl(group);
 
@@ -1272,7 +1267,7 @@ export default function RestaurantMapView({
             </span>
           </div>
           <div className="mt-1 text-[0.82rem] font-semibold leading-5 text-black/66">{formatRestaurantPlaceLine(group)}</div>
-          {(reservationUrl || orderUrl || websiteUrl) ? (
+          {(reservationUrl || orderUrl) ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {reservationUrl ? (
                 <a
@@ -1296,17 +1291,6 @@ export default function RestaurantMapView({
                 >
                   <ShoppingBag size={14} strokeWidth={2.35} />
                   {language === "it" ? "Ordina" : "Order"}
-                </a>
-              ) : null}
-              {!reservationUrl && !orderUrl && websiteUrl ? (
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                  className="no-accent-border inline-flex h-9 items-center rounded-full border border-black/10 bg-black/5 px-3 text-[12px] font-black text-black/58 transition active:scale-[0.98]"
-                >
-                  Website
                 </a>
               ) : null}
             </div>

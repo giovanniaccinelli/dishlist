@@ -45,7 +45,7 @@ const RESTAURANT_TAG_PIN_THEME = {
   veg: { fill: "#278F68", stroke: "#0D5440" },
   vegan: { fill: "#21A55A", stroke: "#0B5C34" },
   light: { fill: "#2A9D97", stroke: "#135C58" },
-  easy: { fill: "#6D5BD0", stroke: "#332875" },
+  easy: { fill: "#F5B700", stroke: "#8A6700" },
   quick: { fill: "#219B8E", stroke: "#0D5952" },
   fancy: { fill: "#B94C86", stroke: "#672947" },
   comfort: { fill: "#BD8E24", stroke: "#67490D" },

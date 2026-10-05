@@ -1,7 +1,6 @@
 import {
   Camera,
   ChefHat,
-  Check,
   Dumbbell,
   Fish,
   Globe2,
@@ -12,6 +11,7 @@ import {
   Sun,
   Timer,
   Wheat,
+  Zap,
 } from "lucide-react";
 
 function PlateIcon({ className = "" }) {
@@ -258,7 +258,7 @@ export const TAG_DECOR = {
   "carb heavy": { icon: Wheat, iconClass: "text-[#B38717]", pillClass: "bg-[#F8E6B8] text-[#7A5A10] border-[#E5C86D]" },
   quick: { icon: Timer, iconClass: "text-[#1D7FA6]", pillClass: "bg-[#DDF5FF] text-[#124E68] border-[#96D7F2]" },
   cheat: { icon: PizzaSliceIcon, iconClass: "text-[#C6582C]", iconSize: "h-[1.42rem] w-[1.42rem]", pillClass: "bg-[#FFD8CC] text-[#8A2F16] border-[#F39B7A]" },
-  easy: { icon: Check, iconClass: "text-[#6366F1]", pillClass: "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]" },
+  easy: { icon: Zap, iconClass: "text-[#F5B700]", pillClass: "bg-[#FFF4BF] text-[#8A6700] border-[#F2D35E]" },
   fit: { icon: Dumbbell, iconClass: "text-[#1F8A4D]", pillClass: "bg-[#DDF7E7] text-[#17603A] border-[#9FDEB8]" },
   premium: { icon: CoinStackIcon, iconClass: "text-[#C69A00]", pillClass: "bg-[#FFF1B8] text-[#8A6700] border-[#E8C95B]" },
   veg: { icon: Leaf, iconClass: "text-[#33A047]", pillClass: "bg-[#E4F8D9] text-[#236A1C] border-[#A9E08D]" },

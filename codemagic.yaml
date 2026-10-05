@@ -85,6 +85,10 @@ workflows:
                 fi
               else
                 echo "App Group: NO"
+                if [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist" ] || [ "$PROFILE_BUNDLE_ID" = "com.giovanniaccinelli.dishlist.ShareExtension" ]; then
+                  echo "Removing stale profile without required App Group: $PROFILE_NAME ($PROFILE_UUID)"
+                  rm -f "$profile"
+                fi
               fi
               echo "-----"
             done
@@ -106,6 +110,8 @@ workflows:
             echo "Look above for the exact profile Name/UUID/Bundle ID that Codemagic installed."
             exit 1
           fi
+          echo "Reconfiguring signing after removing stale profiles..."
+          xcode-project use-profiles
       - name: Build signed IPA
         script: |
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {

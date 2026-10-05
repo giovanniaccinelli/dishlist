@@ -509,6 +509,7 @@ export default function RestaurantMapView({
   const router = useRouter();
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  const searchInputRef = useRef(null);
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const sheetRef = useRef(null);
@@ -999,6 +1000,14 @@ export default function RestaurantMapView({
     });
   };
 
+  const dismissSearchKeyboard = () => {
+    searchInputRef.current?.blur?.();
+    if (typeof document !== "undefined" && document.activeElement === searchInputRef.current) {
+      document.activeElement?.blur?.();
+    }
+    setSearchFocused(false);
+  };
+
   const focusGroup = (group, direction = 0, { preserveAnchor = false } = {}) => {
     if (!group) return;
     setSheetDirection(direction);
@@ -1007,10 +1016,11 @@ export default function RestaurantMapView({
     focusMapOnGroup(group, { keepAboveSheet: true });
     setQuery(group.name || "");
     setPredictions([]);
-    setSearchFocused(false);
+    dismissSearchKeyboard();
   };
 
   const handlePredictionSelect = (prediction) => {
+    dismissSearchKeyboard();
     const matchingGroup = displayedGroups.find((group) => group.placeId === prediction?.place_id);
     if (matchingGroup) {
       focusGroup(matchingGroup);
@@ -1033,7 +1043,7 @@ export default function RestaurantMapView({
         setSelectedPlaceId("__none__");
         setQuery(place.name || query);
         setPredictions([]);
-        setSearchFocused(false);
+        dismissSearchKeyboard();
         animateMapCamera({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
@@ -1393,6 +1403,7 @@ export default function RestaurantMapView({
             <div className="flex min-h-[2.65rem] items-center gap-2 px-3 py-1.5">
               <Search size={15} className="shrink-0 text-black/35" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={query}
                 onFocus={() => setSearchFocused(true)}

@@ -2,7 +2,7 @@
 
 import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Funnel, MapPin, Search, X } from "lucide-react";
+import { CalendarCheck, Funnel, MapPin, Search, ShoppingBag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loadGoogleMaps } from "../app/lib/googleMapsClient";
@@ -113,6 +113,18 @@ function getRestaurantGoogleMapsUrl(group = {}) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, address].filter(Boolean).join(", "))}`;
   }
   return "";
+}
+
+function getRestaurantWebsiteUrl(group = {}) {
+  return String(group.websiteUrl || group.website || group.websiteUri || "").trim();
+}
+
+function getRestaurantReservationUrl(group = {}) {
+  return String(group.reservationUrl || group.reserveUrl || group.bookingUrl || group.diningReservationUrl || "").trim();
+}
+
+function getRestaurantOrderUrl(group = {}) {
+  return String(group.orderUrl || group.orderOnlineUrl || group.foodOrderingUrl || group.deliveryUrl || group.takeoutUrl || "").trim();
 }
 
 const TAG_ORDER_INDEX = new Map(TAG_OPTIONS.map((tag, index) => [tag, index]));
@@ -1193,6 +1205,9 @@ export default function RestaurantMapView({
           return ratings.length ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 2) / 2 : 0;
         })();
     const googleMapsUrl = getRestaurantGoogleMapsUrl(group);
+    const websiteUrl = getRestaurantWebsiteUrl(group);
+    const reservationUrl = getRestaurantReservationUrl(group);
+    const orderUrl = getRestaurantOrderUrl(group);
 
     return (
     <motion.div
@@ -1257,6 +1272,45 @@ export default function RestaurantMapView({
             </span>
           </div>
           <div className="mt-1 text-[0.82rem] font-semibold leading-5 text-black/66">{formatRestaurantPlaceLine(group)}</div>
+          {(reservationUrl || orderUrl || websiteUrl) ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {reservationUrl ? (
+                <a
+                  href={reservationUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="restaurant-accent-border inline-flex h-9 items-center gap-1.5 rounded-full border-2 bg-[#E64646] px-3 text-[12px] font-black text-white shadow-[0_10px_22px_rgba(230,70,70,0.22)] transition active:scale-[0.98]"
+                >
+                  <CalendarCheck size={14} strokeWidth={2.35} />
+                  {language === "it" ? "Prenota" : "Reserve"}
+                </a>
+              ) : null}
+              {orderUrl ? (
+                <a
+                  href={orderUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="no-accent-border inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-[#2BD36B]/70 bg-[#12351F] px-3 text-[12px] font-black text-[#DDFBE6] shadow-[0_10px_22px_rgba(43,211,107,0.16)] transition active:scale-[0.98]"
+                >
+                  <ShoppingBag size={14} strokeWidth={2.35} />
+                  {language === "it" ? "Ordina" : "Order"}
+                </a>
+              ) : null}
+              {!reservationUrl && !orderUrl && websiteUrl ? (
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="no-accent-border inline-flex h-9 items-center rounded-full border border-black/10 bg-black/5 px-3 text-[12px] font-black text-black/58 transition active:scale-[0.98]"
+                >
+                  Website
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <button
           type="button"

@@ -39,6 +39,12 @@ export function normalizeRestaurant(restaurant) {
       restaurant.url ||
       `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`
   ).trim();
+  const websiteUrl = String(restaurant.websiteUrl || restaurant.website || restaurant.websiteUri || "").trim();
+  const reservationUrl = String(restaurant.reservationUrl || restaurant.reserveUrl || restaurant.bookingUrl || restaurant.diningReservationUrl || "").trim();
+  const orderUrl = String(restaurant.orderUrl || restaurant.orderOnlineUrl || restaurant.foodOrderingUrl || restaurant.deliveryUrl || restaurant.takeoutUrl || "").trim();
+  const phone = String(restaurant.phone || restaurant.formatted_phone_number || restaurant.nationalPhoneNumber || restaurant.internationalPhoneNumber || "").trim();
+  const supportsReservation = Boolean(restaurant.supportsReservation || restaurant.reservable || reservationUrl);
+  const supportsOrder = Boolean(restaurant.supportsOrder || restaurant.takeout || restaurant.delivery || restaurant.servesDelivery || orderUrl);
 
   return {
     placeId,
@@ -49,6 +55,12 @@ export function normalizeRestaurant(restaurant) {
     lat,
     lng,
     googleMapsUrl,
+    websiteUrl,
+    reservationUrl,
+    orderUrl,
+    phone,
+    supportsReservation,
+    supportsOrder,
   };
 }
 

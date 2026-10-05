@@ -158,7 +158,33 @@ workflows:
           fi
       - name: Build signed IPA
         script: |
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" || {
+          set -euo pipefail
+          ARCHIVE_PATH="$PWD/build/ios/xcarchive/App.xcarchive"
+          EXPORT_PATH="$PWD/build/ios/ipa"
+          rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
+          mkdir -p "$(dirname "$ARCHIVE_PATH")" "$EXPORT_PATH"
+          echo "----- FINAL SIGNING BUILD SETTINGS -----"
+          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -showBuildSettings | grep -E "PRODUCT_BUNDLE_IDENTIFIER|PROVISIONING_PROFILE|CODE_SIGN_STYLE|CODE_SIGN_ENTITLEMENTS" || true
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            archive \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            DEVELOPMENT_TEAM=6G5LUUC32R \
+            "CODE_SIGN_IDENTITY=Apple Distribution" \
+            CODE_SIGN_STYLE=Manual || {
+            echo "----- XCODEBUILD LOGS -----"
+            find /tmp/xcodebuild_logs -maxdepth 1 -type f -print -exec cat {} \;
+            exit 1
+          }
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist /Users/builder/export_options.plist || {
             echo "----- XCODEBUILD LOGS -----"
             find /tmp/xcodebuild_logs -maxdepth 1 -type f -print -exec cat {} \;
             exit 1

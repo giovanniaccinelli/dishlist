@@ -8,7 +8,6 @@ import ClientCrashRecovery from "../components/ClientCrashRecovery";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import NotificationsManager from "../components/NotificationsManager";
-import KeyboardDismissManager from "../components/KeyboardDismissManager";
 import { LanguageProvider } from "../components/LanguageProvider";
 
 export default function RootLayout({ children }) {
@@ -50,7 +49,6 @@ export default function RootLayout({ children }) {
               <GoogleAnalytics />
               <ServiceWorkerRegister />
               <NotificationsManager />
-              <KeyboardDismissManager />
               <DebugBanner />
               {children}
             </LanguageProvider>

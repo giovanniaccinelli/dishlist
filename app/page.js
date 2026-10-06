@@ -239,6 +239,8 @@ function VerticalFeedScroll({
   const containerRef = useRef(null);
   const viewedRef = useRef(new Set());
   const snapTimeoutRef = useRef(null);
+  const gestureStartRef = useRef({ scrollTop: 0, index: 0, y: 0 });
+  const touchingRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(() => Math.max(0, Number(initialIndex || 0)));
   const [visibleCount, setVisibleCount] = useState(() => Math.max(24, Number(initialIndex || 0) + 16));
 
@@ -295,6 +297,39 @@ function VerticalFeedScroll({
     centerCard(findNearestIndex(node), behavior);
   };
 
+  const beginScrollGesture = (clientY = 0) => {
+    const node = containerRef.current;
+    if (!node) return;
+    touchingRef.current = true;
+    if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
+    gestureStartRef.current = {
+      scrollTop: node.scrollTop,
+      index: findNearestIndex(node),
+      y: clientY,
+    };
+  };
+
+  const finishScrollGesture = (clientY = gestureStartRef.current.y) => {
+    const node = containerRef.current;
+    if (!node) return;
+    touchingRef.current = false;
+    if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
+    const scrollDelta = node.scrollTop - gestureStartRef.current.scrollTop;
+    const touchDelta = gestureStartRef.current.y - clientY;
+    const movement = Math.abs(scrollDelta) >= 12 ? scrollDelta : touchDelta;
+    const threshold = Math.max(18, node.clientHeight * 0.035);
+    let targetIndex = findNearestIndex(node);
+    if (Math.abs(movement) > threshold) {
+      targetIndex = gestureStartRef.current.index + (movement > 0 ? 1 : -1);
+    }
+    targetIndex = Math.max(0, Math.min(dishes.length - 1, targetIndex));
+    setActiveIndex(targetIndex);
+    if (targetIndex + 10 >= visibleCount && visibleCount < dishes.length) {
+      setVisibleCount((count) => Math.min(dishes.length, count + 18));
+    }
+    centerCard(targetIndex, "auto");
+  };
+
   const handleScroll = () => {
     const node = containerRef.current;
     if (!node) return;
@@ -303,10 +338,12 @@ function VerticalFeedScroll({
     if (nextIndex + 10 >= visibleCount && visibleCount < dishes.length) {
       setVisibleCount((count) => Math.min(dishes.length, count + 18));
     }
-    if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
-    snapTimeoutRef.current = window.setTimeout(() => {
-      snapToNearestCard("auto");
-    }, 36);
+    if (!touchingRef.current) {
+      if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
+      snapTimeoutRef.current = window.setTimeout(() => {
+        snapToNearestCard("auto");
+      }, 36);
+    }
   };
 
   const visibleDishes = dishes.slice(0, Math.min(dishes.length, visibleCount));
@@ -315,9 +352,8 @@ function VerticalFeedScroll({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      onTouchEnd={() => snapToNearestCard("auto")}
-      onPointerUp={() => snapToNearestCard("auto")}
-      onMouseUp={() => snapToNearestCard("auto")}
+      onTouchStart={(event) => beginScrollGesture(event.touches?.[0]?.clientY || 0)}
+      onTouchEnd={(event) => finishScrollGesture(event.changedTouches?.[0]?.clientY)}
       className="h-full overflow-y-auto overscroll-contain snap-y snap-mandatory scroll-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (

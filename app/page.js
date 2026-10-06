@@ -252,7 +252,7 @@ function VerticalFeedScroll({
       const target = node.children[nextIndex];
       if (target) node.scrollTo({ top: target.offsetTop, behavior: "auto" });
     });
-  }, [feedKey, initialIndex, dishes.length]);
+  }, [feedKey, dishes.length]);
 
   useEffect(() => {
     const card = dishes[activeIndex] || null;
@@ -291,141 +291,33 @@ function VerticalFeedScroll({
       className="h-full overflow-y-auto overscroll-contain scroll-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (
-        <section key={dish?.id || dish?._key || index} className="min-h-[88%] pb-7">
-          <VerticalFeedPost
-            dish={dish}
-            priority={index === 0}
-            currentUser={currentUser}
-            onAction={onAction}
-            onSavesPress={onSavesPress}
-            onSharePress={onSharePress}
-            onAuthRequired={onAuthRequired}
-          />
+        <section key={dish?.id || dish?._key || index} className="h-[92%] min-h-[92%] pb-4">
+          <div className="h-full">
+            <SwipeDeck
+              key={`vertical-card-${dish?.id || dish?._key || index}`}
+              dishes={[dish]}
+              preserveContinuity={false}
+              initialIndex={0}
+              onAction={onAction}
+              onRightSwipe={onRightSwipe}
+              onSavesPress={onSavesPress}
+              onSharePress={onSharePress}
+              currentUser={currentUser}
+              fitHeight
+              disableSwipeGestures
+              actionOnRightSwipe={false}
+              dismissOnAction={false}
+              actionLabel="+"
+              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionToast="Added to DishList"
+              trackSwipes={false}
+              onAuthRequired={onAuthRequired}
+              onResetFeed={onResetFeed}
+            />
+          </div>
         </section>
       ))}
     </div>
-  );
-}
-
-function VerticalFeedPost({ dish, priority = false, currentUser, onAction, onSavesPress, onSharePress, onAuthRequired }) {
-  const [saving, setSaving] = useState(false);
-  const mediaUrl = getDishImageUrl(dish);
-  const video = isDishVideo(dish);
-  const isRestaurant = String(dish?.dishMode || "").toLowerCase() === DISH_MODE_RESTAURANT;
-  const accent = isRestaurant ? "#E64646" : "#E4B43F";
-  const ownerInitial = (dish?.ownerName || "U").trim().charAt(0).toUpperCase();
-  const saveCount = Number(dish?.saveCount || dish?.savesCount || dish?.savedByCount || 0);
-
-  const handleAdd = async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (saving) return;
-    setSaving(true);
-    try {
-      const result = await onAction?.(dish);
-      if (result === false && typeof onAuthRequired === "function") onAuthRequired();
-    } finally {
-      setTimeout(() => setSaving(false), 500);
-    }
-  };
-
-  return (
-    <article className="mx-auto flex min-h-full w-full max-w-[29rem] flex-col justify-center">
-      <div className="mb-2.5 flex items-center justify-between px-1">
-        <Link
-          href={dish?.owner ? `/profile/${dish.owner}` : "#"}
-          className="flex min-w-0 items-center gap-2.5"
-          onClick={(event) => {
-            if (!dish?.owner) event.preventDefault();
-          }}
-        >
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black text-sm font-black text-white"
-            style={{ borderColor: accent }}
-          >
-            {dish?.ownerPhotoURL ? (
-              <img src={dish.ownerPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
-            ) : (
-              ownerInitial
-            )}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-[0.96rem] font-black leading-tight text-black">{dish?.ownerName || "Unknown"}</span>
-            {dish?.restaurantName || dish?.locationName ? (
-              <span className="mt-0.5 block truncate text-[0.76rem] font-bold leading-tight text-black/45">{dish.restaurantName || dish.locationName}</span>
-            ) : null}
-          </span>
-        </Link>
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={saving}
-          className="add-action-btn h-12 w-12 text-[30px]"
-          aria-label="Add dish"
-        >
-          {saving ? <span className="dishlist-action-spinner" /> : <Plus size={24} strokeWidth={2.2} />}
-        </button>
-      </div>
-
-      <Link href={`/dish/${dish?.id}?source=public&mode=single`} className="block">
-        <div
-          className={`relative overflow-hidden rounded-[28px] border-2 bg-black shadow-[0_20px_54px_rgba(0,0,0,0.22)] ${isRestaurant ? "restaurant-accent-border" : "default-accent-border"}`}
-          style={{ borderColor: accent }}
-        >
-          <div className="aspect-[4/5] w-full bg-black">
-            {mediaUrl ? (
-              video ? (
-                <video src={mediaUrl} className="h-full w-full object-cover" muted loop playsInline preload="metadata" />
-              ) : (
-                <img src={mediaUrl} alt={dish?.name || "Dish"} className="h-full w-full object-cover" loading={priority ? "eager" : "lazy"} decoding="async" />
-              )
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-black px-8 text-center">
-                <span className="rounded-full px-5 py-3 text-sm font-black text-white" style={{ backgroundColor: `${accent}33`, color: accent }}>
-                  {dish?.name || "Dish"}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Link>
-
-      <div className="px-1 pt-3">
-        <div className="flex items-start justify-between gap-3">
-          <Link href={`/dish/${dish?.id}?source=public&mode=single`} className="min-w-0">
-            <h2 className="truncate text-[1.35rem] font-black leading-tight tracking-[-0.02em] text-black">{dish?.name || "Dish"}</h2>
-            {dish?.description ? (
-              <p className="mt-1 line-clamp-2 text-[0.92rem] font-semibold leading-snug text-black/56">{dish.description}</p>
-            ) : null}
-          </Link>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onSavesPress?.(dish);
-              }}
-              className="no-accent-border rounded-full bg-black/8 px-3 py-2 text-xs font-black text-black/72"
-            >
-              {saveCount}
-            </button>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onSharePress?.(dish);
-              }}
-              className="no-accent-border flex h-10 w-10 items-center justify-center rounded-full bg-black/8 text-black/72"
-              aria-label="Share dish"
-            >
-              <Send size={17} strokeWidth={2.2} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
   );
 }
 

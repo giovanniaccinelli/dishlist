@@ -2064,7 +2064,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
             transformOrigin: "50% 50%",
             willChange: "transform",
             backfaceVisibility: "hidden",
-            touchAction: visibleRestaurantMap ? "auto" : "none",
+            touchAction: disableSwipeGestures ? "pan-y" : visibleRestaurantMap ? "auto" : "none",
             borderColor: freezeCurrentMotion ? currentCardBaseBorderColor : activeCardBorderColor,
           }}
           onPointerDownCapture={updateDragTiltFactor}

@@ -266,8 +266,16 @@ function VerticalFeedScroll({
   const handleScroll = () => {
     const node = containerRef.current;
     if (!node) return;
-    const height = Math.max(1, node.clientHeight);
-    const nextIndex = Math.max(0, Math.min(dishes.length - 1, Math.round(node.scrollTop / height)));
+    const center = node.scrollTop + node.clientHeight / 2;
+    let nextIndex = 0;
+    Array.from(node.children).forEach((child, index) => {
+      const childCenter = child.offsetTop + child.clientHeight / 2;
+      const currentDistance = Math.abs(center - childCenter);
+      const bestChild = node.children[nextIndex];
+      const bestDistance = bestChild ? Math.abs(center - (bestChild.offsetTop + bestChild.clientHeight / 2)) : Number.POSITIVE_INFINITY;
+      if (currentDistance < bestDistance) nextIndex = index;
+    });
+    nextIndex = Math.max(0, Math.min(dishes.length - 1, nextIndex));
     if (nextIndex !== activeIndex) setActiveIndex(nextIndex);
     if (nextIndex + 10 >= visibleCount && visibleCount < dishes.length) {
       setVisibleCount((count) => Math.min(dishes.length, count + 18));
@@ -280,31 +288,33 @@ function VerticalFeedScroll({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="h-full overflow-y-auto overscroll-contain snap-y snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="h-full overflow-y-auto overscroll-contain scroll-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (
-        <section key={dish?.id || dish?._key || index} className="h-full snap-start snap-always">
-          <SwipeDeck
-            key={`vertical-card-${dish?.id || dish?._key || index}`}
-            dishes={[dish]}
-            preserveContinuity={false}
-            initialIndex={0}
-            onAction={onAction}
-            onRightSwipe={onRightSwipe}
-            onSavesPress={onSavesPress}
-            onSharePress={onSharePress}
-            currentUser={currentUser}
-            fitHeight
-            disableSwipeGestures
-            actionOnRightSwipe={false}
-            dismissOnAction={false}
-            actionLabel="+"
-            actionClassName="add-action-btn w-14 h-14 text-[36px]"
-            actionToast="Added to DishList"
-            trackSwipes={false}
-            onAuthRequired={onAuthRequired}
-            onResetFeed={onResetFeed}
-          />
+        <section key={dish?.id || dish?._key || index} className="h-[92%] min-h-[92%] pb-4">
+          <div className="h-full">
+            <SwipeDeck
+              key={`vertical-card-${dish?.id || dish?._key || index}`}
+              dishes={[dish]}
+              preserveContinuity={false}
+              initialIndex={0}
+              onAction={onAction}
+              onRightSwipe={onRightSwipe}
+              onSavesPress={onSavesPress}
+              onSharePress={onSharePress}
+              currentUser={currentUser}
+              fitHeight
+              disableSwipeGestures
+              actionOnRightSwipe={false}
+              dismissOnAction={false}
+              actionLabel="+"
+              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionToast="Added to DishList"
+              trackSwipes={false}
+              onAuthRequired={onAuthRequired}
+              onResetFeed={onResetFeed}
+            />
+          </div>
         </section>
       ))}
     </div>

@@ -43,6 +43,7 @@ import {
   DishModeFilterModal,
   hasChosenOpeningDishMode,
   usePersistentDishMode,
+  useSliceModeEnabled,
 } from "../components/DishModeControls";
 import { arrayUnion, collection, collectionGroup, doc, getDoc, getDocs, limit as limitResults, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { db } from "./lib/firebase";
@@ -221,6 +222,95 @@ function FeedSwipeHint({ onDismiss }) {
   );
 }
 
+function VerticalFeedScroll({
+  dishes,
+  initialIndex = 0,
+  onIndexChange,
+  onCardViewed,
+  onAction,
+  onRightSwipe,
+  onSavesPress,
+  onSharePress,
+  currentUser,
+  onAuthRequired,
+  onResetFeed,
+  feedKey,
+}) {
+  const containerRef = useRef(null);
+  const viewedRef = useRef(new Set());
+  const [activeIndex, setActiveIndex] = useState(() => Math.max(0, Number(initialIndex || 0)));
+  const [visibleCount, setVisibleCount] = useState(() => Math.max(24, Number(initialIndex || 0) + 16));
+
+  useEffect(() => {
+    const nextIndex = Math.max(0, Math.min(Number(initialIndex || 0), Math.max(0, dishes.length - 1)));
+    setActiveIndex(nextIndex);
+    setVisibleCount(Math.max(24, nextIndex + 16));
+    viewedRef.current = new Set();
+    const node = containerRef.current;
+    if (!node) return;
+    requestAnimationFrame(() => {
+      const target = node.children[nextIndex];
+      if (target) node.scrollTo({ top: target.offsetTop, behavior: "auto" });
+    });
+  }, [feedKey, initialIndex, dishes.length]);
+
+  useEffect(() => {
+    const card = dishes[activeIndex] || null;
+    onIndexChange?.(activeIndex, card);
+    if (card?.id && !viewedRef.current.has(card.id)) {
+      viewedRef.current.add(card.id);
+      onCardViewed?.(card);
+    }
+  }, [activeIndex, dishes, onCardViewed, onIndexChange]);
+
+  const handleScroll = () => {
+    const node = containerRef.current;
+    if (!node) return;
+    const height = Math.max(1, node.clientHeight);
+    const nextIndex = Math.max(0, Math.min(dishes.length - 1, Math.round(node.scrollTop / height)));
+    if (nextIndex !== activeIndex) setActiveIndex(nextIndex);
+    if (nextIndex + 10 >= visibleCount && visibleCount < dishes.length) {
+      setVisibleCount((count) => Math.min(dishes.length, count + 18));
+    }
+  };
+
+  const visibleDishes = dishes.slice(0, Math.min(dishes.length, visibleCount));
+
+  return (
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="h-full overflow-y-auto overscroll-contain snap-y snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {visibleDishes.map((dish, index) => (
+        <section key={dish?.id || dish?._key || index} className="h-full snap-start snap-always">
+          <SwipeDeck
+            key={`vertical-card-${dish?.id || dish?._key || index}`}
+            dishes={[dish]}
+            preserveContinuity={false}
+            initialIndex={0}
+            onAction={onAction}
+            onRightSwipe={onRightSwipe}
+            onSavesPress={onSavesPress}
+            onSharePress={onSharePress}
+            currentUser={currentUser}
+            fitHeight
+            disableSwipeGestures
+            actionOnRightSwipe={false}
+            dismissOnAction={false}
+            actionLabel="+"
+            actionClassName="add-action-btn w-14 h-14 text-[36px]"
+            actionToast="Added to DishList"
+            trackSwipes={false}
+            onAuthRequired={onAuthRequired}
+            onResetFeed={onResetFeed}
+          />
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export default function Feed() {
   const { user, loading } = useAuth();
   const { t, darkMode } = useLanguage();
@@ -287,6 +377,7 @@ export default function Feed() {
   const [feedStoriesOpen, setFeedStoriesOpen] = useState(false);
   const [dishModeFilterOpen, setDishModeFilterOpen] = useState(false);
   const [selectedDishMode, setSelectedDishMode] = usePersistentDishMode("dish-mode:feed", DISH_MODE_ALL);
+  const sliceModeEnabled = useSliceModeEnabled();
   const [feedClientReady, setFeedClientReady] = useState(false);
   const [needsOpeningDishMode, setNeedsOpeningDishMode] = useState(true);
   const [firstFeedCardReady, setFirstFeedCardReady] = useState(() => initialHasCompleteFeedCache);
@@ -1813,33 +1904,54 @@ export default function Feed() {
       </div>
       <div className="bottom-nav-spacer swipe-deck-layer mt-0 px-3 pt-0 flex-1 min-h-0">
         <div className={activeFeed === "for_you" ? "block h-full" : "hidden h-full"}>
-          <SwipeDeck
-            ref={forYouDeckRef}
-            key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
-	            dishes={orderedForYou}
-	            preserveContinuity
-	            initialIndex={currentForYouIndex}
-	            onIndexChange={(index, card) => {
-	              setForYouIndex(index);
-	              setCurrentForYouCard(card || null);
-	              updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
-	            }}
-	            onAction={handleAdd}
-            onRightSwipe={handleRightSwipeToTry}
-            onSavesPress={handleOpenSavers}
-            onSharePress={handleShare}
-            currentUser={user}
-            fitHeight
-            actionOnRightSwipe={false}
-            dismissOnAction={false}
-            actionLabel="+"
-            actionClassName="add-action-btn w-14 h-14 text-[36px]"
-            actionToast="Added to DishList"
-            trackSwipes
-            onSwiped={handleDishSwiped}
-            onAuthRequired={() => setShowAuthPrompt(true)}
-            onResetFeed={() => handleResetFeed("for_you")}
-          />
+          {sliceModeEnabled ? (
+            <VerticalFeedScroll
+              feedKey={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
+              dishes={orderedForYou}
+              initialIndex={currentForYouIndex}
+              onIndexChange={(index, card) => {
+                setForYouIndex(index);
+                setCurrentForYouCard(card || null);
+                updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
+              }}
+              onCardViewed={handleDishSwiped}
+              onAction={handleAdd}
+              onRightSwipe={handleRightSwipeToTry}
+              onSavesPress={handleOpenSavers}
+              onSharePress={handleShare}
+              currentUser={user}
+              onAuthRequired={() => setShowAuthPrompt(true)}
+              onResetFeed={() => handleResetFeed("for_you")}
+            />
+          ) : (
+            <SwipeDeck
+              ref={forYouDeckRef}
+              key={`for-you-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
+	              dishes={orderedForYou}
+	              preserveContinuity
+	              initialIndex={currentForYouIndex}
+	              onIndexChange={(index, card) => {
+	                setForYouIndex(index);
+	                setCurrentForYouCard(card || null);
+	                updateModeIndex(setForYouIndexByMode, selectedDishMode, index);
+	              }}
+	              onAction={handleAdd}
+              onRightSwipe={handleRightSwipeToTry}
+              onSavesPress={handleOpenSavers}
+              onSharePress={handleShare}
+              currentUser={user}
+              fitHeight
+              actionOnRightSwipe={false}
+              dismissOnAction={false}
+              actionLabel="+"
+              actionClassName="add-action-btn w-14 h-14 text-[36px]"
+              actionToast="Added to DishList"
+              trackSwipes
+              onSwiped={handleDishSwiped}
+              onAuthRequired={() => setShowAuthPrompt(true)}
+              onResetFeed={() => handleResetFeed("for_you")}
+            />
+          )}
         </div>
         <div className={activeFeed === "following" ? "block h-full" : "hidden h-full"}>
           {!userId ? (
@@ -1872,37 +1984,58 @@ export default function Feed() {
               />
             </div>
           ) : (
-            <SwipeDeck
-              ref={followingDeckRef}
-              key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
-	              dishes={orderedFollowing}
-	              preserveContinuity
-	              initialIndex={currentFollowingIndex}
-	              onIndexChange={(index, card) => {
-	                setFollowingIndex(index);
-	                setCurrentFollowingCard(card || null);
-	                updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
-	              }}
-	              onAction={handleAdd}
-              onRightSwipe={handleRightSwipeToTry}
-              onSavesPress={handleOpenSavers}
-              onSharePress={handleShare}
-              currentUser={user}
-              fitHeight
-              actionOnRightSwipe={false}
-              dismissOnAction={false}
-              actionLabel="+"
-              actionClassName="add-action-btn w-14 h-14 text-[36px]"
-              actionToast="Added to DishList"
-              trackSwipes
-              onSwiped={handleDishSwiped}
-              onAuthRequired={() => setShowAuthPrompt(true)}
-              onResetFeed={() => handleResetFeed("following")}
-            />
+            sliceModeEnabled ? (
+              <VerticalFeedScroll
+                feedKey={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
+                dishes={orderedFollowing}
+                initialIndex={currentFollowingIndex}
+                onIndexChange={(index, card) => {
+                  setFollowingIndex(index);
+                  setCurrentFollowingCard(card || null);
+                  updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
+                }}
+                onCardViewed={handleDishSwiped}
+                onAction={handleAdd}
+                onRightSwipe={handleRightSwipeToTry}
+                onSavesPress={handleOpenSavers}
+                onSharePress={handleShare}
+                currentUser={user}
+                onAuthRequired={() => setShowAuthPrompt(true)}
+                onResetFeed={() => handleResetFeed("following")}
+              />
+            ) : (
+              <SwipeDeck
+                ref={followingDeckRef}
+                key={`following-${selectedDishMode}-${filterVersion}-${excludedTags.join("|")}-${selectedDishMode === DISH_MODE_RESTAURANT ? `${currentLocationStatus}-${Number(currentLocation?.lat || 0).toFixed(4)}-${Number(currentLocation?.lng || 0).toFixed(4)}` : "no-geo"}`}
+	                dishes={orderedFollowing}
+	                preserveContinuity
+	                initialIndex={currentFollowingIndex}
+	                onIndexChange={(index, card) => {
+	                  setFollowingIndex(index);
+	                  setCurrentFollowingCard(card || null);
+	                  updateModeIndex(setFollowingIndexByMode, selectedDishMode, index);
+	                }}
+	                onAction={handleAdd}
+                onRightSwipe={handleRightSwipeToTry}
+                onSavesPress={handleOpenSavers}
+                onSharePress={handleShare}
+                currentUser={user}
+                fitHeight
+                actionOnRightSwipe={false}
+                dismissOnAction={false}
+                actionLabel="+"
+                actionClassName="add-action-btn w-14 h-14 text-[36px]"
+                actionToast="Added to DishList"
+                trackSwipes
+                onSwiped={handleDishSwiped}
+                onAuthRequired={() => setShowAuthPrompt(true)}
+                onResetFeed={() => handleResetFeed("following")}
+              />
+            )
           )}
         </div>
         <AnimatePresence>
-          {swipeHintVisible ? <FeedSwipeHint onDismiss={dismissSwipeHint} /> : null}
+          {swipeHintVisible && !sliceModeEnabled ? <FeedSwipeHint onDismiss={dismissSwipeHint} /> : null}
         </AnimatePresence>
       </div>
       <AnimatePresence>

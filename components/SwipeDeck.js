@@ -324,6 +324,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
   onCardViewed,
   onIndexChange,
   fitHeight = false,
+  disableSwipeGestures = false,
   storyPushStatsByDish = {},
   showStoryHistoryCounter = false,
 }, ref) {
@@ -2052,7 +2053,7 @@ const SwipeDeck = forwardRef(function SwipeDeck({
         <motion.div
           ref={currentCardShellRef}
           key={currentCard._key}
-          drag={disabled || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
+          drag={disabled || disableSwipeGestures || isEjecting || scrollPanelActive || visibleRestaurantMap ? false : true}
           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.74}
           dragMomentum={false}

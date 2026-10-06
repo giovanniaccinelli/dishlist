@@ -357,8 +357,8 @@ function VerticalFeedScroll({
       className="h-full overflow-y-auto overscroll-contain snap-y snap-mandatory scroll-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (
-        <section key={dish?.id || dish?._key || index} className="box-border h-full min-h-full snap-center">
-          <div className="h-full">
+        <section key={dish?.id || dish?._key || index} className="box-border h-full min-h-full snap-center bg-transparent py-[3px]">
+          <div className="h-full min-h-0">
             <SwipeDeck
               key={`vertical-card-${dish?.id || dish?._key || index}`}
               dishes={[dish]}

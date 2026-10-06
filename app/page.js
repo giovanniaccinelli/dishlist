@@ -238,6 +238,7 @@ function VerticalFeedScroll({
 }) {
   const containerRef = useRef(null);
   const viewedRef = useRef(new Set());
+  const snapTimeoutRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(() => Math.max(0, Number(initialIndex || 0)));
   const [visibleCount, setVisibleCount] = useState(() => Math.max(24, Number(initialIndex || 0) + 16));
 
@@ -263,9 +264,11 @@ function VerticalFeedScroll({
     }
   }, [activeIndex, dishes, onCardViewed, onIndexChange]);
 
-  const handleScroll = () => {
-    const node = containerRef.current;
-    if (!node) return;
+  useEffect(() => () => {
+    if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
+  }, []);
+
+  const findNearestIndex = (node) => {
     const center = node.scrollTop + node.clientHeight / 2;
     let nextIndex = 0;
     Array.from(node.children).forEach((child, index) => {
@@ -275,11 +278,31 @@ function VerticalFeedScroll({
       const bestDistance = bestChild ? Math.abs(center - (bestChild.offsetTop + bestChild.clientHeight / 2)) : Number.POSITIVE_INFINITY;
       if (currentDistance < bestDistance) nextIndex = index;
     });
-    nextIndex = Math.max(0, Math.min(dishes.length - 1, nextIndex));
+    return Math.max(0, Math.min(dishes.length - 1, nextIndex));
+  };
+
+  const centerCard = (index, behavior = "smooth") => {
+    const node = containerRef.current;
+    const target = node?.children?.[index];
+    if (!node || !target) return;
+    const centeredTop = target.offsetTop - Math.max(0, (node.clientHeight - target.clientHeight) / 2);
+    node.scrollTo({ top: centeredTop, behavior });
+  };
+
+  const handleScroll = () => {
+    const node = containerRef.current;
+    if (!node) return;
+    const nextIndex = findNearestIndex(node);
     if (nextIndex !== activeIndex) setActiveIndex(nextIndex);
     if (nextIndex + 10 >= visibleCount && visibleCount < dishes.length) {
       setVisibleCount((count) => Math.min(dishes.length, count + 18));
     }
+    if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
+    snapTimeoutRef.current = window.setTimeout(() => {
+      const freshNode = containerRef.current;
+      if (!freshNode) return;
+      centerCard(findNearestIndex(freshNode), "smooth");
+    }, 120);
   };
 
   const visibleDishes = dishes.slice(0, Math.min(dishes.length, visibleCount));
@@ -291,7 +314,7 @@ function VerticalFeedScroll({
       className="h-full overflow-y-auto overscroll-contain scroll-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (
-        <section key={dish?.id || dish?._key || index} className="h-[92%] min-h-[92%] pb-4">
+        <section key={dish?.id || dish?._key || index} className="box-border h-full min-h-full py-1.5">
           <div className="h-full">
             <SwipeDeck
               key={`vertical-card-${dish?.id || dish?._key || index}`}

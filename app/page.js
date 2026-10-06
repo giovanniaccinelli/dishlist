@@ -285,8 +285,14 @@ function VerticalFeedScroll({
     const node = containerRef.current;
     const target = node?.children?.[index];
     if (!node || !target) return;
-    const centeredTop = target.offsetTop - Math.max(0, (node.clientHeight - target.clientHeight) / 2);
+    const centeredTop = target.offsetTop + target.clientHeight / 2 - node.clientHeight / 2;
     node.scrollTo({ top: centeredTop, behavior });
+  };
+
+  const snapToNearestCard = (behavior = "auto") => {
+    const node = containerRef.current;
+    if (!node) return;
+    centerCard(findNearestIndex(node), behavior);
   };
 
   const handleScroll = () => {
@@ -299,10 +305,8 @@ function VerticalFeedScroll({
     }
     if (snapTimeoutRef.current) window.clearTimeout(snapTimeoutRef.current);
     snapTimeoutRef.current = window.setTimeout(() => {
-      const freshNode = containerRef.current;
-      if (!freshNode) return;
-      centerCard(findNearestIndex(freshNode), "smooth");
-    }, 120);
+      snapToNearestCard("auto");
+    }, 36);
   };
 
   const visibleDishes = dishes.slice(0, Math.min(dishes.length, visibleCount));
@@ -311,10 +315,13 @@ function VerticalFeedScroll({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="h-full overflow-y-auto overscroll-contain scroll-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      onTouchEnd={() => snapToNearestCard("auto")}
+      onPointerUp={() => snapToNearestCard("auto")}
+      onMouseUp={() => snapToNearestCard("auto")}
+      className="h-full overflow-y-auto overscroll-contain snap-y snap-mandatory scroll-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {visibleDishes.map((dish, index) => (
-        <section key={dish?.id || dish?._key || index} className="box-border h-full min-h-full py-1.5">
+        <section key={dish?.id || dish?._key || index} className="box-border h-full min-h-full snap-center">
           <div className="h-full">
             <SwipeDeck
               key={`vertical-card-${dish?.id || dish?._key || index}`}

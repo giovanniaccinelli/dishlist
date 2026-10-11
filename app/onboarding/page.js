@@ -200,22 +200,24 @@ export default function Onboarding() {
               <button
                 type="button"
                 onClick={() => chooseLanguage(LANGUAGE_EN)}
-                className="no-accent-border flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.06)] active:scale-[0.99]"
+                className="flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-[#3B82F6]/45 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),0_0_22px_rgba(59,130,246,0.10),inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]"
               >
                 <UkFlag />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ENGLISH</span>
+                  <span className="mt-2 block text-[0.8rem] font-bold uppercase tracking-[0.12em] text-white/48">Continue</span>
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => chooseLanguage(LANGUAGE_IT)}
-                className="no-accent-border flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.06)] active:scale-[0.99]"
+                className="flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-[#23C268]/45 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),0_0_22px_rgba(35,194,104,0.10),inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]"
               >
                 <ItalyFlag />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ITALIANO</span>
+                  <span className="mt-2 block text-[0.8rem] font-bold uppercase tracking-[0.12em] text-white/48">Continua</span>
                 </span>
               </button>
             </div>

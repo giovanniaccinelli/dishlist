@@ -23,6 +23,31 @@ const ONBOARDING_STEP_PREVIEW = [
   { label: "Dish 3", color: "#23C268" },
 ];
 
+function UkFlag() {
+  return (
+    <span className="relative block h-[4.1rem] w-[6.2rem] overflow-hidden rounded-[1.05rem] bg-[#123B86] shadow-[0_14px_30px_rgba(0,0,0,0.34)]">
+      <span className="absolute left-1/2 top-1/2 h-[0.62rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[34deg] bg-white" />
+      <span className="absolute left-1/2 top-1/2 h-[0.62rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[-34deg] bg-white" />
+      <span className="absolute left-1/2 top-1/2 h-[0.28rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[34deg] bg-[#D71F2A]" />
+      <span className="absolute left-1/2 top-1/2 h-[0.28rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[-34deg] bg-[#D71F2A]" />
+      <span className="absolute left-1/2 top-0 h-full w-[1.12rem] -translate-x-1/2 bg-white" />
+      <span className="absolute left-0 top-1/2 h-[1.12rem] w-full -translate-y-1/2 bg-white" />
+      <span className="absolute left-1/2 top-0 h-full w-[0.58rem] -translate-x-1/2 bg-[#D71F2A]" />
+      <span className="absolute left-0 top-1/2 h-[0.58rem] w-full -translate-y-1/2 bg-[#D71F2A]" />
+    </span>
+  );
+}
+
+function ItalyFlag() {
+  return (
+    <span className="grid h-[4.1rem] w-[6.2rem] grid-cols-3 overflow-hidden rounded-[1.05rem] shadow-[0_14px_30px_rgba(0,0,0,0.34)]">
+      <span className="bg-[#159447]" />
+      <span className="bg-white" />
+      <span className="bg-[#E34245]" />
+    </span>
+  );
+}
+
 export default function Onboarding() {
   const router = useRouter();
   const { user } = useAuth();
@@ -156,53 +181,41 @@ export default function Onboarding() {
 
   if (!languageGateDone) {
     return (
-      <div className="h-[100dvh] bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1.35rem)] text-white">
+      <div data-no-translate="true" className="h-[100dvh] bg-[#050505] px-4 pb-5 pt-[calc(env(safe-area-inset-top)+1.35rem)] text-white">
         <div className="mx-auto flex h-full max-w-xl flex-col">
-          <div className="mb-5 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img src="/logo-real.png" alt="DishList logo" className="h-10 w-10 rounded-full object-cover" />
             <div>
               <div className="text-[1.55rem] font-black leading-none tracking-[-0.04em]">DishList</div>
-              <div className="mt-1 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-white/38">Choose language</div>
+              <div className="mt-1 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-white/38">Language</div>
             </div>
           </div>
-          <div className="grid flex-1 grid-rows-2 gap-3">
-          <button
-            type="button"
-            onClick={() => chooseLanguage(LANGUAGE_EN)}
-            className="preserve-blue-border flex flex-col justify-between overflow-hidden rounded-[1.75rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-5 text-left text-white shadow-[0_18px_48px_rgba(56,189,248,0.12)] active:scale-[0.99]"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white text-[1.2rem] font-black text-[#071723] shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
-                EN
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/62">
-                Continue
-              </span>
-            </div>
-            <div>
-              <div className="text-[2.15rem] font-black leading-none tracking-[-0.05em]">English</div>
-              <div className="mt-2 text-[0.95rem] font-semibold text-white/58">Use DishList in English</div>
-            </div>
-          </button>
+          <div className="flex flex-1 items-center">
+            <div className="w-full space-y-3">
+              <button
+                type="button"
+                onClick={() => chooseLanguage(LANGUAGE_EN)}
+                className="preserve-blue-border flex w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-4 text-left text-white shadow-[0_18px_48px_rgba(56,189,248,0.14)] active:scale-[0.99]"
+              >
+                <UkFlag />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[2.35rem] font-black uppercase leading-[0.88] tracking-[-0.045em]">ENGLISH</span>
+                  <span className="mt-2 block text-[0.88rem] font-bold uppercase tracking-[0.12em] text-white/50">Continue</span>
+                </span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => chooseLanguage(LANGUAGE_IT)}
-            className="preserve-green-border flex flex-col justify-between overflow-hidden rounded-[1.75rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-5 text-left text-white shadow-[0_18px_48px_rgba(255,194,71,0.12)] active:scale-[0.99]"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white text-[1.2rem] font-black text-[#271C07] shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
-                IT
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/62">
-                Inizia
-              </span>
+              <button
+                type="button"
+                onClick={() => chooseLanguage(LANGUAGE_IT)}
+                className="preserve-green-border flex w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-4 text-left text-white shadow-[0_18px_48px_rgba(255,194,71,0.14)] active:scale-[0.99]"
+              >
+                <ItalyFlag />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[2.35rem] font-black uppercase leading-[0.88] tracking-[-0.045em]">ITALIANO</span>
+                  <span className="mt-2 block text-[0.88rem] font-bold uppercase tracking-[0.12em] text-white/50">Inizia</span>
+                </span>
+              </button>
             </div>
-            <div>
-              <div className="text-[2.15rem] font-black leading-none tracking-[-0.05em]">Italiano</div>
-              <div className="mt-2 text-[0.95rem] font-semibold text-white/58">Usa DishList in italiano</div>
-            </div>
-          </button>
           </div>
         </div>
       </div>

@@ -8,13 +8,15 @@ import { collection, getDocs, limit, query } from "firebase/firestore";
 import { useAuth } from "../lib/auth";
 import { db } from "../lib/firebase";
 import { getDishImageUrl } from "../lib/dishImage";
-import { useLanguage } from "../../components/LanguageProvider";
+import { LANGUAGE_EN, LANGUAGE_IT, useLanguage } from "../../components/LanguageProvider";
 
 const DONE_KEY = "onboarding:done";
 const MODE_KEY = "onboarding:mode";
 const NAMES_KEY = "onboarding:dishNames";
 const SAVED_KEY = "onboarding:guestSavedDishIds";
 const SELECTED_DISHES_KEY = "onboarding:selectedDishIds";
+const LANGUAGE_CHOICE_KEY = "onboarding:language-choice-done";
+const LANGUAGE_EXPLICIT_STORAGE_KEY = "dishlist-language-explicit";
 const ONBOARDING_STEP_PREVIEW = [
   { label: "Dish 1", color: "#E64646" },
   { label: "Dish 2", color: "#F59E0B" },
@@ -24,8 +26,10 @@ const ONBOARDING_STEP_PREVIEW = [
 export default function Onboarding() {
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { setLanguage, t } = useLanguage();
   const [step, setStep] = useState(0);
+  const [languageGateReady, setLanguageGateReady] = useState(false);
+  const [languageGateDone, setLanguageGateDone] = useState(false);
   const [names, setNames] = useState(["", "", ""]);
   const [selectedDishIds, setSelectedDishIds] = useState([null, null, null]);
   const [error, setError] = useState("");
@@ -35,6 +39,23 @@ export default function Onboarding() {
   useEffect(() => {
     if (user) router.replace("/");
   }, [user, router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const alreadyChoseLanguage =
+      window.localStorage.getItem(LANGUAGE_CHOICE_KEY) === "1" ||
+      window.localStorage.getItem(LANGUAGE_EXPLICIT_STORAGE_KEY) === "1";
+    setLanguageGateDone(alreadyChoseLanguage);
+    setLanguageGateReady(true);
+  }, []);
+
+  const chooseLanguage = async (nextLanguage) => {
+    await setLanguage(nextLanguage);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LANGUAGE_CHOICE_KEY, "1");
+    }
+    setLanguageGateDone(true);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -128,6 +149,52 @@ export default function Onboarding() {
   const handleSkip = () => {
     handleBrowseFeed();
   };
+
+  if (!languageGateReady) {
+    return <div className="h-[100dvh] bg-[#050505]" />;
+  }
+
+  if (!languageGateDone) {
+    return (
+      <div className="h-[100dvh] bg-[#050505] p-4 pt-[calc(env(safe-area-inset-top)+1rem)] text-white">
+        <div className="mx-auto flex h-full max-w-xl flex-col gap-4">
+          <button
+            type="button"
+            onClick={() => chooseLanguage(LANGUAGE_EN)}
+            className="preserve-blue-border flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-6 text-left text-white shadow-[0_24px_70px_rgba(56,189,248,0.16)] active:scale-[0.99]"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[3rem] leading-none">🇬🇧</span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
+                Start
+              </span>
+            </div>
+            <div>
+              <div className="text-[2.45rem] font-black leading-none tracking-[-0.05em]">English</div>
+              <div className="mt-2 text-[1rem] font-semibold text-white/58">Use DishList in English</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => chooseLanguage(LANGUAGE_IT)}
+            className="preserve-green-border flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-6 text-left text-white shadow-[0_24px_70px_rgba(255,194,71,0.16)] active:scale-[0.99]"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[3rem] leading-none">🇮🇹</span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
+                Inizia
+              </span>
+            </div>
+            <div>
+              <div className="text-[2.45rem] font-black leading-none tracking-[-0.05em]">Italiano</div>
+              <div className="mt-2 text-[1rem] font-semibold text-white/58">Usa DishList in italiano</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[100dvh] overflow-y-auto bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+2.65rem)] text-white">

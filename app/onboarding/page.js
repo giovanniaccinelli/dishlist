@@ -25,26 +25,31 @@ const ONBOARDING_STEP_PREVIEW = [
 
 function UkFlag() {
   return (
-    <span className="relative block h-[4.1rem] w-[6.2rem] overflow-hidden rounded-[1.05rem] bg-[#123B86] shadow-[0_14px_30px_rgba(0,0,0,0.34)]">
-      <span className="absolute left-1/2 top-1/2 h-[0.62rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[34deg] bg-white" />
-      <span className="absolute left-1/2 top-1/2 h-[0.62rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[-34deg] bg-white" />
-      <span className="absolute left-1/2 top-1/2 h-[0.28rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[34deg] bg-[#D71F2A]" />
-      <span className="absolute left-1/2 top-1/2 h-[0.28rem] w-[8.1rem] -translate-x-1/2 -translate-y-1/2 rotate-[-34deg] bg-[#D71F2A]" />
-      <span className="absolute left-1/2 top-0 h-full w-[1.12rem] -translate-x-1/2 bg-white" />
-      <span className="absolute left-0 top-1/2 h-[1.12rem] w-full -translate-y-1/2 bg-white" />
-      <span className="absolute left-1/2 top-0 h-full w-[0.58rem] -translate-x-1/2 bg-[#D71F2A]" />
-      <span className="absolute left-0 top-1/2 h-[0.58rem] w-full -translate-y-1/2 bg-[#D71F2A]" />
-    </span>
+    <svg
+      viewBox="0 0 60 40"
+      aria-hidden="true"
+      className="block h-[4.9rem] w-[7.35rem] shrink-0 overflow-hidden rounded-[1.05rem] shadow-[0_14px_30px_rgba(0,0,0,0.34)]"
+    >
+      <rect width="60" height="40" fill="#123B86" />
+      <path d="M0 0 60 40M60 0 0 40" stroke="#FFFFFF" strokeWidth="8" />
+      <path d="M0 0 60 40M60 0 0 40" stroke="#D71F2A" strokeWidth="4" />
+      <path d="M30 0v40M0 20h60" stroke="#FFFFFF" strokeWidth="13" />
+      <path d="M30 0v40M0 20h60" stroke="#D71F2A" strokeWidth="7" />
+    </svg>
   );
 }
 
 function ItalyFlag() {
   return (
-    <span className="grid h-[4.1rem] w-[6.2rem] grid-cols-3 overflow-hidden rounded-[1.05rem] shadow-[0_14px_30px_rgba(0,0,0,0.34)]">
-      <span className="bg-[#159447]" />
-      <span className="bg-white" />
-      <span className="bg-[#E34245]" />
-    </span>
+    <svg
+      viewBox="0 0 60 40"
+      aria-hidden="true"
+      className="block h-[4.9rem] w-[7.35rem] shrink-0 overflow-hidden rounded-[1.05rem] shadow-[0_14px_30px_rgba(0,0,0,0.34)]"
+    >
+      <rect width="20" height="40" x="0" fill="#159447" />
+      <rect width="20" height="40" x="20" fill="#FFFFFF" />
+      <rect width="20" height="40" x="40" fill="#E34245" />
+    </svg>
   );
 }
 
@@ -191,28 +196,26 @@ export default function Onboarding() {
             </div>
           </div>
           <div className="flex flex-1 items-center">
-            <div className="w-full space-y-3">
+            <div className="w-full space-y-3.5">
               <button
                 type="button"
                 onClick={() => chooseLanguage(LANGUAGE_EN)}
-                className="preserve-blue-border flex w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-4 text-left text-white shadow-[0_18px_48px_rgba(56,189,248,0.14)] active:scale-[0.99]"
+                className="no-accent-border flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.06)] active:scale-[0.99]"
               >
                 <UkFlag />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[2.35rem] font-black uppercase leading-[0.88] tracking-[-0.045em]">ENGLISH</span>
-                  <span className="mt-2 block text-[0.88rem] font-bold uppercase tracking-[0.12em] text-white/50">Continue</span>
+                  <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ENGLISH</span>
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => chooseLanguage(LANGUAGE_IT)}
-                className="preserve-green-border flex w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-4 text-left text-white shadow-[0_18px_48px_rgba(255,194,71,0.14)] active:scale-[0.99]"
+                className="no-accent-border flex min-h-[7.45rem] w-full items-center gap-4 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[#121212] p-4 text-left text-white shadow-[0_18px_44px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.06)] active:scale-[0.99]"
               >
                 <ItalyFlag />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[2.35rem] font-black uppercase leading-[0.88] tracking-[-0.045em]">ITALIANO</span>
-                  <span className="mt-2 block text-[0.88rem] font-bold uppercase tracking-[0.12em] text-white/50">Inizia</span>
+                  <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ITALIANO</span>
                 </span>
               </button>
             </div>

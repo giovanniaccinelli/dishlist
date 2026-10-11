@@ -156,41 +156,54 @@ export default function Onboarding() {
 
   if (!languageGateDone) {
     return (
-      <div className="h-[100dvh] bg-[#050505] p-4 pt-[calc(env(safe-area-inset-top)+1rem)] text-white">
-        <div className="mx-auto flex h-full max-w-xl flex-col gap-4">
+      <div className="h-[100dvh] bg-[#050505] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1.35rem)] text-white">
+        <div className="mx-auto flex h-full max-w-xl flex-col">
+          <div className="mb-5 flex items-center gap-3">
+            <img src="/logo-real.png" alt="DishList logo" className="h-10 w-10 rounded-full object-cover" />
+            <div>
+              <div className="text-[1.55rem] font-black leading-none tracking-[-0.04em]">DishList</div>
+              <div className="mt-1 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-white/38">Choose language</div>
+            </div>
+          </div>
+          <div className="grid flex-1 grid-rows-2 gap-3">
           <button
             type="button"
             onClick={() => chooseLanguage(LANGUAGE_EN)}
-            className="preserve-blue-border flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-6 text-left text-white shadow-[0_24px_70px_rgba(56,189,248,0.16)] active:scale-[0.99]"
+            className="preserve-blue-border flex flex-col justify-between overflow-hidden rounded-[1.75rem] border-2 border-[#38BDF8] bg-[linear-gradient(145deg,#071723_0%,#102D45_100%)] p-5 text-left text-white shadow-[0_18px_48px_rgba(56,189,248,0.12)] active:scale-[0.99]"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[3rem] leading-none">🇬🇧</span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
-                Start
+            <div className="flex items-start justify-between gap-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white text-[1.2rem] font-black text-[#071723] shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
+                EN
+              </span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/62">
+                Continue
               </span>
             </div>
             <div>
-              <div className="text-[2.45rem] font-black leading-none tracking-[-0.05em]">English</div>
-              <div className="mt-2 text-[1rem] font-semibold text-white/58">Use DishList in English</div>
+              <div className="text-[2.15rem] font-black leading-none tracking-[-0.05em]">English</div>
+              <div className="mt-2 text-[0.95rem] font-semibold text-white/58">Use DishList in English</div>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => chooseLanguage(LANGUAGE_IT)}
-            className="preserve-green-border flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-6 text-left text-white shadow-[0_24px_70px_rgba(255,194,71,0.16)] active:scale-[0.99]"
+            className="preserve-green-border flex flex-col justify-between overflow-hidden rounded-[1.75rem] border-2 border-[#FFC247] bg-[linear-gradient(145deg,#271C07_0%,#5A3A08_100%)] p-5 text-left text-white shadow-[0_18px_48px_rgba(255,194,71,0.12)] active:scale-[0.99]"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[3rem] leading-none">🇮🇹</span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
+            <div className="flex items-start justify-between gap-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white text-[1.2rem] font-black text-[#271C07] shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
+                IT
+              </span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/62">
                 Inizia
               </span>
             </div>
             <div>
-              <div className="text-[2.45rem] font-black leading-none tracking-[-0.05em]">Italiano</div>
-              <div className="mt-2 text-[1rem] font-semibold text-white/58">Usa DishList in italiano</div>
+              <div className="text-[2.15rem] font-black leading-none tracking-[-0.05em]">Italiano</div>
+              <div className="mt-2 text-[0.95rem] font-semibold text-white/58">Usa DishList in italiano</div>
             </div>
           </button>
+          </div>
         </div>
       </div>
     );

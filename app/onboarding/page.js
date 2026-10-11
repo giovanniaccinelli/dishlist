@@ -205,7 +205,9 @@ export default function Onboarding() {
                 <UkFlag />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ENGLISH</span>
-                  <span className="mt-2 block text-[0.8rem] font-bold uppercase tracking-[0.12em] text-white/48">Continue</span>
+                  <span className="mt-2 inline-flex rounded-full border border-white/14 px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-white/52">
+                    Continue
+                  </span>
                 </span>
               </button>
 
@@ -217,7 +219,9 @@ export default function Onboarding() {
                 <ItalyFlag />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[1.65rem] font-extrabold uppercase leading-none">ITALIANO</span>
-                  <span className="mt-2 block text-[0.8rem] font-bold uppercase tracking-[0.12em] text-white/48">Continua</span>
+                  <span className="mt-2 inline-flex rounded-full border border-white/14 px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-white/52">
+                    Continua
+                  </span>
                 </span>
               </button>
             </div>
